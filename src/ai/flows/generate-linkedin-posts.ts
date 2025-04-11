@@ -1,4 +1,3 @@
-// src/ai/flows/generate-linkedin-posts.ts
 'use server';
 /**
  * @fileOverview A LinkedIn post generator AI agent.
@@ -32,6 +31,7 @@ const prompt = ai.definePrompt({
     schema: z.object({
       topic: z.string().describe('The topic to generate LinkedIn posts about.'),
       numPosts: z.number().describe('The number of LinkedIn posts to generate.'),
+      postNumbers: z.array(z.number()).describe('The numbers of the posts to generate')
     }),
   },
   output: {
@@ -47,7 +47,7 @@ Topic: {{{topic}}}
 
 Here are the posts:
 
-{{#each (range numPosts)}}
+{{#each postNumbers}}
 Post {{this}}:
 {{/each}}`,
   promptOptions: {
@@ -72,6 +72,8 @@ async input => {
     return arr;
   };
 
-  const {output} = await prompt({...input, range});
+  const postNumbers = range(input.numPosts);
+  const {output} = await prompt({...input, postNumbers});
   return output!;
 });
+
