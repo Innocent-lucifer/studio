@@ -1,4 +1,3 @@
-// research-topic.ts
 'use server';
 
 /**
@@ -11,6 +10,7 @@
 
 import {ai} from '@/ai/ai-instance';
 import {z} from 'genkit';
+import { searchTwitter } from '@/ai/tools/searchTwitter';
 
 const ResearchTopicInputSchema = z.object({
   topic: z.string().describe('The topic to research.'),
@@ -31,6 +31,7 @@ const researchTopicPrompt = ai.definePrompt({
   input: {
     schema: z.object({
       topic: z.string().describe('The topic to research.'),
+      twitterResults: z.string().describe('The results from searching Twitter.'),
     }),
   },
   output: {
@@ -38,7 +39,7 @@ const researchTopicPrompt = ai.definePrompt({
       summary: z.string().describe('A summary of the researched topic.'),
     }),
   },
-  prompt: `You are an expert researcher. Please research the following topic and provide a detailed summary:\n\nTopic: {{{topic}}}`,
+  prompt: `You are an expert researcher. Please research the following topic and provide a detailed summary, incorporating information from Twitter:\n\nTopic: {{{topic}}}\n\nTwitter Results: {{{twitterResults}}}`,
 });
 
 const researchTopicFlow = ai.defineFlow<
@@ -49,6 +50,14 @@ const researchTopicFlow = ai.defineFlow<
   inputSchema: ResearchTopicInputSchema,
   outputSchema: ResearchTopicOutputSchema,
 }, async (input) => {
-  const {output} = await researchTopicPrompt(input);
+  const { topic } = input;
+
+  // Search Twitter and LinkedIn using the new tools
+  const twitterResults = await searchTwitter({ query: topic });
+
+  const {output} = await researchTopicPrompt({
+    topic: topic,
+    twitterResults: twitterResults
+  });
   return output!;
 });
