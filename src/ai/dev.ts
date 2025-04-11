@@ -1,1 +1,3 @@
-// Flows will be imported for their side effects in this file.
+import '@/ai/flows/research-topic.ts';
+import '@/ai/flows/generate-linkedin-posts.ts';
+import '@/ai/flows/generate-twitter-posts.ts';
