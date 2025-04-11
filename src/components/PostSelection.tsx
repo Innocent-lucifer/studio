@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -32,7 +31,7 @@ export const PostSelection: React.FC<PostSelectionProps> = ({ twitterPosts, link
   };
 
   return (
-    <div>
+    <div className="fade-in">
       <h2 className="text-lg font-semibold mb-2">Post Selection and Editing</h2>
       <div className="mb-4">
         <h3 className="text-md font-semibold mb-1">Twitter Posts</h3>

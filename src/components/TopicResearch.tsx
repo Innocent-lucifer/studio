@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -28,7 +27,7 @@ export const TopicResearch: React.FC<TopicResearchProps> = ({ setTopic }) => {
   };
 
   return (
-    <div className="mb-4">
+    <div className="mb-4 fade-in">
       <h2 className="text-lg font-semibold mb-2">Topic Research</h2>
       <div className="flex space-x-2">
         <Input

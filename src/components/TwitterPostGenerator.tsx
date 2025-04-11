@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -33,7 +32,7 @@ export const TwitterPostGenerator: React.FC<TwitterPostGeneratorProps> = ({ topi
   }, [topic, setTwitterPosts]);
 
   return (
-    <div className="mb-4">
+    <div className="mb-4 slide-in-from-left">
       <h2 className="text-lg font-semibold mb-2">Twitter Post Generator</h2>
       <Button disabled={isLoading}>
         {isLoading ? "Generating Twitter Posts..." : "Generate Twitter Posts"}

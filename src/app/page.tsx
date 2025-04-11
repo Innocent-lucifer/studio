@@ -12,8 +12,8 @@ export default function Home() {
   const [linkedinPosts, setLinkedinPosts] = useState<string[]>([]);
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Social Sage</h1>
+    <div className="container mx-auto p-8 rounded-lg shadow-md bg-white dark:bg-gray-800 transition-colors duration-500">
+      <h1 className="text-3xl font-bold mb-6 text-gray-800 dark:text-gray-100">Social Sage</h1>
       <TopicResearch setTopic={setTopic} />
 
       {topic && (
@@ -29,4 +29,3 @@ export default function Home() {
     </div>
   );
 }
-
