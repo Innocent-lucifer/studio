@@ -9,6 +9,7 @@
 
 import {ai} from '@/ai/ai-instance';
 import {z} from 'genkit';
+import {researchTopic} from "@/ai/flows/research-topic";
 
 const GenerateLinkedInPostsInputSchema = z.object({
   topic: z.string().describe('The topic to generate LinkedIn posts about.'),
@@ -31,6 +32,7 @@ const prompt = ai.definePrompt({
     schema: z.object({
       topic: z.string().describe('The topic to generate LinkedIn posts about.'),
       numPosts: z.number().describe('The number of LinkedIn posts to generate.'),
+      researchedInformation: z.string().describe('The researched information about the topic.'),
       postNumbers: z.array(z.number()).describe('The numbers of the posts to generate')
     }),
   },
@@ -39,11 +41,13 @@ const prompt = ai.definePrompt({
       posts: z.array(z.string()).describe('The generated LinkedIn posts.'),
     }),
   },
-  prompt: `You are an expert social media manager specializing in generating LinkedIn posts.
+  prompt: `You are an expert social media manager specializing in generating LinkedIn posts. 🚀
 
-You will generate {{numPosts}} LinkedIn posts about the following topic.  The posts should be professional in tone and targeted toward a business audience.
+You will generate {{numPosts}} LinkedIn posts about the following topic, with varying tones and angles, incorporating emojis to make them more engaging and human-like. The posts should be professional in tone and targeted toward a business audience. 💼
 
 Topic: {{{topic}}}
+
+Researched Information: {{{researchedInformation}}}
 
 Here are the posts:
 
@@ -72,8 +76,8 @@ async input => {
     return arr;
   };
 
+  const researchedInformation = await researchTopic({topic: input.topic});
   const postNumbers = range(input.numPosts);
-  const {output} = await prompt({...input, postNumbers});
+  const {output} = await prompt({...input, researchedInformation: researchedInformation.summary, postNumbers});
   return output!;
 });
-
