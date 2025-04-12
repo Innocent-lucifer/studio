@@ -5,6 +5,11 @@ import { TwitterPostGenerator } from "@/components/TwitterPostGenerator";
 import { LinkedInPostGenerator } from "@/components/LinkedInPostGenerator";
 import { PostSelection } from "@/components/PostSelection";
 import { useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Icons } from "@/components/icons";
 
 export default function Home() {
   const [topic, setTopic] = useState<string>("");
@@ -13,7 +18,7 @@ export default function Home() {
 
   return (
     <div className="container mx-auto p-8 rounded-lg shadow-md bg-white dark:bg-gray-800 transition-colors duration-500">
-      <h1 className="text-3xl font-bold mb-6 text-gray-800 dark:text-gray-100">Social Sage</h1>
+      <h1 className="text-3xl font-bold mb-6 text-gray-800 dark:text-gray-100">SagePostAI</h1>
       <TopicResearch setTopic={setTopic} />
 
       {topic && (
@@ -29,3 +34,4 @@ export default function Home() {
     </div>
   );
 }
+
