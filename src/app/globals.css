@@ -14,7 +14,7 @@ body {
     --card-foreground: 0 0% 3.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 3.9%;
-    --primary: 231 69% 29%; /* Deep blue (#1A237E) in HSL */
+    --primary: 255 55% 55%; /* Techy bluish-purple (#8000FF) in HSL */
     --primary-foreground: 0 0% 98%;
     --secondary: 0 0% 93.3%; /* Light gray (#EEEEEE) in HSL */
     --secondary-foreground: 0 0% 9%;
@@ -50,7 +50,7 @@ body {
     --popover: 0 0% 3.9%;
     --popover-foreground: 0 0% 98%;
     --primary: 0 0% 98%;
-    --primary-foreground: 231 69% 29%; /* Inverted Deep blue */
+    --primary-foreground: 255 55% 55%; /* Inverted Techy bluish-purple */
     --secondary: 0 0% 14.9%;
     --secondary-foreground: 0 0% 98%;
     --muted: 0 0% 14.9%;
@@ -113,3 +113,4 @@ body {
     opacity: 1;
   }
 }
+
