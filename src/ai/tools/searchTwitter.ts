@@ -3,7 +3,7 @@
 
 import {ai} from '@/ai/ai-instance';
 import {z} from 'genkit';
-import {TwitterApi} from 'twitter-api-v2';
+// import {TwitterApi} from 'twitter-api-v2'; // Moved to dynamic import
 
 const SearchTwitterInputSchema = z.object({
   query: z.string().describe('The search query for Twitter.'),
@@ -12,6 +12,8 @@ const SearchTwitterInputSchema = z.object({
 const SearchTwitterOutputSchema = z.string().describe('The search results from Twitter.');
 
 export async function searchTwitter(input: { query: string }): Promise<string> {
+  const { TwitterApi } = await import('twitter-api-v2'); // Dynamic import
+
   const apiKey = process.env.TWITTER_API_KEY;
   const apiKeySecret = process.env.TWITTER_API_KEY_SECRET;
 
