@@ -3,7 +3,7 @@
 
 import {ai} from '@/ai/ai-instance';
 import {z} from 'genkit';
-// import {TwitterApi} from 'twitter-api-v2'; // Moved to dynamic import
+// Dynamic import for TwitterApi will be used inside the function to potentially mitigate initialization issues.
 
 const SearchTwitterInputSchema = z.object({
   query: z.string().describe('The search query for Twitter.'),
@@ -12,8 +12,6 @@ const SearchTwitterInputSchema = z.object({
 const SearchTwitterOutputSchema = z.string().describe('The search results from Twitter.');
 
 export async function searchTwitter(input: { query: string }): Promise<string> {
-  const { TwitterApi } = await import('twitter-api-v2'); // Dynamic import
-
   const apiKey = process.env.TWITTER_API_KEY;
   const apiKeySecret = process.env.TWITTER_API_KEY_SECRET;
 
@@ -29,8 +27,12 @@ export async function searchTwitter(input: { query: string }): Promise<string> {
   }
 
   try {
+    // Dynamically import the TwitterApi class
+    const TwitterApiModule = await import('twitter-api-v2');
+    const TwitterApiClient = TwitterApiModule.TwitterApi; // Access the class from the imported module
+
     // Initialize TwitterApi client for app-only authentication
-    const appOnlyClient = new TwitterApi({
+    const appOnlyClient = new TwitterApiClient({
       appKey: apiKey,
       appSecret: apiKeySecret,
     });
@@ -58,14 +60,18 @@ export async function searchTwitter(input: { query: string }): Promise<string> {
     return `Recent tweets for "${input.query}":\n${tweets}`;
 
   } catch (error: any) {
-    console.error(`Error searching Twitter for query "${input.query}":`, error.message || error);
+    console.error(`Error during Twitter search for query "${input.query}":`, error); // Log the full error object
     let errorMessage = `Error during Twitter search for "${input.query}": API request failed. `;
-    if (error.rateLimit) {
+    
+    if (error && typeof error.message === 'string' && error.message.includes('Cannot access') && error.message.includes('before initialization')) {
+      errorMessage += `A critical error occurred while trying to initialize the 'twitter-api-v2' library: "${error.message}". This often indicates a compatibility issue between the library and the Next.js server environment. Twitter search functionality will be affected.`;
+      console.error("Detailed error: 'twitter-api-v2' failed to initialize correctly. This may require investigating the library's compatibility or seeking alternative solutions for Twitter integration.");
+    } else if (error.rateLimit) {
       errorMessage += `Rate limit exceeded. Please try again later. (Rate limit resets at: ${new Date(error.rateLimit.reset * 1000).toLocaleTimeString()})`;
     } else if (error.isAuthError) {
       errorMessage += `Authentication failed. Please check your Twitter API keys in the .env file.`;
     } else {
-      errorMessage += `This could be due to invalid API keys, network issues, or other API errors. (Details: ${error.message || 'Unknown error'})`;
+      errorMessage += `This could be due to network issues, or other API errors. (Details: ${error.message || 'Unknown error'})`;
     }
     return errorMessage;
   }
@@ -81,3 +87,4 @@ ai.defineTool({
     return searchTwitter(input);
   }
 );
+
