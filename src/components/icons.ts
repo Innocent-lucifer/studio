@@ -1,9 +1,9 @@
 import {
-  ArrowRight, Check, ChevronsUpDown, Circle, Copy, CreditCard, Edit, ExternalLink, 
-  File, HelpCircle, Home, Loader2, LogIn, LogOut, Mail, Menu, MessageSquare, Moon, 
-  Plus, PlusCircle, Search, Server, Settings, Share2, Shield, Sun, Trash, User, 
-  UserPlus, X, Workflow, Twitter, Linkedin, Save, Sparkles, Wand2, CalendarDays, Send, RefreshCw
-} from 'lucide-react'; // Added Twitter, Linkedin, Save, Sparkles, Wand2, CalendarDays, Send, RefreshCw
+  ArrowRight, Check, ChevronsUpDown, Circle, Copy, CreditCard, Edit, ExternalLink,
+  File, HelpCircle, Home, Loader2, LogIn, LogOut, Mail, Menu, MessageSquare, Moon,
+  Plus, PlusCircle, Search, Server, Settings, Share2, Shield, Sun, Trash, User,
+  UserPlus, X, Workflow, Twitter, Linkedin, Save, Sparkles, Wand2, CalendarDays, Send, RefreshCw, Feather
+} from 'lucide-react'; // Added Feather
 
 const Icons = {
   arrowRight: ArrowRight,
@@ -37,14 +37,15 @@ const Icons = {
   trash: Trash,
   user: User,
   userPlus: UserPlus,
-  twitter: Twitter, // Added
-  linkedin: Linkedin, // Added
-  save: Save, // Added
-  sparkles: Sparkles, // Added for AI features
-  wand: Wand2, // Added for AI generation/magic
-  calendar: CalendarDays, // Added for scheduling
-  send: Send, // Added for instant posting
-  refreshCw: RefreshCw, // Added for regenerate
+  twitter: Twitter,
+  linkedin: Linkedin,
+  save: Save,
+  sparkles: Sparkles,
+  wand: Wand2,
+  calendar: CalendarDays,
+  send: Send,
+  refreshCw: RefreshCw,
+  feather: Feather, // Added Feather
 };
 
 export {Icons};

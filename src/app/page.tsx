@@ -52,17 +52,13 @@ export default function Home() {
         <main className="container mx-auto w-full max-w-4xl">
           <header className="flex justify-between items-center mb-8 py-4">
             <div className="flex items-center space-x-3">
-              <motion.svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 256 256"
-                className="h-10 w-10 text-primary" // Updated to use primary color from theme
-                fill="currentColor"
-                initial={{ rotate: 0, scale: 0.5, opacity: 0 }}
-                animate={{ rotate: 360, scale: 1, opacity: 1 }}
-                transition={{ duration: 1, ease: "easeOut" }}
+              <motion.div
+                initial={{ scale: 0.5, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.7, ease: "easeOut" }}
               >
-                <path d="M128,24A104,104,0,1,0,232,128,104.12,104.12,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm8-82.83,26.39,26.4a8,8,0,0,1-11.32,11.31L128,143.31l-22.07,22.07a8,8,0,0,1-11.32-11.31L116.69,132,93.66,108.9a8,8,0,0,1,11.31-11.31L128,119.31l23.07-23.07a8,8,0,1,1,11.31,11.31Z" />
-              </motion.svg>
+                <Icons.feather className="h-10 w-10 text-primary" />
+              </motion.div>
               <h1 className="text-4xl font-bold tracking-tight" style={{ color: 'hsl(var(--primary))' }}>
                 SagePostAI
               </h1>
@@ -167,7 +163,7 @@ export default function Home() {
         </main>
         <Toaster />
         <footer className="text-center p-4 mt-12 text-slate-500 text-sm">
-          Powered by Genkit and Next.js. Built with Firebase Studio.
+          Powered by Gemini. Built By EZ Team.
         </footer>
       </motion.div>
     </>
