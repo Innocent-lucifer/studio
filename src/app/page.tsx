@@ -98,7 +98,7 @@ export default function Home() {
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.7, ease: "easeOut" }}
               >
-                <AppLogo className="h-10 w-10 text-primary" /> {/* Replaced Icons.feather with AppLogo */}
+                <AppLogo className="h-9 w-9 text-primary" /> {/* Changed h-10 w-10 to h-9 w-9 */}
               </motion.div>
               <h1 className="text-4xl font-bold tracking-tight" style={{ color: 'hsl(var(--primary))' }}>
                 SagePostAI
