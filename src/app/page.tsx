@@ -69,18 +69,19 @@ export default function Home() {
     },
   };
 
-  if (authLoading) {
-    return (
-      <div className="flex flex-col justify-center items-center min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white">
-        <Icons.loader className="h-16 w-16 animate-spin text-primary" />
-        <p className="mt-4 text-xl">Loading SagePostAI...</p>
-      </div>
-    );
-  }
+  // Temporarily disabling auth checks
+  // if (authLoading) {
+  //   return (
+  //     <div className="flex flex-col justify-center items-center min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white">
+  //       <Icons.loader className="h-16 w-16 animate-spin text-primary" />
+  //       <p className="mt-4 text-xl">Loading SagePostAI...</p>
+  //     </div>
+  //   );
+  // }
 
-  if (!user) {
-    return <LoginSignUpForm />;
-  }
+  // if (!user) {
+  //   return <LoginSignUpForm />;
+  // }
 
   return (
     <>
