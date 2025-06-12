@@ -97,8 +97,15 @@ export default function Home() {
                 initial={{ scale: 0.5, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.7, ease: "easeOut" }}
+                whileHover={{
+                  rotate: [0, -8, 8, -8, 8, 0], // Tilt sequence: normal, left, right, left, right, normal
+                  transition: { 
+                    duration: 0.4, // Duration for the entire tilt sequence
+                    ease: "easeInOut" 
+                  }
+                }}
               >
-                <AppLogo className="h-16 w-16 text-primary" /> {/* Changed h-9 w-9 to h-16 w-16 */}
+                <AppLogo className="h-16 w-16 text-primary" />
               </motion.div>
               <h1 className="text-4xl font-bold tracking-tight" style={{ color: 'hsl(var(--primary))' }}>
                 SagePostAI
