@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -25,13 +26,19 @@ interface PostSelectionProps {
   twitterPosts: string[];
   linkedinPosts: string[];
   topic: string;
+  onUpdatePost: (type: 'twitter' | 'linkedin', index: number, newText: string) => void;
 }
 
-export const PostSelection: React.FC<PostSelectionProps> = ({ twitterPosts, linkedinPosts, topic }) => {
+export const PostSelection: React.FC<PostSelectionProps> = ({ 
+  twitterPosts, 
+  linkedinPosts, 
+  topic, 
+  onUpdatePost 
+}) => {
   const [selectedTwitterPosts, setSelectedTwitterPosts] = useState<string[]>([]);
   const [selectedLinkedInPosts, setSelectedLinkedInPosts] = useState<string[]>([]);
   
-  const [editingPost, setEditingPost] = useState<{type: 'twitter' | 'linkedin', index: number, originalText: string, currentText: string} | null>(null);
+  const [editingPost, setEditingPost] = useState<{type: 'twitter' | 'linkedin', index: number, originalTextWhileEditing: string, currentText: string} | null>(null);
   const [isAiEditingModalOpen, setIsAiEditingModalOpen] = useState(false);
   const [aiEditInstruction, setAiEditInstruction] = useState("");
   const [isAiSubmitting, setIsAiSubmitting] = useState(false);
@@ -50,21 +57,19 @@ export const PostSelection: React.FC<PostSelectionProps> = ({ twitterPosts, link
     }
   };
 
-  const handleEditPost = (post: string, index: number, type: 'twitter' | 'linkedin') => {
-    setEditingPost({ type, index, originalText: post, currentText: post });
+  const handleEditPost = (postText: string, index: number, type: 'twitter' | 'linkedin') => {
+    // When opening edit, `postText` is the current text from the list (twitterPosts[index] or linkedinPosts[index])
+    setEditingPost({ type, index, originalTextWhileEditing: postText, currentText: postText });
   };
+  
 
   const handleSaveEdit = () => {
     if (editingPost) {
-      // This is a placeholder for now. In a real app, you'd update the source array.
-      // For this component's scope, we'll just display the edited text.
-      // We'd need to pass callback props to update Home.tsx state if actual post modification is needed.
+      onUpdatePost(editingPost.type, editingPost.index, editingPost.currentText);
       toast({
-        title: "Post Updated (Locally)",
-        description: "Your changes have been updated in this view.",
+        title: "Post Updated",
+        description: "Your changes have been saved to the main list.",
       });
-      // To actually update the list, you'd need to find the post by index and type
-      // and update it in the parent component's state (twitterPosts/linkedinPosts)
       setEditingPost(null);
     }
   };
@@ -114,15 +119,16 @@ export const PostSelection: React.FC<PostSelectionProps> = ({ twitterPosts, link
     setIsAiSubmitting(true);
     try {
       const result = await generateEditedPost({
-        originalPost: editingPost.currentText,
+        originalPost: editingPost.currentText, // Use current text in editor for AI edit
         editInstruction: aiEditInstruction,
-        topic: topic, // Pass topic for context
+        topic: topic, 
         platform: editingPost.type,
       });
+      // Update only the currentText in the dialog, Save will commit it to parent
       setEditingPost(prev => prev ? { ...prev, currentText: result.editedPost } : null);
       toast({
         title: "AI Edit Applied",
-        description: "The AI has revised the post based on your instructions.",
+        description: "The AI has revised the post. Click 'Save Changes' to update the main list.",
       });
       setIsAiEditingModalOpen(false);
       setAiEditInstruction("");
@@ -213,7 +219,7 @@ export const PostSelection: React.FC<PostSelectionProps> = ({ twitterPosts, link
               <DialogHeader>
                 <DialogTitle className="text-primary">Edit Post ({editingPost.type})</DialogTitle>
                 <DialogDescription className="text-slate-400">
-                  Refine your post content here.
+                  Refine your post content here. Use AI changes or edit manually.
                 </DialogDescription>
               </DialogHeader>
               <motion.div
@@ -280,7 +286,7 @@ export const PostSelection: React.FC<PostSelectionProps> = ({ twitterPosts, link
           <Icons.copy className="mr-2 h-5 w-5" /> Copy Selected Posts
         </Button>
         <Button 
-          onClick={() => { /* Placeholder for future scheduling functionality */
+          onClick={() => { 
             toast({ title: "Feature Coming Soon", description: "Post scheduling will be available in a future update."});
           }} 
           variant="outline" 
@@ -289,7 +295,7 @@ export const PostSelection: React.FC<PostSelectionProps> = ({ twitterPosts, link
           <Icons.calendar className="mr-2 h-5 w-5" /> Schedule Selected
         </Button>
          <Button 
-          onClick={() => { /* Placeholder for future instant post functionality */
+          onClick={() => { 
              toast({ title: "Feature Coming Soon", description: "Instant posting will be available after account integration."});
           }} 
           variant="outline" 

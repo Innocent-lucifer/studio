@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -10,27 +11,37 @@ import { Icons } from "./icons";
 interface TwitterPostGeneratorProps {
   topic: string;
   setTwitterPosts: (posts: string[]) => void;
+  displayGeneratedPostsInCard: boolean;
+  setParentPostsEmpty: () => void;
 }
 
-export const TwitterPostGenerator: React.FC<TwitterPostGeneratorProps> = ({ topic, setTwitterPosts }) => {
+export const TwitterPostGenerator: React.FC<TwitterPostGeneratorProps> = ({ 
+  topic, 
+  setTwitterPosts, 
+  displayGeneratedPostsInCard,
+  setParentPostsEmpty 
+}) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [generatedPosts, setGeneratedPosts] = useState<string[]>([]);
+  const [generatedPostsInternal, setGeneratedPostsInternal] = useState<string[]>([]); // Internal state for this component
   const { toast } = useToast();
 
   useEffect(() => {
+    // This effect triggers generation when the topic changes.
+    // It also clears posts if the topic becomes empty (e.g. new research started)
     const generate = async () => {
       if (!topic) {
-        setGeneratedPosts([]);
-        setTwitterPosts([]);
+        setGeneratedPostsInternal([]);
+        setTwitterPosts([]); // Update parent state
         return;
       }
 
       setIsLoading(true);
-      setGeneratedPosts([]); // Clear previous posts
+      setGeneratedPostsInternal([]); // Clear previous internal posts
+      setTwitterPosts([]); // Clear parent posts immediately
       try {
         const result = await generateTwitterPosts({ topic: topic, numPosts: 3 });
-        setGeneratedPosts(result.posts);
-        setTwitterPosts(result.posts);
+        setGeneratedPostsInternal(result.posts);
+        setTwitterPosts(result.posts); // Update parent state with new posts
       } catch (error: any) {
         console.error("Error generating Twitter posts:", error);
         toast({
@@ -38,22 +49,24 @@ export const TwitterPostGenerator: React.FC<TwitterPostGeneratorProps> = ({ topi
           title: "Twitter Post Generation Failed",
           description: error.message || "Failed to generate Twitter posts. Please try again.",
         });
-        setGeneratedPosts([]);
-        setTwitterPosts([]);
+        setGeneratedPostsInternal([]);
+        setTwitterPosts([]); // Ensure parent is also empty on error
       } finally {
         setIsLoading(false);
       }
     };
 
     generate();
-  }, [topic, setTwitterPosts, toast]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [topic, setTwitterPosts]); // Removed toast from dependencies as it's stable
 
   const handleRegenerate = async () => {
      setIsLoading(true);
-     setGeneratedPosts([]);
+     setGeneratedPostsInternal([]);
+     setParentPostsEmpty(); // Clear parent state (twitterPosts in page.tsx) before regenerating
      try {
         const result = await generateTwitterPosts({ topic: topic, numPosts: 3 });
-        setGeneratedPosts(result.posts);
+        setGeneratedPostsInternal(result.posts);
         setTwitterPosts(result.posts);
       } catch (error: any) {
         console.error("Error re-generating Twitter posts:", error);
@@ -62,12 +75,15 @@ export const TwitterPostGenerator: React.FC<TwitterPostGeneratorProps> = ({ topi
           title: "Twitter Post Re-generation Failed",
           description: error.message || "Failed to re-generate Twitter posts. Please try again.",
         });
-        setGeneratedPosts([]);
+        setGeneratedPostsInternal([]);
         setTwitterPosts([]);
       } finally {
         setIsLoading(false);
       }
   };
+  
+  const showPostsInThisCard = displayGeneratedPostsInCard && generatedPostsInternal.length > 0;
+  const showConfirmationMessage = !displayGeneratedPostsInCard && generatedPostsInternal.length > 0 && !isLoading;
 
   return (
     <motion.div 
@@ -83,9 +99,9 @@ export const TwitterPostGenerator: React.FC<TwitterPostGeneratorProps> = ({ topi
         </div>
       )}
 
-      {!isLoading && generatedPosts.length > 0 && (
+      {!isLoading && showPostsInThisCard && (
         <div className="space-y-3">
-          {generatedPosts.map((post, index) => (
+          {generatedPostsInternal.map((post, index) => (
             <motion.div 
               key={index} 
               className="p-4 bg-slate-700/70 rounded-lg shadow text-slate-200 text-sm"
@@ -98,6 +114,13 @@ export const TwitterPostGenerator: React.FC<TwitterPostGeneratorProps> = ({ topi
           ))}
         </div>
       )}
+      
+      {!isLoading && showConfirmationMessage && (
+        <div className="flex items-center justify-center p-3 rounded-md bg-slate-700/50 text-slate-300 text-sm">
+          <Icons.checkCircle className="h-5 w-5 text-green-400 mr-2" />
+          Twitter posts generated. Review below.
+        </div>
+      )}
 
       {!isLoading && topic && (
          <Button 
@@ -106,7 +129,7 @@ export const TwitterPostGenerator: React.FC<TwitterPostGeneratorProps> = ({ topi
             className="w-full bg-primary/80 hover:bg-primary text-primary-foreground transition-colors duration-200 flex items-center justify-center py-2.5"
           >
           <Icons.refreshCw className="mr-2 h-4 w-4" /> 
-          {generatedPosts.length > 0 ? "Regenerate Twitter Posts" : "Generate Twitter Posts"}
+          {generatedPostsInternal.length > 0 ? "Regenerate Twitter Posts" : "Generate Twitter Posts"}
         </Button>
       )}
 

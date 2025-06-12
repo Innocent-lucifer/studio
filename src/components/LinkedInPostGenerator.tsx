@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -10,26 +11,34 @@ import { Icons } from "./icons";
 interface LinkedInPostGeneratorProps {
   topic: string;
   setLinkedinPosts: (posts: string[]) => void;
+  displayGeneratedPostsInCard: boolean;
+  setParentPostsEmpty: () => void;
 }
 
-export const LinkedInPostGenerator: React.FC<LinkedInPostGeneratorProps> = ({ topic, setLinkedinPosts }) => {
+export const LinkedInPostGenerator: React.FC<LinkedInPostGeneratorProps> = ({ 
+  topic, 
+  setLinkedinPosts, 
+  displayGeneratedPostsInCard,
+  setParentPostsEmpty
+}) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [generatedPosts, setGeneratedPosts] = useState<string[]>([]);
+  const [generatedPostsInternal, setGeneratedPostsInternal] = useState<string[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
     const generate = async () => {
       if (!topic) {
-        setGeneratedPosts([]);
+        setGeneratedPostsInternal([]);
         setLinkedinPosts([]);
         return;
       }
 
       setIsLoading(true);
-      setGeneratedPosts([]); // Clear previous posts
+      setGeneratedPostsInternal([]);
+      setLinkedinPosts([]); 
       try {
         const result = await generateLinkedInPosts({ topic: topic, numPosts: 3 });
-        setGeneratedPosts(result.posts);
+        setGeneratedPostsInternal(result.posts);
         setLinkedinPosts(result.posts);
       } catch (error: any) {
         console.error("Error generating LinkedIn posts:", error);
@@ -38,7 +47,7 @@ export const LinkedInPostGenerator: React.FC<LinkedInPostGeneratorProps> = ({ to
           title: "LinkedIn Post Generation Failed",
           description: error.message || "Failed to generate LinkedIn posts. Please try again.",
         });
-        setGeneratedPosts([]);
+        setGeneratedPostsInternal([]);
         setLinkedinPosts([]);
       } finally {
         setIsLoading(false);
@@ -46,14 +55,16 @@ export const LinkedInPostGenerator: React.FC<LinkedInPostGeneratorProps> = ({ to
     };
 
     generate();
-  }, [topic, setLinkedinPosts, toast]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [topic, setLinkedinPosts]);
 
   const handleRegenerate = async () => {
     setIsLoading(true);
-    setGeneratedPosts([]);
+    setGeneratedPostsInternal([]);
+    setParentPostsEmpty(); 
      try {
         const result = await generateLinkedInPosts({ topic: topic, numPosts: 3 });
-        setGeneratedPosts(result.posts);
+        setGeneratedPostsInternal(result.posts);
         setLinkedinPosts(result.posts);
       } catch (error: any) {
         console.error("Error re-generating LinkedIn posts:", error);
@@ -62,12 +73,15 @@ export const LinkedInPostGenerator: React.FC<LinkedInPostGeneratorProps> = ({ to
           title: "LinkedIn Post Re-generation Failed",
           description: error.message || "Failed to re-generate LinkedIn posts. Please try again.",
         });
-         setGeneratedPosts([]);
+         setGeneratedPostsInternal([]);
         setLinkedinPosts([]);
       } finally {
         setIsLoading(false);
       }
   };
+
+  const showPostsInThisCard = displayGeneratedPostsInCard && generatedPostsInternal.length > 0;
+  const showConfirmationMessage = !displayGeneratedPostsInCard && generatedPostsInternal.length > 0 && !isLoading;
 
   return (
     <motion.div 
@@ -83,9 +97,9 @@ export const LinkedInPostGenerator: React.FC<LinkedInPostGeneratorProps> = ({ to
         </div>
       )}
 
-      {!isLoading && generatedPosts.length > 0 && (
+      {!isLoading && showPostsInThisCard && (
         <div className="space-y-3">
-          {generatedPosts.map((post, index) => (
+          {generatedPostsInternal.map((post, index) => (
             <motion.div 
               key={index} 
               className="p-4 bg-slate-700/70 rounded-lg shadow text-slate-200 text-sm"
@@ -98,6 +112,13 @@ export const LinkedInPostGenerator: React.FC<LinkedInPostGeneratorProps> = ({ to
           ))}
         </div>
       )}
+
+      {!isLoading && showConfirmationMessage && (
+        <div className="flex items-center justify-center p-3 rounded-md bg-slate-700/50 text-slate-300 text-sm">
+          <Icons.checkCircle className="h-5 w-5 text-green-400 mr-2" />
+          LinkedIn posts generated. Review below.
+        </div>
+      )}
       
       {!isLoading && topic && (
          <Button 
@@ -106,7 +127,7 @@ export const LinkedInPostGenerator: React.FC<LinkedInPostGeneratorProps> = ({ to
             className="w-full bg-primary/80 hover:bg-primary text-primary-foreground transition-colors duration-200 flex items-center justify-center py-2.5"
           >
           <Icons.refreshCw className="mr-2 h-4 w-4" /> 
-          {generatedPosts.length > 0 ? "Regenerate LinkedIn Posts" : "Generate LinkedIn Posts"}
+          {generatedPostsInternal.length > 0 ? "Regenerate LinkedIn Posts" : "Generate LinkedIn Posts"}
         </Button>
       )}
 

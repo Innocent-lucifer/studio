@@ -1,24 +1,54 @@
+
 "use client";
 
 import { TopicResearch } from "@/components/TopicResearch";
 import { TwitterPostGenerator } from "@/components/TwitterPostGenerator";
 import { LinkedInPostGenerator } from "@/components/LinkedInPostGenerator";
 import { PostSelection } from "@/components/PostSelection";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Toaster } from "@/components/ui/toaster";
 import { HamburgerMenu } from "@/components/HamburgerMenu";
 import { Icons } from "@/components/icons";
-import { useToast } from "@/hooks/use-toast"; // Added for potential direct toasts
+import { useAuth } from "@/context/AuthContext";
+import { LoginSignUpForm } from "@/components/LoginSignUpForm";
 
 export default function Home() {
+  const { user, loading: authLoading } = useAuth();
+
   const [topic, setTopic] = useState<string>("");
   const [researchedContent, setResearchedContent] = useState<string>("");
   const [twitterPosts, setTwitterPosts] = useState<string[]>([]);
   const [linkedinPosts, setLinkedinPosts] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast(); // Initialize toast
+  const [researchIsLoading, setResearchIsLoading] = useState(false); // Renamed from isLoading to avoid conflict
+
+  const [displayTwitterInCard, setDisplayTwitterInCard] = useState(true);
+  const [displayLinkedInInCard, setDisplayLinkedInInCard] = useState(true);
+
+  const showPostSelectionCard = twitterPosts.length > 0 && linkedinPosts.length > 0;
+
+  useEffect(() => {
+    // If PostSelection card is shown, hide posts in individual generator cards
+    // unless a specific generator's posts are empty (e.g., during regeneration)
+    setDisplayTwitterInCard(!(showPostSelectionCard && twitterPosts.length > 0));
+    setDisplayLinkedInInCard(!(showPostSelectionCard && linkedinPosts.length > 0));
+
+    // If topic changes, reset display flags for generators
+    if (topic && (!researchedContent || researchIsLoading)) {
+        setDisplayTwitterInCard(true);
+        setDisplayLinkedInInCard(true);
+    }
+  }, [showPostSelectionCard, twitterPosts, linkedinPosts, topic, researchedContent, researchIsLoading]);
+
+
+  const handlePostUpdate = (type: 'twitter' | 'linkedin', index: number, newText: string) => {
+    if (type === 'twitter') {
+      setTwitterPosts(prev => prev.map((post, i) => i === index ? newText : post));
+    } else {
+      setLinkedinPosts(prev => prev.map((post, i) => i === index ? newText : post));
+    }
+  };
+
 
   const pageVariants = {
     initial: { opacity: 0 },
@@ -38,6 +68,19 @@ export default function Home() {
       },
     },
   };
+
+  if (authLoading) {
+    return (
+      <div className="flex flex-col justify-center items-center min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white">
+        <Icons.loader className="h-16 w-16 animate-spin text-primary" />
+        <p className="mt-4 text-xl">Loading SagePostAI...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <LoginSignUpForm />;
+  }
 
   return (
     <>
@@ -79,13 +122,13 @@ export default function Home() {
                   <TopicResearch
                     setTopic={setTopic}
                     setResearchedContent={setResearchedContent}
-                    setIsLoading={setIsLoading}
+                    setIsLoading={setResearchIsLoading} // Pass research loading state
                   />
                 </CardContent>
               </Card>
             </motion.div>
 
-            {isLoading && (
+            {researchIsLoading && ( // Use research specific loading state
               <motion.div 
                 className="flex flex-col justify-center items-center my-8 p-6 bg-slate-800/50 border border-slate-700 rounded-xl shadow-lg"
                 initial={{ opacity: 0, scale: 0.9 }}
@@ -98,7 +141,7 @@ export default function Home() {
               </motion.div>
             )}
 
-            {!isLoading && topic && researchedContent && (
+            {!researchIsLoading && topic && researchedContent && (
               <motion.div 
                 className="grid md:grid-cols-2 gap-8"
                 variants={staggerChildren}
@@ -113,9 +156,10 @@ export default function Home() {
                     </CardHeader>
                     <CardContent>
                       <TwitterPostGenerator
-                        topic={researchedContent || topic} // Prioritize researched content
+                        topic={researchedContent || topic}
                         setTwitterPosts={setTwitterPosts}
-                        // setIsLoading is managed globally for the research phase. Generators handle their own button states.
+                        displayGeneratedPostsInCard={displayTwitterInCard}
+                        setParentPostsEmpty={() => setTwitterPosts([])}
                       />
                     </CardContent>
                   </Card>
@@ -131,8 +175,10 @@ export default function Home() {
                     </CardHeader>
                     <CardContent>
                       <LinkedInPostGenerator
-                        topic={researchedContent || topic} // Prioritize researched content
+                        topic={researchedContent || topic}
                         setLinkedinPosts={setLinkedinPosts}
+                        displayGeneratedPostsInCard={displayLinkedInInCard}
+                        setParentPostsEmpty={() => setLinkedinPosts([])}
                       />
                     </CardContent>
                   </Card>
@@ -140,7 +186,7 @@ export default function Home() {
               </motion.div>
             )}
 
-            {!isLoading && twitterPosts.length > 0 && linkedinPosts.length > 0 && (
+            {!researchIsLoading && showPostSelectionCard && (
               <motion.div variants={cardVariants} className="mt-8">
                 <Card className="bg-slate-800/50 border-slate-700 shadow-2xl hover:shadow-primary/30 transition-shadow duration-300 rounded-xl">
                   <CardHeader>
@@ -153,7 +199,8 @@ export default function Home() {
                     <PostSelection
                       twitterPosts={twitterPosts}
                       linkedinPosts={linkedinPosts}
-                      topic={topic} // Pass original topic for context if needed
+                      topic={topic} 
+                      onUpdatePost={handlePostUpdate}
                     />
                   </CardContent>
                 </Card>
@@ -161,7 +208,7 @@ export default function Home() {
             )}
           </motion.div>
         </main>
-        <Toaster />
+        {/* Toaster moved to RootLayout to be globally available for AuthContext */}
         <footer className="text-center p-4 mt-12 text-slate-500 text-sm">
           Powered by Gemini. Built By EZ Team.
         </footer>
