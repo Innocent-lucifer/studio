@@ -2,8 +2,8 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { User, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, AuthError } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { User, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, AuthError, signInWithPopup } from 'firebase/auth'; // Added signInWithPopup
+import { auth, googleProvider } from '@/lib/firebase'; // Added googleProvider
 import { useToast } from "@/hooks/use-toast";
 
 interface AuthContextType {
@@ -11,6 +11,7 @@ interface AuthContextType {
   loading: boolean;
   signUp: (email: string, pass: string) => Promise<User | AuthError>;
   logIn: (email: string, pass: string) => Promise<User | AuthError>;
+  signInWithGoogle: () => Promise<User | AuthError>; // Added signInWithGoogle
   logOut: () => Promise<void>;
 }
 
@@ -63,6 +64,33 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  const signInWithGoogle = async (): Promise<User | AuthError> => {
+    setLoading(true);
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      setUser(result.user);
+      toast({ title: "Google Sign-In Successful", description: "Welcome!" });
+      return result.user;
+    } catch (error) {
+      const authError = error as AuthError;
+      console.error("Google sign-in error:", authError);
+      // Common Google Sign-In errors:
+      // auth/popup-closed-by-user
+      // auth/cancelled-popup-request
+      // auth/popup-blocked
+      if (authError.code === 'auth/popup-closed-by-user' || authError.code === 'auth/cancelled-popup-request') {
+        toast({ variant: "destructive", title: "Google Sign-In Cancelled", description: "You closed the Google sign-in window." });
+      } else if (authError.code === 'auth/popup-blocked') {
+         toast({ variant: "destructive", title: "Google Sign-In Blocked", description: "Your browser blocked the Google sign-in popup. Please enable popups for this site." });
+      } else {
+        toast({ variant: "destructive", title: "Google Sign-In Failed", description: authError.message });
+      }
+      return authError;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const logOut = async () => {
     setLoading(true);
     try {
@@ -79,7 +107,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signUp, logIn, logOut }}>
+    <AuthContext.Provider value={{ user, loading, signUp, logIn, signInWithGoogle, logOut }}>
       {children}
     </AuthContext.Provider>
   );
