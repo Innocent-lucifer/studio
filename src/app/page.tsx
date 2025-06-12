@@ -10,17 +10,18 @@ import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { HamburgerMenu } from "@/components/HamburgerMenu";
 import { Icons } from "@/components/icons";
-import { useAuth } from "@/context/AuthContext";
-import { LoginSignUpForm } from "@/components/LoginSignUpForm";
+import { AppLogo } from "@/components/AppLogo"; // Import the new AppLogo component
+// import { useAuth } from "@/context/AuthContext";
+// import { LoginSignUpForm } from "@/components/LoginSignUpForm";
 
 export default function Home() {
-  const { user, loading: authLoading } = useAuth();
+  // const { user, loading: authLoading } = useAuth();
 
   const [topic, setTopic] = useState<string>("");
   const [researchedContent, setResearchedContent] = useState<string>("");
   const [twitterPosts, setTwitterPosts] = useState<string[]>([]);
   const [linkedinPosts, setLinkedinPosts] = useState<string[]>([]);
-  const [researchIsLoading, setResearchIsLoading] = useState(false); // Renamed from isLoading to avoid conflict
+  const [researchIsLoading, setResearchIsLoading] = useState(false); 
 
   const [displayTwitterInCard, setDisplayTwitterInCard] = useState(true);
   const [displayLinkedInInCard, setDisplayLinkedInInCard] = useState(true);
@@ -28,12 +29,9 @@ export default function Home() {
   const showPostSelectionCard = twitterPosts.length > 0 && linkedinPosts.length > 0;
 
   useEffect(() => {
-    // If PostSelection card is shown, hide posts in individual generator cards
-    // unless a specific generator's posts are empty (e.g., during regeneration)
     setDisplayTwitterInCard(!(showPostSelectionCard && twitterPosts.length > 0));
     setDisplayLinkedInInCard(!(showPostSelectionCard && linkedinPosts.length > 0));
 
-    // If topic changes, reset display flags for generators
     if (topic && (!researchedContent || researchIsLoading)) {
         setDisplayTwitterInCard(true);
         setDisplayLinkedInInCard(true);
@@ -69,7 +67,6 @@ export default function Home() {
     },
   };
 
-  // Temporarily disabling auth checks
   // if (authLoading) {
   //   return (
   //     <div className="flex flex-col justify-center items-center min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white">
@@ -101,7 +98,7 @@ export default function Home() {
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.7, ease: "easeOut" }}
               >
-                <Icons.feather className="h-10 w-10 text-primary" />
+                <AppLogo className="h-10 w-10 text-primary" /> {/* Replaced Icons.feather with AppLogo */}
               </motion.div>
               <h1 className="text-4xl font-bold tracking-tight" style={{ color: 'hsl(var(--primary))' }}>
                 SagePostAI
@@ -123,13 +120,13 @@ export default function Home() {
                   <TopicResearch
                     setTopic={setTopic}
                     setResearchedContent={setResearchedContent}
-                    setIsLoading={setResearchIsLoading} // Pass research loading state
+                    setIsLoading={setResearchIsLoading} 
                   />
                 </CardContent>
               </Card>
             </motion.div>
 
-            {researchIsLoading && ( // Use research specific loading state
+            {researchIsLoading && ( 
               <motion.div 
                 className="flex flex-col justify-center items-center my-8 p-6 bg-slate-800/50 border border-slate-700 rounded-xl shadow-lg"
                 initial={{ opacity: 0, scale: 0.9 }}
@@ -209,7 +206,6 @@ export default function Home() {
             )}
           </motion.div>
         </main>
-        {/* Toaster moved to RootLayout to be globally available for AuthContext */}
         <footer className="text-center p-4 mt-12 text-slate-500 text-sm">
           Powered by Gemini. Built By EZ Team.
         </footer>
@@ -217,3 +213,5 @@ export default function Home() {
     </>
   );
 }
+
+    
