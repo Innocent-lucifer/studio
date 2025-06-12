@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Generates multiple Twitter posts based on a researched topic with varying tones and angles.
@@ -44,13 +45,26 @@ const generateTwitterPostsPrompt = ai.definePrompt({
       ).describe('The list of generated Twitter posts.')
     }),
   },
-  prompt: `You are a social media expert. 🐦 Generate {{numPosts}} Twitter posts about the following topic, with varying tones, angles, and incorporating emojis to make them more engaging and human-like:
+  prompt: `You are a social media expert and a savvy Twitter user. 🐦
+Your task is to generate {{numPosts}} Twitter posts about the following topic.
+The posts should be:
+- Cool and punchy
+- Use an open, conversational, and human-like tone
+- Engaging, shareable, and attention-grabbing
+- Witty and concise
+- Feel free to use relevant slang or a bit of humor if appropriate for the topic, but keep it generally respectful.
+- Incorporate emojis to make them more engaging.
 
 Topic: {{{topic}}}
 
 Researched Information: {{{researchedInformation}}}
 
+Craft your tweets to sound like they're coming from a real person, not a corporate bot.
+
 Posts:`,
+  promptOptions: {
+    temperature: 0.8, // Slightly higher temperature for more creative/human-like tweets
+  },
 });
 
 const generateTwitterPostsFlow = ai.defineFlow<
@@ -67,3 +81,4 @@ async input => {
   return output!;
 }
 );
+
