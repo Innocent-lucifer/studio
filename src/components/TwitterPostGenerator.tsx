@@ -10,6 +10,7 @@ import { Icons } from "./icons";
 
 interface TwitterPostGeneratorProps {
   topic: string;
+  userId: string;
   setTwitterPosts: (posts: string[]) => void;
   displayGeneratedPostsInCard: boolean;
   setParentPostsEmpty: () => void;
@@ -17,31 +18,36 @@ interface TwitterPostGeneratorProps {
 
 export const TwitterPostGenerator: React.FC<TwitterPostGeneratorProps> = ({ 
   topic, 
+  userId,
   setTwitterPosts, 
   displayGeneratedPostsInCard,
   setParentPostsEmpty 
 }) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [generatedPostsInternal, setGeneratedPostsInternal] = useState<string[]>([]); // Internal state for this component
+  const [generatedPostsInternal, setGeneratedPostsInternal] = useState<string[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
-    // This effect triggers generation when the topic changes.
-    // It also clears posts if the topic becomes empty (e.g. new research started)
     const generate = async () => {
       if (!topic) {
         setGeneratedPostsInternal([]);
-        setTwitterPosts([]); // Update parent state
+        setTwitterPosts([]); 
         return;
       }
 
       setIsLoading(true);
-      setGeneratedPostsInternal([]); // Clear previous internal posts
-      setTwitterPosts([]); // Clear parent posts immediately
+      setGeneratedPostsInternal([]); 
+      setTwitterPosts([]); 
       try {
-        const result = await generateTwitterPosts({ topic: topic, numPosts: 3 });
-        setGeneratedPostsInternal(result.posts);
-        setTwitterPosts(result.posts); // Update parent state with new posts
+        const result = await generateTwitterPosts({ topic: topic, numPosts: 3, userId });
+        if (result.error) {
+           toast({ variant: "destructive", title: "Generation Error", description: result.error });
+           setGeneratedPostsInternal([]);
+           setTwitterPosts([]);
+        } else {
+          setGeneratedPostsInternal(result.posts || []);
+          setTwitterPosts(result.posts || []);
+        }
       } catch (error: any) {
         console.error("Error generating Twitter posts:", error);
         toast({
@@ -50,7 +56,7 @@ export const TwitterPostGenerator: React.FC<TwitterPostGeneratorProps> = ({
           description: error.message || "Failed to generate Twitter posts. Please try again.",
         });
         setGeneratedPostsInternal([]);
-        setTwitterPosts([]); // Ensure parent is also empty on error
+        setTwitterPosts([]); 
       } finally {
         setIsLoading(false);
       }
@@ -58,16 +64,22 @@ export const TwitterPostGenerator: React.FC<TwitterPostGeneratorProps> = ({
 
     generate();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [topic, setTwitterPosts]); // Removed toast from dependencies as it's stable
+  }, [topic, userId]); 
 
   const handleRegenerate = async () => {
      setIsLoading(true);
      setGeneratedPostsInternal([]);
-     setParentPostsEmpty(); // Clear parent state (twitterPosts in page.tsx) before regenerating
+     setParentPostsEmpty(); 
      try {
-        const result = await generateTwitterPosts({ topic: topic, numPosts: 3 });
-        setGeneratedPostsInternal(result.posts);
-        setTwitterPosts(result.posts);
+        const result = await generateTwitterPosts({ topic: topic, numPosts: 3, userId });
+        if (result.error) {
+           toast({ variant: "destructive", title: "Generation Error", description: result.error });
+           setGeneratedPostsInternal([]);
+           setTwitterPosts([]);
+        } else {
+          setGeneratedPostsInternal(result.posts || []);
+          setTwitterPosts(result.posts || []);
+        }
       } catch (error: any) {
         console.error("Error re-generating Twitter posts:", error);
         toast({

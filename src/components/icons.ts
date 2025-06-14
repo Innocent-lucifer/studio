@@ -1,20 +1,22 @@
 
 import {
-  ArrowRight, Check, ChevronsUpDown, Circle, Copy, CreditCard, Edit, ExternalLink,
-  File, HelpCircle, Home, Loader2, LogIn, LogOut, Mail, Menu, MessageSquare, Moon,
-  Plus, PlusCircle, Search, Server, Settings, Share2, Shield, Sun, Trash, User,
-  UserPlus, X, Workflow, Twitter, Linkedin, Save, Sparkles, Wand2, CalendarDays, Send, RefreshCw, Feather,
-  CheckCircle, Lock // Added CheckCircle and Lock
+  ArrowLeft, ArrowRight, BarChartBig, Check, ChevronsUpDown, Circle, Copy, CreditCard, Edit, ExternalLink,
+  File, HelpCircle, Home, Lightbulb, ListChecks, Loader2, LogIn, LogOut, Mail, Menu, MessageSquare, Moon,
+  Plus, PlusCircle, RefreshCw, Repeat, Save, Search, Server, Settings, Share2, Shield, Sun, Trash, User,
+  UserPlus, Wand2, Workflow, Twitter, Linkedin, Sparkles, CalendarDays, Send, Feather,
+  CheckCircle, Lock, X // Added X here
 } from 'lucide-react';
 
 const Icons = {
+  arrowLeft: ArrowLeft,
   arrowRight: ArrowRight,
+  barChartBig: BarChartBig,
   check: Check,
-  checkCircle: CheckCircle, // Added CheckCircle
-  chevronDown: ChevronsUpDown, // For select dropdowns or similar
+  checkCircle: CheckCircle,
+  chevronDown: ChevronsUpDown,
   circle: Circle,
   workflow: Workflow,
-  close: X,
+  close: X, // Now X is defined
   copy: Copy,
   creditCard: CreditCard,
   edit: Edit,
@@ -24,16 +26,19 @@ const Icons = {
   help: HelpCircle,
   home: Home,
   light: Sun,
-  loader: Loader2, // General purpose loader
+  lightbulb: Lightbulb,
+  listChecks: ListChecks,
+  loader: Loader2,
   logIn: LogIn,
   logOut: LogOut,
-  lock: Lock, // Added Lock
+  lock: Lock,
   mail: Mail,
   menu: Menu,
   messageSquare: MessageSquare,
   plus: Plus,
   plusCircle: PlusCircle,
   refreshCw: RefreshCw,
+  repeat: Repeat,
   save: Save,
   search: Search,
   send: Send,
@@ -42,7 +47,7 @@ const Icons = {
   share: Share2,
   shield: Shield,
   sparkles: Sparkles,
-  spinner: Loader2, // Alias for loader
+  spinner: Loader2,
   trash: Trash,
   twitter: Twitter,
   user: User,

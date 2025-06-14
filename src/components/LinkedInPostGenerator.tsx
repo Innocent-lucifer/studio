@@ -10,6 +10,7 @@ import { Icons } from "./icons";
 
 interface LinkedInPostGeneratorProps {
   topic: string;
+  userId: string;
   setLinkedinPosts: (posts: string[]) => void;
   displayGeneratedPostsInCard: boolean;
   setParentPostsEmpty: () => void;
@@ -17,6 +18,7 @@ interface LinkedInPostGeneratorProps {
 
 export const LinkedInPostGenerator: React.FC<LinkedInPostGeneratorProps> = ({ 
   topic, 
+  userId,
   setLinkedinPosts, 
   displayGeneratedPostsInCard,
   setParentPostsEmpty
@@ -37,9 +39,15 @@ export const LinkedInPostGenerator: React.FC<LinkedInPostGeneratorProps> = ({
       setGeneratedPostsInternal([]);
       setLinkedinPosts([]); 
       try {
-        const result = await generateLinkedInPosts({ topic: topic, numPosts: 3 });
-        setGeneratedPostsInternal(result.posts);
-        setLinkedinPosts(result.posts);
+        const result = await generateLinkedInPosts({ topic: topic, numPosts: 3, userId });
+        if (result.error) {
+           toast({ variant: "destructive", title: "Generation Error", description: result.error });
+           setGeneratedPostsInternal([]);
+           setLinkedinPosts([]);
+        } else {
+          setGeneratedPostsInternal(result.posts || []);
+          setLinkedinPosts(result.posts || []);
+        }
       } catch (error: any) {
         console.error("Error generating LinkedIn posts:", error);
         toast({
@@ -56,16 +64,22 @@ export const LinkedInPostGenerator: React.FC<LinkedInPostGeneratorProps> = ({
 
     generate();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [topic, setLinkedinPosts]);
+  }, [topic, userId]);
 
   const handleRegenerate = async () => {
     setIsLoading(true);
     setGeneratedPostsInternal([]);
     setParentPostsEmpty(); 
      try {
-        const result = await generateLinkedInPosts({ topic: topic, numPosts: 3 });
-        setGeneratedPostsInternal(result.posts);
-        setLinkedinPosts(result.posts);
+        const result = await generateLinkedInPosts({ topic: topic, numPosts: 3, userId });
+        if (result.error) {
+           toast({ variant: "destructive", title: "Generation Error", description: result.error });
+           setGeneratedPostsInternal([]);
+           setLinkedinPosts([]);
+        } else {
+          setGeneratedPostsInternal(result.posts || []);
+          setLinkedinPosts(result.posts || []);
+        }
       } catch (error: any) {
         console.error("Error re-generating LinkedIn posts:", error);
         toast({

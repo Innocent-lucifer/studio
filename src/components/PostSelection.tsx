@@ -26,6 +26,7 @@ interface PostSelectionProps {
   twitterPosts: string[];
   linkedinPosts: string[];
   topic: string;
+  userId: string;
   onUpdatePost: (type: 'twitter' | 'linkedin', index: number, newText: string) => void;
 }
 
@@ -33,6 +34,7 @@ export const PostSelection: React.FC<PostSelectionProps> = ({
   twitterPosts, 
   linkedinPosts, 
   topic, 
+  userId,
   onUpdatePost 
 }) => {
   const [selectedTwitterPosts, setSelectedTwitterPosts] = useState<string[]>([]);
@@ -58,7 +60,6 @@ export const PostSelection: React.FC<PostSelectionProps> = ({
   };
 
   const handleEditPost = (postText: string, index: number, type: 'twitter' | 'linkedin') => {
-    // When opening edit, `postText` is the current text from the list (twitterPosts[index] or linkedinPosts[index])
     setEditingPost({ type, index, originalTextWhileEditing: postText, currentText: postText });
   };
   
@@ -119,19 +120,24 @@ export const PostSelection: React.FC<PostSelectionProps> = ({
     setIsAiSubmitting(true);
     try {
       const result = await generateEditedPost({
-        originalPost: editingPost.currentText, // Use current text in editor for AI edit
+        originalPost: editingPost.currentText, 
         editInstruction: aiEditInstruction,
         topic: topic, 
         platform: editingPost.type,
+        userId: userId,
       });
-      // Update only the currentText in the dialog, Save will commit it to parent
-      setEditingPost(prev => prev ? { ...prev, currentText: result.editedPost } : null);
-      toast({
-        title: "AI Edit Applied",
-        description: "The AI has revised the post. Click 'Save Changes' to update the main list.",
-      });
-      setIsAiEditingModalOpen(false);
-      setAiEditInstruction("");
+
+      if (result.error) {
+        toast({ variant: "destructive", title: "AI Edit Error", description: result.error});
+      } else {
+        setEditingPost(prev => prev ? { ...prev, currentText: result.editedPost } : null);
+        toast({
+          title: "AI Edit Applied",
+          description: "The AI has revised the post. Click 'Save Changes' to update the main list.",
+        });
+        setIsAiEditingModalOpen(false);
+        setAiEditInstruction("");
+      }
     } catch (error: any) {
       console.error("Error applying AI edit:", error);
       toast({

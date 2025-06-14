@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -8,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { motion } from 'framer-motion';
 import { Icons } from "./icons";
 
+const MOCK_USER_ID = "sagepostai-guest-user";
 
 interface TopicResearchProps {
   setTopic: (topic: string) => void;
@@ -29,10 +31,17 @@ export const TopicResearch: React.FC<TopicResearchProps> = ({ setTopic, setResea
       return;
     }
     setIsLoading(true);
+    setResearchedContent(""); // Clear previous research
     try {
-      const result = await researchTopic({ topic: topicInput });
-      setTopic(topicInput); // Set the original input topic
-      setResearchedContent(result.summary); // Set the researched content
+      const result = await researchTopic({ topic: topicInput, userId: MOCK_USER_ID });
+      if (result.error) {
+        toast({ variant: "destructive", title: "Research Failed", description: result.error });
+        setTopic(topicInput); // Still set topic so user knows what failed
+        setResearchedContent(`Error researching "${topicInput}": ${result.error}`);
+      } else {
+        setTopic(topicInput); 
+        setResearchedContent(result.summary); 
+      }
     } catch (error: any) {
       console.error("Error researching topic:", error);
       toast({
@@ -40,7 +49,8 @@ export const TopicResearch: React.FC<TopicResearchProps> = ({ setTopic, setResea
         title: "Research Failed",
         description: error.message || "Failed to research topic. Please try again.",
       });
-      setResearchedContent(`Failed to research "${topicInput}". Please try again.`); // Provide fallback
+      setTopic(topicInput);
+      setResearchedContent(`Failed to research "${topicInput}". Please try again.`);
     } finally {
       setIsLoading(false);
     }
@@ -61,6 +71,7 @@ export const TopicResearch: React.FC<TopicResearchProps> = ({ setTopic, setResea
           onChange={(e) => setTopicInput(e.target.value)}
           className="flex-grow bg-slate-700 border-slate-600 placeholder-slate-400 text-white focus:ring-primary focus:border-primary"
           aria-label="Topic for research"
+          onKeyDown={(e) => { if (e.key === 'Enter') handleResearchTopic(); }}
         />
         <Button 
           onClick={handleResearchTopic} 
