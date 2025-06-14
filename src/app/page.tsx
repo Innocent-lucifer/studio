@@ -10,7 +10,7 @@ import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { HamburgerMenu } from "@/components/HamburgerMenu";
 import { Icons } from "@/components/icons";
-import { AppLogo } from "@/components/AppLogo"; 
+import { AppLogo } from "@/components/AppLogo";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
@@ -22,13 +22,13 @@ export default function Home() {
   const [researchedContent, setResearchedContent] = useState<string>("");
   const [twitterPosts, setTwitterPosts] = useState<string[]>([]);
   const [linkedinPosts, setLinkedinPosts] = useState<string[]>([]);
-  const [researchIsLoading, setResearchIsLoading] = useState(false); 
+  const [researchIsLoading, setResearchIsLoading] = useState(false);
 
   const [displayTwitterInCard, setDisplayTwitterInCard] = useState(true);
   const [displayLinkedInInCard, setDisplayLinkedInInCard] = useState(true);
 
   const showPostSelectionCard = twitterPosts.length > 0 && linkedinPosts.length > 0;
-  
+
   useEffect(() => {
     if (!topic || researchIsLoading || !researchedContent) {
       // If no topic, or researching, or no content, reset to show individual generators initially
@@ -41,6 +41,7 @@ export default function Home() {
       }
     } else {
       // Topic is researched and content is available
+      // If PostSelection card is to be shown, hide individual generators, otherwise show them
       setDisplayTwitterInCard(!showPostSelectionCard);
       setDisplayLinkedInInCard(!showPostSelectionCard);
     }
@@ -66,7 +67,7 @@ export default function Home() {
     initial: { opacity: 0, y: 20 },
     animate: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
   };
-  
+
   const staggerChildren = {
     animate: {
       transition: {
@@ -77,7 +78,7 @@ export default function Home() {
 
   return (
     <>
-      <motion.div 
+      <motion.div
         initial="initial"
         animate="in"
         exit="out"
@@ -93,10 +94,10 @@ export default function Home() {
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.7, ease: "easeOut" }}
                 whileHover={{
-                  rotate: [0, -8, 8, -8, 8, 0], 
-                  transition: { 
-                    duration: 0.4, 
-                    ease: "easeInOut" 
+                  rotate: [0, -8, 8, -8, 8, 0],
+                  transition: {
+                    duration: 0.4,
+                    ease: "easeInOut"
                   }
                 }}
               >
@@ -107,7 +108,7 @@ export default function Home() {
               </h1>
             </div>
             <div className="flex items-center space-x-3">
-              <Link 
+              <Link
                 href={{
                   pathname: '/smart-campaign',
                   query: { topic: topic, researchedContent: researchedContent },
@@ -115,7 +116,7 @@ export default function Home() {
                 passHref
                 legacyBehavior // Recommended for Button asChild
               >
-                <Button 
+                <Button
                   variant="outline"
                   className={`border-purple-500 text-purple-400 hover:bg-purple-500/20 hover:text-purple-300 transition-all duration-200 ease-in-out transform hover:scale-105 shadow-md hover:shadow-lg
                               ${(!topic || !researchedContent) ? 'opacity-50 cursor-not-allowed' : ''}`}
@@ -153,14 +154,14 @@ export default function Home() {
                     setTopic={setTopic}
                     setResearchedContent={setResearchedContent}
                     setIsLoading={setResearchIsLoading}
-                    userId={MOCK_USER_ID}
+                    // No userId prop as auth is stubbed
                   />
                 </CardContent>
               </Card>
             </motion.div>
 
-            {researchIsLoading && ( 
-              <motion.div 
+            {researchIsLoading && (
+              <motion.div
                 className="flex flex-col justify-center items-center my-8 p-6 bg-slate-800/50 border border-slate-700 rounded-xl shadow-lg"
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -174,7 +175,7 @@ export default function Home() {
 
             {!researchIsLoading && topic && researchedContent && (
               <>
-                <motion.div 
+                <motion.div
                   className="grid md:grid-cols-2 gap-8 mt-8"
                   variants={staggerChildren}
                 >
@@ -189,7 +190,7 @@ export default function Home() {
                       <CardContent>
                         <TwitterPostGenerator
                           topic={researchedContent || topic}
-                          userId={MOCK_USER_ID}
+                          userId={MOCK_USER_ID} // Pass mock user ID
                           setTwitterPosts={setTwitterPosts}
                           displayGeneratedPostsInCard={displayTwitterInCard}
                           setParentPostsEmpty={() => setTwitterPosts([])}
@@ -209,7 +210,7 @@ export default function Home() {
                       <CardContent>
                         <LinkedInPostGenerator
                           topic={researchedContent || topic}
-                          userId={MOCK_USER_ID}
+                          userId={MOCK_USER_ID} // Pass mock user ID
                           setLinkedinPosts={setLinkedinPosts}
                           displayGeneratedPostsInCard={displayLinkedInInCard}
                           setParentPostsEmpty={() => setLinkedinPosts([])}
@@ -234,8 +235,8 @@ export default function Home() {
                     <PostSelection
                       twitterPosts={twitterPosts}
                       linkedinPosts={linkedinPosts}
-                      topic={topic} 
-                      userId={MOCK_USER_ID}
+                      topic={topic}
+                      userId={MOCK_USER_ID} // Pass mock user ID
                       onUpdatePost={handlePostUpdate}
                     />
                   </CardContent>
@@ -254,4 +255,3 @@ export default function Home() {
     </>
   );
 }
-
