@@ -31,8 +31,6 @@ export default function Home() {
 
   useEffect(() => {
     if (!topic || researchIsLoading || !researchedContent) {
-      // If no topic, or researching, or no content, reset to show individual generators initially
-      // and ensure post arrays are empty if topic/content becomes invalid
       setDisplayTwitterInCard(true);
       setDisplayLinkedInInCard(true);
       if (!topic || !researchedContent) {
@@ -40,8 +38,6 @@ export default function Home() {
         setLinkedinPosts([]);
       }
     } else {
-      // Topic is researched and content is available
-      // If PostSelection card is to be shown, hide individual generators, otherwise show them
       setDisplayTwitterInCard(!showPostSelectionCard);
       setDisplayLinkedInInCard(!showPostSelectionCard);
     }
