@@ -5,7 +5,7 @@ import { TopicResearch } from "@/components/TopicResearch";
 import { TwitterPostGenerator } from "@/components/TwitterPostGenerator";
 import { LinkedInPostGenerator } from "@/components/LinkedInPostGenerator";
 import { PostSelection } from "@/components/PostSelection";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { HamburgerMenu } from "@/components/HamburgerMenu";
@@ -14,7 +14,6 @@ import { AppLogo } from "@/components/AppLogo";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
-// Mock user ID for when auth is disabled
 const MOCK_USER_ID = "sagepostai-guest-user";
 
 export default function Home() {
@@ -27,21 +26,16 @@ export default function Home() {
   const [displayTwitterInCard, setDisplayTwitterInCard] = useState(true);
   const [displayLinkedInInCard, setDisplayLinkedInInCard] = useState(true);
 
-  const showPostSelectionCard = twitterPosts.length > 0 && linkedinPosts.length > 0;
-
   useEffect(() => {
-    if (!topic || researchIsLoading || !researchedContent) {
+    if (researchIsLoading || !researchedContent || !topic) {
       setDisplayTwitterInCard(true);
       setDisplayLinkedInInCard(true);
-      if (!topic || !researchedContent) {
-        setTwitterPosts([]);
-        setLinkedinPosts([]);
-      }
     } else {
-      setDisplayTwitterInCard(!showPostSelectionCard);
-      setDisplayLinkedInInCard(!showPostSelectionCard);
+      const shouldShowInCombinedCard = twitterPosts.length > 0 && linkedinPosts.length > 0;
+      setDisplayTwitterInCard(!shouldShowInCombinedCard);
+      setDisplayLinkedInInCard(!shouldShowInCombinedCard);
     }
-  }, [topic, researchedContent, researchIsLoading, twitterPosts, linkedinPosts, showPostSelectionCard]);
+  }, [topic, researchedContent, researchIsLoading, twitterPosts, linkedinPosts]);
 
 
   const handlePostUpdate = (type: 'twitter' | 'linkedin', index: number, newText: string) => {
@@ -52,6 +46,15 @@ export default function Home() {
     }
   };
 
+  const showPostSelectionCard = twitterPosts.length > 0 && linkedinPosts.length > 0;
+
+  const clearTwitterPosts = useCallback(() => {
+    setTwitterPosts([]);
+  }, []);
+
+  const clearLinkedinPosts = useCallback(() => {
+    setLinkedinPosts([]);
+  }, []);
 
   const pageVariants = {
     initial: { opacity: 0 },
@@ -142,7 +145,6 @@ export default function Home() {
                     setTopic={setTopic}
                     setResearchedContent={setResearchedContent}
                     setIsLoading={setResearchIsLoading}
-                    // No userId prop as auth is stubbed
                   />
                 </CardContent>
               </Card>
@@ -178,10 +180,10 @@ export default function Home() {
                       <CardContent>
                         <TwitterPostGenerator
                           topic={researchedContent || topic}
-                          userId={MOCK_USER_ID} // Pass mock user ID
+                          userId={MOCK_USER_ID}
                           setTwitterPosts={setTwitterPosts}
                           displayGeneratedPostsInCard={displayTwitterInCard}
-                          setParentPostsEmpty={() => setTwitterPosts([])}
+                          setParentPostsEmpty={clearTwitterPosts}
                         />
                       </CardContent>
                     </Card>
@@ -198,10 +200,10 @@ export default function Home() {
                       <CardContent>
                         <LinkedInPostGenerator
                           topic={researchedContent || topic}
-                          userId={MOCK_USER_ID} // Pass mock user ID
+                          userId={MOCK_USER_ID}
                           setLinkedinPosts={setLinkedinPosts}
                           displayGeneratedPostsInCard={displayLinkedInInCard}
-                          setParentPostsEmpty={() => setLinkedinPosts([])}
+                          setParentPostsEmpty={clearLinkedinPosts}
                         />
                       </CardContent>
                     </Card>
@@ -224,7 +226,7 @@ export default function Home() {
                       twitterPosts={twitterPosts}
                       linkedinPosts={linkedinPosts}
                       topic={topic}
-                      userId={MOCK_USER_ID} // Pass mock user ID
+                      userId={MOCK_USER_ID}
                       onUpdatePost={handlePostUpdate}
                     />
                   </CardContent>
