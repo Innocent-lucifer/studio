@@ -13,6 +13,7 @@ import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { Icons } from '@/components/icons';
 import { Separator } from '@/components/ui/separator';
+import Link from 'next/link';
 
 import type { SuggestContentAnglesInput, SuggestContentAnglesOutput, ContentAngle } from '@/ai/flows/suggest-content-angles';
 import { suggestContentAngles } from '@/ai/flows/suggest-content-angles';
@@ -23,13 +24,14 @@ import { suggestRepurposingIdeas } from '@/ai/flows/suggest-repurposing-ideas';
 
 const MOCK_USER_ID = "sagepostai-guest-user"; // For stubbed auth
 
-type WizardStep = 'angles' | 'series' | 'repurpose' | 'complete';
+type WizardStep = 'initial' | 'angles' | 'series' | 'repurpose' | 'complete';
 
-const stepConfig: Record<WizardStep, { title: string; icon: keyof typeof Icons; progress: number }> = {
-  angles: { title: "Select Content Angle", icon: "lightbulb", progress: 25 },
-  series: { title: "Generate Campaign Series", icon: "listChecks", progress: 50 },
-  repurpose: { title: "Get Repurposing Ideas", icon: "repeat", progress: 75 },
-  complete: { title: "Campaign Ready!", icon: "checkCircle", progress: 100 },
+const stepConfig: Record<WizardStep, { title: string; icon: keyof typeof Icons; progress: number; description?: string }> = {
+  initial: { title: "Smart Campaign Setup", icon: "settings", progress: 0, description: "Missing topic information." },
+  angles: { title: "Select Content Angle", icon: "lightbulb", progress: 25, description: "Choose a strategic angle." },
+  series: { title: "Generate Campaign Series", icon: "listChecks", progress: 50, description: "Crafting your posts." },
+  repurpose: { title: "Get Repurposing Ideas", icon: "repeat", progress: 75, description: "Maximizing content value." },
+  complete: { title: "Campaign Ready!", icon: "checkCircle", progress: 100, description: "Your campaign is generated." },
 };
 
 const cardVariants = {
@@ -45,8 +47,9 @@ const SmartCampaignWizardInternal: React.FC = () => {
 
   const [topic, setTopic] = useState<string>('');
   const [researchedContent, setResearchedContent] = useState<string>('');
+  const [isDataMissing, setIsDataMissing] = useState<boolean>(true);
   
-  const [currentStep, setCurrentStep] = useState<WizardStep>('angles');
+  const [currentStep, setCurrentStep] = useState<WizardStep>('initial');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [loadingMessage, setLoadingMessage] = useState<string>('');
 
@@ -63,21 +66,23 @@ const SmartCampaignWizardInternal: React.FC = () => {
   useEffect(() => {
     const topicParam = searchParams.get('topic');
     const researchedContentParam = searchParams.get('researchedContent');
-    if (topicParam) setTopic(topicParam);
-    if (researchedContentParam) setResearchedContent(researchedContentParam);
 
-    if (topicParam && researchedContentParam && currentStep === 'angles' && angles.length === 0) {
-      handleSuggestAngles(topicParam, researchedContentParam);
+    if (topicParam && researchedContentParam) {
+      setTopic(topicParam);
+      setResearchedContent(researchedContentParam);
+      setIsDataMissing(false);
+      setCurrentStep('angles'); // Move to angle selection
+      if (angles.length === 0) { // Fetch angles only if not already fetched
+          handleSuggestAngles(topicParam, researchedContentParam);
+      }
+    } else {
+      setIsDataMissing(true);
+      setCurrentStep('initial');
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
   const handleSuggestAngles = async (currentTopic: string, currentResearchedContent: string) => {
-    if (!currentTopic || !currentResearchedContent) {
-      toast({ variant: "destructive", title: "Missing Topic", description: "Topic and research content are required." });
-      router.push('/'); // Redirect if essential data is missing
-      return;
-    }
     setIsLoading(true);
     setLoadingMessage('Brainstorming content angles...');
     try {
@@ -98,7 +103,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
   };
 
   const handleGenerateSeries = async () => {
-    if (!selectedAngle || !topic) return;
+    if (!selectedAngle || !topic || isDataMissing) return;
     setIsLoading(true);
     setLoadingMessage('Crafting your campaign series...');
     setCurrentStep('series');
@@ -125,7 +130,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
   };
   
   const handleSuggestRepurposing = async () => {
-    if (!topic || !selectedAngle || (twitterSeries.length === 0 && linkedinSeries.length === 0)) return;
+    if (!topic || !selectedAngle || (twitterSeries.length === 0 && linkedinSeries.length === 0) || isDataMissing) return;
     setIsLoading(true);
     setLoadingMessage('Finding repurposing opportunities...');
     setCurrentStep('repurpose');
@@ -188,11 +193,16 @@ const SmartCampaignWizardInternal: React.FC = () => {
             </div>
             <Progress value={stepConfig[currentStep]?.progress || 0} className="w-1/3 h-2 bg-slate-700 [&>div]:bg-primary" />
           </div>
-          {topic && (
+          {topic && !isDataMissing && (
             <CardDescription className="text-slate-400 pt-2">
               Campaign Topic: <span className="font-semibold text-slate-300">{topic}</span>
             </CardDescription>
           )}
+           {isDataMissing && currentStep === 'initial' && (
+             <CardDescription className="text-slate-400 pt-2">
+                {stepConfig[currentStep]?.description}
+            </CardDescription>
+           )}
         </CardHeader>
         <CardContent className="p-6">
           <AnimatePresence mode="wait">
@@ -202,7 +212,24 @@ const SmartCampaignWizardInternal: React.FC = () => {
               </motion.div>
             )}
 
-            {!isLoading && currentStep === 'angles' && (
+            {!isLoading && currentStep === 'initial' && isDataMissing && (
+              <motion.div key="initial-missing-data" {...cardVariants} className="text-center space-y-4 py-8">
+                <Icons.alertTriangle className="h-16 w-16 text-yellow-400 mx-auto" />
+                <h3 className="text-2xl font-semibold text-slate-100">Topic Information Needed</h3>
+                <p className="text-slate-300 max-w-md mx-auto">
+                  To start building a Smart Campaign, please research a topic on the main page first.
+                  The Smart Campaign wizard uses this researched information to generate relevant content angles and posts.
+                </p>
+                <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground">
+                  <Link href="/">
+                    <Icons.arrowLeft className="mr-2 h-5 w-5" />
+                    Back to Topic Research
+                  </Link>
+                </Button>
+              </motion.div>
+            )}
+
+            {!isLoading && currentStep === 'angles' && !isDataMissing && (
               <motion.div key="angles" {...cardVariants} className="space-y-6">
                 <h3 className="text-xl font-medium text-slate-200">Select a Content Angle</h3>
                 <p className="text-slate-400">Choose the strategic angle you'd like to focus on for this campaign. The AI will generate interconnected content based on your selection.</p>
@@ -226,7 +253,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
                     ))}
                   </RadioGroup>
                 ) : (
-                  <p className="text-slate-500">No angles suggested yet, or an error occurred.</p>
+                  <p className="text-slate-500">No angles suggested yet, or an error occurred. If research was just completed, angles might still be loading.</p>
                 )}
                 <Button 
                   onClick={handleGenerateSeries} 
@@ -240,11 +267,10 @@ const SmartCampaignWizardInternal: React.FC = () => {
               </motion.div>
             )}
 
-            {!isLoading && currentStep === 'series' && (
+            {!isLoading && currentStep === 'series' && !isDataMissing && (
               <motion.div key="series" {...cardVariants} className="space-y-6">
                  <h3 className="text-xl font-medium text-slate-200">Your Campaign Series for: <span className="text-purple-400">{selectedAngle?.title}</span></h3>
                 
-                {/* Twitter Series */}
                 <Card className="bg-slate-700/50 border-slate-600">
                   <CardHeader>
                     <CardTitle className="flex items-center text-lg text-sky-400"><Icons.twitter className="mr-2 h-5 w-5" /> Twitter Thread</CardTitle>
@@ -260,7 +286,6 @@ const SmartCampaignWizardInternal: React.FC = () => {
                   </CardContent>
                 </Card>
 
-                {/* LinkedIn Series */}
                 <Card className="bg-slate-700/50 border-slate-600">
                   <CardHeader>
                     <CardTitle className="flex items-center text-lg text-blue-400"><Icons.linkedin className="mr-2 h-5 w-5" /> LinkedIn Series</CardTitle>
@@ -291,7 +316,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
               </motion.div>
             )}
 
-            {!isLoading && currentStep === 'repurpose' && (
+            {!isLoading && currentStep === 'repurpose' && !isDataMissing && (
               <motion.div key="repurpose" {...cardVariants} className="space-y-6">
                 <h3 className="text-xl font-medium text-slate-200">Repurposing Ideas for: <span className="text-purple-400">{selectedAngle?.title}</span></h3>
                 {repurposingIdeas.length > 0 ? (
@@ -317,7 +342,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
                 </Button>
               </motion.div>
             )}
-             {!isLoading && currentStep === 'complete' && (
+             {!isLoading && currentStep === 'complete' && !isDataMissing && (
               <motion.div key="complete" {...cardVariants} className="text-center space-y-6 py-8">
                 <Icons.checkCircle className="h-20 w-20 text-green-500 mx-auto mb-4" />
                 <h2 className="text-3xl font-bold text-slate-100">Your Smart Campaign is Ready!</h2>
@@ -328,7 +353,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
                 <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
                   <Button 
                     onClick={() => {
-                       const contentToCopy = `Topic: ${topic}\nSelected Angle: ${selectedAngle?.title}\n\nTwitter Series:\n${twitterSeries.join('\n\n---\n\n')}\n\nLinkedIn Series:\n${linkedinSeries.join('\n\n---\n\n')}\n\nRepurposing Ideas:\n${repurposingIdeas.join('\n- ')}`;
+                       const contentToCopy = `Topic: ${topic}\nSelected Angle: ${selectedAngle?.title}\n\nTwitter Series:\n${twitterSeries.join('\n\n---\n\n')}\n\nLinkedIn Series:\n${linkedinSeries.join('\n\n---\n\n')}\n\nRepurposing Ideas:\n- ${repurposingIdeas.join('\n- ')}`;
                        navigator.clipboard.writeText(contentToCopy);
                        toast({ title: "Campaign Copied!", description: "Full campaign content copied to clipboard." });
                     }}
@@ -352,7 +377,6 @@ const SmartCampaignWizardInternal: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Editing Modal */}
       {editingSeries && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
           <motion.div 
@@ -363,7 +387,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
             <h3 className="text-xl font-semibold text-primary mb-4">Edit {editingSeries.platform} Post</h3>
             <Textarea
               value={editingSeries.text}
-              onChange={(e) => setEditingSeries({ ...editingSeries, text: e.target.value })}
+              onChange={(e) => setEditingSeries(prev => prev ? { ...prev, text: e.target.value } : null)}
               rows={10}
               className="bg-slate-700 border-slate-600 text-slate-100 focus:ring-primary focus:border-primary text-sm"
             />
@@ -378,8 +402,6 @@ const SmartCampaignWizardInternal: React.FC = () => {
   );
 };
 
-// This wrapper component is necessary because useSearchParams can only be used in Client Components
-// that are descendants of a <Suspense> boundary.
 export const SmartCampaignWizard: React.FC = () => {
   return (
     <Suspense fallback={<div className="flex justify-center items-center h-64"><Icons.loader className="h-12 w-12 animate-spin text-primary" /></div>}>
@@ -387,4 +409,3 @@ export const SmartCampaignWizard: React.FC = () => {
     </Suspense>
   );
 };
-

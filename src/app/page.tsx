@@ -114,15 +114,7 @@ export default function Home() {
               >
                 <Button
                   variant="outline"
-                  className={`border-purple-500 text-purple-400 hover:bg-purple-500/20 hover:text-purple-300 transition-all duration-200 ease-in-out transform hover:scale-105 shadow-md hover:shadow-lg
-                              ${(!topic || !researchedContent) ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  disabled={!topic || !researchedContent}
-                  aria-disabled={!topic || !researchedContent}
-                  onClick={(e) => {
-                    if (!topic || !researchedContent) {
-                      e.preventDefault(); // Prevent navigation if disabled
-                    }
-                  }}
+                  className="border-purple-500 text-purple-400 hover:bg-purple-500/20 hover:text-purple-300 transition-all duration-200 ease-in-out transform hover:scale-105 shadow-md hover:shadow-lg"
                 >
                   <Icons.sparkles className="mr-2 h-5 w-5" />
                   Smart Campaign
