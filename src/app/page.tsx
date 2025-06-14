@@ -36,18 +36,22 @@ export default function Home() {
   const canGenerateOrEdit = true; // Auth stubbed out, always allow
 
   useEffect(() => {
-    if (generationMode === 'campaign') {
+    // If switching to campaign mode, or if topic is cleared, ensure quick generators are hidden
+    if (generationMode === 'campaign' || !topic || researchIsLoading) {
       setDisplayTwitterInCard(false);
       setDisplayLinkedInInCard(false);
-    } else {
+    } else { // Quick mode and topic is present
       setDisplayTwitterInCard(!(showPostSelectionCard && twitterPosts.length > 0));
       setDisplayLinkedInInCard(!(showPostSelectionCard && linkedinPosts.length > 0));
     }
-
-    if (topic && (!researchedContent || researchIsLoading)) {
+    
+    // If the topic is being researched or is empty, ensure individual cards are shown if quick mode is active
+    // This handles the case where user clears topic, or research starts
+    if (generationMode === 'quick' && (researchIsLoading || !topic || !researchedContent)) {
         setDisplayTwitterInCard(true);
         setDisplayLinkedInInCard(true);
     }
+
   }, [showPostSelectionCard, twitterPosts, linkedinPosts, topic, researchedContent, researchIsLoading, generationMode]);
 
 
@@ -113,7 +117,7 @@ export default function Home() {
             <div className="flex items-center space-x-2">
               <div className="text-right text-xs">
                 <p className="font-semibold text-primary">Dev Mode</p>
-                <p className="text-slate-400">Unlimited Access (Auth Disabled)</p>
+                <p className="text-slate-400">Guest Access (Auth Disabled)</p>
               </div>
               <HamburgerMenu />
             </div>
@@ -133,6 +137,7 @@ export default function Home() {
                     setTopic={setTopic}
                     setResearchedContent={setResearchedContent}
                     setIsLoading={setResearchIsLoading}
+                    userId={MOCK_USER_ID}
                     // Props related to auth/credits removed as auth is stubbed
                   />
                 </CardContent>
@@ -161,11 +166,11 @@ export default function Home() {
                       2. Choose Your Generation Mode
                     </CardTitle>
                     <CardDescription className="text-slate-400">
-                      Select how you want to generate content.
+                      Select how you want to generate content for: <span className="font-medium text-slate-300">{topic}</span>
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="p-0">
-                    <div className="flex flex-col sm:flex-row gap-4 mb-6">
+                    <div className="flex flex-col sm:flex-row gap-4">
                       <Button
                         onClick={() => setGenerationMode('quick')}
                         variant={generationMode === 'quick' ? 'default' : 'outline'}
@@ -174,42 +179,38 @@ export default function Home() {
                         <Icons.edit className="mr-2 h-5 w-5" />
                         Quick Posts
                       </Button>
-                      <Button
-                        onClick={() => setGenerationMode('campaign')}
-                        variant={generationMode === 'campaign' ? 'default' : 'outline'}
-                         className={`flex-1 py-6 text-base shadow-md hover:shadow-lg transition-all duration-200 ease-in-out transform hover:scale-105 ${generationMode === 'campaign' ? 'bg-primary text-primary-foreground border-primary' : 'border-slate-600 text-slate-300 hover:bg-slate-700/50 hover:border-primary/50'}`}
-                      >
-                        <Icons.sparkles className="mr-2 h-5 w-5" />
-                        Smart Campaign
-                      </Button>
-                    </div>
-
-                    {generationMode === 'campaign' && (
-                      <motion.div 
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="text-center p-4 bg-slate-700/30 rounded-lg border border-slate-600"
-                      >
-                        <p className="text-slate-300 mb-4">
-                          Build a full content campaign with strategy, angles, interconnected post series, and repurposing ideas.
-                        </p>
-                        <Link 
+                      
+                      <Link 
                           href={{
                             pathname: '/smart-campaign',
                             query: { topic: topic, researchedContent: researchedContent },
                           }}
                           passHref
+                          className="flex-1"
                         >
                           <Button 
-                            size="lg" 
-                            className="bg-purple-600 hover:bg-purple-700 text-white shadow-lg transform hover:scale-105 transition-transform duration-200 py-3 px-8"
+                            variant={generationMode === 'campaign' ? 'default' : 'outline'}
+                            onClick={() => setGenerationMode('campaign')} // Set mode for styling, navigation is handled by Link
+                            className={`w-full py-6 text-base shadow-md hover:shadow-lg transition-all duration-200 ease-in-out transform hover:scale-105 ${generationMode === 'campaign' ? 'bg-purple-600 hover:bg-purple-700 text-white border-purple-600' : 'border-slate-600 text-slate-300 hover:bg-slate-700/50 hover:border-purple-500/50'}`}
                             disabled={!topic || !researchedContent}
                           >
-                            <Icons.arrowRight className="mr-2 h-5 w-5" />
-                            Launch Smart Campaign Builder
+                            <Icons.sparkles className="mr-2 h-5 w-5" />
+                            Smart Campaign
+                             <span className="text-xs font-normal ml-2 text-slate-400 group-hover:text-slate-300 hidden sm:inline">
+                              (Builder)
+                            </span>
                           </Button>
                         </Link>
-                      </motion.div>
+                    </div>
+                     {generationMode === 'quick' && (
+                       <p className="text-xs text-slate-400 mt-4 text-center">
+                        Instantly generate posts for Twitter & LinkedIn based on your researched topic. Review and edit them below.
+                      </p>
+                    )}
+                    {generationMode === 'campaign' && (
+                       <p className="text-xs text-slate-400 mt-4 text-center">
+                        You've selected Smart Campaign. Click the button above to launch the dedicated builder for a strategic, multi-step content creation experience.
+                      </p>
                     )}
                   </CardContent>
                 </Card>
@@ -267,7 +268,7 @@ export default function Home() {
               </>
             )}
 
-            {!researchIsLoading && showPostSelectionCard && (
+            {!researchIsLoading && topic && researchedContent && showPostSelectionCard && generationMode === 'quick' && (
               <motion.div variants={cardVariants} className="mt-8">
                 <Card className="bg-slate-800/50 border-slate-700 shadow-2xl hover:shadow-primary/30 transition-shadow duration-300 rounded-xl">
                   <CardHeader>
@@ -281,8 +282,8 @@ export default function Home() {
                       twitterPosts={twitterPosts}
                       linkedinPosts={linkedinPosts}
                       topic={topic} 
-                      onUpdatePost={handlePostUpdate}
                       userId={MOCK_USER_ID}
+                      onUpdatePost={handlePostUpdate}
                        // Credit related props are removed as auth is stubbed
                     />
                   </CardContent>
