@@ -86,7 +86,7 @@ export default function Home() {
         className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col items-center p-4 sm:p-8 transition-colors duration-500"
       >
         <main className="container mx-auto w-full max-w-4xl">
-          <header className="flex justify-between items-center mb-8 py-4">
+          <header className="flex flex-wrap justify-between items-center mb-8 py-4 gap-4">
             <div className="flex items-center space-x-3">
               <motion.div
                 initial={{ scale: 0.5, opacity: 0 }}
@@ -106,28 +106,32 @@ export default function Home() {
                 SagePostAI
               </h1>
             </div>
-            <div className="flex items-center space-x-3">
-              <Link
+            <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-3 space-y-2 sm:space-y-0">
+               <Link
                 href={{
                   pathname: '/smart-campaign',
                   query: { topic: topic, researchedContent: researchedContent },
                 }}
                 passHref
-                legacyBehavior // Recommended for Button asChild
+                legacyBehavior
               >
                 <Button
+                  asChild={false} // Ensure it renders as a button, Link handles navigation
                   variant="outline"
-                  className="border-purple-500 text-purple-400 hover:bg-purple-500/20 hover:text-purple-300 transition-all duration-200 ease-in-out transform hover:scale-105 shadow-md hover:shadow-lg"
+                  className="w-full sm:w-auto border-purple-500 text-purple-400 hover:bg-purple-500/20 hover:text-purple-300 transition-all duration-200 ease-in-out transform hover:scale-105 shadow-md hover:shadow-lg"
+                  
                 >
                   <Icons.sparkles className="mr-2 h-5 w-5" />
                   Smart Campaign
                 </Button>
               </Link>
-              <div className="text-right text-xs">
-                <p className="font-semibold text-primary">Dev Mode</p>
-                <p className="text-slate-400">Guest Access (Auth Disabled)</p>
+              <div className="flex items-center space-x-3 justify-end sm:justify-start">
+                <div className="text-right text-xs">
+                  <p className="font-semibold text-primary">Dev Mode</p>
+                  <p className="text-slate-400">Guest Access (Auth Disabled)</p>
+                </div>
+                <HamburgerMenu />
               </div>
-              <HamburgerMenu />
             </div>
           </header>
 
@@ -137,7 +141,7 @@ export default function Home() {
                 <CardHeader>
                   <CardTitle className="text-2xl font-semibold text-center text-primary flex items-center justify-center">
                     <Icons.search className="mr-3 h-7 w-7" />
-                    1. Research Your Topic
+                    Research Your Topic
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
