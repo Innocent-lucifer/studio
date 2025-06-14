@@ -7,18 +7,15 @@ import { LinkedInPostGenerator } from "@/components/LinkedInPostGenerator";
 import { PostSelection } from "@/components/PostSelection";
 import { useState, useEffect } from "react";
 import { motion } from 'framer-motion';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { HamburgerMenu } from "@/components/HamburgerMenu";
 import { Icons } from "@/components/icons";
 import { AppLogo } from "@/components/AppLogo"; 
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { Separator } from "@/components/ui/separator";
 
 // Mock user ID for when auth is disabled
 const MOCK_USER_ID = "sagepostai-guest-user";
-
-type GenerationMode = 'quick' | 'campaign';
 
 export default function Home() {
   const [topic, setTopic] = useState<string>("");
@@ -26,33 +23,28 @@ export default function Home() {
   const [twitterPosts, setTwitterPosts] = useState<string[]>([]);
   const [linkedinPosts, setLinkedinPosts] = useState<string[]>([]);
   const [researchIsLoading, setResearchIsLoading] = useState(false); 
-  const [generationMode, setGenerationMode] = useState<GenerationMode>('quick');
 
   const [displayTwitterInCard, setDisplayTwitterInCard] = useState(true);
   const [displayLinkedInInCard, setDisplayLinkedInInCard] = useState(true);
 
-  const showPostSelectionCard = twitterPosts.length > 0 && linkedinPosts.length > 0 && generationMode === 'quick';
+  const showPostSelectionCard = twitterPosts.length > 0 && linkedinPosts.length > 0;
   
-  const canGenerateOrEdit = true; // Auth stubbed out, always allow
-
   useEffect(() => {
-    // If switching to campaign mode, or if topic is cleared, ensure quick generators are hidden
-    if (generationMode === 'campaign' || !topic || researchIsLoading) {
-      setDisplayTwitterInCard(false);
-      setDisplayLinkedInInCard(false);
-    } else { // Quick mode and topic is present
-      setDisplayTwitterInCard(!(showPostSelectionCard && twitterPosts.length > 0));
-      setDisplayLinkedInInCard(!(showPostSelectionCard && linkedinPosts.length > 0));
+    if (!topic || researchIsLoading || !researchedContent) {
+      // If no topic, or researching, or no content, reset to show individual generators initially
+      // and ensure post arrays are empty if topic/content becomes invalid
+      setDisplayTwitterInCard(true);
+      setDisplayLinkedInInCard(true);
+      if (!topic || !researchedContent) {
+        setTwitterPosts([]);
+        setLinkedinPosts([]);
+      }
+    } else {
+      // Topic is researched and content is available
+      setDisplayTwitterInCard(!showPostSelectionCard);
+      setDisplayLinkedInInCard(!showPostSelectionCard);
     }
-    
-    // If the topic is being researched or is empty, ensure individual cards are shown if quick mode is active
-    // This handles the case where user clears topic, or research starts
-    if (generationMode === 'quick' && (researchIsLoading || !topic || !researchedContent)) {
-        setDisplayTwitterInCard(true);
-        setDisplayLinkedInInCard(true);
-    }
-
-  }, [showPostSelectionCard, twitterPosts, linkedinPosts, topic, researchedContent, researchIsLoading, generationMode]);
+  }, [topic, researchedContent, researchIsLoading, twitterPosts, linkedinPosts, showPostSelectionCard]);
 
 
   const handlePostUpdate = (type: 'twitter' | 'linkedin', index: number, newText: string) => {
@@ -114,7 +106,31 @@ export default function Home() {
                 SagePostAI
               </h1>
             </div>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-3">
+              <Link 
+                href={{
+                  pathname: '/smart-campaign',
+                  query: { topic: topic, researchedContent: researchedContent },
+                }}
+                passHref
+                legacyBehavior // Recommended for Button asChild
+              >
+                <Button 
+                  variant="outline"
+                  className={`border-purple-500 text-purple-400 hover:bg-purple-500/20 hover:text-purple-300 transition-all duration-200 ease-in-out transform hover:scale-105 shadow-md hover:shadow-lg
+                              ${(!topic || !researchedContent) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  disabled={!topic || !researchedContent}
+                  aria-disabled={!topic || !researchedContent}
+                  onClick={(e) => {
+                    if (!topic || !researchedContent) {
+                      e.preventDefault(); // Prevent navigation if disabled
+                    }
+                  }}
+                >
+                  <Icons.sparkles className="mr-2 h-5 w-5" />
+                  Smart Campaign
+                </Button>
+              </Link>
               <div className="text-right text-xs">
                 <p className="font-semibold text-primary">Dev Mode</p>
                 <p className="text-slate-400">Guest Access (Auth Disabled)</p>
@@ -138,7 +154,6 @@ export default function Home() {
                     setResearchedContent={setResearchedContent}
                     setIsLoading={setResearchIsLoading}
                     userId={MOCK_USER_ID}
-                    // Props related to auth/credits removed as auth is stubbed
                   />
                 </CardContent>
               </Card>
@@ -158,66 +173,6 @@ export default function Home() {
             )}
 
             {!researchIsLoading && topic && researchedContent && (
-              <motion.div variants={cardVariants} className="my-8">
-                <Card className="bg-slate-800/50 border-slate-700 shadow-xl rounded-xl p-6">
-                  <CardHeader className="p-0 pb-4 mb-4 border-b border-slate-700">
-                    <CardTitle className="text-2xl font-semibold text-primary flex items-center">
-                      <Icons.settings className="mr-3 h-7 w-7" />
-                      2. Choose Your Generation Mode
-                    </CardTitle>
-                    <CardDescription className="text-slate-400">
-                      Select how you want to generate content for: <span className="font-medium text-slate-300">{topic}</span>
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="p-0">
-                    <div className="flex flex-col sm:flex-row gap-4">
-                      <Button
-                        onClick={() => setGenerationMode('quick')}
-                        variant={generationMode === 'quick' ? 'default' : 'outline'}
-                        className={`flex-1 py-6 text-base shadow-md hover:shadow-lg transition-all duration-200 ease-in-out transform hover:scale-105 ${generationMode === 'quick' ? 'bg-primary text-primary-foreground border-primary' : 'border-slate-600 text-slate-300 hover:bg-slate-700/50 hover:border-primary/50'}`}
-                      >
-                        <Icons.edit className="mr-2 h-5 w-5" />
-                        Quick Posts
-                      </Button>
-                      
-                      <Link 
-                          href={{
-                            pathname: '/smart-campaign',
-                            query: { topic: topic, researchedContent: researchedContent },
-                          }}
-                          passHref
-                          className="flex-1"
-                        >
-                          <Button 
-                            variant={generationMode === 'campaign' ? 'default' : 'outline'}
-                            onClick={() => setGenerationMode('campaign')} // Set mode for styling, navigation is handled by Link
-                            className={`w-full py-6 text-base shadow-md hover:shadow-lg transition-all duration-200 ease-in-out transform hover:scale-105 ${generationMode === 'campaign' ? 'bg-purple-600 hover:bg-purple-700 text-white border-purple-600' : 'border-slate-600 text-slate-300 hover:bg-slate-700/50 hover:border-purple-500/50'}`}
-                            disabled={!topic || !researchedContent}
-                          >
-                            <Icons.sparkles className="mr-2 h-5 w-5" />
-                            Smart Campaign
-                             <span className="text-xs font-normal ml-2 text-slate-400 group-hover:text-slate-300 hidden sm:inline">
-                              (Builder)
-                            </span>
-                          </Button>
-                        </Link>
-                    </div>
-                     {generationMode === 'quick' && (
-                       <p className="text-xs text-slate-400 mt-4 text-center">
-                        Instantly generate posts for Twitter & LinkedIn based on your researched topic. Review and edit them below.
-                      </p>
-                    )}
-                    {generationMode === 'campaign' && (
-                       <p className="text-xs text-slate-400 mt-4 text-center">
-                        You've selected Smart Campaign. Click the button above to launch the dedicated builder for a strategic, multi-step content creation experience.
-                      </p>
-                    )}
-                  </CardContent>
-                </Card>
-              </motion.div>
-            )}
-
-            {!researchIsLoading && topic && researchedContent && generationMode === 'quick' && (
               <>
                 <motion.div 
                   className="grid md:grid-cols-2 gap-8 mt-8"
@@ -238,7 +193,6 @@ export default function Home() {
                           setTwitterPosts={setTwitterPosts}
                           displayGeneratedPostsInCard={displayTwitterInCard}
                           setParentPostsEmpty={() => setTwitterPosts([])}
-                          // Credit related props are removed as auth is stubbed
                         />
                       </CardContent>
                     </Card>
@@ -259,7 +213,6 @@ export default function Home() {
                           setLinkedinPosts={setLinkedinPosts}
                           displayGeneratedPostsInCard={displayLinkedInInCard}
                           setParentPostsEmpty={() => setLinkedinPosts([])}
-                           // Credit related props are removed as auth is stubbed
                         />
                       </CardContent>
                     </Card>
@@ -268,7 +221,7 @@ export default function Home() {
               </>
             )}
 
-            {!researchIsLoading && topic && researchedContent && showPostSelectionCard && generationMode === 'quick' && (
+            {!researchIsLoading && topic && researchedContent && showPostSelectionCard && (
               <motion.div variants={cardVariants} className="mt-8">
                 <Card className="bg-slate-800/50 border-slate-700 shadow-2xl hover:shadow-primary/30 transition-shadow duration-300 rounded-xl">
                   <CardHeader>
@@ -284,7 +237,6 @@ export default function Home() {
                       topic={topic} 
                       userId={MOCK_USER_ID}
                       onUpdatePost={handlePostUpdate}
-                       // Credit related props are removed as auth is stubbed
                     />
                   </CardContent>
                 </Card>
