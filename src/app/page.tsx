@@ -10,12 +10,20 @@ import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { HamburgerMenu } from "@/components/HamburgerMenu";
 import { Icons } from "@/components/icons";
-import { AppLogo } from "@/components/AppLogo"; // Import the new AppLogo component
+import { AppLogo } from "@/components/AppLogo"; 
 // import { useAuth } from "@/context/AuthContext";
 // import { LoginSignUpForm } from "@/components/LoginSignUpForm";
+// import type { UserData } from "@/types/user";
+
+// Mock user ID for when auth is disabled
+const MOCK_USER_ID = "sagepostai-guest-user";
 
 export default function Home() {
-  // const { user, loading: authLoading } = useAuth();
+  // const { user, userData, loading: authLoading, refreshUserData } = useAuth();
+  const authLoading = false; // Stubbed out
+  const user = null; // Stubbed out
+  const userData = null; // Stubbed out
+  const refreshUserData = async () => {}; // Stubbed out
 
   const [topic, setTopic] = useState<string>("");
   const [researchedContent, setResearchedContent] = useState<string>("");
@@ -27,6 +35,14 @@ export default function Home() {
   const [displayLinkedInInCard, setDisplayLinkedInInCard] = useState(true);
 
   const showPostSelectionCard = twitterPosts.length > 0 && linkedinPosts.length > 0;
+
+  // Determine current user ID (mock or real)
+  const currentUserId = user?.uid || MOCK_USER_ID;
+  
+  // Determine if generation/editing is allowed (always true if auth is stubbed)
+  const canGenerateOrEdit = true;
+  // const canGenerateOrEdit = userData ? userData.plan === 'infinity' || (userData.credits || 0) > 0 : true;
+
 
   useEffect(() => {
     setDisplayTwitterInCard(!(showPostSelectionCard && twitterPosts.length > 0));
@@ -67,16 +83,17 @@ export default function Home() {
     },
   };
 
-  // if (authLoading) {
-  //   return (
-  //     <div className="flex flex-col justify-center items-center min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white">
-  //       <Icons.loader className="h-16 w-16 animate-spin text-primary" />
-  //       <p className="mt-4 text-xl">Loading SagePostAI...</p>
-  //     </div>
-  //   );
-  // }
+  if (authLoading) {
+    return (
+      <div className="flex flex-col justify-center items-center min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white">
+        <Icons.loader className="h-16 w-16 animate-spin text-primary" />
+        <p className="mt-4 text-xl">Loading SagePostAI...</p>
+      </div>
+    );
+  }
 
-  // if (!user) {
+  // Auth gate removed for now
+  // if (!user && !authLoading) {
   //   return <LoginSignUpForm />;
   // }
 
@@ -98,9 +115,9 @@ export default function Home() {
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.7, ease: "easeOut" }}
                 whileHover={{
-                  rotate: [0, -8, 8, -8, 8, 0], // Tilt sequence: normal, left, right, left, right, normal
+                  rotate: [0, -8, 8, -8, 8, 0], 
                   transition: { 
-                    duration: 0.4, // Duration for the entire tilt sequence
+                    duration: 0.4, 
                     ease: "easeInOut" 
                   }
                 }}
@@ -111,7 +128,14 @@ export default function Home() {
                 SagePostAI
               </h1>
             </div>
-            <HamburgerMenu />
+            <div className="flex items-center space-x-2">
+              <div className="text-right text-xs">
+                 {/* Simplified display for stubbed auth */}
+                <p className="font-semibold text-primary">Dev Mode</p>
+                <p className="text-slate-400">Unlimited Access</p>
+              </div>
+              <HamburgerMenu />
+            </div>
           </header>
 
           <motion.div variants={staggerChildren} initial="initial" animate="animate">
@@ -128,6 +152,10 @@ export default function Home() {
                     setTopic={setTopic}
                     setResearchedContent={setResearchedContent}
                     setIsLoading={setResearchIsLoading} 
+                    userId={currentUserId} // Use mock or real user ID
+                    canGenerate={canGenerateOrEdit}
+                    onGenerationAttempt={() => true} // Stubbed: always allow
+                    onGenerationSuccess={refreshUserData}
                   />
                 </CardContent>
               </Card>
@@ -165,6 +193,10 @@ export default function Home() {
                         setTwitterPosts={setTwitterPosts}
                         displayGeneratedPostsInCard={displayTwitterInCard}
                         setParentPostsEmpty={() => setTwitterPosts([])}
+                        userId={currentUserId}
+                        canGenerate={canGenerateOrEdit}
+                        onGenerationAttempt={() => true} // Stubbed
+                        onGenerationSuccess={refreshUserData}
                       />
                     </CardContent>
                   </Card>
@@ -184,6 +216,10 @@ export default function Home() {
                         setLinkedinPosts={setLinkedinPosts}
                         displayGeneratedPostsInCard={displayLinkedInInCard}
                         setParentPostsEmpty={() => setLinkedinPosts([])}
+                        userId={currentUserId}
+                        canGenerate={canGenerateOrEdit}
+                        onGenerationAttempt={() => true} // Stubbed
+                        onGenerationSuccess={refreshUserData}
                       />
                     </CardContent>
                   </Card>
@@ -206,6 +242,10 @@ export default function Home() {
                       linkedinPosts={linkedinPosts}
                       topic={topic} 
                       onUpdatePost={handlePostUpdate}
+                      userId={currentUserId}
+                      canEdit={canGenerateOrEdit} // Using same flag for simplicity
+                      onEditAttempt={() => true} // Stubbed
+                      onEditSuccess={refreshUserData}
                     />
                   </CardContent>
                 </Card>
@@ -214,11 +254,12 @@ export default function Home() {
           </motion.div>
         </main>
         <footer className="text-center p-4 mt-12 text-slate-500 text-sm">
-          Powered by Gemini. Built By EZ Team.
+          <span className="relative group hover:text-primary transition-colors duration-300 cursor-default">
+            Built By EZ Teenagers.
+            <span className="absolute -bottom-0.5 left-0 w-full h-[1.5px] bg-primary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-out origin-left"></span>
+          </span>
         </footer>
       </motion.div>
     </>
   );
 }
-
-    
