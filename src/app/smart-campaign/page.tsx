@@ -8,6 +8,7 @@ import { HamburgerMenu } from '@/components/HamburgerMenu';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { Icons } from '@/components/icons';
+import { Button } from '@/components/ui/button';
 
 const SmartCampaignPageContent = () => {
   return (
@@ -30,7 +31,16 @@ const SmartCampaignPageContent = () => {
               </div>
             </div>
           </Link>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-3">
+            <Link href="/" passHref legacyBehavior>
+              <Button
+                variant="outline"
+                className="border-primary text-primary hover:bg-primary/10 hover:text-primary-foreground"
+              >
+                <Icons.edit className="mr-2 h-5 w-5" />
+                Quick Posts
+              </Button>
+            </Link>
             <div className="text-right text-xs">
               <p className="font-semibold text-primary">Dev Mode</p>
               <p className="text-slate-400">Unlimited Access</p>
