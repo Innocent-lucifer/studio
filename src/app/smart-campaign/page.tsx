@@ -19,7 +19,7 @@ const SmartCampaignPageContent = () => {
       className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col items-center p-4 sm:p-8"
     >
       <main className="container mx-auto w-full max-w-4xl">
-        <header className="flex justify-between items-center mb-8 py-4">
+        <header className="flex flex-col sm:flex-row justify-between items-center mb-8 py-4 gap-4">
           <Link href="/" passHref>
             <div className="flex items-center space-x-3 cursor-pointer group">
               <AppLogo className="h-12 w-12 text-primary group-hover:scale-110 transition-transform" />
@@ -31,17 +31,17 @@ const SmartCampaignPageContent = () => {
               </div>
             </div>
           </Link>
-          <div className="flex items-center space-x-3">
+          <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:space-x-3 sm:gap-0">
             <Link href="/" passHref legacyBehavior>
               <Button
                 variant="outline"
-                className="border-primary text-primary hover:bg-primary/10 hover:text-primary-foreground"
+                className="w-full sm:w-auto border-primary text-primary hover:bg-primary/10 hover:text-primary-foreground"
               >
                 <Icons.edit className="mr-2 h-5 w-5" />
                 Quick Posts
               </Button>
             </Link>
-            <div className="text-right text-xs">
+            <div className="text-right text-xs self-center sm:self-auto">
               <p className="font-semibold text-primary">Dev Mode</p>
               <p className="text-slate-400">Unlimited Access</p>
             </div>
