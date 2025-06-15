@@ -63,20 +63,20 @@ export const TopicResearch: React.FC<TopicResearchProps> = ({ setTopic, setResea
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <div className="flex space-x-2 items-center">
+      <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 items-stretch sm:items-center">
         <Input
           type="text"
           placeholder="e.g., 'I love someone maybe its you, '"
           value={topicInput}
           onChange={(e) => setTopicInput(e.target.value)}
-          className="flex-grow bg-slate-700 border-slate-600 placeholder-slate-400 text-white focus:ring-primary focus:border-primary"
+          className="w-full sm:flex-grow bg-slate-700 border-slate-600 placeholder-slate-400 text-white focus:ring-primary focus:border-primary"
           aria-label="Topic for research"
           onKeyDown={(e) => { if (e.key === 'Enter') handleResearchTopic(); }}
         />
         <Button 
           onClick={handleResearchTopic} 
           disabled={!topicInput.trim()}
-          className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-2 rounded-md transition-transform transform hover:scale-105"
+          className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-2 rounded-md transition-transform transform hover:scale-105"
         >
           <Icons.search className="mr-2 h-5 w-5" />
           Research
