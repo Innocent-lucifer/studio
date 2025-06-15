@@ -29,11 +29,11 @@ const MOCK_USER_ID = "sagepostai-guest-user";
 type WizardStep = 'initial' | 'angles' | 'series' | 'repurpose' | 'complete';
 
 const stepConfig: Record<WizardStep, { title: string; icon: keyof typeof Icons; progress: number; description?: string }> = {
-  initial: { title: "Smart Campaign Setup", icon: "settings", progress: 0, description: "Missing topic information." },
-  angles: { title: "Select Content Angle", icon: "lightbulb", progress: 25, description: "Choose a strategic angle." },
-  series: { title: "Generate Campaign Series", icon: "listChecks", progress: 50, description: "Crafting your posts." },
-  repurpose: { title: "Get Repurposing Ideas", icon: "repeat", progress: 75, description: "Maximizing content value." },
-  complete: { title: "Campaign Ready!", icon: "checkCircle", progress: 100, description: "Your campaign is generated." },
+  initial: { title: "Smart Campaign Setup", icon: "alertTriangle", progress: 0, description: "Missing topic information to start." },
+  angles: { title: "Select Content Angle", icon: "lightbulb", progress: 25, description: "Choose a strategic angle for your campaign." },
+  series: { title: "Generate Campaign Series", icon: "listChecks", progress: 50, description: "Crafting your posts based on the selected angle." },
+  repurpose: { title: "Get Repurposing Ideas", icon: "repeat", progress: 75, description: "Maximizing content value across platforms." },
+  complete: { title: "Campaign Ready!", icon: "checkCircle", progress: 100, description: "Your smart campaign has been generated." },
 };
 
 const cardVariants = {
@@ -73,8 +73,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
       setTopic(topicParam);
       setResearchedContent(researchedContentParam);
       setIsDataMissing(false);
-      // Only set to 'angles' and fetch if not already past 'initial' or if data was previously missing
-      if (currentStep === 'initial' || angles.length === 0) {
+      if (currentStep === 'initial' || (currentStep === 'angles' && angles.length === 0 && !isLoading) ) {
         setCurrentStep('angles');
         handleSuggestAngles(topicParam, researchedContentParam);
       }
@@ -83,10 +82,10 @@ const SmartCampaignWizardInternal: React.FC = () => {
       setCurrentStep('initial');
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams]); // Dependencies ensure this runs when params change. Avoid adding state setters that would cause loops.
+  }, [searchParams, currentStep]); 
 
   const handleSuggestAngles = async (currentTopic: string, currentResearchedContent: string) => {
-    if (!currentTopic || !currentResearchedContent) return; // Prevent call if data is somehow still missing
+    if (!currentTopic || !currentResearchedContent) return;
     setIsLoading(true);
     setLoadingMessage('Brainstorming content angles...');
     try {
@@ -118,7 +117,6 @@ const SmartCampaignWizardInternal: React.FC = () => {
     setLoadingMessage('Crafting your campaign series...');
     setCurrentStep('series');
     
-    // Clear previous series
     setTwitterSeries([]);
     setLinkedinSeries([]);
 
@@ -162,7 +160,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
     setIsLoading(true);
     setLoadingMessage('Finding repurposing opportunities...');
     setCurrentStep('repurpose');
-    setRepurposingIdeas([]); // Clear previous ideas
+    setRepurposingIdeas([]); 
     try {
       const campaignSummary = `Topic: ${topic}\nAngle: ${selectedAngle.title}\nTwitter Series: ${twitterSeries.join(' ')}\nLinkedIn Series: ${linkedinSeries.join(' ')}`;
       const input: SuggestRepurposingIdeasInput = { topic, selectedAngle: selectedAngle.title, campaignSummary, userId: MOCK_USER_ID, numIdeas: 4 };
@@ -200,10 +198,9 @@ const SmartCampaignWizardInternal: React.FC = () => {
   };
 
   const resetWizard = () => {
-    // Reset state for a new campaign on the same page, or navigate
     setTopic('');
     setResearchedContent('');
-    setIsDataMissing(true);
+    setIsDataMissing(true); // This will trigger the useEffect to show 'initial' state
     setCurrentStep('initial');
     setAngles([]);
     setSelectedAngle(null);
@@ -211,7 +208,6 @@ const SmartCampaignWizardInternal: React.FC = () => {
     setLinkedinSeries([]);
     setRepurposingIdeas([]);
     setEditingSeries(null);
-    // Navigate to home to force re-fetch of query params or clear them
     router.push('/'); 
   };
   
@@ -261,7 +257,7 @@ ${repurposingIdeas.map(idea => `- ${idea}`).join('\n') || 'No repurposing ideas 
               Campaign Topic: <span className="font-semibold text-slate-300">{topic}</span>
             </CardDescription>
           )}
-           {(isDataMissing || currentStep === 'initial') && (
+           {(isDataMissing || currentStep === 'initial') && stepConfig['initial']?.description && (
              <CardDescription className="text-slate-400 pt-2">
                 {stepConfig['initial']?.description}
             </CardDescription>
@@ -293,7 +289,7 @@ ${repurposingIdeas.map(idea => `- ${idea}`).join('\n') || 'No repurposing ideas 
             )}
 
             {!isLoading && currentStep === 'angles' && !isDataMissing && (
-              <motion.div key="angles" {...cardVariants} className="space-y-6">
+              <motion.div key="angles" {...cardVariants} className="space-y-6 min-h-[350px]">
                 <h3 className="text-xl font-medium text-slate-200">{stepConfig.angles.description}</h3>
                 <p className="text-slate-400">The AI will generate interconnected content based on your selection.</p>
                 {angles.length > 0 ? (
@@ -319,11 +315,25 @@ ${repurposingIdeas.map(idea => `- ${idea}`).join('\n') || 'No repurposing ideas 
                     </RadioGroup>
                   </ScrollArea>
                 ) : (
-                  <p className="text-slate-500 py-10 text-center">No content angles available. Try researching a different topic.</p>
+                  <div className="flex flex-col items-center justify-center h-[250px] text-center">
+                    <Icons.info className="w-12 h-12 text-slate-500 mb-4" />
+                    <p className="text-slate-400 text-lg">No content angles available currently.</p>
+                    <p className="text-slate-500 text-sm mt-1">
+                      This might be due to the nature of the topic or a temporary issue.
+                    </p>
+                     <Button 
+                        variant="outline" 
+                        onClick={() => handleSuggestAngles(topic, researchedContent)} 
+                        className="mt-4 border-slate-600 text-slate-300 hover:bg-slate-700"
+                        disabled={isLoading}
+                      >
+                       <Icons.refreshCw className="mr-2 h-4 w-4" /> Try Again
+                     </Button>
+                  </div>
                 )}
                 <Button 
                   onClick={handleGenerateSeries} 
-                  disabled={!selectedAngle || isLoading}
+                  disabled={!selectedAngle || isLoading || angles.length === 0}
                   size="lg"
                   className="w-full bg-primary hover:bg-primary/90 text-primary-foreground mt-4"
                 >
@@ -400,7 +410,19 @@ ${repurposingIdeas.map(idea => `- ${idea}`).join('\n') || 'No repurposing ideas 
                     </ul>
                   </ScrollArea>
                 ) : (
-                  <p className="text-slate-400 py-10 text-center">No repurposing ideas generated. You can still finalize your campaign.</p>
+                  <div className="flex flex-col items-center justify-center h-[250px] text-center">
+                    <Icons.info className="w-12 h-12 text-slate-500 mb-4" />
+                    <p className="text-slate-400 text-lg">No repurposing ideas generated.</p>
+                     <p className="text-slate-500 text-sm mt-1">You can still finalize your campaign or try generating ideas again.</p>
+                     <Button 
+                        variant="outline" 
+                        onClick={handleSuggestRepurposing} 
+                        className="mt-4 border-slate-600 text-slate-300 hover:bg-slate-700"
+                        disabled={isLoading}
+                      >
+                       <Icons.refreshCw className="mr-2 h-4 w-4" /> Try Again
+                     </Button>
+                  </div>
                 )}
                 <Separator className="my-6 bg-slate-700" />
                  <Button 
@@ -488,9 +510,10 @@ ${repurposingIdeas.map(idea => `- ${idea}`).join('\n') || 'No repurposing ideas 
 };
 
 export const SmartCampaignWizard: React.FC = () => {
+  // Use a key for Suspense that changes with searchParams to force re-mount if params change
+  const searchParamsString = typeof window !== 'undefined' ? window.location.search : 'initialKey';
   return (
-    // Suspense key ensures re-evaluation if query params change, e.g. navigating to same page with new params
-    <Suspense key={typeof window !== 'undefined' ? window.location.search : 'loading'} fallback={
+    <Suspense key={searchParamsString} fallback={
       <div className="flex flex-col items-center justify-center p-10 bg-slate-800/50 rounded-xl shadow-xl min-h-[300px]">
         <Icons.loader className="h-12 w-12 animate-spin text-primary mb-4" />
         <p className="text-lg text-slate-300">Loading Campaign Wizard...</p>

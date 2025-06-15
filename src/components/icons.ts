@@ -4,11 +4,11 @@ import {
   File, HelpCircle, Home, Lightbulb, ListChecks, Loader2, LogIn, LogOut, Mail, Menu, MessageSquare, Moon,
   Plus, PlusCircle, RefreshCw, Repeat, Save, Search, Server, Settings, Share2, Shield, Sun, Trash, User,
   UserPlus, Wand2, Workflow, Twitter, Linkedin, Sparkles, CalendarDays, Send, Feather,
-  CheckCircle, Lock, X, AlertTriangle // Added AlertTriangle
+  CheckCircle, Lock, X, AlertTriangle, Info // Added Info
 } from 'lucide-react';
 
 const Icons = {
-  alertTriangle: AlertTriangle, // Added AlertTriangle
+  alertTriangle: AlertTriangle, 
   arrowLeft: ArrowLeft,
   arrowRight: ArrowRight,
   barChartBig: BarChartBig,
@@ -26,6 +26,7 @@ const Icons = {
   feather: Feather,
   help: HelpCircle,
   home: Home,
+  info: Info, // Added Info
   light: Sun,
   lightbulb: Lightbulb,
   listChecks: ListChecks,
@@ -59,3 +60,4 @@ const Icons = {
 };
 
 export {Icons};
+
