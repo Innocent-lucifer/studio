@@ -39,8 +39,8 @@ export const TopicResearch: React.FC<TopicResearchProps> = ({ setTopic, setResea
         setTopic(topicInput); // Still set topic so user knows what failed
         setResearchedContent(`Error researching "${topicInput}": ${result.error}`);
       } else {
-        setTopic(topicInput); 
-        setResearchedContent(result.summary); 
+        setTopic(topicInput);
+        setResearchedContent(result.summary);
       }
     } catch (error: any) {
       console.error("Error researching topic:", error);
@@ -57,7 +57,7 @@ export const TopicResearch: React.FC<TopicResearchProps> = ({ setTopic, setResea
   };
 
   return (
-    <motion.div 
+    <motion.div
       className="mb-4"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -73,12 +73,12 @@ export const TopicResearch: React.FC<TopicResearchProps> = ({ setTopic, setResea
           aria-label="Topic for research"
           onKeyDown={(e) => { if (e.key === 'Enter') handleResearchTopic(); }}
         />
-        <Button 
-          onClick={handleResearchTopic} 
+        <Button
+          onClick={handleResearchTopic}
           disabled={!topicInput.trim()}
           className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-2 rounded-md transition-transform transform hover:scale-105"
         >
-          <Icons.search className="mr-2 h-5 w-5" />
+          <Icons.search /> {/* Removed custom classes for the icon */}
           Research
         </Button>
       </div>
