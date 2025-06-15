@@ -46,6 +46,8 @@ const prompt = ai.definePrompt({
     }),
   },
   prompt: `You are an expert social media campaign creator.
+Your entire output MUST be a valid JSON object containing a single key "series". The value of "series" must be an array of strings, where each string is a post.
+
 Based on the topic, selected content angle, and researched context, generate a cohesive series of {{numPostsInSeries}} interconnected posts for the {{platform}} platform.
 The posts should build on each other to explore the angle more deeply.
 
@@ -63,9 +65,16 @@ Generate a LinkedIn post series (or a single long-form post divided into {{numPo
 The content should be professional, insightful, and provide value to a business audience. Use emojis where appropriate.
 {{/if}}
 
-Generated Series:
+Remember to format your entire response as a JSON object with a "series" key. For example:
+{
+  "series": [
+    "Post 1 content here for {{platform}}...",
+    "Post 2 content here for {{platform}}...",
+    "Post 3 content here for {{platform}}..."
+  ]
+}
 `,
-  promptOptions: { 
+  promptOptions: {
     temperature: 0.7,
     safetySettings: [
       { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
@@ -87,7 +96,7 @@ const generateCampaignSeriesFlow = ai.defineFlow({
   }
 
   try {
-    console.log('[generateCampaignSeriesFlow] Calling AI prompt...');
+    console.log('[generateCampaignSeriesFlow] Calling AI prompt with input:', JSON.stringify(input, null, 2));
     const { output: promptOutput, usage } = await prompt(input);
     
     console.log('[generateCampaignSeriesFlow] Raw AI output:', JSON.stringify(promptOutput, null, 2));
@@ -95,7 +104,7 @@ const generateCampaignSeriesFlow = ai.defineFlow({
 
 
     if (!promptOutput || !promptOutput.series || promptOutput.series.length === 0) {
-      const errorMessage = `AI failed to generate a campaign series for ${input.platform}. This could be due to the nature of the topic or the AI's internal generation policies even with relaxed safety filters. Try a different angle or adjust the topic.`;
+      const errorMessage = `AI failed to generate a campaign series for ${input.platform}. This could be due to the nature of the topic, the AI's internal generation policies even with relaxed safety filters, or the AI not returning the expected JSON structure. Try a different angle or adjust the topic.`;
       console.warn(`[generateCampaignSeriesFlow] Warning: ${errorMessage}. Prompt output was:`, promptOutput);
       return { error: errorMessage };
     }
@@ -114,4 +123,3 @@ const generateCampaignSeriesFlow = ai.defineFlow({
     return { error: detailedErrorMessage };
   }
 });
-
