@@ -19,35 +19,54 @@ const SmartCampaignPageContent = () => {
       className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col items-center p-4 sm:p-8"
     >
       <main className="container mx-auto w-full max-w-4xl">
-        <header className="flex flex-col sm:flex-row justify-between items-center mb-8 py-4 gap-4">
+        <header className="flex justify-between items-center w-full mb-8 py-4">
           <Link href="/" passHref>
-            <div className="flex items-center space-x-3 cursor-pointer group">
-              <AppLogo className="h-12 w-12 text-primary group-hover:scale-110 transition-transform" />
+            <div className="flex items-center space-x-2 sm:space-x-3 cursor-pointer group">
+              <AppLogo className="h-10 w-10 sm:h-12 sm:w-12 text-primary group-hover:scale-110 transition-transform" />
               <div>
-                <h1 className="text-3xl font-bold tracking-tight text-primary">
+                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-primary">
                   SagePostAI
                 </h1>
-                <p className="text-sm text-slate-400 -mt-1">Smart Campaign Mode</p>
+                <p className="text-sm text-slate-400 -mt-1">Smart Campaign</p>
               </div>
             </div>
           </Link>
-          <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:space-x-3 sm:gap-0">
-            <Link href="/" passHref legacyBehavior>
-              <Button
-                variant="outline"
-                className="w-full sm:w-auto border-primary text-primary hover:bg-primary/10 hover:text-primary-foreground"
-              >
-                <Icons.edit className="mr-2 h-5 w-5" />
-                Quick Posts
-              </Button>
-            </Link>
-            <div className="text-right text-xs self-center sm:self-auto">
+          
+          <div className="flex items-center gap-3">
+            {/* Quick Posts Button for Desktop/Tablet in Header */}
+            <div className="hidden sm:flex">
+              <Link href="/" passHref legacyBehavior={false}>
+                <Button
+                  variant="outline"
+                  className="border-primary text-primary hover:bg-primary/10 hover:text-purple-300 transition-all duration-200 ease-in-out transform hover:scale-105 shadow-md hover:shadow-lg"
+                  size="sm"
+                >
+                  <Icons.edit className="mr-1 h-4 w-4" />
+                  Quick Posts
+                </Button>
+              </Link>
+            </div>
+            
+            <div className="text-right text-xs">
               <p className="font-semibold text-primary">Dev Mode</p>
-              <p className="text-slate-400">Unlimited Access</p>
+              <p className="text-slate-400">Guest</p> {/* Updated from "Unlimited Access" for consistency if needed */}
             </div>
             <HamburgerMenu />
           </div>
         </header>
+        
+        {/* Quick Posts Button for Mobile - Below Header */}
+        <div className="sm:hidden w-full mb-6">
+          <Link href="/" passHref legacyBehavior={false}>
+            <Button
+              variant="outline"
+              className="w-full border-primary text-primary hover:bg-primary/10 hover:text-purple-300"
+            >
+              <Icons.edit className="mr-2 h-5 w-5" />
+              Quick Posts
+            </Button>
+          </Link>
+        </div>
         
         <SmartCampaignWizard />
       </main>
@@ -75,3 +94,4 @@ const LoadingState = () => (
     <p className="mt-4 text-xl">Loading Smart Campaign...</p>
   </div>
 );
+
