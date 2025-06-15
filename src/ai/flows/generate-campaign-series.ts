@@ -65,7 +65,7 @@ The content should be professional, insightful, and provide value to a business 
 
 Generated Series:
 `,
-  promptOptions: { // Renamed from config to promptOptions for consistency with other flows.
+  promptOptions: { 
     temperature: 0.7,
     safetySettings: [
       { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
@@ -81,35 +81,37 @@ const generateCampaignSeriesFlow = ai.defineFlow({
   inputSchema: GenerateCampaignSeriesInputSchema,
   outputSchema: GenerateCampaignSeriesOutputSchema,
 }, async (input) => {
+  console.log(`[generateCampaignSeriesFlow] Starting for platform: ${input.platform}, topic: "${input.topic}", angle: "${input.selectedAngle}"`);
   if (input.userId !== MOCK_USER_ID_FOR_STUBBED_AUTH) {
     // Auth stubbed - credit check logic would go here
-    // const userData = await getUserData(input.userId);
-    // if (!userData) return { error: "User data not found." };
-    // if (userData.plan !== 'infinity' && (userData.credits || 0) <= 0) { // Assuming campaign generation also costs
-    //   return { error: "You have no credits remaining. Please upgrade your plan." };
-    // }
   }
 
   try {
-    const { output: promptOutput } = await prompt(input);
+    console.log('[generateCampaignSeriesFlow] Calling AI prompt...');
+    const { output: promptOutput, usage } = await prompt(input);
+    
+    console.log('[generateCampaignSeriesFlow] Raw AI output:', JSON.stringify(promptOutput, null, 2));
+    console.log('[generateCampaignSeriesFlow] Usage data:', JSON.stringify(usage, null, 2));
+
 
     if (!promptOutput || !promptOutput.series || promptOutput.series.length === 0) {
-      return { error: `AI failed to generate a campaign series for ${input.platform}. This could be due to the nature of the topic or the AI's internal generation policies even with relaxed safety filters. Try a different angle or adjust the topic.` };
+      const errorMessage = `AI failed to generate a campaign series for ${input.platform}. This could be due to the nature of the topic or the AI's internal generation policies even with relaxed safety filters. Try a different angle or adjust the topic.`;
+      console.warn(`[generateCampaignSeriesFlow] Warning: ${errorMessage}. Prompt output was:`, promptOutput);
+      return { error: errorMessage };
     }
     
     // Auth stubbed - credit deduction logic would go here
-    // if (input.userId !== MOCK_USER_ID_FOR_STUBBED_AUTH) {
-    //   const userData = await getUserData(input.userId);
-    //   if (userData && userData.plan !== 'infinity') {
-    //     await deductCredits(input.userId, 1); // Example: Deduct 1 credit per platform series generated
-    //   }
-    // }
 
+    console.log(`[generateCampaignSeriesFlow] Successfully generated ${promptOutput.series.length} posts for ${input.platform}.`);
     return { series: promptOutput.series };
 
   } catch (e: any) {
-    console.error(`Error in generateCampaignSeriesFlow for ${input.platform}:`, e);
-    return { error: e.message || `An unexpected error occurred while generating the ${input.platform} series.` };
+    console.error(`[generateCampaignSeriesFlow] Error during series generation for ${input.platform}:`, e);
+    let detailedErrorMessage = e.message || `An unexpected error occurred while generating the ${input.platform} series.`;
+    if (e.data?.error?.message) { // Check for nested error messages from the API
+        detailedErrorMessage += ` (AI Provider Error: ${e.data.error.message})`;
+    }
+    return { error: detailedErrorMessage };
   }
 });
 
