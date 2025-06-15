@@ -67,6 +67,12 @@ Generated Series:
 `,
   promptOptions: {
     temperature: 0.7,
+    safetySettings: [ // Added safety settings
+      { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_ONLY_HIGH' },
+      { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_ONLY_HIGH' },
+      { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_ONLY_HIGH' },
+      { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
+    ],
   },
 });
 
@@ -88,7 +94,7 @@ const generateCampaignSeriesFlow = ai.defineFlow({
     const { output: promptOutput } = await prompt(input);
 
     if (!promptOutput || !promptOutput.series || promptOutput.series.length === 0) {
-      return { error: `AI failed to generate a campaign series for ${input.platform}.` };
+      return { error: `AI failed to generate a campaign series for ${input.platform}. This could be due to the nature of the topic or safety filters. Try a different angle or adjust the topic.` };
     }
     
     // Auth stubbed - credit deduction logic would go here
@@ -106,3 +112,4 @@ const generateCampaignSeriesFlow = ai.defineFlow({
     return { error: e.message || `An unexpected error occurred while generating the ${input.platform} series.` };
   }
 });
+
