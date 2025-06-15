@@ -66,7 +66,7 @@ export const TopicResearch: React.FC<TopicResearchProps> = ({ setTopic, setResea
       <div className="flex space-x-2 items-center">
         <Input
           type="text"
-          placeholder="e.g., 'The future of AI in marketing'"
+          placeholder="e.g., 'i love someone maybe its you, '"
           value={topicInput}
           onChange={(e) => setTopicInput(e.target.value)}
           className="flex-grow bg-slate-700 border-slate-600 placeholder-slate-400 text-white focus:ring-primary focus:border-primary"
