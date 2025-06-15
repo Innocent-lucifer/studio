@@ -63,7 +63,9 @@ const SmartCampaignWizardInternal: React.FC = () => {
   
   const [editingSeries, setEditingSeries] = useState<{ platform: 'twitter' | 'linkedin'; index: number; text: string } | null>(null);
   
-  const [repurposingIdeas, setRepurposingIdeas] = useState<string[]>([]);
+  const [twitterRepurposingIdeas, setTwitterRepurposingIdeas] = useState<string[]>([]);
+  const [linkedinRepurposingIdeas, setLinkedinRepurposingIdeas] = useState<string[]>([]);
+
 
   useEffect(() => {
     const topicParam = searchParams.get('topic');
@@ -82,7 +84,16 @@ const SmartCampaignWizardInternal: React.FC = () => {
       setCurrentStep('initial');
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams, currentStep]); 
+  }, [searchParams]); 
+
+  useEffect(() => {
+     // Auto-trigger angle suggestion if data is present and we are on the initial/angles step without angles
+    if (!isDataMissing && topic && researchedContent && currentStep === 'angles' && angles.length === 0 && !isLoading) {
+      handleSuggestAngles(topic, researchedContent);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [topic, researchedContent, currentStep, isDataMissing, angles.length, isLoading]);
+
 
   const handleSuggestAngles = async (currentTopic: string, currentResearchedContent: string) => {
     if (!currentTopic || !currentResearchedContent) return;
@@ -114,7 +125,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
         return;
     }
     setIsLoading(true);
-    setLoadingMessage('Crafting your campaign series...');
+    setLoadingMessage('Crafting your campaign series (Twitter & LinkedIn)...');
     setCurrentStep('series');
     
     setTwitterSeries([]);
@@ -152,7 +163,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
     }
   };
   
-  const handleSuggestRepurposing = async () => {
+ const handleSuggestRepurposing = async () => {
     if (!topic || !selectedAngle || (twitterSeries.length === 0 && linkedinSeries.length === 0) || isDataMissing) {
       toast({ variant: "destructive", title: "Missing Information", description: "Campaign series must be generated first." });
       return;
@@ -160,26 +171,70 @@ const SmartCampaignWizardInternal: React.FC = () => {
     setIsLoading(true);
     setLoadingMessage('Finding repurposing opportunities...');
     setCurrentStep('repurpose');
-    setRepurposingIdeas([]); 
-    try {
-      const campaignSummary = `Topic: ${topic}\nAngle: ${selectedAngle.title}\nTwitter Series: ${twitterSeries.join(' ')}\nLinkedIn Series: ${linkedinSeries.join(' ')}`;
-      const input: SuggestRepurposingIdeasInput = { topic, selectedAngle: selectedAngle.title, campaignSummary, userId: MOCK_USER_ID, numIdeas: 4 };
-      const result = await suggestRepurposingIdeas(input);
+    setTwitterRepurposingIdeas([]);
+    setLinkedinRepurposingIdeas([]);
 
-      if (result.error) {
-        toast({ variant: "destructive", title: "Repurposing Ideas Failed", description: result.error });
-      } else {
-        setRepurposingIdeas(result.ideas || []);
-        if ((result.ideas || []).length === 0) {
-          toast({ variant: "default", title: "No Repurposing Ideas", description: "The AI couldn't find repurposing ideas for this campaign." });
+    const promises = [];
+    let twitterPromise, linkedinPromise;
+
+    if (twitterSeries.length > 0) {
+      const twitterInput: SuggestRepurposingIdeasInput = {
+        topic,
+        selectedAngle: selectedAngle.title,
+        campaignSummary: twitterSeries.join('\n\n---\n\n'),
+        userId: MOCK_USER_ID,
+        numIdeas: 3
+      };
+      twitterPromise = suggestRepurposingIdeas(twitterInput);
+      promises.push(twitterPromise);
+    } else {
+       promises.push(Promise.resolve({ ideas: [], error: undefined })); // Placeholder if no twitter series
+    }
+
+    if (linkedinSeries.length > 0) {
+      const linkedinInput: SuggestRepurposingIdeasInput = {
+        topic,
+        selectedAngle: selectedAngle.title,
+        campaignSummary: linkedinSeries.join('\n\n---\n\n'),
+        userId: MOCK_USER_ID,
+        numIdeas: 3
+      };
+      linkedinPromise = suggestRepurposingIdeas(linkedinInput);
+      promises.push(linkedinPromise);
+    } else {
+        promises.push(Promise.resolve({ ideas: [], error: undefined })); // Placeholder if no linkedin series
+    }
+
+    try {
+      const [twitterResult, linkedinResult] = await Promise.all(promises);
+
+      if (twitterSeries.length > 0) {
+        if (twitterResult.error) {
+          toast({ variant: "destructive", title: "Twitter Repurposing Ideas Failed", description: twitterResult.error });
+        } else {
+          setTwitterRepurposingIdeas(twitterResult.ideas || []);
         }
       }
+      
+      if (linkedinSeries.length > 0) {
+        if (linkedinResult.error) {
+          toast({ variant: "destructive", title: "LinkedIn Repurposing Ideas Failed", description: linkedinResult.error });
+        } else {
+          setLinkedinRepurposingIdeas(linkedinResult.ideas || []);
+        }
+      }
+      
+      if ((twitterResult.ideas || []).length === 0 && (linkedinResult.ideas || []).length === 0) {
+         toast({ variant: "default", title: "No Repurposing Ideas", description: "The AI couldn't find repurposing ideas for this campaign." });
+      }
+
     } catch (error: any) {
       toast({ variant: "destructive", title: "Error Suggesting Repurposing", description: error.message || "Failed to suggest repurposing ideas." });
     } finally {
       setIsLoading(false);
     }
   };
+
 
   const startEdit = (platform: 'twitter' | 'linkedin', index: number, text: string) => {
     setEditingSeries({ platform, index, text });
@@ -200,31 +255,50 @@ const SmartCampaignWizardInternal: React.FC = () => {
   const resetWizard = () => {
     setTopic('');
     setResearchedContent('');
-    setIsDataMissing(true); // This will trigger the useEffect to show 'initial' state
+    setIsDataMissing(true); 
     setCurrentStep('initial');
     setAngles([]);
     setSelectedAngle(null);
     setTwitterSeries([]);
     setLinkedinSeries([]);
-    setRepurposingIdeas([]);
+    setTwitterRepurposingIdeas([]);
+    setLinkedinRepurposingIdeas([]);
     setEditingSeries(null);
-    router.push('/'); 
+    router.push('/smart-campaign'); // Navigate to smart-campaign to clear params or to '/'
   };
   
   const handleCopyCampaign = () => {
-    const contentToCopy = `
-Topic: ${topic}
-Selected Angle: ${selectedAngle?.title || 'N/A'}
+    let contentToCopy = `Smart Campaign for Topic: ${topic}\nSelected Angle: ${selectedAngle?.title || 'N/A'}\n\n`;
 
-Twitter Series:
-${twitterSeries.map((post, i) => `Tweet ${i+1}:\n${post}`).join('\n\n---\n\n') || 'No Twitter posts generated.'}
+    if (twitterSeries.length > 0) {
+      contentToCopy += `=== Twitter Series ===\n`;
+      contentToCopy += twitterSeries.map((post, i) => `Tweet ${i+1}:\n${post}`).join('\n\n---\n\n');
+      contentToCopy += `\n\n`;
+    } else {
+      contentToCopy += `=== Twitter Series ===\nNo Twitter posts generated.\n\n`;
+    }
+    
+    if (twitterRepurposingIdeas.length > 0) {
+        contentToCopy += `--- Repurposing Ideas for Twitter ---\n`;
+        contentToCopy += twitterRepurposingIdeas.map(idea => `- ${idea}`).join('\n');
+        contentToCopy += `\n\n`;
+    }
 
-LinkedIn Series:
-${linkedinSeries.map((post, i) => `LinkedIn Post ${i+1}:\n${post}`).join('\n\n---\n\n') || 'No LinkedIn posts generated.'}
 
-Repurposing Ideas:
-${repurposingIdeas.map(idea => `- ${idea}`).join('\n') || 'No repurposing ideas generated.'}
-    `;
+    if (linkedinSeries.length > 0) {
+      contentToCopy += `=== LinkedIn Series ===\n`;
+      contentToCopy += linkedinSeries.map((post, i) => `LinkedIn Post ${i+1}:\n${post}`).join('\n\n---\n\n');
+      contentToCopy += `\n\n`;
+    } else {
+       contentToCopy += `=== LinkedIn Series ===\nNo LinkedIn posts generated.\n\n`;
+    }
+
+    if (linkedinRepurposingIdeas.length > 0) {
+        contentToCopy += `--- Repurposing Ideas for LinkedIn ---\n`;
+        contentToCopy += linkedinRepurposingIdeas.map(idea => `- ${idea}`).join('\n');
+        contentToCopy += `\n\n`;
+    }
+    
     navigator.clipboard.writeText(contentToCopy.trim());
     toast({ title: "Campaign Copied!", description: "Full campaign content copied to clipboard." });
   };
@@ -354,13 +428,12 @@ ${repurposingIdeas.map(idea => `- ${idea}`).join('\n') || 'No repurposing ideas 
                     </CardHeader>
                     <CardContent className="space-y-3">
                       <ScrollArea className="h-[250px] pr-2">
-                        {twitterSeries.map((post, index) => (
+                        {twitterSeries.length > 0 ? twitterSeries.map((post, index) => (
                           <div key={`twitter-${index}`} className="p-3 bg-slate-600/70 rounded-md text-slate-200 text-sm mb-2">
                             <p className="whitespace-pre-wrap">{post}</p>
                             <Button variant="link" size="sm" onClick={() => startEdit('twitter', index, post)} className="text-sky-400/80 hover:text-sky-400 p-0 h-auto mt-1">Edit</Button>
                           </div>
-                        ))}
-                        {twitterSeries.length === 0 && <p className="text-slate-400 text-center py-4">No Twitter posts generated.</p>}
+                        )) : <p className="text-slate-400 text-center py-4">No Twitter posts generated.</p>}
                       </ScrollArea>
                     </CardContent>
                   </Card>
@@ -371,13 +444,12 @@ ${repurposingIdeas.map(idea => `- ${idea}`).join('\n') || 'No repurposing ideas 
                     </CardHeader>
                     <CardContent className="space-y-3">
                        <ScrollArea className="h-[250px] pr-2">
-                          {linkedinSeries.map((post, index) => (
+                          {linkedinSeries.length > 0 ? linkedinSeries.map((post, index) => (
                             <div key={`linkedin-${index}`} className="p-3 bg-slate-600/70 rounded-md text-slate-200 text-sm mb-2">
                               <p className="whitespace-pre-wrap">{post}</p>
                               <Button variant="link" size="sm" onClick={() => startEdit('linkedin', index, post)} className="text-blue-400/80 hover:text-blue-400 p-0 h-auto mt-1">Edit</Button>
                             </div>
-                          ))}
-                          {linkedinSeries.length === 0 && <p className="text-slate-400 text-center py-4">No LinkedIn posts generated.</p>}
+                          )) : <p className="text-slate-400 text-center py-4">No LinkedIn posts generated.</p>}
                        </ScrollArea>
                     </CardContent>
                   </Card>
@@ -400,30 +472,66 @@ ${repurposingIdeas.map(idea => `- ${idea}`).join('\n') || 'No repurposing ideas 
 
             {!isLoading && currentStep === 'repurpose' && !isDataMissing && (
               <motion.div key="repurpose" {...cardVariants} className="space-y-6">
-                <h3 className="text-xl font-medium text-slate-200">Repurposing Ideas for: <span className="text-purple-400">{selectedAngle?.title || 'Selected Angle'}</span></h3>
-                {repurposingIdeas.length > 0 ? (
-                  <ScrollArea className="h-[300px] pr-3">
-                    <ul className="list-disc list-inside space-y-2 pl-4 text-slate-300">
-                      {repurposingIdeas.map((idea, index) => (
-                        <li key={index} className="p-3 bg-slate-700/50 rounded-md border border-slate-600">{idea}</li>
-                      ))}
-                    </ul>
-                  </ScrollArea>
-                ) : (
-                  <div className="flex flex-col items-center justify-center h-[250px] text-center">
-                    <Icons.info className="w-12 h-12 text-slate-500 mb-4" />
-                    <p className="text-slate-400 text-lg">No repurposing ideas generated.</p>
-                     <p className="text-slate-500 text-sm mt-1">You can still finalize your campaign or try generating ideas again.</p>
-                     <Button 
-                        variant="outline" 
-                        onClick={handleSuggestRepurposing} 
-                        className="mt-4 border-slate-600 text-slate-300 hover:bg-slate-700"
-                        disabled={isLoading}
-                      >
-                       <Icons.refreshCw className="mr-2 h-4 w-4" /> Try Again
-                     </Button>
-                  </div>
+                <h3 className="text-xl font-medium text-slate-200 mb-1">Repurposing Ideas for: <span className="text-purple-400">{selectedAngle?.title || 'Selected Angle'}</span></h3>
+                
+                <div className="grid md:grid-cols-2 gap-6">
+                    <Card className="bg-slate-700/50 border-slate-600">
+                        <CardHeader>
+                            <CardTitle className="flex items-center text-lg text-sky-400"><Icons.twitter className="mr-2 h-5 w-5" /> For Your Twitter Series</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <ScrollArea className="h-[200px] pr-2">
+                                {twitterRepurposingIdeas.length > 0 ? (
+                                    <ul className="list-disc list-inside space-y-2 text-slate-300">
+                                        {twitterRepurposingIdeas.map((idea, index) => (
+                                            <li key={`twitter-repurpose-${index}`} className="p-2 bg-slate-600/50 rounded-md">{idea}</li>
+                                        ))}
+                                    </ul>
+                                ) : (
+                                    <p className="text-slate-400 text-center py-4">
+                                      {twitterSeries.length > 0 ? "No specific repurposing ideas generated for Twitter." : "No Twitter series available to generate ideas."}
+                                    </p>
+                                )}
+                            </ScrollArea>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="bg-slate-700/50 border-slate-600">
+                        <CardHeader>
+                            <CardTitle className="flex items-center text-lg text-blue-400"><Icons.linkedin className="mr-2 h-5 w-5" /> For Your LinkedIn Series</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <ScrollArea className="h-[200px] pr-2">
+                                {linkedinRepurposingIdeas.length > 0 ? (
+                                    <ul className="list-disc list-inside space-y-2 text-slate-300">
+                                        {linkedinRepurposingIdeas.map((idea, index) => (
+                                            <li key={`linkedin-repurpose-${index}`} className="p-2 bg-slate-600/50 rounded-md">{idea}</li>
+                                        ))}
+                                    </ul>
+                                ) : (
+                                     <p className="text-slate-400 text-center py-4">
+                                      {linkedinSeries.length > 0 ? "No specific repurposing ideas generated for LinkedIn." : "No LinkedIn series available to generate ideas."}
+                                    </p>
+                                )}
+                            </ScrollArea>
+                        </CardContent>
+                    </Card>
+                </div>
+                {(twitterRepurposingIdeas.length === 0 && linkedinRepurposingIdeas.length === 0 && (twitterSeries.length > 0 || linkedinSeries.length > 0)) && (
+                    <div className="flex flex-col items-center justify-center text-center mt-4">
+                        <Icons.info className="w-10 h-10 text-slate-500 mb-2" />
+                        <p className="text-slate-400 text-md">The AI couldn't find repurposing ideas for the generated content.</p>
+                        <Button 
+                            variant="outline" 
+                            onClick={handleSuggestRepurposing} 
+                            className="mt-3 border-slate-600 text-slate-300 hover:bg-slate-700"
+                            disabled={isLoading}
+                        >
+                           <Icons.refreshCw className="mr-2 h-4 w-4" /> Try Generating Ideas Again
+                        </Button>
+                    </div>
                 )}
+
                 <Separator className="my-6 bg-slate-700" />
                  <Button 
                   onClick={() => setCurrentStep('complete')}
@@ -510,7 +618,6 @@ ${repurposingIdeas.map(idea => `- ${idea}`).join('\n') || 'No repurposing ideas 
 };
 
 export const SmartCampaignWizard: React.FC = () => {
-  // Use a key for Suspense that changes with searchParams to force re-mount if params change
   const searchParamsString = typeof window !== 'undefined' ? window.location.search : 'initialKey';
   return (
     <Suspense key={searchParamsString} fallback={
