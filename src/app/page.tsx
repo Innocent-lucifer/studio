@@ -75,6 +75,8 @@ export default function Home() {
     },
   };
 
+  const canProceedToSmartCampaign = !researchIsLoading && !!topic.trim() && !!researchedContent.trim();
+
   return (
     <>
       <motion.div
@@ -86,7 +88,7 @@ export default function Home() {
         className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col items-center p-4 sm:p-8 transition-colors duration-500"
       >
         <main className="container mx-auto w-full max-w-4xl">
-          <header className="flex justify-between items-center w-full mb-8 py-4">
+          <header className="flex justify-between items-center w-full mb-8 py-4 px-4">
             {/* Logo and App Name */}
             <div className="flex items-center space-x-2 sm:space-x-3">
               <motion.div
@@ -108,9 +110,8 @@ export default function Home() {
               </h1>
             </div>
 
-            {/* Right side controls: Smart Campaign, Dev Mode Text, Hamburger Menu */}
+            {/* Right side controls: Smart Campaign (desktop), Dev Mode Text, Hamburger Menu */}
             <div className="flex items-center gap-3">
-              {/* Smart Campaign Button for Desktop/Tablet */}
               <div className="hidden sm:flex">
                 <Link
                   href={{
@@ -119,11 +120,15 @@ export default function Home() {
                   }}
                   passHref
                   legacyBehavior={false}
+                  aria-disabled={!canProceedToSmartCampaign}
+                  onClick={(e) => !canProceedToSmartCampaign && e.preventDefault()}
                 >
                   <Button
                     variant="outline"
-                    className="border-purple-500 text-purple-400 hover:bg-purple-500/20 hover:text-purple-300 transition-all duration-200 ease-in-out transform hover:scale-105 shadow-md hover:shadow-lg"
+                    className="border-purple-500 text-purple-400 hover:bg-purple-500/20 hover:text-purple-300 transition-all duration-200 ease-in-out transform hover:scale-105 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                     size="sm"
+                    disabled={!canProceedToSmartCampaign}
+                    title={!canProceedToSmartCampaign ? "Please research a topic first" : "Go to Smart Campaign"}
                   >
                     <Icons.sparkles className="mr-1 h-4 w-4" />
                     Smart Campaign
@@ -140,27 +145,31 @@ export default function Home() {
           </header>
           
           {/* Smart Campaign Button for Mobile - Below Header */}
-          <div className="sm:hidden w-full mb-6">
-            <Link
-              href={{
-                pathname: '/smart-campaign',
-                query: { topic: topic, researchedContent: researchedContent },
-              }}
-              passHref
-              legacyBehavior={false}
-            >
-              <Button
-                variant="outline"
-                className="w-full border-purple-500 text-purple-400 hover:bg-purple-500/20 hover:text-purple-300"
+          <div className="sm:hidden w-full mb-6 px-4">
+             <Link
+                href={{
+                  pathname: '/smart-campaign',
+                  query: { topic: topic, researchedContent: researchedContent },
+                }}
+                passHref
+                legacyBehavior={false}
+                aria-disabled={!canProceedToSmartCampaign}
+                onClick={(e) => !canProceedToSmartCampaign && e.preventDefault()}
               >
-                <Icons.sparkles className="mr-2 h-5 w-5" />
-                Smart Campaign
-              </Button>
-            </Link>
+                <Button
+                  variant="outline"
+                  className="w-full border-purple-500 text-purple-400 hover:bg-purple-500/20 hover:text-purple-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={!canProceedToSmartCampaign}
+                  title={!canProceedToSmartCampaign ? "Please research a topic first" : "Go to Smart Campaign"}
+                >
+                  <Icons.sparkles className="mr-2 h-5 w-5" />
+                  Smart Campaign
+                </Button>
+              </Link>
           </div>
 
 
-          <motion.div variants={staggerChildren} initial="initial" animate="animate">
+          <motion.div variants={staggerChildren} initial="initial" animate="animate" className="px-4 sm:px-0">
             <motion.div variants={cardVariants}>
               <Card className="mb-8 bg-slate-800/50 border-slate-700 shadow-2xl hover:shadow-primary/30 transition-shadow duration-300 rounded-xl">
                 <CardHeader>
