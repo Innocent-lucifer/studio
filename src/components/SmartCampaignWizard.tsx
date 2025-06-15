@@ -1,9 +1,8 @@
-
 "use client";
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -66,37 +65,11 @@ const SmartCampaignWizardInternal: React.FC = () => {
   const [twitterRepurposingIdeas, setTwitterRepurposingIdeas] = useState<string[]>([]);
   const [linkedinRepurposingIdeas, setLinkedinRepurposingIdeas] = useState<string[]>([]);
 
-
-  useEffect(() => {
-    const topicParam = searchParams.get('topic');
-    const researchedContentParam = searchParams.get('researchedContent');
-
-    if (topicParam && researchedContentParam) {
-      setTopic(topicParam);
-      setResearchedContent(researchedContentParam);
-      setIsDataMissing(false);
-      if (currentStep === 'initial' || (currentStep === 'angles' && angles.length === 0 && !isLoading) ) {
-        setCurrentStep('angles');
-        handleSuggestAngles(topicParam, researchedContentParam);
-      }
-    } else {
-      setIsDataMissing(true);
-      setCurrentStep('initial');
+  const handleSuggestAngles = useCallback(async (currentTopic: string, currentResearchedContent: string) => {
+    if (!currentTopic || !currentResearchedContent) {
+      toast({ variant: "destructive", title: "Missing Data", description: "Topic or research content is missing for angle suggestion." });
+      return;
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams]); 
-
-  useEffect(() => {
-     // Auto-trigger angle suggestion if data is present and we are on the initial/angles step without angles
-    if (!isDataMissing && topic && researchedContent && currentStep === 'angles' && angles.length === 0 && !isLoading) {
-      handleSuggestAngles(topic, researchedContent);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [topic, researchedContent, currentStep, isDataMissing, angles.length, isLoading]);
-
-
-  const handleSuggestAngles = async (currentTopic: string, currentResearchedContent: string) => {
-    if (!currentTopic || !currentResearchedContent) return;
     setIsLoading(true);
     setLoadingMessage('Brainstorming content angles...');
     try {
@@ -117,7 +90,35 @@ const SmartCampaignWizardInternal: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [toast, setIsLoading, setLoadingMessage, setAngles]);
+
+
+  useEffect(() => {
+    const topicParam = searchParams.get('topic');
+    const researchedContentParam = searchParams.get('researchedContent');
+
+    if (topicParam && researchedContentParam && researchedContentParam.trim() !== "") {
+      setTopic(topicParam);
+      setResearchedContent(researchedContentParam);
+      setIsDataMissing(false);
+      if (currentStep === 'initial') {
+          setCurrentStep('angles');
+      }
+    } else {
+      setTopic(topicParam || ''); 
+      setResearchedContent('');
+      setIsDataMissing(true);
+      setCurrentStep('initial');
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]); 
+
+  useEffect(() => {
+    if (currentStep === 'angles' && !isDataMissing && topic && researchedContent && angles.length === 0 && !isLoading) {
+      handleSuggestAngles(topic, researchedContent);
+    }
+  }, [currentStep, isDataMissing, topic, researchedContent, angles.length, isLoading, handleSuggestAngles]);
+
 
   const handleGenerateSeries = async () => {
     if (!selectedAngle || !topic || isDataMissing || !researchedContent) {
@@ -175,7 +176,6 @@ const SmartCampaignWizardInternal: React.FC = () => {
     setLinkedinRepurposingIdeas([]);
 
     const promises = [];
-    let twitterPromise, linkedinPromise;
 
     if (twitterSeries.length > 0) {
       const twitterInput: SuggestRepurposingIdeasInput = {
@@ -185,10 +185,9 @@ const SmartCampaignWizardInternal: React.FC = () => {
         userId: MOCK_USER_ID,
         numIdeas: 3
       };
-      twitterPromise = suggestRepurposingIdeas(twitterInput);
-      promises.push(twitterPromise);
+      promises.push(suggestRepurposingIdeas(twitterInput));
     } else {
-       promises.push(Promise.resolve({ ideas: [], error: undefined })); // Placeholder if no twitter series
+       promises.push(Promise.resolve({ ideas: [], error: undefined })); 
     }
 
     if (linkedinSeries.length > 0) {
@@ -199,16 +198,15 @@ const SmartCampaignWizardInternal: React.FC = () => {
         userId: MOCK_USER_ID,
         numIdeas: 3
       };
-      linkedinPromise = suggestRepurposingIdeas(linkedinInput);
-      promises.push(linkedinPromise);
+      promises.push(suggestRepurposingIdeas(linkedinInput));
     } else {
-        promises.push(Promise.resolve({ ideas: [], error: undefined })); // Placeholder if no linkedin series
+        promises.push(Promise.resolve({ ideas: [], error: undefined })); 
     }
 
     try {
       const [twitterResult, linkedinResult] = await Promise.all(promises);
 
-      if (twitterSeries.length > 0) {
+      if (twitterSeries.length > 0 && twitterResult) {
         if (twitterResult.error) {
           toast({ variant: "destructive", title: "Twitter Repurposing Ideas Failed", description: twitterResult.error });
         } else {
@@ -216,7 +214,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
         }
       }
       
-      if (linkedinSeries.length > 0) {
+      if (linkedinSeries.length > 0 && linkedinResult) {
         if (linkedinResult.error) {
           toast({ variant: "destructive", title: "LinkedIn Repurposing Ideas Failed", description: linkedinResult.error });
         } else {
@@ -224,7 +222,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
         }
       }
       
-      if ((twitterResult.ideas || []).length === 0 && (linkedinResult.ideas || []).length === 0) {
+      if ((twitterResult?.ideas || []).length === 0 && (linkedinResult?.ideas || []).length === 0) {
          toast({ variant: "default", title: "No Repurposing Ideas", description: "The AI couldn't find repurposing ideas for this campaign." });
       }
 
@@ -264,7 +262,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
     setTwitterRepurposingIdeas([]);
     setLinkedinRepurposingIdeas([]);
     setEditingSeries(null);
-    router.push('/smart-campaign'); // Navigate to smart-campaign to clear params or to '/'
+    router.push('/smart-campaign'); 
   };
   
   const handleCopyCampaign = () => {
@@ -313,6 +311,271 @@ const SmartCampaignWizardInternal: React.FC = () => {
 
   const CurrentIcon = Icons[stepConfig[currentStep]?.icon || 'help'] || Icons.help;
 
+  const renderStepContent = () => {
+    if (isLoading) {
+      return (
+        <motion.div key="loading" initial="hidden" animate="visible" exit="exit" variants={cardVariants}>
+          {renderLoadingState()}
+        </motion.div>
+      );
+    }
+
+    switch (currentStep) {
+      case 'initial':
+        if (isDataMissing) {
+          return (
+            <motion.div key="initial-missing-data" initial="hidden" animate="visible" exit="exit" variants={cardVariants} className="text-center space-y-4 py-8 min-h-[300px] flex flex-col justify-center items-center">
+              <Icons.alertTriangle className="h-16 w-16 text-yellow-400 mx-auto" />
+              <h3 className="text-2xl font-semibold text-slate-100">Topic Information Needed</h3>
+              <p className="text-slate-300 max-w-md mx-auto">
+                To start building a Smart Campaign, please research a topic on the main page first.
+                The Smart Campaign wizard uses this researched information to generate relevant content angles and posts.
+              </p>
+              <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground mt-4">
+                <Link href="/">
+                  <Icons.arrowLeft className="mr-2 h-5 w-5" />
+                  Back to Topic Research
+                </Link>
+              </Button>
+            </motion.div>
+          );
+        }
+        return null; // Should not happen if logic is correct, covered by isLoading or next step
+
+      case 'angles':
+        if (!isDataMissing) {
+          return (
+            <motion.div key="angles" initial="hidden" animate="visible" exit="exit" variants={cardVariants} className="space-y-6 min-h-[350px]">
+              <h3 className="text-xl font-medium text-slate-200">{stepConfig.angles.description}</h3>
+              <p className="text-slate-400">The AI will generate interconnected content based on your selection.</p>
+              {angles.length > 0 ? (
+                <ScrollArea className="h-[300px] pr-3">
+                  <RadioGroup 
+                    value={selectedAngle?.title}
+                    onValueChange={(value) => setSelectedAngle(angles.find(a => a.title === value) || null)}
+                    className="space-y-3"
+                  >
+                    {angles.map((angle, index) => (
+                      <Label 
+                        key={index} 
+                        htmlFor={`angle-${index}`}
+                        className="flex flex-col p-4 rounded-lg border border-slate-600 hover:border-primary/70 has-[:checked]:border-primary has-[:checked]:bg-primary/10 transition-all cursor-pointer"
+                      >
+                        <div className="flex items-center space-x-3">
+                          <RadioGroupItem value={angle.title} id={`angle-${index}`} className="border-slate-500 text-primary focus:ring-primary" />
+                          <span className="font-semibold text-slate-100 text-lg">{angle.title}</span>
+                        </div>
+                        <p className="ml-8 mt-1 text-sm text-slate-400">{angle.explanation}</p>
+                      </Label>
+                    ))}
+                  </RadioGroup>
+                </ScrollArea>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-[250px] text-center">
+                  <Icons.info className="w-12 h-12 text-slate-500 mb-4" />
+                  <p className="text-slate-400 text-lg">No content angles available currently.</p>
+                  <p className="text-slate-500 text-sm mt-1">
+                    This might be due to the nature of the topic or a temporary issue.
+                  </p>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => handleSuggestAngles(topic, researchedContent)} 
+                      className="mt-4 border-slate-600 text-slate-300 hover:bg-slate-700"
+                      disabled={isLoading || !topic || !researchedContent}
+                    >
+                      <Icons.refreshCw className="mr-2 h-4 w-4" /> Try Again
+                    </Button>
+                </div>
+              )}
+              <Button 
+                onClick={handleGenerateSeries} 
+                disabled={!selectedAngle || isLoading || angles.length === 0}
+                size="lg"
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground mt-4"
+              >
+                <Icons.listChecks className="mr-2 h-5 w-5" />
+                Generate Campaign Series
+              </Button>
+            </motion.div>
+          );
+        }
+        return null;
+      
+      case 'series':
+         if (!isDataMissing) {
+          return (
+            <motion.div key="series" initial="hidden" animate="visible" exit="exit" variants={cardVariants} className="space-y-6">
+              <h3 className="text-xl font-medium text-slate-200">Your Campaign Series for: <span className="text-purple-400">{selectedAngle?.title || 'Selected Angle'}</span></h3>
+              <div className="grid md:grid-cols-2 gap-6">
+                <Card className="bg-slate-700/50 border-slate-600">
+                  <CardHeader>
+                    <CardTitle className="flex items-center text-lg text-sky-400"><Icons.twitter className="mr-2 h-5 w-5" /> Twitter Thread</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <ScrollArea className="h-[250px] pr-2">
+                      {twitterSeries.length > 0 ? twitterSeries.map((post, index) => (
+                        <div key={`twitter-${index}`} className="p-3 bg-slate-600/70 rounded-md text-slate-200 text-sm mb-2">
+                          <p className="whitespace-pre-wrap">{post}</p>
+                          <Button variant="link" size="sm" onClick={() => startEdit('twitter', index, post)} className="text-sky-400/80 hover:text-sky-400 p-0 h-auto mt-1">Edit</Button>
+                        </div>
+                      )) : <p className="text-slate-400 text-center py-4">No Twitter posts generated.</p>}
+                    </ScrollArea>
+                  </CardContent>
+                </Card>
+                <Card className="bg-slate-700/50 border-slate-600">
+                  <CardHeader>
+                    <CardTitle className="flex items-center text-lg text-blue-400"><Icons.linkedin className="mr-2 h-5 w-5" /> LinkedIn Series</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                      <ScrollArea className="h-[250px] pr-2">
+                        {linkedinSeries.length > 0 ? linkedinSeries.map((post, index) => (
+                          <div key={`linkedin-${index}`} className="p-3 bg-slate-600/70 rounded-md text-slate-200 text-sm mb-2">
+                            <p className="whitespace-pre-wrap">{post}</p>
+                            <Button variant="link" size="sm" onClick={() => startEdit('linkedin', index, post)} className="text-blue-400/80 hover:text-blue-400 p-0 h-auto mt-1">Edit</Button>
+                          </div>
+                        )) : <p className="text-slate-400 text-center py-4">No LinkedIn posts generated.</p>}
+                      </ScrollArea>
+                  </CardContent>
+                </Card>
+              </div>
+              <Button 
+                onClick={handleSuggestRepurposing} 
+                disabled={isLoading || (twitterSeries.length === 0 && linkedinSeries.length === 0)}
+                size="lg"
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground mt-4"
+              >
+                  <Icons.repeat className="mr-2 h-5 w-5" />
+                Suggest Repurposing Ideas
+              </Button>
+                <Button variant="outline" onClick={() => setCurrentStep('angles')} className="w-full mt-2 border-slate-600 text-slate-300 hover:bg-slate-700">
+                <Icons.arrowLeft className="mr-2 h-5 w-5" /> Back to Angles
+              </Button>
+            </motion.div>
+          );
+        }
+        return null;
+
+      case 'repurpose':
+        if (!isDataMissing) {
+          return (
+            <motion.div key="repurpose" initial="hidden" animate="visible" exit="exit" variants={cardVariants} className="space-y-6">
+              <h3 className="text-xl font-medium text-slate-200 mb-1">Repurposing Ideas for: <span className="text-purple-400">{selectedAngle?.title || 'Selected Angle'}</span></h3>
+              <div className="grid md:grid-cols-2 gap-6">
+                  <Card className="bg-slate-700/50 border-slate-600">
+                      <CardHeader>
+                          <CardTitle className="flex items-center text-lg text-sky-400"><Icons.twitter className="mr-2 h-5 w-5" /> For Your Twitter Series</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                          <ScrollArea className="h-[200px] pr-2">
+                              {twitterRepurposingIdeas.length > 0 ? (
+                                  <ul className="list-disc list-inside space-y-2 text-slate-300">
+                                      {twitterRepurposingIdeas.map((idea, index) => (
+                                          <li key={`twitter-repurpose-${index}`} className="p-2 bg-slate-600/50 rounded-md">{idea}</li>
+                                      ))}
+                                  </ul>
+                              ) : (
+                                  <p className="text-slate-400 text-center py-4">
+                                    {twitterSeries.length > 0 ? "No specific repurposing ideas generated for Twitter." : "No Twitter series available to generate ideas."}
+                                  </p>
+                              )}
+                          </ScrollArea>
+                      </CardContent>
+                  </Card>
+                  <Card className="bg-slate-700/50 border-slate-600">
+                      <CardHeader>
+                          <CardTitle className="flex items-center text-lg text-blue-400"><Icons.linkedin className="mr-2 h-5 w-5" /> For Your LinkedIn Series</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                          <ScrollArea className="h-[200px] pr-2">
+                              {linkedinRepurposingIdeas.length > 0 ? (
+                                  <ul className="list-disc list-inside space-y-2 text-slate-300">
+                                      {linkedinRepurposingIdeas.map((idea, index) => (
+                                          <li key={`linkedin-repurpose-${index}`} className="p-2 bg-slate-600/50 rounded-md">{idea}</li>
+                                      ))}
+                                  </ul>
+                              ) : (
+                                    <p className="text-slate-400 text-center py-4">
+                                    {linkedinSeries.length > 0 ? "No specific repurposing ideas generated for LinkedIn." : "No LinkedIn series available to generate ideas."}
+                                  </p>
+                              )}
+                          </ScrollArea>
+                      </CardContent>
+                  </Card>
+              </div>
+              {(twitterRepurposingIdeas.length === 0 && linkedinRepurposingIdeas.length === 0 && (twitterSeries.length > 0 || linkedinSeries.length > 0)) && (
+                  <div className="flex flex-col items-center justify-center text-center mt-4">
+                      <Icons.info className="w-10 h-10 text-slate-500 mb-2" />
+                      <p className="text-slate-400 text-md">The AI couldn't find repurposing ideas for the generated content.</p>
+                      <Button 
+                          variant="outline" 
+                          onClick={handleSuggestRepurposing} 
+                          className="mt-3 border-slate-600 text-slate-300 hover:bg-slate-700"
+                          disabled={isLoading}
+                      >
+                          <Icons.refreshCw className="mr-2 h-4 w-4" /> Try Generating Ideas Again
+                      </Button>
+                  </div>
+              )}
+              <Separator className="my-6 bg-slate-700" />
+                <Button 
+                onClick={() => setCurrentStep('complete')}
+                size="lg"
+                className="w-full bg-green-600 hover:bg-green-700 text-white mt-4"
+              >
+                <Icons.checkCircle className="mr-2 h-5 w-5" />
+                Finalize Campaign
+              </Button>
+              <Button variant="outline" onClick={() => setCurrentStep('series')} className="w-full mt-2 border-slate-600 text-slate-300 hover:bg-slate-700">
+                <Icons.arrowLeft className="mr-2 h-5 w-5" /> Back to Series
+              </Button>
+            </motion.div>
+          );
+        }
+        return null;
+      
+      case 'complete':
+        if (!isDataMissing) {
+          return (
+            <motion.div key="complete" initial="hidden" animate="visible" exit="exit" variants={cardVariants} className="text-center space-y-6 py-8 min-h-[300px] flex flex-col justify-center items-center">
+              <Icons.checkCircle className="h-20 w-20 text-green-500 mx-auto mb-4" />
+              <h2 className="text-3xl font-bold text-slate-100">Your Smart Campaign is Ready!</h2>
+              <p className="text-slate-300 max-w-md mx-auto">
+                You've successfully generated content angles, a campaign series, and repurposing ideas for your topic: <span className="font-semibold text-purple-400">{topic}</span>.
+              </p>
+              <p className="text-slate-400">What would you like to do next?</p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
+                <Button 
+                  onClick={handleCopyCampaign}
+                  size="lg"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                >
+                  <Icons.copy className="mr-2 h-5 w-5" /> Copy Full Campaign
+                </Button>
+                <Button 
+                  onClick={resetWizard}
+                  size="lg"
+                  variant="outline"
+                  className="border-slate-600 text-slate-300 hover:bg-slate-700"
+                >
+                  <Icons.refreshCw className="mr-2 h-5 w-5" /> Start New Campaign
+                </Button>
+              </div>
+                <Button 
+                  variant="link"
+                  onClick={() => setCurrentStep('repurpose')} 
+                  className="mt-4 text-slate-400 hover:text-primary">
+                    <Icons.arrowLeft className="mr-1 h-4 w-4" /> Back to Repurposing Ideas
+                </Button>
+            </motion.div>
+          );
+        }
+        return null;
+
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="w-full space-y-8">
       <Card className="bg-slate-800/70 border-slate-700 shadow-2xl rounded-xl">
@@ -338,248 +601,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
            )}
         </CardHeader>
         <CardContent className="p-6">
-          <AnimatePresence mode="wait">
-            {isLoading && (
-              <motion.div key="loading" {...cardVariants}>
-                {renderLoadingState()}
-              </motion.div>
-            )}
-
-            {!isLoading && currentStep === 'initial' && isDataMissing && (
-              <motion.div key="initial-missing-data" {...cardVariants} className="text-center space-y-4 py-8 min-h-[300px] flex flex-col justify-center items-center">
-                <Icons.alertTriangle className="h-16 w-16 text-yellow-400 mx-auto" />
-                <h3 className="text-2xl font-semibold text-slate-100">Topic Information Needed</h3>
-                <p className="text-slate-300 max-w-md mx-auto">
-                  To start building a Smart Campaign, please research a topic on the main page first.
-                  The Smart Campaign wizard uses this researched information to generate relevant content angles and posts.
-                </p>
-                <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground mt-4">
-                  <Link href="/">
-                    <Icons.arrowLeft className="mr-2 h-5 w-5" />
-                    Back to Topic Research
-                  </Link>
-                </Button>
-              </motion.div>
-            )}
-
-            {!isLoading && currentStep === 'angles' && !isDataMissing && (
-              <motion.div key="angles" {...cardVariants} className="space-y-6 min-h-[350px]">
-                <h3 className="text-xl font-medium text-slate-200">{stepConfig.angles.description}</h3>
-                <p className="text-slate-400">The AI will generate interconnected content based on your selection.</p>
-                {angles.length > 0 ? (
-                  <ScrollArea className="h-[300px] pr-3">
-                    <RadioGroup 
-                      value={selectedAngle?.title}
-                      onValueChange={(value) => setSelectedAngle(angles.find(a => a.title === value) || null)}
-                      className="space-y-3"
-                    >
-                      {angles.map((angle, index) => (
-                        <Label 
-                          key={index} 
-                          htmlFor={`angle-${index}`}
-                          className="flex flex-col p-4 rounded-lg border border-slate-600 hover:border-primary/70 has-[:checked]:border-primary has-[:checked]:bg-primary/10 transition-all cursor-pointer"
-                        >
-                          <div className="flex items-center space-x-3">
-                            <RadioGroupItem value={angle.title} id={`angle-${index}`} className="border-slate-500 text-primary focus:ring-primary" />
-                            <span className="font-semibold text-slate-100 text-lg">{angle.title}</span>
-                          </div>
-                          <p className="ml-8 mt-1 text-sm text-slate-400">{angle.explanation}</p>
-                        </Label>
-                      ))}
-                    </RadioGroup>
-                  </ScrollArea>
-                ) : (
-                  <div className="flex flex-col items-center justify-center h-[250px] text-center">
-                    <Icons.info className="w-12 h-12 text-slate-500 mb-4" />
-                    <p className="text-slate-400 text-lg">No content angles available currently.</p>
-                    <p className="text-slate-500 text-sm mt-1">
-                      This might be due to the nature of the topic or a temporary issue.
-                    </p>
-                     <Button 
-                        variant="outline" 
-                        onClick={() => handleSuggestAngles(topic, researchedContent)} 
-                        className="mt-4 border-slate-600 text-slate-300 hover:bg-slate-700"
-                        disabled={isLoading}
-                      >
-                       <Icons.refreshCw className="mr-2 h-4 w-4" /> Try Again
-                     </Button>
-                  </div>
-                )}
-                <Button 
-                  onClick={handleGenerateSeries} 
-                  disabled={!selectedAngle || isLoading || angles.length === 0}
-                  size="lg"
-                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground mt-4"
-                >
-                  <Icons.listChecks className="mr-2 h-5 w-5" />
-                  Generate Campaign Series
-                </Button>
-              </motion.div>
-            )}
-
-            {!isLoading && currentStep === 'series' && !isDataMissing && (
-              <motion.div key="series" {...cardVariants} className="space-y-6">
-                 <h3 className="text-xl font-medium text-slate-200">Your Campaign Series for: <span className="text-purple-400">{selectedAngle?.title || 'Selected Angle'}</span></h3>
-                
-                <div className="grid md:grid-cols-2 gap-6">
-                  <Card className="bg-slate-700/50 border-slate-600">
-                    <CardHeader>
-                      <CardTitle className="flex items-center text-lg text-sky-400"><Icons.twitter className="mr-2 h-5 w-5" /> Twitter Thread</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <ScrollArea className="h-[250px] pr-2">
-                        {twitterSeries.length > 0 ? twitterSeries.map((post, index) => (
-                          <div key={`twitter-${index}`} className="p-3 bg-slate-600/70 rounded-md text-slate-200 text-sm mb-2">
-                            <p className="whitespace-pre-wrap">{post}</p>
-                            <Button variant="link" size="sm" onClick={() => startEdit('twitter', index, post)} className="text-sky-400/80 hover:text-sky-400 p-0 h-auto mt-1">Edit</Button>
-                          </div>
-                        )) : <p className="text-slate-400 text-center py-4">No Twitter posts generated.</p>}
-                      </ScrollArea>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="bg-slate-700/50 border-slate-600">
-                    <CardHeader>
-                      <CardTitle className="flex items-center text-lg text-blue-400"><Icons.linkedin className="mr-2 h-5 w-5" /> LinkedIn Series</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                       <ScrollArea className="h-[250px] pr-2">
-                          {linkedinSeries.length > 0 ? linkedinSeries.map((post, index) => (
-                            <div key={`linkedin-${index}`} className="p-3 bg-slate-600/70 rounded-md text-slate-200 text-sm mb-2">
-                              <p className="whitespace-pre-wrap">{post}</p>
-                              <Button variant="link" size="sm" onClick={() => startEdit('linkedin', index, post)} className="text-blue-400/80 hover:text-blue-400 p-0 h-auto mt-1">Edit</Button>
-                            </div>
-                          )) : <p className="text-slate-400 text-center py-4">No LinkedIn posts generated.</p>}
-                       </ScrollArea>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                <Button 
-                  onClick={handleSuggestRepurposing} 
-                  disabled={isLoading || (twitterSeries.length === 0 && linkedinSeries.length === 0)}
-                  size="lg"
-                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground mt-4"
-                >
-                   <Icons.repeat className="mr-2 h-5 w-5" />
-                  Suggest Repurposing Ideas
-                </Button>
-                 <Button variant="outline" onClick={() => setCurrentStep('angles')} className="w-full mt-2 border-slate-600 text-slate-300 hover:bg-slate-700">
-                  <Icons.arrowLeft className="mr-2 h-5 w-5" /> Back to Angles
-                </Button>
-              </motion.div>
-            )}
-
-            {!isLoading && currentStep === 'repurpose' && !isDataMissing && (
-              <motion.div key="repurpose" {...cardVariants} className="space-y-6">
-                <h3 className="text-xl font-medium text-slate-200 mb-1">Repurposing Ideas for: <span className="text-purple-400">{selectedAngle?.title || 'Selected Angle'}</span></h3>
-                
-                <div className="grid md:grid-cols-2 gap-6">
-                    <Card className="bg-slate-700/50 border-slate-600">
-                        <CardHeader>
-                            <CardTitle className="flex items-center text-lg text-sky-400"><Icons.twitter className="mr-2 h-5 w-5" /> For Your Twitter Series</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <ScrollArea className="h-[200px] pr-2">
-                                {twitterRepurposingIdeas.length > 0 ? (
-                                    <ul className="list-disc list-inside space-y-2 text-slate-300">
-                                        {twitterRepurposingIdeas.map((idea, index) => (
-                                            <li key={`twitter-repurpose-${index}`} className="p-2 bg-slate-600/50 rounded-md">{idea}</li>
-                                        ))}
-                                    </ul>
-                                ) : (
-                                    <p className="text-slate-400 text-center py-4">
-                                      {twitterSeries.length > 0 ? "No specific repurposing ideas generated for Twitter." : "No Twitter series available to generate ideas."}
-                                    </p>
-                                )}
-                            </ScrollArea>
-                        </CardContent>
-                    </Card>
-
-                    <Card className="bg-slate-700/50 border-slate-600">
-                        <CardHeader>
-                            <CardTitle className="flex items-center text-lg text-blue-400"><Icons.linkedin className="mr-2 h-5 w-5" /> For Your LinkedIn Series</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <ScrollArea className="h-[200px] pr-2">
-                                {linkedinRepurposingIdeas.length > 0 ? (
-                                    <ul className="list-disc list-inside space-y-2 text-slate-300">
-                                        {linkedinRepurposingIdeas.map((idea, index) => (
-                                            <li key={`linkedin-repurpose-${index}`} className="p-2 bg-slate-600/50 rounded-md">{idea}</li>
-                                        ))}
-                                    </ul>
-                                ) : (
-                                     <p className="text-slate-400 text-center py-4">
-                                      {linkedinSeries.length > 0 ? "No specific repurposing ideas generated for LinkedIn." : "No LinkedIn series available to generate ideas."}
-                                    </p>
-                                )}
-                            </ScrollArea>
-                        </CardContent>
-                    </Card>
-                </div>
-                {(twitterRepurposingIdeas.length === 0 && linkedinRepurposingIdeas.length === 0 && (twitterSeries.length > 0 || linkedinSeries.length > 0)) && (
-                    <div className="flex flex-col items-center justify-center text-center mt-4">
-                        <Icons.info className="w-10 h-10 text-slate-500 mb-2" />
-                        <p className="text-slate-400 text-md">The AI couldn't find repurposing ideas for the generated content.</p>
-                        <Button 
-                            variant="outline" 
-                            onClick={handleSuggestRepurposing} 
-                            className="mt-3 border-slate-600 text-slate-300 hover:bg-slate-700"
-                            disabled={isLoading}
-                        >
-                           <Icons.refreshCw className="mr-2 h-4 w-4" /> Try Generating Ideas Again
-                        </Button>
-                    </div>
-                )}
-
-                <Separator className="my-6 bg-slate-700" />
-                 <Button 
-                  onClick={() => setCurrentStep('complete')}
-                  size="lg"
-                  className="w-full bg-green-600 hover:bg-green-700 text-white mt-4"
-                >
-                  <Icons.checkCircle className="mr-2 h-5 w-5" />
-                  Finalize Campaign
-                </Button>
-                <Button variant="outline" onClick={() => setCurrentStep('series')} className="w-full mt-2 border-slate-600 text-slate-300 hover:bg-slate-700">
-                  <Icons.arrowLeft className="mr-2 h-5 w-5" /> Back to Series
-                </Button>
-              </motion.div>
-            )}
-             {!isLoading && currentStep === 'complete' && !isDataMissing && (
-              <motion.div key="complete" {...cardVariants} className="text-center space-y-6 py-8 min-h-[300px] flex flex-col justify-center items-center">
-                <Icons.checkCircle className="h-20 w-20 text-green-500 mx-auto mb-4" />
-                <h2 className="text-3xl font-bold text-slate-100">Your Smart Campaign is Ready!</h2>
-                <p className="text-slate-300 max-w-md mx-auto">
-                  You've successfully generated content angles, a campaign series, and repurposing ideas for your topic: <span className="font-semibold text-purple-400">{topic}</span>.
-                </p>
-                <p className="text-slate-400">What would you like to do next?</p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-                  <Button 
-                    onClick={handleCopyCampaign}
-                    size="lg"
-                    className="bg-primary hover:bg-primary/90 text-primary-foreground"
-                  >
-                    <Icons.copy className="mr-2 h-5 w-5" /> Copy Full Campaign
-                  </Button>
-                  <Button 
-                    onClick={resetWizard}
-                    size="lg"
-                    variant="outline"
-                    className="border-slate-600 text-slate-300 hover:bg-slate-700"
-                  >
-                    <Icons.refreshCw className="mr-2 h-5 w-5" /> Start New Campaign
-                  </Button>
-                </div>
-                 <Button 
-                    variant="link"
-                    onClick={() => setCurrentStep('repurpose')} 
-                    className="mt-4 text-slate-400 hover:text-primary">
-                     <Icons.arrowLeft className="mr-1 h-4 w-4" /> Back to Repurposing Ideas
-                 </Button>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {renderStepContent()}
         </CardContent>
       </Card>
 
@@ -618,7 +640,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
 };
 
 export const SmartCampaignWizard: React.FC = () => {
-  const searchParamsString = typeof window !== 'undefined' ? window.location.search : 'initialKey';
+  const searchParamsString = typeof window !== 'undefined' ? window.location.search : 'stableInitialKey';
   return (
     <Suspense key={searchParamsString} fallback={
       <div className="flex flex-col items-center justify-center p-10 bg-slate-800/50 rounded-xl shadow-xl min-h-[300px]">
