@@ -86,7 +86,7 @@ export default function Home() {
         className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col items-center p-4 sm:p-8 transition-colors duration-500"
       >
         <main className="container mx-auto w-full max-w-4xl">
-          <header className="relative flex justify-center sm:justify-between items-center w-full mb-8 py-4 gap-4">
+          <header className="flex justify-between items-center w-full mb-8 py-4">
             {/* Logo and App Name */}
             <div className="flex items-center space-x-2 sm:space-x-3">
               <motion.div
@@ -109,21 +109,20 @@ export default function Home() {
             </div>
 
             {/* Right side controls: Smart Campaign, Dev Mode Text, Hamburger Menu */}
-            <div className="absolute top-4 right-4 sm:static flex flex-col items-end sm:flex-row sm:items-center gap-2 sm:gap-3">
-              <div className="hidden sm:block">
+            <div className="flex items-center gap-3">
+              {/* Smart Campaign Button for Desktop/Tablet */}
+              <div className="hidden sm:flex">
                 <Link
                   href={{
                     pathname: '/smart-campaign',
                     query: { topic: topic, researchedContent: researchedContent },
                   }}
                   passHref
-                  legacyBehavior={true}
+                  legacyBehavior={false}
                 >
                   <Button
-                    asChild={false}
                     variant="outline"
                     className="border-purple-500 text-purple-400 hover:bg-purple-500/20 hover:text-purple-300 transition-all duration-200 ease-in-out transform hover:scale-105 shadow-md hover:shadow-lg"
-                    disabled={!topic || !researchedContent}
                     size="sm"
                   >
                     <Icons.sparkles className="mr-1 h-4 w-4" />
@@ -131,6 +130,7 @@ export default function Home() {
                   </Button>
                 </Link>
               </div>
+              
               <div className="text-right text-xs">
                 <p className="font-semibold text-primary">Dev Mode</p>
                 <p className="text-slate-400">Guest</p>
@@ -147,13 +147,11 @@ export default function Home() {
                 query: { topic: topic, researchedContent: researchedContent },
               }}
               passHref
-              legacyBehavior={true}
+              legacyBehavior={false}
             >
               <Button
-                asChild={false}
                 variant="outline"
                 className="w-full border-purple-500 text-purple-400 hover:bg-purple-500/20 hover:text-purple-300"
-                disabled={!topic || !researchedContent}
               >
                 <Icons.sparkles className="mr-2 h-5 w-5" />
                 Smart Campaign
