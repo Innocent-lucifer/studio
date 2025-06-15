@@ -18,12 +18,10 @@ export async function searchTwitter(input: { query: string }): Promise<string> {
   if (!apiKey || !apiKeySecret) {
     const warningMessage = `ACTION REQUIRED: Twitter API key and/or secret not found in environment variables (.env file). 
     Twitter search will return placeholder data. 
-    Please set TWITTER_API_KEY and TWITTER_API_KEY_SECRET in your .env file for live Twitter results.
-    Example .env content:
-    TWITTER_API_KEY=your_api_key
-    TWITTER_API_KEY_SECRET=your_api_key_secret`;
+    Please set TWITTER_API_KEY and TWITTER_API_KEY_SECRET in your .env file for live Twitter results.`;
     console.warn(warningMessage);
-    return `[Placeholder] Twitter search results for "${input.query}" (Reason: API credentials not configured in .env).`;
+    // Return a more neutral message for the research context
+    return `Twitter search functionality is not configured. No real-time tweet insights are available for "${input.query}".`;
   }
 
   try {
@@ -49,7 +47,7 @@ export async function searchTwitter(input: { query: string }): Promise<string> {
     });
 
     if (!searchResponse.data || !searchResponse.data.data || searchResponse.data.data.length === 0) {
-      return `No recent tweets found for "${input.query}".`;
+      return `No recent tweets found for "${input.query}". General knowledge will be used.`;
     }
 
     const tweets = searchResponse.data.data.map(tweet => {
@@ -60,26 +58,26 @@ export async function searchTwitter(input: { query: string }): Promise<string> {
     return `Recent tweets for "${input.query}":\n${tweets}`;
 
   } catch (error: any) {
-    console.error(`Error during Twitter search for query "${input.query}":`, error); // Log the full error object
-    let errorMessage = `Error during Twitter search for "${input.query}": API request failed. `;
+    console.error(`Error during Twitter search for query "${input.query}":`, error);
+    let errorMessage = `Error during Twitter search for "${input.query}". `;
     
     if (error && typeof error.message === 'string' && error.message.includes('Cannot access') && error.message.includes('before initialization')) {
-      errorMessage += `A critical error occurred while trying to initialize the 'twitter-api-v2' library: "${error.message}". This often indicates a compatibility issue between the library and the Next.js server environment. Twitter search functionality will be affected.`;
-      console.error("Detailed error: 'twitter-api-v2' failed to initialize correctly. This may require investigating the library's compatibility or seeking alternative solutions for Twitter integration.");
+      errorMessage += `A critical error occurred with the Twitter library. `;
     } else if (error.rateLimit) {
-      errorMessage += `Rate limit exceeded. Please try again later. (Rate limit resets at: ${new Date(error.rateLimit.reset * 1000).toLocaleTimeString()})`;
+      errorMessage += `Rate limit exceeded. `;
     } else if (error.isAuthError) {
-      errorMessage += `Authentication failed. Please check your Twitter API keys in the .env file.`;
+      errorMessage += `Authentication failed with Twitter. `;
     } else {
-      errorMessage += `This could be due to network issues, or other API errors. (Details: ${error.message || 'Unknown error'})`;
+      errorMessage += `API request failed. `;
     }
-    return errorMessage;
+    // Return a more neutral message for the research context
+    return `${errorMessage}Could not fetch live Twitter data for "${input.query}". Proceeding with general knowledge.`;
   }
 }
 
 ai.defineTool({
     name: 'searchTwitter',
-    description: 'Searches Twitter for recent tweets related to a given query. Provides tweet text, author, and basic metrics.',
+    description: 'Searches Twitter for recent tweets related to a given query. Provides tweet text, author, and basic metrics. Returns neutral message if search fails or is unconfigured.',
     inputSchema: SearchTwitterInputSchema,
     outputSchema: SearchTwitterOutputSchema,
   },
