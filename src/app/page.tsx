@@ -86,8 +86,9 @@ export default function Home() {
         className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col items-center p-4 sm:p-8 transition-colors duration-500"
       >
         <main className="container mx-auto w-full max-w-4xl">
-          <header className="flex flex-wrap justify-between items-center mb-8 py-4 gap-4">
-            <div className="flex items-center space-x-3">
+          <header className="relative flex justify-center sm:justify-between items-center w-full mb-8 py-4 gap-4">
+            {/* Logo and App Name */}
+            <div className="flex items-center space-x-2 sm:space-x-3">
               <motion.div
                 initial={{ scale: 0.5, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
@@ -100,39 +101,66 @@ export default function Home() {
                   }
                 }}
               >
-                <AppLogo className="h-16 w-16 text-primary" />
+                <AppLogo className="h-10 w-10 sm:h-16 sm:w-16 text-primary" />
               </motion.div>
-              <h1 className="text-4xl font-bold tracking-tight" style={{ color: 'hsl(var(--primary))' }}>
+              <h1 className="text-2xl sm:text-4xl font-bold tracking-tight" style={{ color: 'hsl(var(--primary))' }}>
                 SagePostAI
               </h1>
             </div>
-            <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-3 space-y-2 sm:space-y-0">
-               <Link
-                href={{
-                  pathname: '/smart-campaign',
-                  query: { topic: topic, researchedContent: researchedContent },
-                }}
-                passHref
-                legacyBehavior={true}
-              >
-                <Button
-                  asChild={false} 
-                  variant="outline"
-                  className="w-full sm:w-auto border-purple-500 text-purple-400 hover:bg-purple-500/20 hover:text-purple-300 transition-all duration-200 ease-in-out transform hover:scale-105 shadow-md hover:shadow-lg"
+
+            {/* Right side controls: Smart Campaign, Dev Mode Text, Hamburger Menu */}
+            <div className="absolute top-4 right-4 sm:static flex flex-col items-end sm:flex-row sm:items-center gap-2 sm:gap-3">
+              <div className="hidden sm:block">
+                <Link
+                  href={{
+                    pathname: '/smart-campaign',
+                    query: { topic: topic, researchedContent: researchedContent },
+                  }}
+                  passHref
+                  legacyBehavior={true}
                 >
-                  <Icons.sparkles className="mr-2 h-5 w-5" />
-                  Smart Campaign
-                </Button>
-              </Link>
-              <div className="flex items-center space-x-3 justify-end sm:justify-start">
-                <div className="text-right text-xs">
-                  <p className="font-semibold text-primary">Dev Mode</p>
-                  <p className="text-slate-400">Guest Access (Auth Disabled)</p>
-                </div>
-                <HamburgerMenu />
+                  <Button
+                    asChild={false}
+                    variant="outline"
+                    className="border-purple-500 text-purple-400 hover:bg-purple-500/20 hover:text-purple-300 transition-all duration-200 ease-in-out transform hover:scale-105 shadow-md hover:shadow-lg"
+                    disabled={!topic || !researchedContent}
+                    size="sm"
+                  >
+                    <Icons.sparkles className="mr-1 h-4 w-4" />
+                    Smart Campaign
+                  </Button>
+                </Link>
               </div>
+              <div className="text-right text-xs">
+                <p className="font-semibold text-primary">Dev Mode</p>
+                <p className="text-slate-400">Guest</p>
+              </div>
+              <HamburgerMenu />
             </div>
           </header>
+          
+          {/* Smart Campaign Button for Mobile - Below Header */}
+          <div className="sm:hidden w-full mb-6">
+            <Link
+              href={{
+                pathname: '/smart-campaign',
+                query: { topic: topic, researchedContent: researchedContent },
+              }}
+              passHref
+              legacyBehavior={true}
+            >
+              <Button
+                asChild={false}
+                variant="outline"
+                className="w-full border-purple-500 text-purple-400 hover:bg-purple-500/20 hover:text-purple-300"
+                disabled={!topic || !researchedContent}
+              >
+                <Icons.sparkles className="mr-2 h-5 w-5" />
+                Smart Campaign
+              </Button>
+            </Link>
+          </div>
+
 
           <motion.div variants={staggerChildren} initial="initial" animate="animate">
             <motion.div variants={cardVariants}>
