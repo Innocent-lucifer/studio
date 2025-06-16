@@ -9,18 +9,21 @@ import { useToast } from "@/hooks/use-toast";
 import { motion } from 'framer-motion';
 import { Icons } from "./icons";
 
-// const MOCK_USER_ID = "sagepostai-guest-user"; // userId will be passed as a prop
-
 interface TopicResearchProps {
   setTopic: (topic: string) => void;
   setResearchedContent: (content: string) => void;
   setIsLoading: (isLoading: boolean) => void;
-  userId: string; // Add userId prop
+  userId: string;
 }
 
 export const TopicResearch: React.FC<TopicResearchProps> = ({ setTopic, setResearchedContent, setIsLoading, userId }) => {
   const [topicInput, setTopicInput] = useState<string>("");
   const { toast } = useToast();
+
+  const buttonMotionProps = {
+    whileHover: { scale: 1.05, transition: { type: "spring", stiffness: 400, damping: 10 } },
+    whileTap: { scale: 0.95, transition: { type: "spring", stiffness: 400, damping: 17 } },
+  };
 
   const handleResearchTopic = async () => {
     if (!topicInput.trim()) {
@@ -32,12 +35,12 @@ export const TopicResearch: React.FC<TopicResearchProps> = ({ setTopic, setResea
       return;
     }
     setIsLoading(true);
-    setResearchedContent(""); // Clear previous research
+    setResearchedContent(""); 
     try {
-      const result = await researchTopic({ topic: topicInput, userId: userId }); // Use passed userId
+      const result = await researchTopic({ topic: topicInput, userId: userId }); 
       if (result.error) {
         toast({ variant: "destructive", title: "Research Failed", description: result.error });
-        setTopic(topicInput); // Still set topic so user knows what failed
+        setTopic(topicInput); 
         setResearchedContent(`Error researching "${topicInput}": ${result.error}`);
       } else {
         setTopic(topicInput);
@@ -74,14 +77,16 @@ export const TopicResearch: React.FC<TopicResearchProps> = ({ setTopic, setResea
           aria-label="Topic for research"
           onKeyDown={(e) => { if (e.key === 'Enter') handleResearchTopic(); }}
         />
-        <Button
-          onClick={handleResearchTopic}
-          disabled={!topicInput.trim()}
-          className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-2 rounded-md transition-transform transform hover:scale-105"
-        >
-          <Icons.search /> {/* Removed custom classes for the icon */}
-          Research
-        </Button>
+        <motion.div {...buttonMotionProps} className="w-full sm:w-auto">
+          <Button
+            onClick={handleResearchTopic}
+            disabled={!topicInput.trim()}
+            className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-2 rounded-md" 
+          >
+            <Icons.search /> 
+            Research
+          </Button>
+        </motion.div>
       </div>
        <p className="mt-2 text-xs text-slate-400">
         Enter a topic and let SagePostAI gather insights and information for your posts.

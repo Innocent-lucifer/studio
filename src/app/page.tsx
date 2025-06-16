@@ -8,8 +8,6 @@ import { AppLogo } from '@/components/AppLogo';
 import { HamburgerMenu } from '@/components/HamburgerMenu';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
-// import { useRouter } from 'next/navigation'; // Not needed if not redirecting
-// import { useEffect } from 'react'; // Not needed if not redirecting
 
 interface FeatureCardProps {
   icon: keyof typeof Icons;
@@ -26,7 +24,7 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ icon, title, description, hre
       initial={{ opacity: 0, y: 50 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.2 + delay, ease: "easeOut" }}
-      whileHover={{ scale: 1.05, boxShadow: "0px 10px 30px -5px hsl(var(--primary)/0.3)" }}
+      whileHover={{ scale: 1.03, boxShadow: "0px 10px 30px -5px hsl(var(--primary)/0.3)" }}
       className="group"
     >
       <Link href={href} passHref legacyBehavior={false}>
@@ -40,12 +38,18 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ icon, title, description, hre
           <p className="text-slate-400 text-sm sm:text-base leading-relaxed mb-4 sm:mb-6 flex-grow">
             {description}
           </p>
-          <Button
-            variant="outline"
-            className="mt-auto w-full sm:w-auto self-start bg-primary/10 border-primary/50 text-primary group-hover:bg-primary/20 group-hover:border-primary/70 group-hover:text-purple-300 transition-all duration-300 ease-in-out transform group-hover:scale-105"
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="mt-auto self-start w-full sm:w-auto"
           >
-            Launch Tool <Icons.arrowRight className="ml-2 h-4 w-4" />
-          </Button>
+            <Button
+              variant="outline"
+              className="w-full bg-primary/10 border-primary/50 text-primary group-hover:bg-primary/20 group-hover:border-primary/70 group-hover:text-purple-300 transition-all duration-300 ease-in-out"
+            >
+              Launch Tool <Icons.arrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </motion.div>
         </div>
       </Link>
     </motion.div>
@@ -53,30 +57,10 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ icon, title, description, hre
 };
 
 export default function AppHomePage() {
-  const { user } = useAuth(); // Removed loading and router as auth is disabled for now
-
-  // useEffect(() => {
-  //   if (!loading && !user) {
-  //     router.push('/login');
-  //   }
-  // }, [user, loading, router]); // This useEffect is removed
-
-  // if (loading) { // This block is removed
-  //   return (
-  //     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col items-center justify-center p-4">
-  //       <Icons.loader className="h-16 w-16 animate-spin text-primary" />
-  //       <p className="mt-4 text-xl">Loading SagePostAI...</p>
-  //     </div>
-  //   );
-  // }
-
-  // if (!user) { // This block is removed, assuming user is always the mock guest user
-  //   return null; 
-  // }
+  const { user } = useAuth();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col items-center p-4 sm:p-6 md:p-8 overflow-x-hidden">
-      {/* Header */}
       <header className="w-full max-w-6xl mx-auto py-6 sm:py-8 px-4 sm:px-0 flex justify-between items-center">
         <div className="flex items-center space-x-3">
           <div className="hidden md:block">
@@ -106,9 +90,7 @@ export default function AppHomePage() {
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="container mx-auto max-w-5xl flex-grow flex flex-col items-center text-center px-2 sm:px-4">
-        {/* App Home Welcome Section */}
         <motion.section
           initial={{ opacity: 0, y: -30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -127,7 +109,6 @@ export default function AppHomePage() {
           </p>
         </motion.section>
 
-        {/* Feature Cards Section */}
         <section className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 sm:gap-8 mb-16 sm:mb-24">
           <FeatureCard
             icon="edit"
@@ -160,7 +141,6 @@ export default function AppHomePage() {
         </section>
       </main>
 
-      {/* Footer */}
       <footer className="w-full text-center p-6 sm:p-8 text-slate-500 text-sm">
         <span className="relative group hover:text-primary transition-colors duration-300 cursor-default">
           Built by EZ Teenagers.

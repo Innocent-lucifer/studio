@@ -47,6 +47,11 @@ export const PostSelection: React.FC<PostSelectionProps> = ({
   
   const { toast } = useToast();
 
+  const buttonMotionProps = {
+    whileHover: { scale: 1.03, transition: { type: "spring", stiffness: 400, damping: 10 } },
+    whileTap: { scale: 0.97, transition: { type: "spring", stiffness: 400, damping: 17 } },
+  };
+
   const handlePostSelection = (post: string, type: 'twitter' | 'linkedin') => {
     if (type === 'twitter') {
       setSelectedTwitterPosts(prev => 
@@ -290,27 +295,33 @@ export const PostSelection: React.FC<PostSelectionProps> = ({
       </Dialog>
 
       <motion.div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center" variants={itemVariants}>
-        <Button onClick={handleCopySelectedPosts} disabled={selectedTwitterPosts.length === 0 && selectedLinkedInPosts.length === 0} className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white py-2.5 px-6">
-          <Icons.copy className="mr-2 h-5 w-5" /> Copy Selected Posts
-        </Button>
-        <Button 
-          onClick={() => { 
-            toast({ title: "Feature Coming Soon", description: "Post scheduling will be available in a future update."});
-          }} 
-          variant="outline" 
-          className="w-full sm:w-auto border-primary text-primary hover:bg-primary/10 py-2.5 px-6"
-        >
-          <Icons.calendar className="mr-2 h-5 w-5" /> Schedule Selected
-        </Button>
-         <Button 
-          onClick={() => { 
-             toast({ title: "Feature Coming Soon", description: "Instant posting will be available after account integration."});
-          }} 
-          variant="outline" 
-          className="w-full sm:w-auto border-blue-500 text-blue-400 hover:bg-blue-500/10 py-2.5 px-6"
-        >
-          <Icons.send className="mr-2 h-5 w-5" /> Post Selected Now
-        </Button>
+        <motion.div {...buttonMotionProps} className="w-full sm:w-auto">
+          <Button onClick={handleCopySelectedPosts} disabled={selectedTwitterPosts.length === 0 && selectedLinkedInPosts.length === 0} className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white py-2.5 px-6">
+            <Icons.copy className="mr-2 h-5 w-5" /> Copy Selected Posts
+          </Button>
+        </motion.div>
+        <motion.div {...buttonMotionProps} className="w-full sm:w-auto">
+          <Button 
+            onClick={() => { 
+              toast({ title: "Feature Coming Soon", description: "Post scheduling will be available in a future update."});
+            }} 
+            variant="outline" 
+            className="w-full sm:w-auto border-primary text-primary hover:bg-primary/10 py-2.5 px-6"
+          >
+            <Icons.calendar className="mr-2 h-5 w-5" /> Schedule Selected
+          </Button>
+        </motion.div>
+        <motion.div {...buttonMotionProps} className="w-full sm:w-auto">
+           <Button 
+            onClick={() => { 
+               toast({ title: "Feature Coming Soon", description: "Instant posting will be available after account integration."});
+            }} 
+            variant="outline" 
+            className="w-full sm:w-auto border-blue-500 text-blue-400 hover:bg-blue-500/10 py-2.5 px-6"
+          >
+            <Icons.send className="mr-2 h-5 w-5" /> Post Selected Now
+          </Button>
+        </motion.div>
       </motion.div>
        <p className="mt-4 text-xs text-slate-500 text-center">
         Select posts to copy, schedule, or post instantly. Edit posts by clicking the <Icons.edit className="inline h-3 w-3"/> icon.
@@ -318,4 +329,3 @@ export const PostSelection: React.FC<PostSelectionProps> = ({
     </motion.div>
   );
 };
-

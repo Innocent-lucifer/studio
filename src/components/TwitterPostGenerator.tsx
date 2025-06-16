@@ -27,6 +27,11 @@ export const TwitterPostGenerator: React.FC<TwitterPostGeneratorProps> = ({
   const [generatedPostsInternal, setGeneratedPostsInternal] = useState<string[]>([]);
   const { toast } = useToast();
 
+  const buttonMotionProps = {
+    whileHover: { scale: 1.05, transition: { type: "spring", stiffness: 400, damping: 10 } },
+    whileTap: { scale: 0.95, transition: { type: "spring", stiffness: 400, damping: 17 } },
+  };
+
   useEffect(() => {
     const generate = async () => {
       if (!topic) {
@@ -135,14 +140,16 @@ export const TwitterPostGenerator: React.FC<TwitterPostGeneratorProps> = ({
       )}
 
       {!isLoading && topic && (
-         <Button 
-            onClick={handleRegenerate} 
-            disabled={isLoading} 
-            className="w-full bg-primary/80 hover:bg-primary text-primary-foreground transition-colors duration-200 flex items-center justify-center py-2.5"
-          >
-          <Icons.refreshCw className="mr-2 h-4 w-4" /> 
-          {generatedPostsInternal.length > 0 ? "Regenerate Twitter Posts" : "Generate Twitter Posts"}
-        </Button>
+        <motion.div {...buttonMotionProps} className="w-full">
+          <Button 
+              onClick={handleRegenerate} 
+              disabled={isLoading} 
+              className="w-full bg-primary/80 hover:bg-primary text-primary-foreground transition-colors duration-200 flex items-center justify-center py-2.5"
+            >
+            <Icons.refreshCw className="mr-2 h-4 w-4" /> 
+            {generatedPostsInternal.length > 0 ? "Regenerate Twitter Posts" : "Generate Twitter Posts"}
+          </Button>
+        </motion.div>
       )}
 
       {!isLoading && !topic && (

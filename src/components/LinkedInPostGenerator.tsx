@@ -27,6 +27,11 @@ export const LinkedInPostGenerator: React.FC<LinkedInPostGeneratorProps> = ({
   const [generatedPostsInternal, setGeneratedPostsInternal] = useState<string[]>([]);
   const { toast } = useToast();
 
+  const buttonMotionProps = {
+    whileHover: { scale: 1.05, transition: { type: "spring", stiffness: 400, damping: 10 } },
+    whileTap: { scale: 0.95, transition: { type: "spring", stiffness: 400, damping: 17 } },
+  };
+
   useEffect(() => {
     const generate = async () => {
       if (!topic) {
@@ -135,6 +140,7 @@ export const LinkedInPostGenerator: React.FC<LinkedInPostGeneratorProps> = ({
       )}
       
       {!isLoading && topic && (
+        <motion.div {...buttonMotionProps} className="w-full">
          <Button 
             onClick={handleRegenerate} 
             disabled={isLoading} 
@@ -143,6 +149,7 @@ export const LinkedInPostGenerator: React.FC<LinkedInPostGeneratorProps> = ({
           <Icons.refreshCw className="mr-2 h-4 w-4" /> 
           {generatedPostsInternal.length > 0 ? "Regenerate LinkedIn Posts" : "Generate LinkedIn Posts"}
         </Button>
+       </motion.div>
       )}
 
       {!isLoading && !topic && (
