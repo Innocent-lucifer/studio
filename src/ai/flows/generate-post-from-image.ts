@@ -54,30 +54,29 @@ const prompt = ai.definePrompt({
     }),
   },
   prompt: `You are an expert social media content creator specializing in crafting engaging and descriptive posts from images.
-Analyze the provided image carefully. Consider its mood, setting, objects, colors, and overall vibe.
+Your goal is to generate a compelling, detailed, and relatively lengthy social media post (e.g., a well-developed paragraph or two, suitable for platforms like Instagram, Facebook, or LinkedIn).
+Analyze the provided image carefully. Consider its mood, setting, objects, colors, and overall vibe to inspire a rich narrative or description.
 
 Image: {{media url=imageDataUri}}
 
-{{#if userContext}}
-User's additional context/keywords: "{{userContext}}"
-Incorporate this context naturally into your post.
-{{else}}
-Even without specific user context, generate a rich and imaginative post based on the image.
-{{/if}}
-
 Desired tone: {{tone}}
 
-Generate a compelling, detailed, and relatively lengthy social media post (suitable for platforms like Instagram, Facebook, or LinkedIn depending on the content and tone).
-The post should be deeply inspired by the image, exploring its narrative potential or descriptive details.
-If the tone is 'default', aim for a generally appealing, descriptive, and engaging style.
-If a specific tone like 'romantic', 'funny', 'professional', 'mysterious' is requested, ensure the post strongly reflects that tone while still being elaborate.
-**Use relevant emojis and hashtags to enhance engagement and convey feelings, especially aligning with the chosen tone.** The post should be more than just a brief caption; aim for a paragraph or two if the image warrants it.
+{{#if userContext}}
+User's additional context/keywords: "{{userContext}}"
+Incorporate this context naturally into your post, ensuring the post remains elaborate and detailed.
+{{else}}
+Even without specific user context, generate a rich, imaginative, and substantial post (aiming for a well-developed paragraph or two) based solely on the image. Describe what you see, the potential story, or the feelings evoked by the image.
+{{/if}}
+
+The post should be more than just a brief caption.
+If a specific tone like 'romantic', 'funny', 'professional', 'mysterious' is requested, ensure the post strongly reflects that tone while still being elaborate and descriptive. If the tone is 'default', aim for a generally appealing, descriptive, and engaging style.
+**Use relevant emojis and hashtags to enhance engagement and convey feelings, especially aligning with the chosen tone.**
 
 Generated post:
 `,
   promptOptions: {
-    temperature: 0.8, // Slightly increased for more creativity, descriptiveness, and emoji use
-     safetySettings: [ // Permissive settings
+    temperature: 0.8, 
+     safetySettings: [ 
       { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
       { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
       { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
@@ -107,8 +106,6 @@ const generatePostFromImageFlow = ai.defineFlow({
       console.warn(`[generatePostFromImageFlow] Error: ${errorMessage}`);
       return { error: errorMessage };
     }
-
-    // Auth stubbed - credit deduction logic
     
     return { generatedPost: promptOutput.post };
 
