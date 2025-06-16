@@ -19,21 +19,20 @@ const SmartCampaignPageContent = () => {
       className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col items-center p-4 sm:p-8"
     >
       <main className="container mx-auto w-full max-w-4xl">
-        <header className="flex justify-between items-center w-full mb-8 py-4">
+        <header className="flex justify-between items-center w-full mb-8 py-4 px-4">
           <Link href="/" passHref>
             <div className="flex items-center space-x-2 sm:space-x-3 cursor-pointer group">
-              <AppLogo className="h-10 w-10 sm:h-12 sm:w-12 text-primary group-hover:scale-110 transition-transform" />
+              <AppLogo className="h-12 w-12 sm:h-14 sm:w-14 text-primary group-hover:scale-110 transition-transform" />
               <div>
                 <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-primary">
                   SagePostAI
                 </h1>
-                <p className="text-sm text-slate-400 -mt-1">Smart Campaign</p>
+                <p className="text-sm text-slate-400">Smart Campaign</p>
               </div>
             </div>
           </Link>
           
           <div className="flex items-center gap-3">
-            {/* Quick Posts Button for Desktop/Tablet in Header */}
             <div className="hidden sm:flex">
               <Link href="/" passHref legacyBehavior={false}>
                 <Button
@@ -49,14 +48,13 @@ const SmartCampaignPageContent = () => {
             
             <div className="text-right text-xs">
               <p className="font-semibold text-primary">Dev Mode</p>
-              <p className="text-slate-400">Guest</p> {/* Updated from "Unlimited Access" for consistency if needed */}
+              <p className="text-slate-400">Guest</p>
             </div>
             <HamburgerMenu />
           </div>
         </header>
         
-        {/* Quick Posts Button for Mobile - Below Header */}
-        <div className="sm:hidden w-full mb-6">
+        <div className="sm:hidden w-full mb-6 px-4">
           <Link href="/" passHref legacyBehavior={false}>
             <Button
               variant="outline"
@@ -94,4 +92,3 @@ const LoadingState = () => (
     <p className="mt-4 text-xl">Loading Smart Campaign...</p>
   </div>
 );
-
