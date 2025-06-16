@@ -14,7 +14,7 @@ import {z} from 'genkit';
 // Auth stubbed for MOCK_USER_ID
 const MOCK_USER_ID_FOR_STUBBED_AUTH = "sagepostai-guest-user";
 
-export const GeneratePostFromImageInputSchema = z.object({
+const GeneratePostFromImageInputSchema = z.object({
   imageDataUri: z
     .string()
     .describe(
@@ -33,7 +33,7 @@ export const GeneratePostFromImageInputSchema = z.object({
 });
 export type GeneratePostFromImageInput = z.infer<typeof GeneratePostFromImageInputSchema>;
 
-export const GeneratePostFromImageOutputSchema = z.object({
+const GeneratePostFromImageOutputSchema = z.object({
   generatedPost: z.string().optional().describe('The AI-generated social media post based on the image and inputs.'),
   error: z.string().optional().describe('An error message if generation failed.'),
 });
@@ -68,7 +68,7 @@ Desired tone: {{tone}}
 Generate a compelling and concise social media post (suitable for platforms like Instagram, Twitter, or LinkedIn depending on the content and tone).
 The post should be inspired by the image.
 If the tone is 'default', aim for a generally appealing and engaging style.
-If a specific tone like 'romantic', 'funny', 'professional', or 'mysterious' is requested, ensure the post strongly reflects that tone.
+If a specific tone like 'romantic', 'funny', 'professional', 'mysterious' is requested, ensure the post strongly reflects that tone.
 Use relevant emojis and hashtags to enhance engagement.
 
 Generated post:
