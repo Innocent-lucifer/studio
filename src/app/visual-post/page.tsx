@@ -180,7 +180,7 @@ export default function VisualPostPage() {
 
             <motion.div initial={{ opacity: 0, y:10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
               <Label htmlFor="userContext" className="text-lg font-medium text-purple-300 mb-2 block">
-                Want to add a few words for deeper personalization? (Optional)
+                Want to add a few words for deeper personalization?
               </Label>
               <Textarea
                 id="userContext"
