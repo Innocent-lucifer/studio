@@ -7,6 +7,9 @@ import { Icons } from '@/components/icons';
 import { AppLogo } from '@/components/AppLogo';
 import { HamburgerMenu } from '@/components/HamburgerMenu';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 interface FeatureCardProps {
   icon: keyof typeof Icons;
@@ -40,7 +43,6 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ icon, title, description, hre
           <Button
             variant="outline"
             className="mt-auto w-full sm:w-auto self-start bg-primary/10 border-primary/50 text-primary group-hover:bg-primary/20 group-hover:border-primary/70 group-hover:text-purple-300 transition-all duration-300 ease-in-out transform group-hover:scale-105"
-            // Removed onClick and asChild, and the inner <a> tag
           >
             Launch Tool <Icons.arrowRight className="ml-2 h-4 w-4" />
           </Button>
@@ -50,13 +52,37 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ icon, title, description, hre
   );
 };
 
-export default function WelcomePage() {
+export default function AppHomePage() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login');
+    }
+  }, [user, loading, router]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col items-center justify-center p-4">
+        <Icons.loader className="h-16 w-16 animate-spin text-primary" />
+        <p className="mt-4 text-xl">Loading SagePostAI...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    // This state should ideally not be reached if useEffect redirects properly,
+    // but it's a fallback.
+    return null; 
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col items-center p-4 sm:p-6 md:p-8 overflow-x-hidden">
       {/* Header */}
       <header className="w-full max-w-6xl mx-auto py-6 sm:py-8 px-4 sm:px-0 flex justify-between items-center">
         <div className="flex items-center space-x-3">
-          <div className="hidden md:block"> {/* Hamburger on left for md+ */}
+          <div className="hidden md:block">
             <HamburgerMenu />
           </div>
           <Link href="/" passHref>
@@ -70,29 +96,33 @@ export default function WelcomePage() {
         </div>
         <div className="flex items-center gap-3">
           <div className="text-right text-xs">
-            <p className="font-semibold text-primary">Dev Mode</p>
-            <p className="text-slate-400">Guest</p>
+            {user.email ? (
+              <p className="font-semibold text-primary truncate max-w-[150px] sm:max-w-[200px]" title={user.email}>{user.email}</p>
+            ) : (
+              <p className="font-semibold text-primary">Authenticated</p>
+            )}
+            <p className="text-slate-400">Welcome!</p>
           </div>
-          <div className="md:hidden"> {/* Hamburger on right for <md */}
+          <div className="md:hidden">
             <HamburgerMenu />
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto max-w-5xl flex-grow flex flex-col items-center justify-center text-center px-2 sm:px-4">
-        {/* Hero Section */}
+      <main className="container mx-auto max-w-5xl flex-grow flex flex-col items-center text-center px-2 sm:px-4">
+        {/* App Home Welcome Section */}
         <motion.section
           initial={{ opacity: 0, y: -30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.1, ease: "easeOut" }}
-          className="py-12 sm:py-20 md:py-28"
+          className="py-12 sm:py-16 md:py-20"
         >
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight mb-6 sm:mb-8 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400">
-            Turn ideas, images, and vibes into scroll-stopping social posts.
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight mb-4 sm:mb-6 text-slate-100">
+            Welcome to SagePostAI!
           </h1>
-          <p className="text-lg sm:text-xl md:text-2xl text-slate-300 max-w-3xl mx-auto">
-            Select your mode to begin. All powered by AI. Styled by you.
+          <p className="text-lg sm:text-xl md:text-2xl text-slate-300 max-w-2xl mx-auto">
+            Ready to create some amazing content? Select a tool below to get started.
           </p>
         </motion.section>
 
@@ -139,10 +169,3 @@ export default function WelcomePage() {
     </div>
   );
 }
-
-// Ensure router is imported if using router.push in FeatureCard
-import { useRouter } from 'next/navigation';
-// ...
-// const router = useRouter(); // if used within FeatureCard or parent that passes it down
-// This is not strictly necessary for simple <Link> navigation but good for programmatic nav.
-// For this case, simple <Link> and <a> tag within Button asChild is fine.
