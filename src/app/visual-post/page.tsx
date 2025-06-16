@@ -1,9 +1,8 @@
 
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from 'react'; 
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Image from 'next/image';
-// import { useRouter } from 'next/navigation'; // Not strictly needed for this modified flow
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -18,8 +17,6 @@ import { Separator } from '@/components/ui/separator';
 import { Label } from '@/components/ui/label';
 import { useAuth } from "@/context/AuthContext";
 
-
-// const MOCK_USER_ID = "sagepostai-guest-user"; // Will use user.uid from useAuth
 type Tone = 'default' | 'romantic' | 'funny' | 'professional' | 'mysterious';
 
 const debounce = <F extends (...args: any[]) => any>(func: F, delay: number) => {
@@ -44,24 +41,28 @@ export default function VisualPostPage() {
   const [userText, setUserText] = useState<string>('');
   const [selectedTone, setSelectedTone] = useState<Tone>('default');
   const [generatedPost, setGeneratedPost] = useState<string>('');
-  const [isLoading, setIsLoading] = useState<boolean>(false); 
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  // const router = useRouter(); // Not strictly needed
   const { toast } = useToast();
-  const attemptedStorageLoad = useRef(false); 
   const fileInputRefVisual = useRef<HTMLInputElement>(null);
 
+  const [isClient, setIsClient] = useState(false);
+  const [initialStorageCheckDone, setInitialStorageCheckDone] = useState(false);
+
   useEffect(() => {
-    if (!attemptedStorageLoad.current && !imageDataUri) { // Only attempt load if no image yet
-      attemptedStorageLoad.current = true; // Mark as attempted
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    if (isClient && !initialStorageCheckDone) {
       const storedImage = localStorage.getItem('sagepostai_visual_post_image');
       if (storedImage) {
-        setImageDataUri(storedImage);
-        localStorage.removeItem('sagepostai_visual_post_image'); 
+        setImageDataUri(storedImage); // This will cause a re-render
+        localStorage.removeItem('sagepostai_visual_post_image');
       }
-      // No automatic redirect here anymore. If no image, UI will offer upload.
+      setInitialStorageCheckDone(true); // Mark check as done, causes re-render
     }
-  }, [imageDataUri]); // Rerun if imageDataUri changes (e.g. set by upload)
+  }, [isClient, initialStorageCheckDone]);
 
 
   const debouncedGeneratePost = useCallback(
@@ -84,25 +85,26 @@ export default function VisualPostPage() {
       } finally {
         setIsLoading(false);
       }
-    }, 700), 
-    [toast] 
+    }, 700),
+    [toast]
   );
 
   useEffect(() => {
-    if (imageDataUri) { 
+    if (imageDataUri && isClient) { // Ensure generation only happens client-side and if image is present
       debouncedGeneratePost({
         imageDataUri,
-        userContext: userText || undefined, 
+        userContext: userText || undefined,
         tone: selectedTone,
         userId: userIdToPass,
       });
     }
-  }, [imageDataUri, userText, selectedTone, debouncedGeneratePost, userIdToPass]);
-  
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [imageDataUri, userText, selectedTone, userIdToPass, isClient]); // debouncedGeneratePost is memoized
+
   const handleDirectImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (fileInputRefVisual.current) { 
-      fileInputRefVisual.current.value = ''; 
+    if (fileInputRefVisual.current) {
+      fileInputRefVisual.current.value = '';
     }
 
     if (file) {
@@ -114,7 +116,7 @@ export default function VisualPostPage() {
         });
         return;
       }
-      if (file.size > 5 * 1024 * 1024) { 
+      if (file.size > 5 * 1024 * 1024) {
          toast({
           variant: "destructive",
           title: "File Too Large",
@@ -126,7 +128,7 @@ export default function VisualPostPage() {
       reader.onloadend = () => {
         const result = reader.result;
         if (typeof result === 'string') {
-          setImageDataUri(result); 
+          setImageDataUri(result);
         } else {
           toast({
             variant: "destructive",
@@ -153,7 +155,7 @@ export default function VisualPostPage() {
       toast({ title: "Post Copied!", description: "The generated post has been copied to your clipboard." });
     }
   };
-  
+
   const handleSharePost = () => {
      toast({ title: "Feature Coming Soon", description: "Direct sharing will be available in a future update." });
   };
@@ -163,9 +165,9 @@ export default function VisualPostPage() {
     { label: 'Romantic', value: 'romantic', icon: 'heart' },
     { label: 'Funny', value: 'funny', icon: 'smile' },
     { label: 'Professional', value: 'professional', icon: 'briefcase' },
-    { label: 'Mysterious', value: 'mysterious', icon: 'help' }, 
+    { label: 'Mysterious', value: 'mysterious', icon: 'help' },
   ];
-  
+
   const commonHeader = (
      <header className="flex justify-between items-center w-full mb-8 py-4 px-4">
         <div className="flex items-center space-x-3">
@@ -197,7 +199,7 @@ export default function VisualPostPage() {
         </div>
       </header>
   );
-  
+
   const commonFooter = (
       <footer className="text-center p-4 mt-12 text-slate-500 text-sm">
          <span className="relative group hover:text-primary transition-colors duration-300 cursor-default">
@@ -207,16 +209,21 @@ export default function VisualPostPage() {
       </footer>
   );
 
-  if (!attemptedStorageLoad.current && typeof window !== 'undefined' && !imageDataUri) {
+  // Initial loading state (SSR and first client paint before initialStorageCheckDone)
+  if (!isClient || (isClient && !initialStorageCheckDone && !imageDataUri)) {
      return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col items-center justify-center p-4">
+      <motion.div
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}
+        className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col items-center justify-center p-4"
+      >
         <Icons.loader className="h-16 w-16 animate-spin text-primary" />
         <p className="mt-4 text-xl">Loading Visual Post Tool...</p>
-      </div>
+      </motion.div>
     );
   }
 
-  if (!imageDataUri && attemptedStorageLoad.current) {
+  // State after storage check is done, but no image is loaded (either from storage or upload)
+  if (isClient && initialStorageCheckDone && !imageDataUri) {
     return (
        <motion.div
         initial={{ opacity: 0 }}
@@ -258,129 +265,135 @@ export default function VisualPostPage() {
     );
   }
 
-
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-      className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col items-center p-4 sm:p-8"
-    >
-      <main className="container mx-auto w-full max-w-3xl">
-        {commonHeader}
-        <Card className="bg-slate-800/60 backdrop-blur-md border border-slate-700 shadow-2xl hover:shadow-primary/20 transition-shadow duration-300 rounded-2xl p-4 sm:p-8">
-          <CardContent className="space-y-8">
-            {imageDataUri && ( 
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.9 }} 
-                animate={{ opacity: 1, scale: 1 }} 
-                transition={{ duration: 0.5 }}
-                className="mb-6 relative w-full aspect-[16/10] overflow-hidden rounded-xl shadow-lg border border-slate-600"
-              >
-                <Image
-                  src={imageDataUri}
-                  alt="Uploaded preview"
-                  fill // Changed from layout="fill" to fill for Next 13+
-                  style={{objectFit:"contain"}} // Changed from objectFit to style={{objectFit}}
-                  className="rounded-xl"
-                  priority
-                />
-              </motion.div>
-            )}
-
-            <motion.div initial={{ opacity: 0, y:10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-              <Label htmlFor="userContext" className="text-lg font-medium text-purple-300 mb-2 block">
-                Want to add a few words for deeper personalization?
-              </Label>
-              <Textarea
-                id="userContext"
-                value={userText}
-                onChange={(e) => setUserText(e.target.value)}
-                placeholder="e.g., 'Celebrating a special milestone!' or 'My new furry friend'"
-                rows={3}
-                className="bg-slate-700/80 border-slate-600 placeholder-slate-400 text-slate-100 focus:ring-purple-500 focus:border-purple-500 rounded-lg"
-              />
-            </motion.div>
-            
-            <motion.div initial={{ opacity: 0, y:10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-              <Label className="text-lg font-medium text-purple-300 mb-3 block">
-                Generate in a different tone:
-              </Label>
-              <div className="flex flex-wrap gap-3">
-                {toneOptions.map(({ label, value, icon }) => {
-                  const Icon = icon ? Icons[icon] || Icons.help : Icons.help;
-                  return(
-                  <Button
-                    key={value}
-                    onClick={() => setSelectedTone(value)}
-                    variant={selectedTone === value ? "default" : "outline"}
-                    className={`
-                      ${selectedTone === value 
-                        ? 'bg-purple-600 hover:bg-purple-700 text-white border-purple-600' 
-                        : 'bg-slate-700/70 border-slate-600 text-slate-300 hover:bg-slate-600/90 hover:border-purple-500/50 hover:text-purple-300'}
-                      transition-all duration-200 ease-in-out shadow-md hover:shadow-lg rounded-lg px-4 py-2 text-sm
-                    `}
-                  >
-                    <Icon className="mr-2 h-4 w-4"/>
-                    {label}
-                  </Button>
-                )})}
-              </div>
-            </motion.div>
-
-            <Separator className="my-8 bg-slate-700" />
-            
-            <motion.div initial={{ opacity: 0, y:10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-              <CardTitle className="text-2xl font-semibold text-primary mb-4 flex items-center">
-                <Icons.wand className="mr-3 h-7 w-7" />
-                Your AI-Generated Post
-              </CardTitle>
-              {isLoading && ( 
-                <div className="flex items-center justify-center p-6 rounded-lg bg-slate-700/50 min-h-[150px]">
-                  <Icons.loader className="h-8 w-8 animate-spin text-primary mr-3" />
-                  <span className="text-slate-300 text-lg">Generating your post...</span>
-                </div>
-              )}
-              {!isLoading && error && (
-                <div className="p-4 rounded-lg bg-red-800/30 border border-red-700 text-red-300 min-h-[100px]">
-                  <p className="font-semibold">Error:</p>
-                  <p className="text-sm">{error}</p>
-                </div>
-              )}
-              {!isLoading && !error && generatedPost && (
-                <motion.div 
-                  initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                  className="p-6 bg-slate-700/80 rounded-xl shadow-inner min-h-[150px]"
+  // Image is loaded (either from storage or direct upload)
+  if (isClient && imageDataUri) {
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+        className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col items-center p-4 sm:p-8"
+      >
+        <main className="container mx-auto w-full max-w-3xl">
+          {commonHeader}
+          <Card className="bg-slate-800/60 backdrop-blur-md border border-slate-700 shadow-2xl hover:shadow-primary/20 transition-shadow duration-300 rounded-2xl p-4 sm:p-8">
+            <CardContent className="space-y-8">
+              {imageDataUri && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.5 }}
+                  className="mb-6 relative w-full aspect-[16/10] overflow-hidden rounded-xl shadow-lg border border-slate-600"
                 >
-                  <p className="text-slate-100 whitespace-pre-wrap text-base leading-relaxed">{generatedPost}</p>
+                  <Image
+                    src={imageDataUri}
+                    alt="Uploaded preview"
+                    fill
+                    style={{objectFit:"contain"}}
+                    className="rounded-xl"
+                    priority
+                  />
                 </motion.div>
               )}
-              {!isLoading && !error && !generatedPost && (
-                 <div className="flex items-center justify-center p-6 rounded-lg bg-slate-700/50 min-h-[150px] text-slate-400">
-                  <Icons.info className="h-8 w-8 mr-3"/>
-                  <span className="text-lg">Your generated post will appear here.</span>
-                </div>
-              )}
-            </motion.div>
 
-            {!isLoading && generatedPost && (
-              <motion.div className="flex flex-col sm:flex-row gap-3 mt-8" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{delay: 0.4}}>
-                <Button onClick={handleCopyPost} className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white py-2.5 px-6 rounded-lg shadow-md hover:shadow-lg">
-                  <Icons.copy className="mr-2 h-5 w-5" /> Copy Post
-                </Button>
-                <Button 
-                  onClick={handleSharePost}
-                  variant="outline" 
-                  className="w-full sm:w-auto border-blue-500 text-blue-400 hover:bg-blue-500/10 hover:text-blue-300 py-2.5 px-6 rounded-lg shadow-md hover:shadow-lg"
-                >
-                  <Icons.share className="mr-2 h-5 w-5" /> Share
-                </Button>
+              <motion.div initial={{ opacity: 0, y:10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+                <Label htmlFor="userContext" className="text-lg font-medium text-purple-300 mb-2 block">
+                  Want to add a few words for deeper personalization?
+                </Label>
+                <Textarea
+                  id="userContext"
+                  value={userText}
+                  onChange={(e) => setUserText(e.target.value)}
+                  placeholder="e.g., 'Celebrating a special milestone!' or 'My new furry friend'"
+                  rows={3}
+                  className="bg-slate-700/80 border-slate-600 placeholder-slate-400 text-slate-100 focus:ring-purple-500 focus:border-purple-500 rounded-lg"
+                />
               </motion.div>
-            )}
-          </CardContent>
-        </Card>
-      </main>
-      {commonFooter}
-    </motion.div>
-  );
+
+              <motion.div initial={{ opacity: 0, y:10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+                <Label className="text-lg font-medium text-purple-300 mb-3 block">
+                  Generate in a different tone:
+                </Label>
+                <div className="flex flex-wrap gap-3">
+                  {toneOptions.map(({ label, value, icon }) => {
+                    const Icon = icon ? Icons[icon] || Icons.help : Icons.help;
+                    return(
+                    <Button
+                      key={value}
+                      onClick={() => setSelectedTone(value)}
+                      variant={selectedTone === value ? "default" : "outline"}
+                      className={`
+                        ${selectedTone === value
+                          ? 'bg-purple-600 hover:bg-purple-700 text-white border-purple-600'
+                          : 'bg-slate-700/70 border-slate-600 text-slate-300 hover:bg-slate-600/90 hover:border-purple-500/50 hover:text-purple-300'}
+                        transition-all duration-200 ease-in-out shadow-md hover:shadow-lg rounded-lg px-4 py-2 text-sm
+                      `}
+                    >
+                      <Icon className="mr-2 h-4 w-4"/>
+                      {label}
+                    </Button>
+                  )})}
+                </div>
+              </motion.div>
+
+              <Separator className="my-8 bg-slate-700" />
+
+              <motion.div initial={{ opacity: 0, y:10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+                <CardTitle className="text-2xl font-semibold text-primary mb-4 flex items-center">
+                  <Icons.wand className="mr-3 h-7 w-7" />
+                  Your AI-Generated Post
+                </CardTitle>
+                {isLoading && (
+                  <div className="flex items-center justify-center p-6 rounded-lg bg-slate-700/50 min-h-[150px]">
+                    <Icons.loader className="h-8 w-8 animate-spin text-primary mr-3" />
+                    <span className="text-slate-300 text-lg">Generating your post...</span>
+                  </div>
+                )}
+                {!isLoading && error && (
+                  <div className="p-4 rounded-lg bg-red-800/30 border border-red-700 text-red-300 min-h-[100px]">
+                    <p className="font-semibold">Error:</p>
+                    <p className="text-sm">{error}</p>
+                  </div>
+                )}
+                {!isLoading && !error && generatedPost && (
+                  <motion.div
+                    initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                    className="p-6 bg-slate-700/80 rounded-xl shadow-inner min-h-[150px]"
+                  >
+                    <p className="text-slate-100 whitespace-pre-wrap text-base leading-relaxed">{generatedPost}</p>
+                  </motion.div>
+                )}
+                {!isLoading && !error && !generatedPost && (
+                   <div className="flex items-center justify-center p-6 rounded-lg bg-slate-700/50 min-h-[150px] text-slate-400">
+                    <Icons.info className="h-8 w-8 mr-3"/>
+                    <span className="text-lg">Your generated post will appear here.</span>
+                  </div>
+                )}
+              </motion.div>
+
+              {!isLoading && generatedPost && (
+                <motion.div className="flex flex-col sm:flex-row gap-3 mt-8" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{delay: 0.4}}>
+                  <Button onClick={handleCopyPost} className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white py-2.5 px-6 rounded-lg shadow-md hover:shadow-lg">
+                    <Icons.copy className="mr-2 h-5 w-5" /> Copy Post
+                  </Button>
+                  <Button
+                    onClick={handleSharePost}
+                    variant="outline"
+                    className="w-full sm:w-auto border-blue-500 text-blue-400 hover:bg-blue-500/10 hover:text-blue-300 py-2.5 px-6 rounded-lg shadow-md hover:shadow-lg"
+                  >
+                    <Icons.share className="mr-2 h-5 w-5" /> Share
+                  </Button>
+                </motion.div>
+              )}
+            </CardContent>
+          </Card>
+        </main>
+        {commonFooter}
+      </motion.div>
+    );
+  }
+
+  // Fallback for any unhandled state, though ideally not reached.
+  // This ensures the component always returns something, matching server's potential non-rendering path.
+  return null;
 }
