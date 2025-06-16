@@ -1,395 +1,151 @@
 
 "use client";
 
-import { TopicResearch } from "@/components/TopicResearch";
-import { TwitterPostGenerator } from "@/components/TwitterPostGenerator";
-import { LinkedInPostGenerator } from "@/components/LinkedInPostGenerator";
-import { PostSelection } from "@/components/PostSelection";
-import { useState, useEffect, useCallback, useRef } from "react";
+import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { HamburgerMenu } from "@/components/HamburgerMenu";
-import { Icons } from "@/components/icons";
-import { AppLogo } from "@/components/AppLogo";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import { useRouter } from 'next/navigation';
-import { useToast } from "@/hooks/use-toast";
-import { Separator } from "@/components/ui/separator";
+import { Icons } from '@/components/icons';
+import { AppLogo } from '@/components/AppLogo';
+import { HamburgerMenu } from '@/components/HamburgerMenu';
+import { Button } from '@/components/ui/button';
 
+interface FeatureCardProps {
+  icon: keyof typeof Icons;
+  title: string;
+  description: string;
+  href: string;
+  delay?: number;
+}
 
-const MOCK_USER_ID = "sagepostai-guest-user";
-
-export default function Home() {
-  const [topic, setTopic] = useState<string>("");
-  const [researchedContent, setResearchedContent] = useState<string>("");
-  const [twitterPosts, setTwitterPosts] = useState<string[]>([]);
-  const [linkedinPosts, setLinkedinPosts] = useState<string[]>([]);
-  const [researchIsLoading, setResearchIsLoading] = useState(false);
-
-  const [displayTwitterInCard, setDisplayTwitterInCard] = useState(true);
-  const [displayLinkedInInCard, setDisplayLinkedInInCard] = useState(true);
-
-  const router = useRouter();
-  const { toast } = useToast();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (researchIsLoading || !researchedContent || !topic) {
-      setDisplayTwitterInCard(true);
-      setDisplayLinkedInInCard(true);
-    } else {
-      const shouldShowInCombinedCard = twitterPosts.length > 0 && linkedinPosts.length > 0;
-      setDisplayTwitterInCard(!shouldShowInCombinedCard);
-      setDisplayLinkedInInCard(!shouldShowInCombinedCard);
-    }
-  }, [topic, researchedContent, researchIsLoading, twitterPosts, linkedinPosts]);
-
-
-  const handlePostUpdate = (type: 'twitter' | 'linkedin', index: number, newText: string) => {
-    if (type === 'twitter') {
-      setTwitterPosts(prev => prev.map((post, i) => i === index ? newText : post));
-    } else {
-      setLinkedinPosts(prev => prev.map((post, i) => i === index ? newText : post));
-    }
-  };
-
-  const showPostSelectionCard = twitterPosts.length > 0 && linkedinPosts.length > 0;
-
-  const clearTwitterPosts = useCallback(() => {
-    setTwitterPosts([]);
-  }, []);
-
-  const clearLinkedinPosts = useCallback(() => {
-    setLinkedinPosts([]);
-  }, []);
-
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (fileInputRef.current) { 
-      fileInputRef.current.value = '';
-    }
-
-    if (file) {
-      if (!file.type.startsWith('image/')) {
-        toast({
-          variant: "destructive",
-          title: "Invalid File Type",
-          description: "Please upload an image file (e.g., JPG, PNG, GIF).",
-        });
-        return;
-      }
-      if (file.size > 5 * 1024 * 1024) { 
-         toast({
-          variant: "destructive",
-          title: "File Too Large",
-          description: "Please upload an image smaller than 5MB.",
-        });
-        return;
-      }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const result = reader.result;
-        if (typeof result === 'string') {
-          const imageDataUri = result;
-          try {
-            localStorage.setItem('sagepostai_visual_post_image', imageDataUri);
-            router.push('/visual-post');
-          } catch (e) {
-              console.error("Error storing image data in localStorage:", e);
-              toast({
-                  variant: "destructive",
-                  title: "Storage Error",
-                  description: "Could not prepare image for processing. Your browser's local storage might be full or disabled.",
-              });
-          }
-        } else {
-          toast({
-            variant: "destructive",
-            title: "Image Read Error",
-            description: "Could not read image data as a string. The file might be corrupted or in an unsupported format.",
-          });
-        }
-      };
-      reader.onerror = () => {
-        toast({
-          variant: "destructive",
-          title: "Image Read Error",
-          description: "Could not read the selected image file. Please try again or use a different file.",
-        });
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-
-  const pageVariants = {
-    initial: { opacity: 0 },
-    in: { opacity: 1 },
-    out: { opacity: 0 },
-  };
-
-  const cardVariants = {
-    initial: { opacity: 0, y: 20 },
-    animate: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
-  };
-
-  const staggerChildren = {
-    animate: {
-      transition: {
-        staggerChildren: 0.1,
-      },
-    },
-  };
-
-  const canProceedToSmartCampaign = !researchIsLoading && !!topic.trim() && !!researchedContent.trim();
-
+const FeatureCard: React.FC<FeatureCardProps> = ({ icon, title, description, href, delay = 0 }) => {
+  const IconComponent = Icons[icon] || Icons.help;
   return (
-    <>
-      <motion.div
-        initial="initial"
-        animate="in"
-        exit="out"
-        variants={pageVariants}
-        transition={{ duration: 0.5 }}
-        className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col items-center p-4 sm:p-8 transition-colors duration-500"
-      >
-        <main className="container mx-auto w-full max-w-4xl">
-          <header className="flex justify-between items-center w-full mb-8 py-4 px-4">
-            {/* LEFT GROUP: Hamburger (MD+), Logo, Title */}
-            <div className="flex items-center space-x-3">
-              <div className="hidden md:block">
-                <HamburgerMenu />
-              </div>
-              <motion.div
-                initial={{ scale: 0.5, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 0.7, ease: "easeOut" }}
-                whileHover={{
-                  rotate: [0, -8, 8, -8, 8, 0],
-                  transition: {
-                    duration: 0.4,
-                    ease: "easeInOut"
-                  }
-                }}
-              >
-                <AppLogo className="h-12 w-12 sm:h-20 sm:w-20 text-primary" />
-              </motion.div>
-              <h1 className="text-2xl sm:text-4xl font-bold tracking-tight" style={{ color: 'hsl(var(--primary))' }}>
+    <motion.div
+      initial={{ opacity: 0, y: 50 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: 0.2 + delay, ease: "easeOut" }}
+      whileHover={{ scale: 1.05, boxShadow: "0px 10px 30px -5px hsl(var(--primary)/0.3)" }}
+      className="group"
+    >
+      <Link href={href} passHref legacyBehavior={false}>
+        <div className="bg-slate-800/50 backdrop-blur-lg border border-slate-700/60 rounded-2xl p-6 sm:p-8 h-full flex flex-col cursor-pointer transition-all duration-300 hover:border-primary/50 hover:shadow-2xl hover:shadow-primary/20">
+          <div className="mb-4 sm:mb-6">
+            <IconComponent className="h-10 w-10 sm:h-12 sm:w-12 text-primary group-hover:text-purple-400 transition-colors duration-300" />
+          </div>
+          <h3 className="text-xl sm:text-2xl font-semibold text-slate-100 mb-2 sm:mb-3 group-hover:text-primary transition-colors duration-300">
+            {title}
+          </h3>
+          <p className="text-slate-400 text-sm sm:text-base leading-relaxed mb-4 sm:mb-6 flex-grow">
+            {description}
+          </p>
+          <Button
+            variant="outline"
+            className="mt-auto w-full sm:w-auto self-start bg-primary/10 border-primary/50 text-primary group-hover:bg-primary/20 group-hover:border-primary/70 group-hover:text-purple-300 transition-all duration-300 ease-in-out transform group-hover:scale-105"
+            onClick={(e) => { e.stopPropagation(); router.push(href);}} // Use router for client-side nav if needed, or simple anchor works
+            asChild
+          >
+            <a>
+              Launch Tool <Icons.arrowRight className="ml-2 h-4 w-4" />
+            </a>
+          </Button>
+        </div>
+      </Link>
+    </motion.div>
+  );
+};
+
+export default function WelcomePage() {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col items-center p-4 sm:p-6 md:p-8 overflow-x-hidden">
+      {/* Header */}
+      <header className="w-full max-w-6xl mx-auto py-6 sm:py-8 px-4 sm:px-0 flex justify-between items-center">
+        <div className="flex items-center space-x-3">
+          <div className="hidden md:block"> {/* Hamburger on left for md+ */}
+            <HamburgerMenu />
+          </div>
+          <Link href="/" passHref>
+            <div className="flex items-center space-x-2 sm:space-x-3 cursor-pointer group">
+              <AppLogo className="h-10 w-10 sm:h-12 sm:w-12 text-primary group-hover:scale-110 transition-transform" />
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-primary">
                 SagePostAI
               </h1>
             </div>
-
-            {/* RIGHT GROUP: Action Buttons, Auth Info, Hamburger (SM) */}
-            <div className="flex items-center gap-3">
-              <div className="hidden sm:flex">
-                <Link
-                  href={{
-                    pathname: '/smart-campaign',
-                    query: { topic: topic, researchedContent: researchedContent },
-                  }}
-                  passHref
-                  legacyBehavior={false}
-                  aria-disabled={!canProceedToSmartCampaign}
-                  onClick={(e) => !canProceedToSmartCampaign && e.preventDefault()}
-                >
-                  <Button
-                    variant="outline"
-                    className="border-purple-500 text-purple-400 hover:bg-purple-500/20 hover:text-purple-300 transition-all duration-200 ease-in-out transform hover:scale-105 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                    size="sm"
-                    disabled={!canProceedToSmartCampaign}
-                    title={!canProceedToSmartCampaign ? "Please research a topic first" : "Go to Smart Campaign"}
-                  >
-                    <Icons.sparkles className="mr-1 h-4 w-4" />
-                    Smart Campaign
-                  </Button>
-                </Link>
-              </div>
-              
-              <div className="text-right text-xs">
-                <p className="font-semibold text-primary">Dev Mode</p>
-                <p className="text-slate-400">Guest</p>
-              </div>
-              {/* Hamburger for screens smaller than MD */}
-              <div className="md:hidden">
-                <HamburgerMenu />
-              </div>
-            </div>
-          </header>
-          
-          <div className="sm:hidden w-full mb-6 px-4">
-             <Link
-                href={{
-                  pathname: '/smart-campaign',
-                  query: { topic: topic, researchedContent: researchedContent },
-                }}
-                passHref
-                legacyBehavior={false}
-                aria-disabled={!canProceedToSmartCampaign}
-                onClick={(e) => !canProceedToSmartCampaign && e.preventDefault()}
-              >
-                <Button
-                  variant="outline"
-                  className="w-full border-purple-500 text-purple-400 hover:bg-purple-500/20 hover:text-purple-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={!canProceedToSmartCampaign}
-                  title={!canProceedToSmartCampaign ? "Please research a topic first" : "Go to Smart Campaign"}
-                >
-                  <Icons.sparkles className="mr-2 h-5 w-5" />
-                  Smart Campaign
-                </Button>
-              </Link>
+          </Link>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="text-right text-xs">
+            <p className="font-semibold text-primary">Dev Mode</p>
+            <p className="text-slate-400">Guest</p>
           </div>
+          <div className="md:hidden"> {/* Hamburger on right for <md */}
+            <HamburgerMenu />
+          </div>
+        </div>
+      </header>
 
+      {/* Main Content */}
+      <main className="container mx-auto max-w-5xl flex-grow flex flex-col items-center justify-center text-center px-2 sm:px-4">
+        {/* Hero Section */}
+        <motion.section
+          initial={{ opacity: 0, y: -30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.1, ease: "easeOut" }}
+          className="py-12 sm:py-20 md:py-28"
+        >
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight mb-6 sm:mb-8 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400">
+            Turn ideas, images, and vibes into scroll-stopping social posts.
+          </h1>
+          <p className="text-lg sm:text-xl md:text-2xl text-slate-300 max-w-3xl mx-auto">
+            Select your mode to begin. All powered by AI. Styled by you.
+          </p>
+        </motion.section>
 
-          <motion.div variants={staggerChildren} initial="initial" animate="animate" className="px-4 sm:px-0">
-            <motion.div variants={cardVariants}>
-              <Card className="mb-8 bg-slate-800/50 border-slate-700 shadow-2xl hover:shadow-primary/30 transition-shadow duration-300 rounded-xl">
-                <CardHeader>
-                  <CardTitle className="text-2xl font-semibold text-center text-primary flex items-center justify-center">
-                    <Icons.search className="mr-3 h-7 w-7" />
-                    Research Your Topic
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <TopicResearch
-                    setTopic={setTopic}
-                    setResearchedContent={setResearchedContent}
-                    setIsLoading={setResearchIsLoading}
-                  />
-                </CardContent>
-              </Card>
-            </motion.div>
+        {/* Feature Cards Section */}
+        <section className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 sm:gap-8 mb-16 sm:mb-24">
+          <FeatureCard
+            icon="edit"
+            title="Quick Post Generator"
+            description="Research any topic and instantly generate engaging drafts for Twitter and LinkedIn. Perfect for rapid content creation."
+            href="/quick-post"
+            delay={0}
+          />
+          <FeatureCard
+            icon="image"
+            title="Image to Post Wizard"
+            description="Upload an image and let our AI craft a personalized, descriptive social media post based on its content and your chosen tone."
+            href="/visual-post"
+            delay={0.1}
+          />
+          <FeatureCard
+            icon="sparkles"
+            title="Smart Campaign Builder"
+            description="Create cohesive multi-post campaigns. Select content angles, generate series for different platforms, and get repurposing ideas."
+            href="/smart-campaign"
+            delay={0.2}
+          />
+          <FeatureCard
+            icon="flame"
+            title="Trend Explorer"
+            description="Discover what's buzzing on social media. Explore trending topics across platforms and categories to inspire your next viral post."
+            href="/trends"
+            delay={0.3}
+          />
+        </section>
+      </main>
 
-            {/* Personalized Post from Image Section */}
-            <motion.div variants={cardVariants} className="mb-8">
-              <Card className="bg-slate-800/60 backdrop-blur-md border border-slate-700 shadow-xl hover:shadow-purple-500/20 transition-all duration-300 rounded-xl">
-                <CardHeader className="text-center pb-4">
-                  <CardTitle className="text-xl font-semibold text-purple-400 flex items-center justify-center">
-                    <Icons.image className="mr-3 h-6 w-6" />
-                    Want a more personalized post?
-                  </CardTitle>
-                  <CardDescription className="text-slate-400 mt-1">
-                    Upload an image and let SagePostAI generate something unique for you.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="flex flex-col items-center">
-                  <Button
-                    onClick={() => fileInputRef.current?.click()}
-                    variant="outline"
-                    className="w-full max-w-xs bg-purple-600/20 border-purple-500 text-purple-300 hover:bg-purple-600/30 hover:text-purple-200 hover:border-purple-400 transition-all duration-200 ease-in-out transform hover:scale-105 shadow-md"
-                  >
-                    <Icons.upload className="mr-2 h-5 w-5" /> Upload Image
-                  </Button>
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleImageUpload}
-                    accept="image/*"
-                    className="hidden"
-                  />
-                   <p className="mt-3 text-xs text-slate-500">Max 5MB (JPG, PNG, GIF)</p>
-                </CardContent>
-              </Card>
-            </motion.div>
-            {/* End Personalized Post from Image Section */}
-
-            {researchIsLoading && (
-              <motion.div
-                className="flex flex-col justify-center items-center my-8 p-6 bg-slate-800/50 border border-slate-700 rounded-xl shadow-lg"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.3 }}
-              >
-                <Icons.loader className="h-12 w-12 animate-spin text-primary" />
-                <p className="ml-4 mt-3 text-lg text-slate-300">Researching...</p>
-                <p className="mt-1 text-sm text-slate-400">This may take a few moments.</p>
-              </motion.div>
-            )}
-
-            {!researchIsLoading && topic && researchedContent && (
-              <>
-                <motion.div
-                  className="grid md:grid-cols-2 gap-8 mt-8"
-                  variants={staggerChildren}
-                >
-                  <motion.div variants={cardVariants}>
-                    <Card className="bg-slate-800/50 border-slate-700 shadow-xl hover:shadow-primary/20 transition-shadow duration-300 rounded-xl">
-                      <CardHeader>
-                        <CardTitle className="text-xl font-semibold text-center text-primary flex items-center justify-center">
-                          <Icons.twitter className="mr-2 h-6 w-6" />
-                          Twitter Posts
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <TwitterPostGenerator
-                          topic={researchedContent || topic}
-                          userId={MOCK_USER_ID}
-                          setTwitterPosts={setTwitterPosts}
-                          displayGeneratedPostsInCard={displayTwitterInCard}
-                          setParentPostsEmpty={clearTwitterPosts}
-                        />
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-
-                  <motion.div variants={cardVariants}>
-                    <Card className="bg-slate-800/50 border-slate-700 shadow-xl hover:shadow-primary/20 transition-shadow duration-300 rounded-xl">
-                      <CardHeader>
-                        <CardTitle className="text-xl font-semibold text-center text-primary flex items-center justify-center">
-                          <Icons.linkedin className="mr-2 h-6 w-6" />
-                          LinkedIn Posts
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <LinkedInPostGenerator
-                          topic={researchedContent || topic}
-                          userId={MOCK_USER_ID}
-                          setLinkedinPosts={setLinkedinPosts}
-                          displayGeneratedPostsInCard={displayLinkedInInCard}
-                          setParentPostsEmpty={clearLinkedinPosts}
-                        />
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                </motion.div>
-              </>
-            )}
-
-            {!researchIsLoading && topic && researchedContent && showPostSelectionCard && (
-              <motion.div variants={cardVariants} className="mt-8">
-                <Card className="bg-slate-800/50 border-slate-700 shadow-2xl hover:shadow-primary/30 transition-shadow duration-300 rounded-xl">
-                  <CardHeader>
-                    <CardTitle className="text-2xl font-semibold text-center text-primary flex items-center justify-center">
-                      <Icons.edit className="mr-3 h-7 w-7" />
-                      Review & Refine Your Quick Posts
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <PostSelection
-                      twitterPosts={twitterPosts}
-                      linkedinPosts={linkedinPosts}
-                      topic={topic}
-                      userId={MOCK_USER_ID}
-                      onUpdatePost={handlePostUpdate}
-                    />
-                  </CardContent>
-                </Card>
-              </motion.div>
-            )}
-          </motion.div>
-        </main>
-        <footer className="text-center p-4 mt-12 text-slate-500 text-sm">
-          <span className="relative group hover:text-primary transition-colors duration-300 cursor-default">
-            Built By EZ Teenagers.
-            <span className="absolute -bottom-0.5 left-0 w-full h-[1.5px] bg-primary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-out origin-left"></span>
-          </span>
-        </footer>
-      </motion.div>
-    </>
+      {/* Footer */}
+      <footer className="w-full text-center p-6 sm:p-8 text-slate-500 text-sm">
+        <span className="relative group hover:text-primary transition-colors duration-300 cursor-default">
+          Built by EZ Teenagers.
+          <span className="absolute -bottom-0.5 left-0 w-full h-[1.5px] bg-primary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-out origin-left"></span>
+        </span>
+      </footer>
+    </div>
   );
 }
-    
 
-    
-
-    
+// Ensure router is imported if using router.push in FeatureCard
+import { useRouter } from 'next/navigation';
+// ...
+// const router = useRouter(); // if used within FeatureCard or parent that passes it down
+// This is not strictly necessary for simple <Link> navigation but good for programmatic nav.
+// For this case, simple <Link> and <a> tag within Button asChild is fine.

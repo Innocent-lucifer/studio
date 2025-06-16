@@ -14,7 +14,7 @@ import {
 import { Icons } from "@/components/icons";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext"; 
-import Link from "next/link"; // Import Link
+import Link from "next/link";
 
 export function HamburgerMenu() {
   const { toast } = useToast();
@@ -45,8 +45,20 @@ export function HamburgerMenu() {
         <DropdownMenuSeparator className="bg-slate-700" />
         <Link href="/" passHref>
           <DropdownMenuItem className="hover:bg-slate-700 focus:bg-slate-700 cursor-pointer">
+            <Icons.home className="mr-2 h-4 w-4 text-primary" />
+            <span>Home (All Tools)</span>
+          </DropdownMenuItem>
+        </Link>
+        <Link href="/quick-post" passHref>
+          <DropdownMenuItem className="hover:bg-slate-700 focus:bg-slate-700 cursor-pointer">
             <Icons.edit className="mr-2 h-4 w-4 text-primary" />
             <span>Quick Post</span>
+          </DropdownMenuItem>
+        </Link>
+        <Link href="/visual-post" passHref>
+          <DropdownMenuItem className="hover:bg-slate-700 focus:bg-slate-700 cursor-pointer">
+            <Icons.image className="mr-2 h-4 w-4 text-primary" />
+            <span>Image to Post</span>
           </DropdownMenuItem>
         </Link>
         <Link href="/smart-campaign" passHref>
@@ -57,7 +69,7 @@ export function HamburgerMenu() {
         </Link>
         <Link href="/trends" passHref>
             <DropdownMenuItem className="hover:bg-slate-700 focus:bg-slate-700 cursor-pointer">
-                <Icons.flame className="mr-2 h-4 w-4 text-primary" /> {/* Using flame for trends */}
+                <Icons.flame className="mr-2 h-4 w-4 text-primary" />
                 <span>Trends Explorer</span>
             </DropdownMenuItem>
         </Link>
@@ -97,5 +109,3 @@ export function HamburgerMenu() {
     </DropdownMenu>
   );
 }
-
-    

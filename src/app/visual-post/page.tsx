@@ -44,17 +44,17 @@ export default function VisualPostPage() {
   const router = useRouter();
   const { toast } = useToast();
   const attemptedStorageLoad = useRef(false); 
+  const fileInputRefVisual = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!attemptedStorageLoad.current && router) {
+    if (!attemptedStorageLoad.current && router && !imageDataUri) {
       attemptedStorageLoad.current = true;
       const storedImage = localStorage.getItem('sagepostai_visual_post_image');
       if (storedImage) {
         setImageDataUri(storedImage);
         localStorage.removeItem('sagepostai_visual_post_image'); 
-      } else {
-        router.push('/');
       }
+      // No automatic redirect here anymore. If no image, UI will offer upload.
     }
   }, [router, imageDataUri]);
 
@@ -93,6 +93,54 @@ export default function VisualPostPage() {
       });
     }
   }, [imageDataUri, userText, selectedTone, debouncedGeneratePost]);
+  
+  const handleDirectImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (fileInputRefVisual.current) { 
+      fileInputRefVisual.current.value = ''; // Reset file input
+    }
+
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        toast({
+          variant: "destructive",
+          title: "Invalid File Type",
+          description: "Please upload an image file (e.g., JPG, PNG, GIF).",
+        });
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) { 
+         toast({
+          variant: "destructive",
+          title: "File Too Large",
+          description: "Please upload an image smaller than 5MB.",
+        });
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const result = reader.result;
+        if (typeof result === 'string') {
+          setImageDataUri(result); // Set image directly in state
+        } else {
+          toast({
+            variant: "destructive",
+            title: "Image Read Error",
+            description: "Could not read image data as a string.",
+          });
+        }
+      };
+      reader.onerror = () => {
+        toast({
+          variant: "destructive",
+          title: "Image Read Error",
+          description: "Could not read the selected image file.",
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
 
   const handleCopyPost = () => {
     if (generatedPost) {
@@ -112,21 +160,94 @@ export default function VisualPostPage() {
     { label: 'Professional', value: 'professional', icon: 'briefcase' },
     { label: 'Mysterious', value: 'mysterious', icon: 'help' }, 
   ];
+  
+  const commonHeader = (
+     <header className="flex justify-between items-center w-full mb-8 py-4 px-4">
+        <div className="flex items-center space-x-3">
+          <div className="hidden md:block">
+            <HamburgerMenu />
+          </div>
+          <Link href="/" passHref>
+            <div className="flex items-center space-x-2 sm:space-x-3 cursor-pointer group">
+              <AppLogo className="h-12 w-12 sm:h-20 sm:w-20 text-primary group-hover:scale-110 transition-transform" />
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-primary">SagePostAI</h1>
+                <p className="text-sm text-slate-400 mt-1">Visual Post Generator</p>
+              </div>
+            </div>
+          </Link>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="text-right text-xs">
+              <p className="font-semibold text-primary">Dev Mode</p>
+              <p className="text-slate-400">Guest</p>
+          </div>
+          <div className="md:hidden">
+            <HamburgerMenu />
+          </div>
+        </div>
+      </header>
+  );
+  
+  const commonFooter = (
+      <footer className="text-center p-4 mt-12 text-slate-500 text-sm">
+         <span className="relative group hover:text-primary transition-colors duration-300 cursor-default">
+            Built By EZ Teenagers.
+            <span className="absolute -bottom-0.5 left-0 w-full h-[1.5px] bg-primary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-out origin-left"></span>
+          </span>
+      </footer>
+  );
 
-  if (!imageDataUri && attemptedStorageLoad.current) { 
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col items-center justify-center p-4">
-        <Icons.loader className="h-16 w-16 animate-spin text-primary" />
-        <p className="mt-4 text-xl">Loading visual post...</p>
-      </div>
-    );
-  }
-  if (!imageDataUri && !attemptedStorageLoad.current) {
+  // Loading state while checking localStorage
+  if (!attemptedStorageLoad.current && typeof window !== 'undefined') {
      return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col items-center justify-center p-4">
         <Icons.loader className="h-16 w-16 animate-spin text-primary" />
-        <p className="mt-4 text-xl">Preparing visual post...</p>
+        <p className="mt-4 text-xl">Loading Visual Post Tool...</p>
       </div>
+    );
+  }
+
+  // If no image is loaded (either from localStorage or direct upload), show upload UI
+  if (!imageDataUri && attemptedStorageLoad.current) {
+    return (
+       <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+        className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col items-center p-4 sm:p-8"
+      >
+        <main className="container mx-auto w-full max-w-xl">
+          {commonHeader}
+          <Card className="bg-slate-800/60 backdrop-blur-md border border-slate-700 shadow-2xl rounded-2xl p-6 sm:p-10 text-center">
+            <CardHeader className="p-0 mb-6">
+              <Icons.image className="h-16 w-16 text-primary mx-auto mb-4" />
+              <CardTitle className="text-2xl sm:text-3xl font-semibold text-primary">Create Post from Image</CardTitle>
+              <CardDescription className="text-slate-400 mt-2 text-base">
+                Upload an image to get started. SagePostAI will craft a unique post for you.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              <Button
+                onClick={() => fileInputRefVisual.current?.click()}
+                size="lg"
+                className="w-full max-w-xs mx-auto bg-primary hover:bg-primary/90 text-primary-foreground text-base py-3"
+              >
+                <Icons.upload className="mr-2 h-5 w-5" /> Upload Image
+              </Button>
+              <input
+                type="file"
+                ref={fileInputRefVisual}
+                onChange={handleDirectImageUpload}
+                accept="image/*"
+                className="hidden"
+              />
+              <p className="mt-4 text-xs text-slate-500">Max 5MB (JPG, PNG, GIF supported)</p>
+            </CardContent>
+          </Card>
+        </main>
+        {commonFooter}
+      </motion.div>
     );
   }
 
@@ -139,35 +260,7 @@ export default function VisualPostPage() {
       className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col items-center p-4 sm:p-8"
     >
       <main className="container mx-auto w-full max-w-3xl">
-        <header className="flex justify-between items-center w-full mb-8 py-4 px-4">
-          {/* LEFT GROUP: Hamburger (MD+), Logo/Title Link */}
-          <div className="flex items-center space-x-3">
-            <div className="hidden md:block">
-              <HamburgerMenu />
-            </div>
-            <Link href="/" passHref>
-              <div className="flex items-center space-x-2 sm:space-x-3 cursor-pointer group">
-                <AppLogo className="h-12 w-12 sm:h-20 sm:w-20 text-primary group-hover:scale-110 transition-transform" />
-                <div>
-                  <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-primary">SagePostAI</h1>
-                  <p className="text-sm text-slate-400 mt-1">Visual Post Generator</p>
-                </div>
-              </div>
-            </Link>
-          </div>
-          {/* RIGHT GROUP: Auth Info, Hamburger (SM) */}
-          <div className="flex items-center gap-3">
-            <div className="text-right text-xs">
-                <p className="font-semibold text-primary">Dev Mode</p>
-                <p className="text-slate-400">Guest</p>
-            </div>
-            {/* Hamburger for screens smaller than MD */}
-            <div className="md:hidden">
-              <HamburgerMenu />
-            </div>
-          </div>
-        </header>
-
+        {commonHeader}
         <Card className="bg-slate-800/60 backdrop-blur-md border border-slate-700 shadow-2xl hover:shadow-primary/20 transition-shadow duration-300 rounded-2xl p-4 sm:p-8">
           <CardContent className="space-y-8">
             {imageDataUri && ( 
@@ -280,15 +373,7 @@ export default function VisualPostPage() {
           </CardContent>
         </Card>
       </main>
-      <footer className="text-center p-4 mt-12 text-slate-500 text-sm">
-         <span className="relative group hover:text-primary transition-colors duration-300 cursor-default">
-            Built By EZ Teenagers.
-            <span className="absolute -bottom-0.5 left-0 w-full h-[1.5px] bg-primary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-out origin-left"></span>
-          </span>
-      </footer>
+      {commonFooter}
     </motion.div>
   );
 }
-
-
-    
