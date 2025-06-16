@@ -76,11 +76,10 @@ export default function VisualPostPage() {
       setImageDataUri(storedImage);
       localStorage.removeItem('sagepostai_visual_post_image'); // Clean up
     } else {
-      // Redirect if no image data is found, or show an error
-      toast({ variant: "destructive", title: "No Image Found", description: "Please upload an image first from the main page." });
+      // Redirect if no image data is found
       router.push('/');
     }
-  }, [router, toast]);
+  }, [router]); // Dependency array updated
 
   useEffect(() => {
     if (imageDataUri) {
@@ -113,10 +112,12 @@ export default function VisualPostPage() {
   ];
 
   if (!imageDataUri && !isLoading) { 
+    // This state will likely not be visible for long due to the redirect,
+    // but it's good practice to have a loading/fallback state.
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col items-center justify-center p-4">
         <Icons.loader className="h-16 w-16 animate-spin text-primary" />
-        <p className="mt-4 text-xl">Loading image...</p>
+        <p className="mt-4 text-xl">Loading...</p>
       </div>
     );
   }
@@ -270,4 +271,4 @@ export default function VisualPostPage() {
     </motion.div>
   );
 }
-    
+
