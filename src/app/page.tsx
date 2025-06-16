@@ -40,12 +40,9 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ icon, title, description, hre
           <Button
             variant="outline"
             className="mt-auto w-full sm:w-auto self-start bg-primary/10 border-primary/50 text-primary group-hover:bg-primary/20 group-hover:border-primary/70 group-hover:text-purple-300 transition-all duration-300 ease-in-out transform group-hover:scale-105"
-            onClick={(e) => { e.stopPropagation(); router.push(href);}} // Use router for client-side nav if needed, or simple anchor works
-            asChild
+            // Removed onClick and asChild, and the inner <a> tag
           >
-            <a>
-              Launch Tool <Icons.arrowRight className="ml-2 h-4 w-4" />
-            </a>
+            Launch Tool <Icons.arrowRight className="ml-2 h-4 w-4" />
           </Button>
         </div>
       </Link>
