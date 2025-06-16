@@ -1,0 +1,273 @@
+
+"use client";
+
+import { useState, useEffect, useCallback, useRef } from 'react';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/hooks/use-toast';
+import { Icons } from '@/components/icons';
+import { AppLogo } from '@/components/AppLogo';
+import { HamburgerMenu } from '@/components/HamburgerMenu';
+import Link from 'next/link';
+import { generatePostFromImage, GeneratePostFromImageInput } from '@/ai/flows/generate-post-from-image';
+import { Separator } from '@/components/ui/separator';
+import { Label } from '@/components/ui/label';
+
+const MOCK_USER_ID = "sagepostai-guest-user";
+type Tone = 'default' | 'romantic' | 'funny' | 'professional' | 'mysterious';
+
+// Debounce function
+const debounce = <F extends (...args: any[]) => any>(func: F, delay: number) => {
+  let timeoutId: ReturnType<typeof setTimeout> | null = null;
+  return (...args: Parameters<F>): Promise<ReturnType<F>> => {
+    return new Promise((resolve) => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      timeoutId = setTimeout(() => {
+        resolve(func(...args));
+      }, delay);
+    });
+  };
+};
+
+export default function VisualPostPage() {
+  const [imageDataUri, setImageDataUri] = useState<string | null>(null);
+  const [userText, setUserText] = useState<string>('');
+  const [selectedTone, setSelectedTone] = useState<Tone>('default');
+  const [generatedPost, setGeneratedPost] = useState<string>('');
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const router = useRouter();
+  const { toast } = useToast();
+
+  const debouncedGeneratePost = useCallback(
+    debounce(async (input: GeneratePostFromImageInput) => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const result = await generatePostFromImage(input);
+        if (result.error) {
+          setError(result.error);
+          setGeneratedPost('');
+          toast({ variant: "destructive", title: "Post Generation Failed", description: result.error });
+        } else {
+          setGeneratedPost(result.generatedPost || '');
+        }
+      } catch (e: any) {
+        setError(e.message || "An unexpected error occurred.");
+        setGeneratedPost('');
+        toast({ variant: "destructive", title: "Error", description: e.message || "Failed to generate post." });
+      } finally {
+        setIsLoading(false);
+      }
+    }, 700), // 700ms debounce
+    [toast] 
+  );
+
+  useEffect(() => {
+    const storedImage = localStorage.getItem('sagepostai_visual_post_image');
+    if (storedImage) {
+      setImageDataUri(storedImage);
+      localStorage.removeItem('sagepostai_visual_post_image'); // Clean up
+    } else {
+      // Redirect if no image data is found, or show an error
+      toast({ variant: "destructive", title: "No Image Found", description: "Please upload an image first from the main page." });
+      router.push('/');
+    }
+  }, [router, toast]);
+
+  useEffect(() => {
+    if (imageDataUri) {
+      debouncedGeneratePost({
+        imageDataUri,
+        userContext: userText || undefined, // Send undefined if empty
+        tone: selectedTone,
+        userId: MOCK_USER_ID,
+      });
+    }
+  }, [imageDataUri, userText, selectedTone, debouncedGeneratePost]);
+
+  const handleCopyPost = () => {
+    if (generatedPost) {
+      navigator.clipboard.writeText(generatedPost);
+      toast({ title: "Post Copied!", description: "The generated post has been copied to your clipboard." });
+    }
+  };
+  
+  const handleSharePost = () => {
+     toast({ title: "Feature Coming Soon", description: "Direct sharing will be available in a future update." });
+  };
+
+  const toneOptions: { label: string; value: Tone, icon?: keyof typeof Icons }[] = [
+    { label: 'Default', value: 'default', icon: 'sparkles' },
+    { label: 'Romantic', value: 'romantic', icon: 'heart' },
+    { label: 'Funny', value: 'funny', icon: 'smile' },
+    { label: 'Professional', value: 'professional', icon: 'briefcase' },
+    { label: 'Mysterious', value: 'mysterious', icon: 'help' }, 
+  ];
+
+  if (!imageDataUri && !isLoading) { 
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col items-center justify-center p-4">
+        <Icons.loader className="h-16 w-16 animate-spin text-primary" />
+        <p className="mt-4 text-xl">Loading image...</p>
+      </div>
+    );
+  }
+
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col items-center p-4 sm:p-8"
+    >
+      <main className="container mx-auto w-full max-w-3xl">
+        <header className="flex justify-between items-center w-full mb-8 py-4 px-4">
+          <Link href="/" passHref>
+            <div className="flex items-center space-x-2 sm:space-x-3 cursor-pointer group">
+              <AppLogo className="h-12 w-12 sm:h-20 sm:w-20 text-primary group-hover:scale-110 transition-transform" />
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-primary">SagePostAI</h1>
+                <p className="text-sm text-slate-400 mt-1">Visual Post Generator</p>
+              </div>
+            </div>
+          </Link>
+          <div className="flex items-center gap-3">
+            <div className="text-right text-xs">
+                <p className="font-semibold text-primary">Dev Mode</p>
+                <p className="text-slate-400">Guest</p>
+            </div>
+            <HamburgerMenu />
+          </div>
+        </header>
+
+        <Card className="bg-slate-800/60 backdrop-blur-md border border-slate-700 shadow-2xl hover:shadow-primary/20 transition-shadow duration-300 rounded-2xl p-4 sm:p-8">
+          <CardContent className="space-y-8">
+            {imageDataUri && (
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9 }} 
+                animate={{ opacity: 1, scale: 1 }} 
+                transition={{ duration: 0.5 }}
+                className="mb-6 relative w-full aspect-[16/10] overflow-hidden rounded-xl shadow-lg border border-slate-600"
+              >
+                <Image
+                  src={imageDataUri}
+                  alt="Uploaded preview"
+                  layout="fill"
+                  objectFit="contain"
+                  className="rounded-xl"
+                  priority
+                />
+              </motion.div>
+            )}
+
+            <motion.div initial={{ opacity: 0, y:10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+              <Label htmlFor="userContext" className="text-lg font-medium text-purple-300 mb-2 block">
+                Want to add a few words for deeper personalization? (Optional)
+              </Label>
+              <Textarea
+                id="userContext"
+                value={userText}
+                onChange={(e) => setUserText(e.target.value)}
+                placeholder="e.g., 'Celebrating a special milestone!' or 'My new furry friend'"
+                rows={3}
+                className="bg-slate-700/80 border-slate-600 placeholder-slate-400 text-slate-100 focus:ring-purple-500 focus:border-purple-500 rounded-lg"
+              />
+            </motion.div>
+            
+            <motion.div initial={{ opacity: 0, y:10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+              <Label className="text-lg font-medium text-purple-300 mb-3 block">
+                Generate in a different tone:
+              </Label>
+              <div className="flex flex-wrap gap-3">
+                {toneOptions.map(({ label, value, icon }) => {
+                  const Icon = icon ? Icons[icon] || Icons.help : Icons.help;
+                  return(
+                  <Button
+                    key={value}
+                    onClick={() => setSelectedTone(value)}
+                    variant={selectedTone === value ? "default" : "outline"}
+                    className={`
+                      ${selectedTone === value 
+                        ? 'bg-purple-600 hover:bg-purple-700 text-white border-purple-600' 
+                        : 'bg-slate-700/70 border-slate-600 text-slate-300 hover:bg-slate-600/90 hover:border-purple-500/50 hover:text-purple-300'}
+                      transition-all duration-200 ease-in-out shadow-md hover:shadow-lg rounded-lg px-4 py-2 text-sm
+                    `}
+                  >
+                    <Icon className="mr-2 h-4 w-4"/>
+                    {label}
+                  </Button>
+                )})}
+              </div>
+            </motion.div>
+
+            <Separator className="my-8 bg-slate-700" />
+            
+            <motion.div initial={{ opacity: 0, y:10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+              <CardTitle className="text-2xl font-semibold text-primary mb-4 flex items-center">
+                <Icons.wand className="mr-3 h-7 w-7" />
+                Your AI-Generated Post
+              </CardTitle>
+              {isLoading && (
+                <div className="flex items-center justify-center p-6 rounded-lg bg-slate-700/50 min-h-[150px]">
+                  <Icons.loader className="h-8 w-8 animate-spin text-primary mr-3" />
+                  <span className="text-slate-300 text-lg">Generating your post...</span>
+                </div>
+              )}
+              {!isLoading && error && (
+                <div className="p-4 rounded-lg bg-red-800/30 border border-red-700 text-red-300 min-h-[100px]">
+                  <p className="font-semibold">Error:</p>
+                  <p className="text-sm">{error}</p>
+                </div>
+              )}
+              {!isLoading && !error && generatedPost && (
+                <motion.div 
+                  initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                  className="p-6 bg-slate-700/80 rounded-xl shadow-inner min-h-[150px]"
+                >
+                  <p className="text-slate-100 whitespace-pre-wrap text-base leading-relaxed">{generatedPost}</p>
+                </motion.div>
+              )}
+              {!isLoading && !error && !generatedPost && (
+                 <div className="flex items-center justify-center p-6 rounded-lg bg-slate-700/50 min-h-[150px] text-slate-400">
+                  <Icons.info className="h-8 w-8 mr-3"/>
+                  <span className="text-lg">Your generated post will appear here.</span>
+                </div>
+              )}
+            </motion.div>
+
+            {!isLoading && generatedPost && (
+              <motion.div className="flex flex-col sm:flex-row gap-3 mt-8" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{delay: 0.4}}>
+                <Button onClick={handleCopyPost} className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white py-2.5 px-6 rounded-lg shadow-md hover:shadow-lg">
+                  <Icons.copy className="mr-2 h-5 w-5" /> Copy Post
+                </Button>
+                <Button 
+                  onClick={handleSharePost}
+                  variant="outline" 
+                  className="w-full sm:w-auto border-blue-500 text-blue-400 hover:bg-blue-500/10 hover:text-blue-300 py-2.5 px-6 rounded-lg shadow-md hover:shadow-lg"
+                >
+                  <Icons.share className="mr-2 h-5 w-5" /> Share
+                </Button>
+              </motion.div>
+            )}
+          </CardContent>
+        </Card>
+      </main>
+      <footer className="text-center p-4 mt-12 text-slate-500 text-sm">
+         <span className="relative group hover:text-primary transition-colors duration-300 cursor-default">
+            Built By EZ Teenagers.
+            <span className="absolute -bottom-0.5 left-0 w-full h-[1.5px] bg-primary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-out origin-left"></span>
+          </span>
+      </footer>
+    </motion.div>
+  );
+}
+    

@@ -5,14 +5,18 @@ import { TopicResearch } from "@/components/TopicResearch";
 import { TwitterPostGenerator } from "@/components/TwitterPostGenerator";
 import { LinkedInPostGenerator } from "@/components/LinkedInPostGenerator";
 import { PostSelection } from "@/components/PostSelection";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion } from 'framer-motion';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { HamburgerMenu } from "@/components/HamburgerMenu";
 import { Icons } from "@/components/icons";
 import { AppLogo } from "@/components/AppLogo";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useRouter } from 'next/navigation';
+import { useToast } from "@/hooks/use-toast";
+import { Separator } from "@/components/ui/separator";
+
 
 const MOCK_USER_ID = "sagepostai-guest-user";
 
@@ -25,6 +29,10 @@ export default function Home() {
 
   const [displayTwitterInCard, setDisplayTwitterInCard] = useState(true);
   const [displayLinkedInInCard, setDisplayLinkedInInCard] = useState(true);
+
+  const router = useRouter();
+  const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (researchIsLoading || !researchedContent || !topic) {
@@ -55,6 +63,53 @@ export default function Home() {
   const clearLinkedinPosts = useCallback(() => {
     setLinkedinPosts([]);
   }, []);
+
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        toast({
+          variant: "destructive",
+          title: "Invalid File Type",
+          description: "Please upload an image file (e.g., JPG, PNG, GIF).",
+        });
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+         toast({
+          variant: "destructive",
+          title: "File Too Large",
+          description: "Please upload an image smaller than 5MB.",
+        });
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const imageDataUri = reader.result as string;
+        // Store in localStorage temporarily for redirect
+        try {
+          localStorage.setItem('sagepostai_visual_post_image', imageDataUri);
+          router.push('/visual-post');
+        } catch (e) {
+            console.error("Error storing image data in localStorage:", e);
+            toast({
+                variant: "destructive",
+                title: "Storage Error",
+                description: "Could not prepare image for processing. Your browser's local storage might be full or disabled.",
+            });
+        }
+      };
+      reader.onerror = () => {
+        toast({
+          variant: "destructive",
+          title: "Image Read Error",
+          description: "Could not read the selected image file.",
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
 
   const pageVariants = {
     initial: { opacity: 0 },
@@ -89,7 +144,6 @@ export default function Home() {
       >
         <main className="container mx-auto w-full max-w-4xl">
           <header className="flex justify-between items-center w-full mb-8 py-4 px-4">
-            {/* Logo and App Name */}
             <div className="flex items-center space-x-2 sm:space-x-3">
               <motion.div
                 initial={{ scale: 0.5, opacity: 0 }}
@@ -110,7 +164,6 @@ export default function Home() {
               </h1>
             </div>
 
-            {/* Right side controls: Smart Campaign (desktop), Dev Mode Text, Hamburger Menu */}
             <div className="flex items-center gap-3">
               <div className="hidden sm:flex">
                 <Link
@@ -144,7 +197,6 @@ export default function Home() {
             </div>
           </header>
           
-          {/* Smart Campaign Button for Mobile - Below Header */}
           <div className="sm:hidden w-full mb-6 px-4">
              <Link
                 href={{
@@ -187,6 +239,39 @@ export default function Home() {
                 </CardContent>
               </Card>
             </motion.div>
+
+            {/* Personalized Post from Image Section */}
+            <motion.div variants={cardVariants} className="mb-8">
+              <Card className="bg-slate-800/60 backdrop-blur-md border border-slate-700 shadow-xl hover:shadow-purple-500/20 transition-all duration-300 rounded-xl">
+                <CardHeader className="text-center pb-4">
+                  <CardTitle className="text-xl font-semibold text-purple-400 flex items-center justify-center">
+                    <Icons.image className="mr-3 h-6 w-6" />
+                    Want a more personalized post?
+                  </CardTitle>
+                  <CardDescription className="text-slate-400 mt-1">
+                    Upload an image and let SagePostAI generate something unique for you.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="flex flex-col items-center">
+                  <Button
+                    onClick={() => fileInputRef.current?.click()}
+                    variant="outline"
+                    className="w-full max-w-xs bg-purple-600/20 border-purple-500 text-purple-300 hover:bg-purple-600/30 hover:text-purple-200 hover:border-purple-400 transition-all duration-200 ease-in-out transform hover:scale-105 shadow-md"
+                  >
+                    <Icons.upload className="mr-2 h-5 w-5" /> Upload Image
+                  </Button>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleImageUpload}
+                    accept="image/*"
+                    className="hidden"
+                  />
+                   <p className="mt-3 text-xs text-slate-500">Max 5MB (JPG, PNG, GIF)</p>
+                </CardContent>
+              </Card>
+            </motion.div>
+            {/* End Personalized Post from Image Section */}
 
             {researchIsLoading && (
               <motion.div
@@ -283,3 +368,4 @@ export default function Home() {
     </>
   );
 }
+    

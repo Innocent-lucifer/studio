@@ -13,11 +13,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Icons } from "@/components/icons";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/context/AuthContext"; // Import useAuth
+import { useAuth } from "@/context/AuthContext"; 
+import Link from "next/link"; // Import Link
 
 export function HamburgerMenu() {
   const { toast } = useToast();
-  const { user, logOut, loading } = useAuth(); // Get user and logOut from AuthContext
+  const { user, logOut, loading } = useAuth(); 
 
   const handleMenuItemClick = (featureName: string) => {
     toast({
@@ -29,7 +30,6 @@ export function HamburgerMenu() {
 
   const handleSignOut = async () => {
     await logOut();
-    // Toast for sign out is handled in AuthContext
   };
 
   return (
@@ -41,6 +41,28 @@ export function HamburgerMenu() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56 bg-slate-800 border-slate-700 text-slate-200">
+        <DropdownMenuLabel className="text-slate-400">Navigation</DropdownMenuLabel>
+        <DropdownMenuSeparator className="bg-slate-700" />
+        <Link href="/" passHref>
+          <DropdownMenuItem className="hover:bg-slate-700 focus:bg-slate-700 cursor-pointer">
+            <Icons.edit className="mr-2 h-4 w-4 text-primary" />
+            <span>Quick Post</span>
+          </DropdownMenuItem>
+        </Link>
+        <Link href="/smart-campaign" passHref>
+            <DropdownMenuItem className="hover:bg-slate-700 focus:bg-slate-700 cursor-pointer">
+                <Icons.sparkles className="mr-2 h-4 w-4 text-primary" />
+                <span>Smart Campaign</span>
+            </DropdownMenuItem>
+        </Link>
+        <Link href="/trends" passHref>
+            <DropdownMenuItem className="hover:bg-slate-700 focus:bg-slate-700 cursor-pointer">
+                <Icons.flame className="mr-2 h-4 w-4 text-primary" /> {/* Using flame for trends */}
+                <span>Trends Explorer</span>
+            </DropdownMenuItem>
+        </Link>
+        
+        <DropdownMenuSeparator className="bg-slate-700" />
         <DropdownMenuLabel className="text-slate-400">My Account</DropdownMenuLabel>
         <DropdownMenuSeparator className="bg-slate-700" />
         {user && (
@@ -63,8 +85,6 @@ export function HamburgerMenu() {
         {!user && (
           <DropdownMenuItem 
             onSelect={() => {
-              // Navigation to login/signup page is handled by the main page logic
-              // This option can be removed or repurposed if login is always on main page
                toast({ title: "Authentication", description: "Please use the form on the main page to log in or sign up." });
             }} 
             className="hover:bg-slate-700 focus:bg-slate-700"
@@ -77,3 +97,5 @@ export function HamburgerMenu() {
     </DropdownMenu>
   );
 }
+
+    
