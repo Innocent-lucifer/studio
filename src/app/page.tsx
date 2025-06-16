@@ -66,6 +66,10 @@ export default function Home() {
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
+    if (fileInputRef.current) { // Reset file input to allow re-selection of the same file
+      fileInputRef.current.value = '';
+    }
+
     if (file) {
       if (!file.type.startsWith('image/')) {
         toast({
@@ -85,25 +89,33 @@ export default function Home() {
       }
       const reader = new FileReader();
       reader.onloadend = () => {
-        const imageDataUri = reader.result as string;
-        // Store in localStorage temporarily for redirect
-        try {
-          localStorage.setItem('sagepostai_visual_post_image', imageDataUri);
-          router.push('/visual-post');
-        } catch (e) {
-            console.error("Error storing image data in localStorage:", e);
-            toast({
-                variant: "destructive",
-                title: "Storage Error",
-                description: "Could not prepare image for processing. Your browser's local storage might be full or disabled.",
-            });
+        const result = reader.result;
+        if (typeof result === 'string') {
+          const imageDataUri = result;
+          try {
+            localStorage.setItem('sagepostai_visual_post_image', imageDataUri);
+            router.push('/visual-post');
+          } catch (e) {
+              console.error("Error storing image data in localStorage:", e);
+              toast({
+                  variant: "destructive",
+                  title: "Storage Error",
+                  description: "Could not prepare image for processing. Your browser's local storage might be full or disabled.",
+              });
+          }
+        } else {
+          toast({
+            variant: "destructive",
+            title: "Image Read Error",
+            description: "Could not read image data as a string. The file might be corrupted or in an unsupported format.",
+          });
         }
       };
       reader.onerror = () => {
         toast({
           variant: "destructive",
           title: "Image Read Error",
-          description: "Could not read the selected image file.",
+          description: "Could not read the selected image file. Please try again or use a different file.",
         });
       };
       reader.readAsDataURL(file);
@@ -368,4 +380,6 @@ export default function Home() {
     </>
   );
 }
+    
+
     
