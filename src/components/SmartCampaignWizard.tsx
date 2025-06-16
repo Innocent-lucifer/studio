@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, Suspense, useCallback } from 'react';
@@ -14,6 +15,7 @@ import { Icons } from '@/components/icons';
 import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
 
 
 import type { SuggestContentAnglesInput, ContentAngle } from '@/ai/flows/suggest-content-angles';
@@ -22,6 +24,8 @@ import type { GenerateCampaignSeriesInput } from '@/ai/flows/generate-campaign-s
 import { generateCampaignSeries } from '@/ai/flows/generate-campaign-series';
 import type { SuggestRepurposingIdeasInput } from '@/ai/flows/suggest-repurposing-ideas';
 import { suggestRepurposingIdeas } from '@/ai/flows/suggest-repurposing-ideas';
+import { generateEditedPost, type GenerateEditedPostInput } from '@/ai/flows/generateEditedPost';
+
 
 const MOCK_USER_ID = "sagepostai-guest-user"; 
 
@@ -61,6 +65,9 @@ const SmartCampaignWizardInternal: React.FC = () => {
   const [linkedinSeries, setLinkedinSeries] = useState<string[]>([]);
   
   const [editingSeries, setEditingSeries] = useState<{ platform: 'twitter' | 'linkedin'; index: number; text: string } | null>(null);
+  const [isAiSeriesEditModalOpen, setIsAiSeriesEditModalOpen] = useState(false);
+  const [aiSeriesEditInstruction, setAiSeriesEditInstruction] = useState("");
+  const [isAiSeriesSubmitting, setIsAiSeriesSubmitting] = useState(false);
   
   const [twitterRepurposingIdeas, setTwitterRepurposingIdeas] = useState<string[]>([]);
   const [linkedinRepurposingIdeas, setLinkedinRepurposingIdeas] = useState<string[]>([]);
@@ -68,6 +75,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
   const handleSuggestAngles = useCallback(async (currentTopic: string, currentResearchedContent: string) => {
     if (!currentTopic || !currentResearchedContent) {
       toast({ variant: "destructive", title: "Missing Data", description: "Topic or research content is missing for angle suggestion." });
+      setIsLoading(false); // Ensure loading is stopped
       return;
     }
     setIsLoading(true);
@@ -90,7 +98,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [toast, setIsLoading, setLoadingMessage, setAngles]);
+  }, [toast]);
 
 
   useEffect(() => {
@@ -106,12 +114,11 @@ const SmartCampaignWizardInternal: React.FC = () => {
       }
     } else {
       setTopic(topicParam || ''); 
-      setResearchedContent('');
+      setResearchedContent(''); // Ensure it's empty if param is missing/empty
       setIsDataMissing(true);
       setCurrentStep('initial');
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams]); 
+  }, [searchParams, currentStep]); 
 
   useEffect(() => {
     if (currentStep === 'angles' && !isDataMissing && topic && researchedContent && angles.length === 0 && !isLoading) {
@@ -249,6 +256,52 @@ const SmartCampaignWizardInternal: React.FC = () => {
     setEditingSeries(null);
     toast({ title: "Post Updated", description: "Your changes have been saved to this campaign." });
   };
+  
+  const handleAiSeriesEditSubmit = async () => {
+    if (!editingSeries || !aiSeriesEditInstruction.trim() || !topic) {
+      toast({
+        title: "Missing Information",
+        description: "Post context or AI instruction is missing.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setIsAiSeriesSubmitting(true);
+    try {
+      const input: GenerateEditedPostInput = {
+        originalPost: editingSeries.text,
+        editInstruction: aiSeriesEditInstruction,
+        topic: topic, 
+        platform: editingSeries.platform,
+        userId: MOCK_USER_ID,
+      };
+      const result = await generateEditedPost(input);
+
+      if (result.error) {
+        toast({ variant: "destructive", title: "AI Edit Error", description: result.error});
+      } else if (result.editedPost) {
+        setEditingSeries(prev => prev ? { ...prev, text: result.editedPost! } : null);
+        toast({
+          title: "AI Edit Applied",
+          description: "The AI has revised the post. Review and save your changes.",
+        });
+        setIsAiSeriesEditModalOpen(false);
+        setAiSeriesEditInstruction("");
+      } else {
+         toast({ variant: "destructive", title: "AI Edit Failed", description: "AI did not return an edited post."});
+      }
+    } catch (error: any) {
+      console.error("Error applying AI edit to series post:", error);
+      toast({
+        title: "AI Edit Exception",
+        description: error.message || "Could not apply AI changes. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAiSeriesSubmitting(false);
+    }
+  };
+
 
   const resetWizard = () => {
     setTopic('');
@@ -262,6 +315,8 @@ const SmartCampaignWizardInternal: React.FC = () => {
     setTwitterRepurposingIdeas([]);
     setLinkedinRepurposingIdeas([]);
     setEditingSeries(null);
+    setIsAiSeriesEditModalOpen(false);
+    setAiSeriesEditInstruction("");
     router.push('/smart-campaign'); 
   };
   
@@ -312,13 +367,24 @@ const SmartCampaignWizardInternal: React.FC = () => {
   const CurrentIcon = Icons[stepConfig[currentStep]?.icon || 'help'] || Icons.help;
 
   const renderStepContent = () => {
+    // Wrap the entire switch in a single motion.div for AnimatePresence
+    // if (!isLoading) { // This outer check might be problematic if we want loading inside the step
+    // return (
+    // <motion.div key={currentStep} initial="hidden" animate="visible" exit="exit" variants={cardVariants} className="min-h-[350px]">
+    // {/* Content based on currentStep */}
+    // </motion.div>
+    // );
+    // }
+    
+    // Original placement of isLoading check
     if (isLoading) {
       return (
-        <motion.div key="loading" initial="hidden" animate="visible" exit="exit" variants={cardVariants}>
-          {renderLoadingState()}
-        </motion.div>
+        // <motion.div key="loading" initial="hidden" animate="visible" exit="exit" variants={cardVariants}>
+          renderLoadingState()
+        // </motion.div>
       );
     }
+
 
     switch (currentStep) {
       case 'initial':
@@ -340,7 +406,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
             </motion.div>
           );
         }
-        return null; // Should not happen if logic is correct, covered by isLoading or next step
+        return <div className="min-h-[300px]" />; // Fallback if not missing data but still initial
 
       case 'angles':
         if (!isDataMissing) {
@@ -399,7 +465,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
             </motion.div>
           );
         }
-        return null;
+        return <div className="min-h-[350px]" />; // Fallback
       
       case 'series':
          if (!isDataMissing) {
@@ -412,7 +478,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
                     <CardTitle className="flex items-center text-lg text-sky-400"><Icons.twitter className="mr-2 h-5 w-5" /> Twitter Thread</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    <ScrollArea className="h-[250px] pr-2">
+                    <ScrollArea className="h-[300px] pr-2">
                       {twitterSeries.length > 0 ? twitterSeries.map((post, index) => (
                         <div key={`twitter-${index}`} className="p-3 bg-slate-600/70 rounded-md text-slate-200 text-sm mb-2">
                           <p className="whitespace-pre-wrap">{post}</p>
@@ -427,7 +493,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
                     <CardTitle className="flex items-center text-lg text-blue-400"><Icons.linkedin className="mr-2 h-5 w-5" /> LinkedIn Series</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                      <ScrollArea className="h-[250px] pr-2">
+                      <ScrollArea className="h-[300px] pr-2">
                         {linkedinSeries.length > 0 ? linkedinSeries.map((post, index) => (
                           <div key={`linkedin-${index}`} className="p-3 bg-slate-600/70 rounded-md text-slate-200 text-sm mb-2">
                             <p className="whitespace-pre-wrap">{post}</p>
@@ -453,7 +519,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
             </motion.div>
           );
         }
-        return null;
+        return <div className="min-h-[350px]" />; // Fallback
 
       case 'repurpose':
         if (!isDataMissing) {
@@ -466,7 +532,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
                           <CardTitle className="flex items-center text-lg text-sky-400"><Icons.twitter className="mr-2 h-5 w-5" /> For Your Twitter Series</CardTitle>
                       </CardHeader>
                       <CardContent>
-                          <ScrollArea className="h-[200px] pr-2">
+                          <ScrollArea className="h-[250px] pr-2">
                               {twitterRepurposingIdeas.length > 0 ? (
                                   <ul className="list-disc list-inside space-y-2 text-slate-300">
                                       {twitterRepurposingIdeas.map((idea, index) => (
@@ -486,7 +552,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
                           <CardTitle className="flex items-center text-lg text-blue-400"><Icons.linkedin className="mr-2 h-5 w-5" /> For Your LinkedIn Series</CardTitle>
                       </CardHeader>
                       <CardContent>
-                          <ScrollArea className="h-[200px] pr-2">
+                          <ScrollArea className="h-[250px] pr-2">
                               {linkedinRepurposingIdeas.length > 0 ? (
                                   <ul className="list-disc list-inside space-y-2 text-slate-300">
                                       {linkedinRepurposingIdeas.map((idea, index) => (
@@ -531,7 +597,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
             </motion.div>
           );
         }
-        return null;
+        return <div className="min-h-[350px]" />; // Fallback
       
       case 'complete':
         if (!isDataMissing) {
@@ -569,10 +635,10 @@ const SmartCampaignWizardInternal: React.FC = () => {
             </motion.div>
           );
         }
-        return null;
+        return <div className="min-h-[300px]" />; // Fallback
 
       default:
-        return null;
+        return <div className="min-h-[300px]" />; // Default fallback
     }
   };
 
@@ -605,42 +671,74 @@ const SmartCampaignWizardInternal: React.FC = () => {
         </CardContent>
       </Card>
 
-      {editingSeries && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-slate-800 p-6 rounded-xl shadow-2xl w-full max-w-lg border border-slate-700"
-          >
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-semibold text-primary">Edit {editingSeries.platform === 'twitter' ? 'Tweet' : 'LinkedIn Post'}</h3>
-              <Button variant="ghost" size="icon" onClick={() => setEditingSeries(null)} className="text-slate-400 hover:text-slate-200">
-                <Icons.close className="h-5 w-5"/>
+      {/* Main Edit Modal for Series Posts */}
+      <Dialog open={!!editingSeries} onOpenChange={(isOpen) => !isOpen && setEditingSeries(null)}>
+        <DialogContent className="bg-slate-800 border-slate-700 text-white sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-primary">Edit {editingSeries?.platform === 'twitter' ? 'Tweet' : 'LinkedIn Post'}</DialogTitle>
+             <DialogDescription className="text-slate-400">
+                  Refine your post. Use "Make AI Change" for AI assistance or edit manually.
+              </DialogDescription>
+          </DialogHeader>
+          <Textarea
+            value={editingSeries?.text || ''}
+            onChange={(e) => setEditingSeries(prev => prev ? { ...prev, text: e.target.value } : null)}
+            rows={10}
+            className="bg-slate-700 border-slate-600 text-slate-100 focus:ring-primary focus:border-primary text-sm mt-2"
+            placeholder={`Enter your revised ${editingSeries?.platform === 'twitter' ? 'tweet' : 'LinkedIn post'}...`}
+          />
+          <DialogFooter className="mt-4 sm:justify-between">
+            <Button variant="outline" onClick={() => setEditingSeries(null)} className="border-slate-600 text-slate-300 hover:bg-slate-700">
+              Cancel
+            </Button>
+            <div className="flex space-x-2">
+              <Button onClick={() => setIsAiSeriesEditModalOpen(true)} className="bg-purple-600 hover:bg-purple-700 text-white">
+                <Icons.sparkles className="mr-2 h-4 w-4" /> Make AI Change
               </Button>
-            </div>
-            <Textarea
-              value={editingSeries.text}
-              onChange={(e) => setEditingSeries(prev => prev ? { ...prev, text: e.target.value } : null)}
-              rows={10}
-              className="bg-slate-700 border-slate-600 text-slate-100 focus:ring-primary focus:border-primary text-sm"
-              placeholder={`Enter your revised ${editingSeries.platform === 'twitter' ? 'tweet' : 'LinkedIn post'}...`}
-            />
-            <div className="flex justify-end space-x-3 mt-6">
-              <Button variant="outline" onClick={() => setEditingSeries(null)} className="border-slate-600 text-slate-300 hover:bg-slate-700">Cancel</Button>
               <Button onClick={saveEdit} className="bg-primary hover:bg-primary/90 text-primary-foreground">
                 <Icons.save className="mr-2 h-4 w-4"/>
                 Save Changes
               </Button>
             </div>
-          </motion.div>
-        </div>
-      )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Nested AI Edit Instruction Modal for Series Posts */}
+      <Dialog open={isAiSeriesEditModalOpen} onOpenChange={setIsAiSeriesEditModalOpen}>
+        <DialogContent className="bg-slate-800 border-slate-700 text-white sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-primary">AI-Powered Editing</DialogTitle>
+            <DialogDescription className="text-slate-400">
+              Tell the AI how you want to change the current post.
+              E.g., "Make it more concise", "Add a question at the end".
+            </DialogDescription>
+          </DialogHeader>
+          <Textarea
+            placeholder="e.g., Make it more professional and add relevant hashtags"
+            value={aiSeriesEditInstruction}
+            onChange={(e) => setAiSeriesEditInstruction(e.target.value)}
+            rows={3}
+            className="bg-slate-700 border-slate-600 text-slate-100 focus:ring-primary focus:border-primary text-sm mt-2"
+          />
+          <DialogFooter className="mt-4">
+            <Button variant="outline" onClick={() => setIsAiSeriesEditModalOpen(false)} className="border-slate-600 text-slate-300 hover:bg-slate-700">Cancel</Button>
+            <Button onClick={handleAiSeriesEditSubmit} disabled={isAiSeriesSubmitting || !aiSeriesEditInstruction.trim()} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+              {isAiSeriesSubmitting ? <Icons.loader className="animate-spin mr-2 h-4 w-4" /> : <Icons.wand className="mr-2 h-4 w-4" />}
+              Apply AI Edit
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 };
 
 export const SmartCampaignWizard: React.FC = () => {
+  // Ensure Suspense key changes if searchParams change, forcing re-evaluation
   const searchParamsString = typeof window !== 'undefined' ? window.location.search : 'stableInitialKey';
+  
   return (
     <Suspense key={searchParamsString} fallback={
       <div className="flex flex-col items-center justify-center p-10 bg-slate-800/50 rounded-xl shadow-xl min-h-[300px]">

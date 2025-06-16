@@ -129,14 +129,16 @@ export const PostSelection: React.FC<PostSelectionProps> = ({
 
       if (result.error) {
         toast({ variant: "destructive", title: "AI Edit Error", description: result.error});
-      } else {
-        setEditingPost(prev => prev ? { ...prev, currentText: result.editedPost } : null);
+      } else if (result.editedPost){
+        setEditingPost(prev => prev ? { ...prev, currentText: result.editedPost! } : null);
         toast({
           title: "AI Edit Applied",
           description: "The AI has revised the post. Click 'Save Changes' to update the main list.",
         });
         setIsAiEditingModalOpen(false);
         setAiEditInstruction("");
+      } else {
+        toast({ variant: "destructive", title: "AI Edit Failed", description: "AI did not return an edited post."});
       }
     } catch (error: any) {
       console.error("Error applying AI edit:", error);
@@ -164,7 +166,7 @@ export const PostSelection: React.FC<PostSelectionProps> = ({
     >
       <div>
         <h3 className="text-lg font-semibold mb-3 text-primary flex items-center"><Icons.twitter className="mr-2 h-5 w-5" />Twitter Posts</h3>
-        <ScrollArea className="h-[200px] pr-3">
+        <ScrollArea className="h-[250px] pr-3">
         <div className="space-y-3">
           {twitterPosts.map((post, index) => (
             <motion.div 
@@ -192,7 +194,7 @@ export const PostSelection: React.FC<PostSelectionProps> = ({
 
       <div>
         <h3 className="text-lg font-semibold mb-3 text-primary flex items-center"><Icons.linkedin className="mr-2 h-5 w-5" />LinkedIn Posts</h3>
-         <ScrollArea className="h-[200px] pr-3">
+         <ScrollArea className="h-[250px] pr-3">
         <div className="space-y-3">
           {linkedinPosts.map((post, index) => (
             <motion.div 
@@ -316,3 +318,4 @@ export const PostSelection: React.FC<PostSelectionProps> = ({
     </motion.div>
   );
 };
+
