@@ -66,26 +66,29 @@ export default function VisualPostPage() {
       } finally {
         setIsLoading(false);
       }
-    }, 700), // 700ms debounce
+    }, 700), 
     [toast] 
   );
 
   useEffect(() => {
-    const storedImage = localStorage.getItem('sagepostai_visual_post_image');
-    if (storedImage) {
-      setImageDataUri(storedImage);
-      localStorage.removeItem('sagepostai_visual_post_image'); // Clean up
-    } else {
-      // Redirect if no image data is found
-      router.push('/');
+    // Only attempt to load from localStorage if imageDataUri is not already set.
+    if (!imageDataUri) {
+      const storedImage = localStorage.getItem('sagepostai_visual_post_image');
+      if (storedImage) {
+        setImageDataUri(storedImage);
+        localStorage.removeItem('sagepostai_visual_post_image'); // Clean up after use
+      } else {
+        // If still no imageDataUri and nothing in storage, then redirect.
+        router.push('/');
+      }
     }
-  }, [router]); // Dependency array updated
+  }, [imageDataUri, router]); // Add imageDataUri to dependency array
 
   useEffect(() => {
     if (imageDataUri) {
       debouncedGeneratePost({
         imageDataUri,
-        userContext: userText || undefined, // Send undefined if empty
+        userContext: userText || undefined, 
         tone: selectedTone,
         userId: MOCK_USER_ID,
       });
@@ -112,12 +115,10 @@ export default function VisualPostPage() {
   ];
 
   if (!imageDataUri && !isLoading) { 
-    // This state will likely not be visible for long due to the redirect,
-    // but it's good practice to have a loading/fallback state.
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col items-center justify-center p-4">
         <Icons.loader className="h-16 w-16 animate-spin text-primary" />
-        <p className="mt-4 text-xl">Loading...</p>
+        <p className="mt-4 text-xl">Loading image...</p>
       </div>
     );
   }
