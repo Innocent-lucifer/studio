@@ -5,20 +5,22 @@ import { TopicResearch } from "@/components/TopicResearch";
 import { TwitterPostGenerator } from "@/components/TwitterPostGenerator";
 import { LinkedInPostGenerator } from "@/components/LinkedInPostGenerator";
 import { PostSelection } from "@/components/PostSelection";
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from 'framer-motion';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { HamburgerMenu } from "@/components/HamburgerMenu";
 import { Icons } from "@/components/icons";
 import { AppLogo } from "@/components/AppLogo";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-// Removed useRouter and useToast as they are not used on this page after image upload removal.
-// If future features on this page need them, they can be re-added.
+import { useAuth } from "@/context/AuthContext";
 
-const MOCK_USER_ID = "sagepostai-guest-user";
+// const MOCK_USER_ID = "sagepostai-guest-user"; // Will use user.uid from useAuth instead
 
 export default function QuickPostPage() {
+  const { user } = useAuth();
+  const userIdToPass = user?.uid || "sagepostai-guest-user"; // Fallback for safety, though user should be mock guest
+
   const [topic, setTopic] = useState<string>("");
   const [researchedContent, setResearchedContent] = useState<string>("");
   const [twitterPosts, setTwitterPosts] = useState<string[]>([]);
@@ -146,8 +148,12 @@ export default function QuickPostPage() {
               </div>
               
               <div className="text-right text-xs">
-                <p className="font-semibold text-primary">Dev Mode</p>
-                <p className="text-slate-400">Guest</p>
+                {user?.email ? (
+                    <p className="font-semibold text-primary truncate max-w-[100px] sm:max-w-[150px]" title={user.email}>{user.email}</p>
+                ) : (
+                    <p className="font-semibold text-primary">Guest</p>
+                )}
+                <p className="text-slate-400">Mode</p>
               </div>
               <div className="md:hidden">
                 <HamburgerMenu />
@@ -192,6 +198,7 @@ export default function QuickPostPage() {
                     setTopic={setTopic}
                     setResearchedContent={setResearchedContent}
                     setIsLoading={setResearchIsLoading}
+                    userId={userIdToPass} 
                   />
                 </CardContent>
               </Card>
@@ -227,7 +234,7 @@ export default function QuickPostPage() {
                       <CardContent>
                         <TwitterPostGenerator
                           topic={researchedContent || topic}
-                          userId={MOCK_USER_ID}
+                          userId={userIdToPass}
                           setTwitterPosts={setTwitterPosts}
                           displayGeneratedPostsInCard={displayTwitterInCard}
                           setParentPostsEmpty={clearTwitterPosts}
@@ -247,7 +254,7 @@ export default function QuickPostPage() {
                       <CardContent>
                         <LinkedInPostGenerator
                           topic={researchedContent || topic}
-                          userId={MOCK_USER_ID}
+                          userId={userIdToPass}
                           setLinkedinPosts={setLinkedinPosts}
                           displayGeneratedPostsInCard={displayLinkedInInCard}
                           setParentPostsEmpty={clearLinkedinPosts}
@@ -273,7 +280,7 @@ export default function QuickPostPage() {
                       twitterPosts={twitterPosts}
                       linkedinPosts={linkedinPosts}
                       topic={topic}
-                      userId={MOCK_USER_ID}
+                      userId={userIdToPass}
                       onUpdatePost={handlePostUpdate}
                     />
                   </CardContent>

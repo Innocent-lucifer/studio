@@ -9,15 +9,16 @@ import { useToast } from "@/hooks/use-toast";
 import { motion } from 'framer-motion';
 import { Icons } from "./icons";
 
-const MOCK_USER_ID = "sagepostai-guest-user";
+// const MOCK_USER_ID = "sagepostai-guest-user"; // userId will be passed as a prop
 
 interface TopicResearchProps {
   setTopic: (topic: string) => void;
   setResearchedContent: (content: string) => void;
   setIsLoading: (isLoading: boolean) => void;
+  userId: string; // Add userId prop
 }
 
-export const TopicResearch: React.FC<TopicResearchProps> = ({ setTopic, setResearchedContent, setIsLoading }) => {
+export const TopicResearch: React.FC<TopicResearchProps> = ({ setTopic, setResearchedContent, setIsLoading, userId }) => {
   const [topicInput, setTopicInput] = useState<string>("");
   const { toast } = useToast();
 
@@ -33,7 +34,7 @@ export const TopicResearch: React.FC<TopicResearchProps> = ({ setTopic, setResea
     setIsLoading(true);
     setResearchedContent(""); // Clear previous research
     try {
-      const result = await researchTopic({ topic: topicInput, userId: MOCK_USER_ID });
+      const result = await researchTopic({ topic: topicInput, userId: userId }); // Use passed userId
       if (result.error) {
         toast({ variant: "destructive", title: "Research Failed", description: result.error });
         setTopic(topicInput); // Still set topic so user knows what failed

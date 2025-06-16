@@ -8,8 +8,8 @@ import { AppLogo } from '@/components/AppLogo';
 import { HamburgerMenu } from '@/components/HamburgerMenu';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+// import { useRouter } from 'next/navigation'; // Not needed if not redirecting
+// import { useEffect } from 'react'; // Not needed if not redirecting
 
 interface FeatureCardProps {
   icon: keyof typeof Icons;
@@ -53,29 +53,26 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ icon, title, description, hre
 };
 
 export default function AppHomePage() {
-  const { user, loading } = useAuth();
-  const router = useRouter();
+  const { user } = useAuth(); // Removed loading and router as auth is disabled for now
 
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push('/login');
-    }
-  }, [user, loading, router]);
+  // useEffect(() => {
+  //   if (!loading && !user) {
+  //     router.push('/login');
+  //   }
+  // }, [user, loading, router]); // This useEffect is removed
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col items-center justify-center p-4">
-        <Icons.loader className="h-16 w-16 animate-spin text-primary" />
-        <p className="mt-4 text-xl">Loading SagePostAI...</p>
-      </div>
-    );
-  }
+  // if (loading) { // This block is removed
+  //   return (
+  //     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col items-center justify-center p-4">
+  //       <Icons.loader className="h-16 w-16 animate-spin text-primary" />
+  //       <p className="mt-4 text-xl">Loading SagePostAI...</p>
+  //     </div>
+  //   );
+  // }
 
-  if (!user) {
-    // This state should ideally not be reached if useEffect redirects properly,
-    // but it's a fallback.
-    return null; 
-  }
+  // if (!user) { // This block is removed, assuming user is always the mock guest user
+  //   return null; 
+  // }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col items-center p-4 sm:p-6 md:p-8 overflow-x-hidden">
@@ -96,10 +93,10 @@ export default function AppHomePage() {
         </div>
         <div className="flex items-center gap-3">
           <div className="text-right text-xs">
-            {user.email ? (
+            {user?.email ? (
               <p className="font-semibold text-primary truncate max-w-[150px] sm:max-w-[200px]" title={user.email}>{user.email}</p>
             ) : (
-              <p className="font-semibold text-primary">Authenticated</p>
+              <p className="font-semibold text-primary">Guest Mode</p>
             )}
             <p className="text-slate-400">Welcome!</p>
           </div>

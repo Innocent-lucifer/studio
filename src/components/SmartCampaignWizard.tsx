@@ -15,7 +15,8 @@ import { Icons } from '@/components/icons';
 import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"; // Removed DialogClose as it's not explicitly used for manual close
+import { useAuth } from "@/context/AuthContext";
 
 
 import type { SuggestContentAnglesInput, ContentAngle } from '@/ai/flows/suggest-content-angles';
@@ -27,7 +28,7 @@ import { suggestRepurposingIdeas } from '@/ai/flows/suggest-repurposing-ideas';
 import { generateEditedPost, type GenerateEditedPostInput } from '@/ai/flows/generateEditedPost';
 
 
-const MOCK_USER_ID = "sagepostai-guest-user"; 
+// const MOCK_USER_ID = "sagepostai-guest-user"; // Will use user.uid from useAuth instead
 
 type WizardStep = 'initial' | 'angles' | 'series' | 'repurpose' | 'complete';
 
@@ -49,6 +50,8 @@ const SmartCampaignWizardInternal: React.FC = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { toast } = useToast();
+  const { user } = useAuth();
+  const userIdToPass = user?.uid || "sagepostai-guest-user";
 
   const [topic, setTopic] = useState<string>('');
   const [researchedContent, setResearchedContent] = useState<string>('');
@@ -75,13 +78,13 @@ const SmartCampaignWizardInternal: React.FC = () => {
   const handleSuggestAngles = useCallback(async (currentTopic: string, currentResearchedContent: string) => {
     if (!currentTopic || !currentResearchedContent) {
       toast({ variant: "destructive", title: "Missing Data", description: "Topic or research content is missing for angle suggestion." });
-      setIsLoading(false); // Ensure loading is stopped
+      setIsLoading(false); 
       return;
     }
     setIsLoading(true);
     setLoadingMessage('Brainstorming content angles...');
     try {
-      const input: SuggestContentAnglesInput = { topic: currentTopic, researchedContext: currentResearchedContent, userId: MOCK_USER_ID, numAngles: 4 };
+      const input: SuggestContentAnglesInput = { topic: currentTopic, researchedContext: currentResearchedContent, userId: userIdToPass, numAngles: 4 };
       const result = await suggestContentAngles(input);
       if (result.error) {
         toast({ variant: "destructive", title: "Angle Suggestion Failed", description: result.error });
@@ -98,7 +101,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [toast]);
+  }, [toast, userIdToPass]);
 
 
   useEffect(() => {
@@ -114,7 +117,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
       }
     } else {
       setTopic(topicParam || ''); 
-      setResearchedContent(''); // Ensure it's empty if param is missing/empty
+      setResearchedContent(''); 
       setIsDataMissing(true);
       setCurrentStep('initial');
     }
@@ -140,8 +143,8 @@ const SmartCampaignWizardInternal: React.FC = () => {
     setLinkedinSeries([]);
 
     try {
-      const twitterInput: GenerateCampaignSeriesInput = { topic, selectedAngle: selectedAngle.title, platform: 'twitter', researchedContext: researchedContent, userId: MOCK_USER_ID, numPostsInSeries: 3 };
-      const linkedinInput: GenerateCampaignSeriesInput = { topic, selectedAngle: selectedAngle.title, platform: 'linkedin', researchedContext: researchedContent, userId: MOCK_USER_ID, numPostsInSeries: 3 };
+      const twitterInput: GenerateCampaignSeriesInput = { topic, selectedAngle: selectedAngle.title, platform: 'twitter', researchedContext: researchedContent, userId: userIdToPass, numPostsInSeries: 3 };
+      const linkedinInput: GenerateCampaignSeriesInput = { topic, selectedAngle: selectedAngle.title, platform: 'linkedin', researchedContext: researchedContent, userId: userIdToPass, numPostsInSeries: 3 };
       
       const [twitterResult, linkedinResult] = await Promise.all([
         generateCampaignSeries(twitterInput),
@@ -189,7 +192,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
         topic,
         selectedAngle: selectedAngle.title,
         campaignSummary: twitterSeries.join('\n\n---\n\n'),
-        userId: MOCK_USER_ID,
+        userId: userIdToPass,
         numIdeas: 3
       };
       promises.push(suggestRepurposingIdeas(twitterInput));
@@ -202,7 +205,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
         topic,
         selectedAngle: selectedAngle.title,
         campaignSummary: linkedinSeries.join('\n\n---\n\n'),
-        userId: MOCK_USER_ID,
+        userId: userIdToPass,
         numIdeas: 3
       };
       promises.push(suggestRepurposingIdeas(linkedinInput));
@@ -273,7 +276,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
         editInstruction: aiSeriesEditInstruction,
         topic: topic, 
         platform: editingSeries.platform,
-        userId: MOCK_USER_ID,
+        userId: userIdToPass,
       };
       const result = await generateEditedPost(input);
 
@@ -366,25 +369,10 @@ const SmartCampaignWizardInternal: React.FC = () => {
 
   const CurrentIcon = Icons[stepConfig[currentStep]?.icon || 'help'] || Icons.help;
 
-  const renderStepContent = () => {
-    // Wrap the entire switch in a single motion.div for AnimatePresence
-    // if (!isLoading) { // This outer check might be problematic if we want loading inside the step
-    // return (
-    // <motion.div key={currentStep} initial="hidden" animate="visible" exit="exit" variants={cardVariants} className="min-h-[350px]">
-    // {/* Content based on currentStep */}
-    // </motion.div>
-    // );
-    // }
-    
-    // Original placement of isLoading check
+  const renderStepContent = () => {    
     if (isLoading) {
-      return (
-        // <motion.div key="loading" initial="hidden" animate="visible" exit="exit" variants={cardVariants}>
-          renderLoadingState()
-        // </motion.div>
-      );
+      return renderLoadingState();
     }
-
 
     switch (currentStep) {
       case 'initial':
@@ -398,7 +386,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
                 The Smart Campaign wizard uses this researched information to generate relevant content angles and posts.
               </p>
               <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground mt-4">
-                <Link href="/">
+                <Link href="/quick-post">
                   <Icons.arrowLeft className="mr-2 h-5 w-5" />
                   Back to Topic Research
                 </Link>
@@ -406,7 +394,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
             </motion.div>
           );
         }
-        return <div className="min-h-[300px]" />; // Fallback if not missing data but still initial
+        return <div className="min-h-[300px]" />; 
 
       case 'angles':
         if (!isDataMissing) {
@@ -465,7 +453,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
             </motion.div>
           );
         }
-        return <div className="min-h-[350px]" />; // Fallback
+        return <div className="min-h-[350px]" />; 
       
       case 'series':
          if (!isDataMissing) {
@@ -519,7 +507,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
             </motion.div>
           );
         }
-        return <div className="min-h-[350px]" />; // Fallback
+        return <div className="min-h-[350px]" />; 
 
       case 'repurpose':
         if (!isDataMissing) {
@@ -597,7 +585,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
             </motion.div>
           );
         }
-        return <div className="min-h-[350px]" />; // Fallback
+        return <div className="min-h-[350px]" />; 
       
       case 'complete':
         if (!isDataMissing) {
@@ -635,10 +623,10 @@ const SmartCampaignWizardInternal: React.FC = () => {
             </motion.div>
           );
         }
-        return <div className="min-h-[300px]" />; // Fallback
+        return <div className="min-h-[300px]" />; 
 
       default:
-        return <div className="min-h-[300px]" />; // Default fallback
+        return <div className="min-h-[300px]" />; 
     }
   };
 
@@ -736,7 +724,6 @@ const SmartCampaignWizardInternal: React.FC = () => {
 };
 
 export const SmartCampaignWizard: React.FC = () => {
-  // Ensure Suspense key changes if searchParams change, forcing re-evaluation
   const searchParamsString = typeof window !== 'undefined' ? window.location.search : 'stableInitialKey';
   
   return (
@@ -750,4 +737,3 @@ export const SmartCampaignWizard: React.FC = () => {
     </Suspense>
   );
 };
-

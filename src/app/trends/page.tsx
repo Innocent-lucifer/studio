@@ -5,7 +5,7 @@ import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'; // Removed TabsContent as it's not used
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -14,6 +14,8 @@ import { AppLogo } from '@/components/AppLogo';
 import { HamburgerMenu } from '@/components/HamburgerMenu';
 import Link from 'next/link';
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"; 
+import { useAuth } from "@/context/AuthContext";
+
 
 type Platform = "Twitter" | "LinkedIn"; 
 const platforms: Platform[] = ["Twitter", "LinkedIn"];
@@ -41,6 +43,7 @@ const mockTrends: Trend[] = [
 
 
 export default function TrendsPage() {
+  const { user } = useAuth();
   const [selectedPlatform, setSelectedPlatform] = useState<Platform>("Twitter");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [filterByHype, setFilterByHype] = useState<boolean>(false);
@@ -96,8 +99,12 @@ export default function TrendsPage() {
           {/* RIGHT GROUP: Auth Info, Hamburger (SM) */}
           <div className="flex items-center gap-3">
              <div className="text-right text-xs">
-                <p className="font-semibold text-primary">Dev Mode</p>
-                <p className="text-slate-400">Guest</p>
+                {user?.email ? (
+                    <p className="font-semibold text-primary truncate max-w-[100px] sm:max-w-[150px]" title={user.email}>{user.email}</p>
+                ) : (
+                    <p className="font-semibold text-primary">Guest</p>
+                )}
+                <p className="text-slate-400">Mode</p>
             </div>
             {/* Hamburger for screens smaller than MD */}
             <div className="md:hidden">
@@ -190,7 +197,7 @@ export default function TrendsPage() {
                   </CardDescription>
                 </CardContent>
                 <div className="p-4 pt-0 mt-auto">
-                    <Link href={`/?topic=${encodeURIComponent(trend.title)}`} passHref>
+                    <Link href={`/quick-post?topic=${encodeURIComponent(trend.title)}`} passHref>
                         <Button 
                             variant="outline" 
                             className="w-full bg-primary/10 border-primary/50 text-primary hover:bg-primary/20 hover:text-purple-300 hover:border-primary/70 transition-all duration-200 ease-in-out transform group-hover:scale-105 shadow-md group-hover:shadow-purple-500/20"
@@ -223,6 +230,3 @@ export default function TrendsPage() {
     </motion.div>
   );
 }
-    
-
-    

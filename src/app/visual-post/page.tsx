@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'; 
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+// import { useRouter } from 'next/navigation'; // Not strictly needed for this modified flow
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -16,8 +16,10 @@ import Link from 'next/link';
 import { generatePostFromImage, GeneratePostFromImageInput } from '@/ai/flows/generate-post-from-image';
 import { Separator } from '@/components/ui/separator';
 import { Label } from '@/components/ui/label';
+import { useAuth } from "@/context/AuthContext";
 
-const MOCK_USER_ID = "sagepostai-guest-user";
+
+// const MOCK_USER_ID = "sagepostai-guest-user"; // Will use user.uid from useAuth
 type Tone = 'default' | 'romantic' | 'funny' | 'professional' | 'mysterious';
 
 const debounce = <F extends (...args: any[]) => any>(func: F, delay: number) => {
@@ -35,20 +37,23 @@ const debounce = <F extends (...args: any[]) => any>(func: F, delay: number) => 
 };
 
 export default function VisualPostPage() {
+  const { user } = useAuth();
+  const userIdToPass = user?.uid || "sagepostai-guest-user";
+
   const [imageDataUri, setImageDataUri] = useState<string | null>(null);
   const [userText, setUserText] = useState<string>('');
   const [selectedTone, setSelectedTone] = useState<Tone>('default');
   const [generatedPost, setGeneratedPost] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false); 
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
+  // const router = useRouter(); // Not strictly needed
   const { toast } = useToast();
   const attemptedStorageLoad = useRef(false); 
   const fileInputRefVisual = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!attemptedStorageLoad.current && router && !imageDataUri) {
-      attemptedStorageLoad.current = true;
+    if (!attemptedStorageLoad.current && !imageDataUri) { // Only attempt load if no image yet
+      attemptedStorageLoad.current = true; // Mark as attempted
       const storedImage = localStorage.getItem('sagepostai_visual_post_image');
       if (storedImage) {
         setImageDataUri(storedImage);
@@ -56,7 +61,7 @@ export default function VisualPostPage() {
       }
       // No automatic redirect here anymore. If no image, UI will offer upload.
     }
-  }, [router, imageDataUri]);
+  }, [imageDataUri]); // Rerun if imageDataUri changes (e.g. set by upload)
 
 
   const debouncedGeneratePost = useCallback(
@@ -89,15 +94,15 @@ export default function VisualPostPage() {
         imageDataUri,
         userContext: userText || undefined, 
         tone: selectedTone,
-        userId: MOCK_USER_ID,
+        userId: userIdToPass,
       });
     }
-  }, [imageDataUri, userText, selectedTone, debouncedGeneratePost]);
+  }, [imageDataUri, userText, selectedTone, debouncedGeneratePost, userIdToPass]);
   
   const handleDirectImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (fileInputRefVisual.current) { 
-      fileInputRefVisual.current.value = ''; // Reset file input
+      fileInputRefVisual.current.value = ''; 
     }
 
     if (file) {
@@ -121,7 +126,7 @@ export default function VisualPostPage() {
       reader.onloadend = () => {
         const result = reader.result;
         if (typeof result === 'string') {
-          setImageDataUri(result); // Set image directly in state
+          setImageDataUri(result); 
         } else {
           toast({
             variant: "destructive",
@@ -179,8 +184,12 @@ export default function VisualPostPage() {
         </div>
         <div className="flex items-center gap-3">
           <div className="text-right text-xs">
-              <p className="font-semibold text-primary">Dev Mode</p>
-              <p className="text-slate-400">Guest</p>
+              {user?.email ? (
+                  <p className="font-semibold text-primary truncate max-w-[100px] sm:max-w-[150px]" title={user.email}>{user.email}</p>
+              ) : (
+                  <p className="font-semibold text-primary">Guest</p>
+              )}
+              <p className="text-slate-400">Mode</p>
           </div>
           <div className="md:hidden">
             <HamburgerMenu />
@@ -198,8 +207,7 @@ export default function VisualPostPage() {
       </footer>
   );
 
-  // Loading state while checking localStorage
-  if (!attemptedStorageLoad.current && typeof window !== 'undefined') {
+  if (!attemptedStorageLoad.current && typeof window !== 'undefined' && !imageDataUri) {
      return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col items-center justify-center p-4">
         <Icons.loader className="h-16 w-16 animate-spin text-primary" />
@@ -208,7 +216,6 @@ export default function VisualPostPage() {
     );
   }
 
-  // If no image is loaded (either from localStorage or direct upload), show upload UI
   if (!imageDataUri && attemptedStorageLoad.current) {
     return (
        <motion.div
@@ -273,8 +280,8 @@ export default function VisualPostPage() {
                 <Image
                   src={imageDataUri}
                   alt="Uploaded preview"
-                  layout="fill"
-                  objectFit="contain"
+                  fill // Changed from layout="fill" to fill for Next 13+
+                  style={{objectFit:"contain"}} // Changed from objectFit to style={{objectFit}}
                   className="rounded-xl"
                   priority
                 />

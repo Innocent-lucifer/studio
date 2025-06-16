@@ -2,108 +2,77 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { User, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, AuthError, signInWithPopup } from 'firebase/auth'; // Added signInWithPopup
-import { auth, googleProvider } from '@/lib/firebase'; // Added googleProvider
+import { User, AuthError }  from 'firebase/auth'; // Removed unused imports for actual auth functions
+// import { auth, googleProvider } from '@/lib/firebase'; // Firebase interaction disabled
 import { useToast } from "@/hooks/use-toast";
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  signUp: (email: string, pass: string) => Promise<User | AuthError>;
-  logIn: (email: string, pass: string) => Promise<User | AuthError>;
-  signInWithGoogle: () => Promise<User | AuthError>; // Added signInWithGoogle
+  signUp: (email: string, pass: string) => Promise<User | AuthError | null>;
+  logIn: (email: string, pass: string) => Promise<User | AuthError | null>;
+  signInWithGoogle: () => Promise<User | AuthError | null>;
   logOut: () => Promise<void>;
 }
+
+// Define a mock user that satisfies the User type structure minimally
+const MOCK_GUEST_USER: User = {
+  uid: "sagepostai-guest-user",
+  email: "guest@sagepost.ai",
+  displayName: "Guest User",
+  photoURL: null,
+  emailVerified: true,
+  isAnonymous: false,
+  metadata: {},
+  providerData: [],
+  providerId: "guest",
+  tenantId: null,
+  delete: async () => {},
+  getIdToken: async () => "mock-token",
+  getIdTokenResult: async () => ({ token: "mock-token", claims: {}, authTime: "", expirationTime: "", issuedAtTime: "", signInProvider: null, signInSecondFactor: null }),
+  reload: async () => {},
+  toJSON: () => ({}),
+};
+
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(MOCK_GUEST_USER);
+  const [loading, setLoading] = useState(false); // Auth is "disabled", so not loading
   const { toast } = useToast();
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      setLoading(false);
-    });
-    return () => unsubscribe();
-  }, []);
+  // useEffect(() => {
+  //   // Firebase onAuthStateChanged listener commented out for disabled auth
+  //   // const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+  //   //   setUser(currentUser);
+  //   //   setLoading(false);
+  //   // });
+  //   // return () => unsubscribe();
+  //   setLoading(false); // Ensure loading is false
+  // }, []);
 
-  const signUp = async (email: string, pass: string): Promise<User | AuthError> => {
-    setLoading(true);
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
-      setUser(userCredential.user);
-      toast({ title: "Sign Up Successful", description: "Welcome!" });
-      return userCredential.user;
-    } catch (error) {
-      const authError = error as AuthError;
-      console.error("Sign up error:", authError);
-      toast({ variant: "destructive", title: "Sign Up Failed", description: authError.message });
-      return authError;
-    } finally {
-      setLoading(false);
-    }
+  const signUp = async (email: string, pass: string): Promise<User | AuthError | null> => {
+    toast({ title: "Authentication Disabled", description: "Sign up is currently inactive." });
+    // setUser(MOCK_GUEST_USER); // Already set
+    return MOCK_GUEST_USER;
   };
 
-  const logIn = async (email: string, pass: string): Promise<User | AuthError> => {
-    setLoading(true);
-    try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, pass);
-      setUser(userCredential.user);
-      toast({ title: "Login Successful", description: "Welcome back!" });
-      return userCredential.user;
-    } catch (error) {
-      const authError = error as AuthError;
-      console.error("Login error:", authError);
-      toast({ variant: "destructive", title: "Login Failed", description: authError.message });
-      return authError;
-    } finally {
-      setLoading(false);
-    }
+  const logIn = async (email: string, pass: string): Promise<User | AuthError | null> => {
+    toast({ title: "Authentication Disabled", description: "Log in is currently inactive." });
+    // setUser(MOCK_GUEST_USER); // Already set
+    return MOCK_GUEST_USER;
   };
 
-  const signInWithGoogle = async (): Promise<User | AuthError> => {
-    setLoading(true);
-    try {
-      const result = await signInWithPopup(auth, googleProvider);
-      setUser(result.user);
-      toast({ title: "Google Sign-In Successful", description: "Welcome!" });
-      return result.user;
-    } catch (error) {
-      const authError = error as AuthError;
-      console.error("Google sign-in error:", authError);
-      // Common Google Sign-In errors:
-      // auth/popup-closed-by-user
-      // auth/cancelled-popup-request
-      // auth/popup-blocked
-      if (authError.code === 'auth/popup-closed-by-user' || authError.code === 'auth/cancelled-popup-request') {
-        toast({ variant: "destructive", title: "Google Sign-In Cancelled", description: "You closed the Google sign-in window." });
-      } else if (authError.code === 'auth/popup-blocked') {
-         toast({ variant: "destructive", title: "Google Sign-In Blocked", description: "Your browser blocked the Google sign-in popup. Please enable popups for this site." });
-      } else {
-        toast({ variant: "destructive", title: "Google Sign-In Failed", description: authError.message });
-      }
-      return authError;
-    } finally {
-      setLoading(false);
-    }
+  const signInWithGoogle = async (): Promise<User | AuthError | null> => {
+    toast({ title: "Authentication Disabled", description: "Google Sign-In is currently inactive." });
+    // setUser(MOCK_GUEST_USER); // Already set
+    return MOCK_GUEST_USER;
   };
 
   const logOut = async () => {
-    setLoading(true);
-    try {
-      await signOut(auth);
-      setUser(null);
-      toast({ title: "Signed Out", description: "You have been successfully signed out." });
-    } catch (error) {
-      const authError = error as AuthError;
-      console.error("Logout error:", authError);
-      toast({ variant: "destructive", title: "Sign Out Failed", description: authError.message });
-    } finally {
-      setLoading(false);
-    }
+    toast({ title: "Authentication Disabled", description: "Log out action is inactive. You are still a guest." });
+    // setUser(MOCK_GUEST_USER); // Keep guest user, or set to null if testing logged out state explicitly
   };
 
   return (

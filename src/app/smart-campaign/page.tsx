@@ -9,8 +9,12 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { Icons } from '@/components/icons';
 import { Button } from '@/components/ui/button';
+import { useAuth } from "@/context/AuthContext";
+
 
 const SmartCampaignPageContent = () => {
+  const { user } = useAuth();
+
   return (
     <motion.div 
       initial={{ opacity: 0 }}
@@ -41,7 +45,7 @@ const SmartCampaignPageContent = () => {
           {/* RIGHT GROUP: Action Buttons, Auth Info, Hamburger (SM) */}
           <div className="flex items-center gap-3">
             <div className="hidden sm:flex">
-              <Link href="/" passHref legacyBehavior={false}>
+              <Link href="/quick-post" passHref legacyBehavior={false}>
                 <Button
                   variant="outline"
                   className="border-primary text-primary hover:bg-primary/10 hover:text-purple-300 transition-all duration-200 ease-in-out transform hover:scale-105 shadow-md hover:shadow-lg"
@@ -54,8 +58,12 @@ const SmartCampaignPageContent = () => {
             </div>
             
             <div className="text-right text-xs">
-              <p className="font-semibold text-primary">Dev Mode</p>
-              <p className="text-slate-400">Guest</p>
+                {user?.email ? (
+                    <p className="font-semibold text-primary truncate max-w-[100px] sm:max-w-[150px]" title={user.email}>{user.email}</p>
+                ) : (
+                    <p className="font-semibold text-primary">Guest</p>
+                )}
+                <p className="text-slate-400">Mode</p>
             </div>
             {/* Hamburger for screens smaller than MD */}
             <div className="md:hidden">
@@ -65,7 +73,7 @@ const SmartCampaignPageContent = () => {
         </header>
         
         <div className="sm:hidden w-full mb-6 px-4">
-          <Link href="/" passHref legacyBehavior={false}>
+          <Link href="/quick-post" passHref legacyBehavior={false}>
             <Button
               variant="outline"
               className="w-full border-primary text-primary hover:bg-primary/10 hover:text-purple-300"
@@ -102,5 +110,3 @@ const LoadingState = () => (
     <p className="mt-4 text-xl">Loading Smart Campaign...</p>
   </div>
 );
-
-    
