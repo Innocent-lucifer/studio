@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react'; // Added useRef
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
@@ -40,11 +40,29 @@ export default function VisualPostPage() {
   const [userText, setUserText] = useState<string>('');
   const [selectedTone, setSelectedTone] = useState<Tone>('default');
   const [generatedPost, setGeneratedPost] = useState<string>('');
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false); // For AI post generation
   const [error, setError] = useState<string | null>(null);
-
   const router = useRouter();
   const { toast } = useToast();
+  const attemptedStorageLoad = useRef(false); // Ref to track if initial load from localStorage was attempted
+
+  useEffect(() => {
+    // This effect attempts to load the image from localStorage only once.
+    if (attemptedStorageLoad.current) {
+      return; // If load already attempted for this component instance, do nothing.
+    }
+    attemptedStorageLoad.current = true; // Mark as attempted.
+
+    const storedImage = localStorage.getItem('sagepostai_visual_post_image');
+    if (storedImage) {
+      setImageDataUri(storedImage);
+      localStorage.removeItem('sagepostai_visual_post_image'); // Clean up after use
+    } else {
+      // No image found in localStorage on the first attempt, redirect.
+      router.push('/');
+    }
+  }, [router]); // Dependency on router to ensure it's available.
+                // The logic inside is guarded by attemptedStorageLoad.current.
 
   const debouncedGeneratePost = useCallback(
     debounce(async (input: GeneratePostFromImageInput) => {
@@ -71,21 +89,7 @@ export default function VisualPostPage() {
   );
 
   useEffect(() => {
-    // Only attempt to load from localStorage if imageDataUri is not already set.
-    if (!imageDataUri) {
-      const storedImage = localStorage.getItem('sagepostai_visual_post_image');
-      if (storedImage) {
-        setImageDataUri(storedImage);
-        localStorage.removeItem('sagepostai_visual_post_image'); // Clean up after use
-      } else {
-        // If still no imageDataUri and nothing in storage, then redirect.
-        router.push('/');
-      }
-    }
-  }, [imageDataUri, router]); // Add imageDataUri to dependency array
-
-  useEffect(() => {
-    if (imageDataUri) {
+    if (imageDataUri) { // Only generate if image is successfully loaded into state
       debouncedGeneratePost({
         imageDataUri,
         userContext: userText || undefined, 
@@ -114,16 +118,19 @@ export default function VisualPostPage() {
     { label: 'Mysterious', value: 'mysterious', icon: 'help' }, 
   ];
 
-  if (!imageDataUri && !isLoading) { 
+  if (!imageDataUri) { 
+    // If imageDataUri is still null, it means the initial load is pending,
+    // or it failed and redirect is imminent (or has happened).
+    // Show a generic loader.
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col items-center justify-center p-4">
         <Icons.loader className="h-16 w-16 animate-spin text-primary" />
-        <p className="mt-4 text-xl">Loading image...</p>
+        <p className="mt-4 text-xl">Loading visual post...</p>
       </div>
     );
   }
 
-
+  // If imageDataUri is set, render the main page content
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -153,7 +160,7 @@ export default function VisualPostPage() {
 
         <Card className="bg-slate-800/60 backdrop-blur-md border border-slate-700 shadow-2xl hover:shadow-primary/20 transition-shadow duration-300 rounded-2xl p-4 sm:p-8">
           <CardContent className="space-y-8">
-            {imageDataUri && (
+            {imageDataUri && ( // This condition is now somewhat redundant due to the check above, but safe.
               <motion.div 
                 initial={{ opacity: 0, scale: 0.9 }} 
                 animate={{ opacity: 1, scale: 1 }} 
@@ -218,7 +225,7 @@ export default function VisualPostPage() {
                 <Icons.wand className="mr-3 h-7 w-7" />
                 Your AI-Generated Post
               </CardTitle>
-              {isLoading && (
+              {isLoading && ( // This is for AI post generation
                 <div className="flex items-center justify-center p-6 rounded-lg bg-slate-700/50 min-h-[150px]">
                   <Icons.loader className="h-8 w-8 animate-spin text-primary mr-3" />
                   <span className="text-slate-300 text-lg">Generating your post...</span>
