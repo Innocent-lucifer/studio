@@ -98,28 +98,16 @@ export default function QuickPostPage() {
                 <HamburgerMenu />
               </div>
               <Link href="/" passHref>
-                <motion.div
-                  initial={{ scale: 0.5, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ duration: 0.7, ease: "easeOut" }}
-                  whileHover={{
-                    rotate: [0, -8, 8, -8, 8, 0],
-                    transition: {
-                      duration: 0.4,
-                      ease: "easeInOut"
-                    }
-                  }}
-                  className="cursor-pointer"
-                >
-                  <AppLogo className="h-12 w-12 sm:h-20 sm:w-20 text-primary" />
-                </motion.div>
+                <div className="flex items-center space-x-3 sm:space-x-4 cursor-pointer group">
+                  <AppLogo className="h-12 w-12 sm:h-16 sm:w-16 text-primary group-hover:scale-110 transition-transform" />
+                  <div>
+                    <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-primary">
+                      SagePostAI
+                    </h1>
+                    <p className="text-sm text-slate-400 mt-1">Quick Post Generator</p>
+                  </div>
+                </div>
               </Link>
-              <div>
-                <h1 className="text-2xl sm:text-4xl font-bold tracking-tight" style={{ color: 'hsl(var(--primary))' }}>
-                  SagePostAI
-                </h1>
-                <p className="text-sm text-slate-400 mt-1">Quick Post Generator</p>
-              </div>
             </div>
 
             <div className="flex items-center gap-3">

@@ -83,9 +83,9 @@ export default function AppHomePage() {
             <HamburgerMenu />
           </div>
           <Link href="/" passHref>
-            <div className="flex items-center space-x-2 sm:space-x-3 cursor-pointer group">
-              <AppLogo className="h-10 w-10 sm:h-12 sm:w-12 text-primary group-hover:scale-110 transition-transform" />
-              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-primary">
+            <div className="flex items-center space-x-3 sm:space-x-4 cursor-pointer group">
+              <AppLogo className="h-12 w-12 sm:h-16 sm:w-16 text-primary group-hover:scale-110 transition-transform" />
+              <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-primary">
                 SagePostAI
               </h1>
             </div>
