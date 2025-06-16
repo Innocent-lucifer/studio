@@ -22,12 +22,12 @@ const SmartCampaignPageContent = () => {
         <header className="flex justify-between items-center w-full mb-8 py-4 px-4">
           <Link href="/" passHref>
             <div className="flex items-center space-x-2 sm:space-x-3 cursor-pointer group">
-              <AppLogo className="h-12 w-12 sm:h-14 sm:w-14 text-primary group-hover:scale-110 transition-transform" />
+              <AppLogo className="h-10 w-10 sm:h-16 sm:w-16 text-primary group-hover:scale-110 transition-transform" />
               <div>
                 <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-primary">
                   SagePostAI
                 </h1>
-                <p className="text-sm text-slate-400">Smart Campaign</p>
+                <p className="text-sm text-slate-400 mt-1">Smart Campaign</p>
               </div>
             </div>
           </Link>
