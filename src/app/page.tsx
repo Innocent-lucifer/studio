@@ -116,10 +116,13 @@ export default function AppHomePage() {
           className="py-12 sm:py-16 md:py-20"
         >
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight mb-4 sm:mb-6 text-slate-100">
-            Welcome to SagePostAI!
+            Welcome to SagePostAI! <br />
+            <span className="bg-gradient-to-r from-purple-400 via-pink-500 to-orange-400 bg-clip-text text-transparent">
+              Turn ideas, images, and vibes into scroll-stopping social posts.
+            </span>
           </h1>
           <p className="text-lg sm:text-xl md:text-2xl text-slate-300 max-w-2xl mx-auto">
-            Ready to create some amazing content? Select a tool below to get started.
+            Select your mode to begin. All powered by AI. Styled by you.
           </p>
         </motion.section>
 
