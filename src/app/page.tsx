@@ -103,7 +103,7 @@ export default function Home() {
                   }
                 }}
               >
-                <AppLogo className="h-10 w-10 sm:h-16 sm:w-16 text-primary" />
+                <AppLogo className="h-12 w-12 sm:h-20 sm:w-20 text-primary" />
               </motion.div>
               <h1 className="text-2xl sm:text-4xl font-bold tracking-tight" style={{ color: 'hsl(var(--primary))' }}>
                 SagePostAI
