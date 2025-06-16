@@ -20,18 +20,25 @@ const SmartCampaignPageContent = () => {
     >
       <main className="container mx-auto w-full max-w-4xl">
         <header className="flex justify-between items-center w-full mb-8 py-4 px-4">
-          <Link href="/" passHref>
-            <div className="flex items-center space-x-2 sm:space-x-3 cursor-pointer group">
-              <AppLogo className="h-12 w-12 sm:h-20 sm:w-20 text-primary group-hover:scale-110 transition-transform" />
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-primary">
-                  SagePostAI
-                </h1>
-                <p className="text-sm text-slate-400 mt-1">Smart Campaign</p>
-              </div>
+          {/* LEFT GROUP: Hamburger (MD+), Logo/Title Link */}
+          <div className="flex items-center space-x-3">
+            <div className="hidden md:block">
+              <HamburgerMenu />
             </div>
-          </Link>
+            <Link href="/" passHref>
+              <div className="flex items-center space-x-2 sm:space-x-3 cursor-pointer group">
+                <AppLogo className="h-12 w-12 sm:h-20 sm:w-20 text-primary group-hover:scale-110 transition-transform" />
+                <div>
+                  <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-primary">
+                    SagePostAI
+                  </h1>
+                  <p className="text-sm text-slate-400 mt-1">Smart Campaign</p>
+                </div>
+              </div>
+            </Link>
+          </div>
           
+          {/* RIGHT GROUP: Action Buttons, Auth Info, Hamburger (SM) */}
           <div className="flex items-center gap-3">
             <div className="hidden sm:flex">
               <Link href="/" passHref legacyBehavior={false}>
@@ -50,7 +57,10 @@ const SmartCampaignPageContent = () => {
               <p className="font-semibold text-primary">Dev Mode</p>
               <p className="text-slate-400">Guest</p>
             </div>
-            <HamburgerMenu />
+            {/* Hamburger for screens smaller than MD */}
+            <div className="md:hidden">
+              <HamburgerMenu />
+            </div>
           </div>
         </header>
         
@@ -92,3 +102,5 @@ const LoadingState = () => (
     <p className="mt-4 text-xl">Loading Smart Campaign...</p>
   </div>
 );
+
+    

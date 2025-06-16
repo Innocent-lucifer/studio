@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from 'react'; // Added useRef
+import { useState, useEffect, useCallback, useRef } from 'react'; 
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
@@ -20,7 +20,6 @@ import { Label } from '@/components/ui/label';
 const MOCK_USER_ID = "sagepostai-guest-user";
 type Tone = 'default' | 'romantic' | 'funny' | 'professional' | 'mysterious';
 
-// Debounce function
 const debounce = <F extends (...args: any[]) => any>(func: F, delay: number) => {
   let timeoutId: ReturnType<typeof setTimeout> | null = null;
   return (...args: Parameters<F>): Promise<ReturnType<F>> => {
@@ -40,29 +39,25 @@ export default function VisualPostPage() {
   const [userText, setUserText] = useState<string>('');
   const [selectedTone, setSelectedTone] = useState<Tone>('default');
   const [generatedPost, setGeneratedPost] = useState<string>('');
-  const [isLoading, setIsLoading] = useState<boolean>(false); // For AI post generation
+  const [isLoading, setIsLoading] = useState<boolean>(false); 
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const { toast } = useToast();
-  const attemptedStorageLoad = useRef(false); // Ref to track if initial load from localStorage was attempted
+  const attemptedStorageLoad = useRef(false); 
 
   useEffect(() => {
-    // This effect attempts to load the image from localStorage only once.
-    if (attemptedStorageLoad.current) {
-      return; // If load already attempted for this component instance, do nothing.
+    if (!attemptedStorageLoad.current && router) {
+      attemptedStorageLoad.current = true;
+      const storedImage = localStorage.getItem('sagepostai_visual_post_image');
+      if (storedImage) {
+        setImageDataUri(storedImage);
+        localStorage.removeItem('sagepostai_visual_post_image'); 
+      } else {
+        router.push('/');
+      }
     }
-    attemptedStorageLoad.current = true; // Mark as attempted.
+  }, [router, imageDataUri]);
 
-    const storedImage = localStorage.getItem('sagepostai_visual_post_image');
-    if (storedImage) {
-      setImageDataUri(storedImage);
-      localStorage.removeItem('sagepostai_visual_post_image'); // Clean up after use
-    } else {
-      // No image found in localStorage on the first attempt, redirect.
-      router.push('/');
-    }
-  }, [router]); // Dependency on router to ensure it's available.
-                // The logic inside is guarded by attemptedStorageLoad.current.
 
   const debouncedGeneratePost = useCallback(
     debounce(async (input: GeneratePostFromImageInput) => {
@@ -89,7 +84,7 @@ export default function VisualPostPage() {
   );
 
   useEffect(() => {
-    if (imageDataUri) { // Only generate if image is successfully loaded into state
+    if (imageDataUri) { 
       debouncedGeneratePost({
         imageDataUri,
         userContext: userText || undefined, 
@@ -118,10 +113,7 @@ export default function VisualPostPage() {
     { label: 'Mysterious', value: 'mysterious', icon: 'help' }, 
   ];
 
-  if (!imageDataUri) { 
-    // If imageDataUri is still null, it means the initial load is pending,
-    // or it failed and redirect is imminent (or has happened).
-    // Show a generic loader.
+  if (!imageDataUri && attemptedStorageLoad.current) { 
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col items-center justify-center p-4">
         <Icons.loader className="h-16 w-16 animate-spin text-primary" />
@@ -129,8 +121,16 @@ export default function VisualPostPage() {
       </div>
     );
   }
+  if (!imageDataUri && !attemptedStorageLoad.current) {
+     return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col items-center justify-center p-4">
+        <Icons.loader className="h-16 w-16 animate-spin text-primary" />
+        <p className="mt-4 text-xl">Preparing visual post...</p>
+      </div>
+    );
+  }
 
-  // If imageDataUri is set, render the main page content
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -140,27 +140,37 @@ export default function VisualPostPage() {
     >
       <main className="container mx-auto w-full max-w-3xl">
         <header className="flex justify-between items-center w-full mb-8 py-4 px-4">
-          <Link href="/" passHref>
-            <div className="flex items-center space-x-2 sm:space-x-3 cursor-pointer group">
-              <AppLogo className="h-12 w-12 sm:h-20 sm:w-20 text-primary group-hover:scale-110 transition-transform" />
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-primary">SagePostAI</h1>
-                <p className="text-sm text-slate-400 mt-1">Visual Post Generator</p>
-              </div>
+          {/* LEFT GROUP: Hamburger (MD+), Logo/Title Link */}
+          <div className="flex items-center space-x-3">
+            <div className="hidden md:block">
+              <HamburgerMenu />
             </div>
-          </Link>
+            <Link href="/" passHref>
+              <div className="flex items-center space-x-2 sm:space-x-3 cursor-pointer group">
+                <AppLogo className="h-12 w-12 sm:h-20 sm:w-20 text-primary group-hover:scale-110 transition-transform" />
+                <div>
+                  <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-primary">SagePostAI</h1>
+                  <p className="text-sm text-slate-400 mt-1">Visual Post Generator</p>
+                </div>
+              </div>
+            </Link>
+          </div>
+          {/* RIGHT GROUP: Auth Info, Hamburger (SM) */}
           <div className="flex items-center gap-3">
             <div className="text-right text-xs">
                 <p className="font-semibold text-primary">Dev Mode</p>
                 <p className="text-slate-400">Guest</p>
             </div>
-            <HamburgerMenu />
+            {/* Hamburger for screens smaller than MD */}
+            <div className="md:hidden">
+              <HamburgerMenu />
+            </div>
           </div>
         </header>
 
         <Card className="bg-slate-800/60 backdrop-blur-md border border-slate-700 shadow-2xl hover:shadow-primary/20 transition-shadow duration-300 rounded-2xl p-4 sm:p-8">
           <CardContent className="space-y-8">
-            {imageDataUri && ( // This condition is now somewhat redundant due to the check above, but safe.
+            {imageDataUri && ( 
               <motion.div 
                 initial={{ opacity: 0, scale: 0.9 }} 
                 animate={{ opacity: 1, scale: 1 }} 
@@ -225,7 +235,7 @@ export default function VisualPostPage() {
                 <Icons.wand className="mr-3 h-7 w-7" />
                 Your AI-Generated Post
               </CardTitle>
-              {isLoading && ( // This is for AI post generation
+              {isLoading && ( 
                 <div className="flex items-center justify-center p-6 rounded-lg bg-slate-700/50 min-h-[150px]">
                   <Icons.loader className="h-8 w-8 animate-spin text-primary mr-3" />
                   <span className="text-slate-300 text-lg">Generating your post...</span>
@@ -280,3 +290,5 @@ export default function VisualPostPage() {
   );
 }
 
+
+    

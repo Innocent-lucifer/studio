@@ -66,7 +66,7 @@ export default function Home() {
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (fileInputRef.current) { // Reset file input to allow re-selection of the same file
+    if (fileInputRef.current) { 
       fileInputRef.current.value = '';
     }
 
@@ -79,7 +79,7 @@ export default function Home() {
         });
         return;
       }
-      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+      if (file.size > 5 * 1024 * 1024) { 
          toast({
           variant: "destructive",
           title: "File Too Large",
@@ -156,7 +156,11 @@ export default function Home() {
       >
         <main className="container mx-auto w-full max-w-4xl">
           <header className="flex justify-between items-center w-full mb-8 py-4 px-4">
-            <div className="flex items-center space-x-2 sm:space-x-3">
+            {/* LEFT GROUP: Hamburger (MD+), Logo, Title */}
+            <div className="flex items-center space-x-3">
+              <div className="hidden md:block">
+                <HamburgerMenu />
+              </div>
               <motion.div
                 initial={{ scale: 0.5, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
@@ -176,6 +180,7 @@ export default function Home() {
               </h1>
             </div>
 
+            {/* RIGHT GROUP: Action Buttons, Auth Info, Hamburger (SM) */}
             <div className="flex items-center gap-3">
               <div className="hidden sm:flex">
                 <Link
@@ -205,7 +210,10 @@ export default function Home() {
                 <p className="font-semibold text-primary">Dev Mode</p>
                 <p className="text-slate-400">Guest</p>
               </div>
-              <HamburgerMenu />
+              {/* Hamburger for screens smaller than MD */}
+              <div className="md:hidden">
+                <HamburgerMenu />
+              </div>
             </div>
           </header>
           
@@ -380,6 +388,8 @@ export default function Home() {
     </>
   );
 }
+    
+
     
 
     

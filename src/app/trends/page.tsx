@@ -13,9 +13,9 @@ import { Icons } from '@/components/icons';
 import { AppLogo } from '@/components/AppLogo';
 import { HamburgerMenu } from '@/components/HamburgerMenu';
 import Link from 'next/link';
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"; // For horizontal scroll
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"; 
 
-type Platform = "Twitter" | "LinkedIn"; // Removed Instagram, TikTok
+type Platform = "Twitter" | "LinkedIn"; 
 const platforms: Platform[] = ["Twitter", "LinkedIn"];
 
 const categories = ["Tech", "Love", "Finance", "Startups", "Fashion", "Memes", "Gaming", "Travel", "Food", "Health", "AI"];
@@ -24,13 +24,12 @@ interface Trend {
   id: string;
   title: string;
   description: string;
-  platform: Platform; // Updated to new Platform type
+  platform: Platform; 
   category: string;
-  hypeScore: number; // 0-100
-  region: "Global" | "Local"; // Simplified
+  hypeScore: number; 
+  region: "Global" | "Local"; 
 }
 
-// Mock Data - Removed Instagram and TikTok trends
 const mockTrends: Trend[] = [
   { id: "t2", title: "The Future of Remote Work", description: "Debates continue: Is hybrid the new norm or are we heading back to offices?", platform: "LinkedIn", category: "Startups", hypeScore: 80, region: "Global" },
   { id: "t4", title: "Web3 Gaming Boom", description: "Play-to-earn models are gaining traction. Is it a bubble or the future?", platform: "Twitter", category: "Gaming", hypeScore: 70, region: "Global" },
@@ -51,7 +50,7 @@ export default function TrendsPage() {
     return mockTrends
       .filter(trend => trend.platform === selectedPlatform)
       .filter(trend => !selectedCategory || trend.category === selectedCategory)
-      .filter(trend => !filterByHype || trend.hypeScore > 80) // Example threshold
+      .filter(trend => !filterByHype || trend.hypeScore > 80) 
       .filter(trend => trendingRegion === "Global" ? true : trend.region === "Local");
   }, [selectedPlatform, selectedCategory, filterByHype, trendingRegion]);
 
@@ -65,7 +64,6 @@ export default function TrendsPage() {
     switch (platform) {
       case "Twitter": return <Icons.twitter className="h-4 w-4" />;
       case "LinkedIn": return <Icons.linkedin className="h-4 w-4" />;
-      // Removed Instagram and TikTok cases
       default: return null;
     }
   };
@@ -80,27 +78,37 @@ export default function TrendsPage() {
     >
       <main className="container mx-auto w-full max-w-5xl">
         <header className="flex justify-between items-center w-full mb-8 py-4 px-4">
-           <Link href="/" passHref>
-            <div className="flex items-center space-x-2 sm:space-x-3 cursor-pointer group">
-              <AppLogo className="h-12 w-12 sm:h-20 sm:w-20 text-primary group-hover:scale-110 transition-transform" />
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-primary">SagePostAI</h1>
-                <p className="text-sm text-slate-400 mt-1">Trending Topics Explorer</p>
-              </div>
+           {/* LEFT GROUP: Hamburger (MD+), Logo/Title Link */}
+           <div className="flex items-center space-x-3">
+            <div className="hidden md:block">
+              <HamburgerMenu />
             </div>
-          </Link>
+            <Link href="/" passHref>
+              <div className="flex items-center space-x-2 sm:space-x-3 cursor-pointer group">
+                <AppLogo className="h-12 w-12 sm:h-20 sm:w-20 text-primary group-hover:scale-110 transition-transform" />
+                <div>
+                  <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-primary">SagePostAI</h1>
+                  <p className="text-sm text-slate-400 mt-1">Trending Topics Explorer</p>
+                </div>
+              </div>
+            </Link>
+          </div>
+          {/* RIGHT GROUP: Auth Info, Hamburger (SM) */}
           <div className="flex items-center gap-3">
              <div className="text-right text-xs">
                 <p className="font-semibold text-primary">Dev Mode</p>
                 <p className="text-slate-400">Guest</p>
             </div>
-            <HamburgerMenu />
+            {/* Hamburger for screens smaller than MD */}
+            <div className="md:hidden">
+              <HamburgerMenu />
+            </div>
           </div>
         </header>
 
         {/* Platform Tabs */}
         <Tabs defaultValue="Twitter" onValueChange={(value) => setSelectedPlatform(value as Platform)} className="w-full mb-6">
-          <TabsList className="grid w-full grid-cols-2 bg-slate-800/70 border border-slate-700 rounded-lg p-1"> {/* Updated grid-cols */}
+          <TabsList className="grid w-full grid-cols-2 bg-slate-800/70 border border-slate-700 rounded-lg p-1">
             {platforms.map(platform => (
               <TabsTrigger 
                 key={platform} 
@@ -190,10 +198,6 @@ export default function TrendsPage() {
                             <Icons.edit className="mr-2 h-4 w-4" /> Generate Post on This
                         </Button>
                     </Link>
-                     {/* Placeholder for "See Angles" - can be enabled later */}
-                    {/* <Button variant="ghost" className="w-full mt-2 text-slate-400 hover:text-purple-400">
-                        <Icons.layers className="mr-2 h-4 w-4" /> See Angles
-                    </Button> */}
                 </div>
               </Card>
             </motion.div>
@@ -219,4 +223,6 @@ export default function TrendsPage() {
     </motion.div>
   );
 }
+    
+
     
