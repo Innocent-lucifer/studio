@@ -71,12 +71,12 @@ Generate a compelling, detailed, and relatively lengthy social media post (suita
 The post should be deeply inspired by the image, exploring its narrative potential or descriptive details.
 If the tone is 'default', aim for a generally appealing, descriptive, and engaging style.
 If a specific tone like 'romantic', 'funny', 'professional', 'mysterious' is requested, ensure the post strongly reflects that tone while still being elaborate.
-Use relevant emojis and hashtags to enhance engagement. The post should be more than just a brief caption; aim for a paragraph or two if the image warrants it.
+**Use relevant emojis and hashtags to enhance engagement and convey feelings, especially aligning with the chosen tone.** The post should be more than just a brief caption; aim for a paragraph or two if the image warrants it.
 
 Generated post:
 `,
   promptOptions: {
-    temperature: 0.8, // Slightly increased for more creativity and descriptiveness
+    temperature: 0.8, // Slightly increased for more creativity, descriptiveness, and emoji use
      safetySettings: [ // Permissive settings
       { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
       { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
