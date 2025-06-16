@@ -15,8 +15,8 @@ import { HamburgerMenu } from '@/components/HamburgerMenu';
 import Link from 'next/link';
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"; // For horizontal scroll
 
-type Platform = "Twitter" | "LinkedIn" | "Instagram" | "TikTok";
-const platforms: Platform[] = ["Twitter", "LinkedIn", "Instagram", "TikTok"];
+type Platform = "Twitter" | "LinkedIn"; // Removed Instagram, TikTok
+const platforms: Platform[] = ["Twitter", "LinkedIn"];
 
 const categories = ["Tech", "Love", "Finance", "Startups", "Fashion", "Memes", "Gaming", "Travel", "Food", "Health", "AI"];
 
@@ -24,23 +24,19 @@ interface Trend {
   id: string;
   title: string;
   description: string;
-  platform: Platform;
+  platform: Platform; // Updated to new Platform type
   category: string;
   hypeScore: number; // 0-100
   region: "Global" | "Local"; // Simplified
 }
 
-// Mock Data - Replace with actual API calls in a real app
+// Mock Data - Removed Instagram and TikTok trends
 const mockTrends: Trend[] = [
-  { id: "t1", title: "AI Avatars Taking Over", description: "Everyone's creating their AI-generated profile pictures. What's next?", platform: "Instagram", category: "AI", hypeScore: 95, region: "Global" },
   { id: "t2", title: "The Future of Remote Work", description: "Debates continue: Is hybrid the new norm or are we heading back to offices?", platform: "LinkedIn", category: "Startups", hypeScore: 80, region: "Global" },
-  { id: "t3", title: "#SustainableFashionChallenge", description: "Influencers showcase their thrifted and upcycled outfits.", platform: "TikTok", category: "Fashion", hypeScore: 88, region: "Local" },
   { id: "t4", title: "Web3 Gaming Boom", description: "Play-to-earn models are gaining traction. Is it a bubble or the future?", platform: "Twitter", category: "Gaming", hypeScore: 70, region: "Global" },
   { id: "t5", title: "Fintech Disruption in Asia", description: "New payment solutions and digital banks are emerging rapidly.", platform: "LinkedIn", category: "Finance", hypeScore: 75, region: "Global" },
-  { id: "t6", title: "Viral Dance Craze", description: "The 'ShuffleBot' dance is everywhere!", platform: "TikTok", category: "Memes", hypeScore: 92, region: "Global" },
   { id: "t7", title: "Ethical AI Discussions", description: "Keynotes and panels on responsible AI development.", platform: "Twitter", category: "Tech", hypeScore: 85, region: "Global" },
   { id: "t8", title: "Quiet Quitting vs. Quiet Thriving", description: "A shift in workplace mindset.", platform: "LinkedIn", category: "Startups", hypeScore: 60, region: "Global" },
-  { id: "t9", title: "Vintage Tech Nostalgia", description: "Retro gaming consoles and old gadgets are making a comeback.", platform: "Instagram", category: "Tech", hypeScore: 65, region: "Local" },
   { id: "t10", title: "Relationship Green Flags", description: "Positive traits people are looking for in partners.", platform: "Twitter", category: "Love", hypeScore: 78, region: "Global" },
 ];
 
@@ -69,8 +65,7 @@ export default function TrendsPage() {
     switch (platform) {
       case "Twitter": return <Icons.twitter className="h-4 w-4" />;
       case "LinkedIn": return <Icons.linkedin className="h-4 w-4" />;
-      case "Instagram": return <Icons.instagram className="h-4 w-4" />;
-      case "TikTok": return <Icons.tiktok className="h-4 w-4" />;
+      // Removed Instagram and TikTok cases
       default: return null;
     }
   };
@@ -105,7 +100,7 @@ export default function TrendsPage() {
 
         {/* Platform Tabs */}
         <Tabs defaultValue="Twitter" onValueChange={(value) => setSelectedPlatform(value as Platform)} className="w-full mb-6">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 bg-slate-800/70 border border-slate-700 rounded-lg p-1">
+          <TabsList className="grid w-full grid-cols-2 bg-slate-800/70 border border-slate-700 rounded-lg p-1"> {/* Updated grid-cols */}
             {platforms.map(platform => (
               <TabsTrigger 
                 key={platform} 
