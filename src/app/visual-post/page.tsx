@@ -285,7 +285,7 @@ export default function VisualPostPage() {
           {commonHeader}
           <Card className="bg-slate-800/60 backdrop-blur-md border border-slate-700 shadow-2xl hover:shadow-primary/20 transition-shadow duration-300 rounded-2xl p-4 sm:p-8">
             <motion.div 
-              className="mb-6 flex flex-col sm:flex-row justify-center sm:justify-end gap-3"
+              className="mb-6 flex flex-col sm:flex-row justify-center sm:justify-between gap-3"
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: 0.1 }}
