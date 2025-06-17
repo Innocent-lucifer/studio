@@ -25,12 +25,12 @@ const SmartCampaignPageContent = () => {
       <main className="container mx-auto w-full max-w-4xl">
         <header className="flex justify-between items-center w-full mb-6 sm:mb-8 py-3 sm:py-4 px-4">
           <div className="flex items-center space-x-2 sm:space-x-3">
-            <div className="md:hidden">
+            <div> {/* Removed md:hidden */}
               <HamburgerMenu />
             </div>
             <Link href="/" passHref>
               <div className="flex items-center space-x-2 sm:space-x-3 cursor-pointer group">
-                <AppLogo className="h-10 w-10 sm:h-12 sm:w-12 text-primary group-hover:scale-110 transition-transform" />
+                <AppLogo className="h-12 w-12 sm:h-14 sm:w-14 text-primary group-hover:scale-110 transition-transform" />
                 <div>
                   <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-primary">
                     SagePostAI

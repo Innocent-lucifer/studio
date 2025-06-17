@@ -125,12 +125,12 @@ export default function AppHomePage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col items-center p-4 sm:p-6 md:p-8 overflow-x-hidden">
       <header className="w-full max-w-6xl mx-auto py-4 sm:py-6 px-4 flex justify-between items-center">
         <div className="flex items-center space-x-2 sm:space-x-3">
-          <div className="md:hidden">
+          <div> {/* Removed md:hidden */}
             <HamburgerMenu />
           </div>
           <Link href="/" passHref>
             <div className="flex items-center space-x-2 sm:space-x-3 cursor-pointer group">
-              <AppLogo className="h-10 w-10 sm:h-12 sm:w-12 text-primary group-hover:scale-110 transition-transform" />
+              <AppLogo className="h-12 w-12 sm:h-14 sm:w-14 text-primary group-hover:scale-110 transition-transform" />
               <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-primary">
                 SagePostAI
               </h1>
