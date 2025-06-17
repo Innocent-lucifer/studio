@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useIsMobile } from "@/hooks/use-mobile";
 
 interface FeatureCardProps {
   icon: keyof typeof Icons;
@@ -23,7 +22,6 @@ interface FeatureCardProps {
 const extractNameFromEmail = (email: string | undefined | null): string => {
   if (!email) return "Guest";
   let namePart = email.split('@')[0];
-  // Replace dots/underscores with spaces and capitalize words
   namePart = namePart.replace(/[._]/g, ' ');
   return namePart
     .split(' ')
@@ -73,18 +71,28 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ icon, title, description, hre
 export default function AppHomePage() {
   const { user, loading } = useAuth();
   const router = useRouter();
-  const isMobile = useIsMobile();
   const [displayName, setDisplayName] = useState<string>("Guest");
+  const [isMobileDisplay, setIsMobileDisplay] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
       router.push('/login');
     }
   }, [user, loading, router]);
+  
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobileDisplay(window.innerWidth < 768); // md breakpoint
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
 
   useEffect(() => {
     if (user?.email) {
-      if (isMobile) {
+      if (isMobileDisplay) {
         setDisplayName(extractNameFromEmail(user.email));
       } else {
         setDisplayName(user.email);
@@ -92,7 +100,8 @@ export default function AppHomePage() {
     } else {
       setDisplayName("Guest");
     }
-  }, [user, isMobile]);
+  }, [user, isMobileDisplay]);
+
 
   if (loading) {
     return (
@@ -116,12 +125,12 @@ export default function AppHomePage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col items-center p-4 sm:p-6 md:p-8 overflow-x-hidden">
       <header className="w-full max-w-6xl mx-auto py-4 sm:py-6 px-4 flex justify-between items-center">
         <div className="flex items-center space-x-2 sm:space-x-3">
-          <div className="md:hidden"> {/* Hamburger for mobile/small screens */}
+          <div className="md:hidden">
             <HamburgerMenu />
           </div>
           <Link href="/" passHref>
             <div className="flex items-center space-x-2 sm:space-x-3 cursor-pointer group">
-              <AppLogo className="h-8 w-8 sm:h-10 sm:w-10 text-primary group-hover:scale-110 transition-transform" />
+              <AppLogo className="h-10 w-10 sm:h-12 sm:w-12 text-primary group-hover:scale-110 transition-transform" />
               <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-primary">
                 SagePostAI
               </h1>
@@ -131,7 +140,7 @@ export default function AppHomePage() {
         
         <div className="flex items-center text-right">
           <div className="text-xs">
-            <p className="font-semibold text-primary truncate max-w-[80px] sm:max-w-[150px] md:max-w-[200px]" title={user?.email || 'User'}>
+            <p className="font-semibold text-primary truncate max-w-[100px] sm:max-w-[150px] md:max-w-[200px]" title={user?.email || 'User'}>
               {displayName}
             </p>
             <p className="text-slate-400">Welcome!</p>

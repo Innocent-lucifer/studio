@@ -43,7 +43,7 @@ const mockTrends: Trend[] = [
 
 
 export default function TrendsPage() {
-  const { user } = useAuth(); // User is available if needed, but not displayed
+  const { user } = useAuth(); 
   const [selectedPlatform, setSelectedPlatform] = useState<Platform>("Twitter");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [filterByHype, setFilterByHype] = useState<boolean>(false);
@@ -87,7 +87,7 @@ export default function TrendsPage() {
             </div>
             <Link href="/" passHref>
               <div className="flex items-center space-x-2 sm:space-x-3 cursor-pointer group">
-                <AppLogo className="h-8 w-8 sm:h-10 sm:w-10 text-primary group-hover:scale-110 transition-transform" />
+                <AppLogo className="h-10 w-10 sm:h-12 sm:w-12 text-primary group-hover:scale-110 transition-transform" />
                 <div>
                   <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-primary">SagePostAI</h1>
                   <p className="text-xs sm:text-sm text-slate-400 mt-0.5">Trending Topics Explorer</p>
@@ -95,13 +95,10 @@ export default function TrendsPage() {
               </div>
             </Link>
           </div>
-          {/* No right-side user info or specific action buttons for this page's header */}
           <div className="flex items-center gap-2 sm:gap-3">
-            {/* Placeholder if any specific right-aligned header items were needed */}
           </div>
         </header>
 
-        {/* Platform Tabs */}
         <Tabs defaultValue="Twitter" onValueChange={(value) => setSelectedPlatform(value as Platform)} className="w-full mb-6">
           <TabsList className="grid w-full grid-cols-2 bg-slate-800/70 border border-slate-700 rounded-lg p-1">
             {platforms.map(platform => (
@@ -116,7 +113,6 @@ export default function TrendsPage() {
           </TabsList>
         </Tabs>
         
-        {/* Category Chips */}
         <div className="mb-8">
           <ScrollArea className="w-full whitespace-nowrap pb-3">
             <div className="flex space-x-3">
@@ -144,7 +140,6 @@ export default function TrendsPage() {
           </ScrollArea>
         </div>
 
-        {/* Floating Toggles */}
          <div className="fixed bottom-6 right-6 z-50 space-y-3 p-3 bg-slate-800/70 backdrop-blur-sm border border-slate-700 rounded-lg shadow-xl">
           <div className="flex items-center space-x-2">
             <Switch id="filter-hype" checked={filterByHype} onCheckedChange={setFilterByHype} className="data-[state=checked]:bg-red-500"/>
@@ -162,7 +157,6 @@ export default function TrendsPage() {
         </div>
 
 
-        {/* Trends Grid */}
         <motion.div 
           layout 
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"

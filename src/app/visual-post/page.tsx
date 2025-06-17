@@ -179,7 +179,7 @@ export default function VisualPostPage() {
           </div>
           <Link href="/" passHref>
             <div className="flex items-center space-x-2 sm:space-x-3 cursor-pointer group">
-              <AppLogo className="h-8 w-8 sm:h-10 sm:w-10 text-primary group-hover:scale-110 transition-transform" />
+              <AppLogo className="h-10 w-10 sm:h-12 sm:w-12 text-primary group-hover:scale-110 transition-transform" />
               <div>
                 <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-primary">SagePostAI</h1>
                 <p className="text-xs sm:text-sm text-slate-400 mt-0.5">Visual Post Generator</p>
@@ -187,7 +187,6 @@ export default function VisualPostPage() {
             </div>
           </Link>
         </div>
-        {/* No right-aligned content for this page's header */}
       </header>
   );
 
@@ -236,9 +235,9 @@ export default function VisualPostPage() {
           {commonHeader}
           <Card className="bg-slate-800/60 backdrop-blur-md border border-slate-700 shadow-2xl rounded-2xl p-8 sm:p-12 text-center">
             <CardHeader className="p-0 mb-8">
-              <Icons.image className="h-20 w-20 text-primary mx-auto mb-6" />
+              <Icons.image className="h-20 w-20 sm:h-24 sm:w-24 text-primary mx-auto mb-6" />
               <CardTitle className="text-3xl sm:text-4xl font-semibold text-primary">Create Post from Image</CardTitle>
-              <CardDescription className="text-slate-300 mt-3 text-lg">
+              <CardDescription className="text-slate-300 mt-3 text-lg sm:text-xl">
                 Upload an image to get started. SagePostAI will craft a unique post for you.
               </CardDescription>
             </CardHeader>
@@ -246,7 +245,7 @@ export default function VisualPostPage() {
               <Button
                 onClick={() => fileInputRefVisual.current?.click()}
                 size="lg"
-                className="w-full max-w-sm mx-auto bg-primary hover:bg-primary/90 text-primary-foreground text-lg py-3.5 px-8 rounded-xl shadow-md hover:shadow-lg transition-all"
+                className="w-full max-w-xs mx-auto bg-primary hover:bg-primary/90 text-primary-foreground text-lg py-3.5 px-8 rounded-xl shadow-md hover:shadow-lg transition-all"
               >
                 <Icons.upload className="mr-2.5 h-6 w-6" /> Upload Image
               </Button>

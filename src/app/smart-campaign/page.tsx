@@ -13,7 +13,7 @@ import { useAuth } from "@/context/AuthContext";
 
 
 const SmartCampaignPageContent = () => {
-  const { user } = useAuth(); // user is available if needed, but not displayed in header
+  const { user } = useAuth(); 
 
   return (
     <motion.div 
@@ -30,7 +30,7 @@ const SmartCampaignPageContent = () => {
             </div>
             <Link href="/" passHref>
               <div className="flex items-center space-x-2 sm:space-x-3 cursor-pointer group">
-                <AppLogo className="h-8 w-8 sm:h-10 sm:w-10 text-primary group-hover:scale-110 transition-transform" />
+                <AppLogo className="h-10 w-10 sm:h-12 sm:w-12 text-primary group-hover:scale-110 transition-transform" />
                 <div>
                   <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-primary">
                     SagePostAI
