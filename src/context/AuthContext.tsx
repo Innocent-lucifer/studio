@@ -9,10 +9,11 @@ import {
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword, 
   signInWithPopup, 
-  signOut 
+  signOut,
+  sendPasswordResetEmail
 } from 'firebase/auth';
 import { auth, googleProvider } from '@/lib/firebase';
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/use-toast"; // This is your existing Radix-based toast
 
 interface AuthContextType {
   user: User | null;
@@ -21,6 +22,7 @@ interface AuthContextType {
   logIn: (email: string, pass: string) => Promise<User | AuthError | null>;
   signInWithGoogle: () => Promise<User | AuthError | null>;
   logOut: () => Promise<void>;
+  sendPasswordReset: (email: string) => Promise<{ success: boolean; error?: AuthError | null }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -28,7 +30,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
+  const { toast } = useToast(); // Using your existing Radix toast for system messages
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -43,12 +45,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
       setUser(userCredential.user);
-      toast({ title: "Account Created!", description: "Welcome to SagePostAI." });
+      // We'll let the form component handle its specific toast (react-hot-toast)
       return userCredential.user;
     } catch (error) {
       console.error("Sign up error:", error);
       const authError = error as AuthError;
-      toast({ variant: "destructive", title: "Sign Up Failed", description: authError.message });
       return authError;
     } finally {
       setLoading(false);
@@ -60,12 +61,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, pass);
       setUser(userCredential.user);
-      toast({ title: "Logged In Successfully!", description: "Welcome back to SagePostAI." });
       return userCredential.user;
     } catch (error) {
       console.error("Log in error:", error);
       const authError = error as AuthError;
-      toast({ variant: "destructive", title: "Log In Failed", description: authError.message });
       return authError;
     } finally {
       setLoading(false);
@@ -77,12 +76,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       const result = await signInWithPopup(auth, googleProvider);
       setUser(result.user);
-      toast({ title: "Signed In With Google!", description: "Welcome to SagePostAI." });
       return result.user;
     } catch (error) {
       console.error("Google sign in error:", error);
       const authError = error as AuthError;
-      toast({ variant: "destructive", title: "Google Sign-In Failed", description: authError.message });
       return authError;
     } finally {
       setLoading(false);
@@ -94,7 +91,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       await signOut(auth);
       setUser(null);
-      toast({ title: "Logged Out", description: "You have been successfully logged out." });
+      toast({ title: "Logged Out", description: "You have been successfully logged out." }); // Radix toast for global logout
     } catch (error) {
       console.error("Log out error:", error);
       const authError = error as AuthError;
@@ -104,8 +101,22 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  const sendPasswordReset = async (email: string): Promise<{ success: boolean; error?: AuthError | null }> => {
+    setLoading(true);
+    try {
+      await sendPasswordResetEmail(auth, email);
+      return { success: true };
+    } catch (error) {
+      console.error("Password reset error:", error);
+      const authError = error as AuthError;
+      return { success: false, error: authError };
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, signUp, logIn, signInWithGoogle, logOut }}>
+    <AuthContext.Provider value={{ user, loading, signUp, logIn, signInWithGoogle, logOut, sendPasswordReset }}>
       {children}
     </AuthContext.Provider>
   );
