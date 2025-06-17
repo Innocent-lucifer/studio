@@ -8,6 +8,8 @@ import { AppLogo } from '@/components/AppLogo';
 import { HamburgerMenu } from '@/components/HamburgerMenu';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface FeatureCardProps {
   icon: keyof typeof Icons;
@@ -57,7 +59,34 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ icon, title, description, hre
 };
 
 export default function AppHomePage() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login');
+    }
+  }, [user, loading, router]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col items-center justify-center p-4">
+        <Icons.loader className="h-16 w-16 animate-spin text-primary" />
+        <p className="mt-4 text-xl">Loading App...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    // This will ideally be brief as the useEffect above should redirect.
+    // Or you can show a more specific "Redirecting to login..." message.
+    return (
+        <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col items-center justify-center p-4">
+        <Icons.loader className="h-16 w-16 animate-spin text-primary" />
+        <p className="mt-4 text-xl">Redirecting to login...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col items-center p-4 sm:p-6 md:p-8 overflow-x-hidden">
@@ -80,7 +109,7 @@ export default function AppHomePage() {
             {user?.email ? (
               <p className="font-semibold text-primary truncate max-w-[150px] sm:max-w-[200px]" title={user.email}>{user.email}</p>
             ) : (
-              <p className="font-semibold text-primary">Guest Mode</p>
+              <p className="font-semibold text-primary">Guest Mode</p> 
             )}
             <p className="text-slate-400">Welcome!</p>
           </div>

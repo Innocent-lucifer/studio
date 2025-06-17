@@ -11,8 +11,7 @@
 import {ai} from '@/ai/ai-instance';
 import {z} from 'genkit';
 
-// Auth stubbed for MOCK_USER_ID
-const MOCK_USER_ID_FOR_STUBBED_AUTH = "sagepostai-guest-user";
+// import { getUserData, deductCredits } from '@/lib/firebaseUserActions'; 
 
 const GeneratePostFromImageInputSchema = z.object({
   imageDataUri: z
@@ -90,11 +89,14 @@ const generatePostFromImageFlow = ai.defineFlow({
   inputSchema: GeneratePostFromImageInputSchema,
   outputSchema: GeneratePostFromImageOutputSchema,
 }, async (input) => {
-  console.log('[generatePostFromImageFlow] Received input:', { ...input, imageDataUri: input.imageDataUri.substring(0,50) + "..."});
+  console.log('[generatePostFromImageFlow] Received input for user:', input.userId, { ...input, imageDataUri: input.imageDataUri.substring(0,50) + "..."});
 
-  if (input.userId !== MOCK_USER_ID_FOR_STUBBED_AUTH) {
-    // Auth stubbed - credit check logic would go here
-  }
+  // Auth logic:
+  // const userData = await getUserData(input.userId);
+  // if (!userData) return { error: "User data not found." };
+  // if (userData.plan !== 'infinity' && (userData.credits || 0) <= 0) {
+  //   return { error: "You have no credits remaining. Please upgrade your plan." };
+  // }
 
   try {
     const { output: promptOutput, usage } = await prompt(input);
@@ -107,6 +109,11 @@ const generatePostFromImageFlow = ai.defineFlow({
       return { error: errorMessage };
     }
     
+    // Auth logic:
+    // if (userData.plan !== 'infinity') {
+    //   await deductCredits(input.userId, 1); 
+    // }
+
     return { generatedPost: promptOutput.post };
 
   } catch (e: any) {

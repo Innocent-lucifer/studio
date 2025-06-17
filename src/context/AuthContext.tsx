@@ -2,8 +2,16 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { User, AuthError }  from 'firebase/auth'; // Removed unused imports for actual auth functions
-// import { auth, googleProvider } from '@/lib/firebase'; // Firebase interaction disabled
+import { 
+  User, 
+  AuthError, 
+  onAuthStateChanged, 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword, 
+  signInWithPopup, 
+  signOut 
+} from 'firebase/auth';
+import { auth, googleProvider } from '@/lib/firebase';
 import { useToast } from "@/hooks/use-toast";
 
 interface AuthContextType {
@@ -15,64 +23,85 @@ interface AuthContextType {
   logOut: () => Promise<void>;
 }
 
-// Define a mock user that satisfies the User type structure minimally
-const MOCK_GUEST_USER: User = {
-  uid: "sagepostai-guest-user",
-  email: "guest@sagepost.ai",
-  displayName: "Guest User",
-  photoURL: null,
-  emailVerified: true,
-  isAnonymous: false,
-  metadata: {},
-  providerData: [],
-  providerId: "guest",
-  tenantId: null,
-  delete: async () => {},
-  getIdToken: async () => "mock-token",
-  getIdTokenResult: async () => ({ token: "mock-token", claims: {}, authTime: "", expirationTime: "", issuedAtTime: "", signInProvider: null, signInSecondFactor: null }),
-  reload: async () => {},
-  toJSON: () => ({}),
-};
-
-
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(MOCK_GUEST_USER);
-  const [loading, setLoading] = useState(false); // Auth is "disabled", so not loading
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  // useEffect(() => {
-  //   // Firebase onAuthStateChanged listener commented out for disabled auth
-  //   // const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-  //   //   setUser(currentUser);
-  //   //   setLoading(false);
-  //   // });
-  //   // return () => unsubscribe();
-  //   setLoading(false); // Ensure loading is false
-  // }, []);
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
 
   const signUp = async (email: string, pass: string): Promise<User | AuthError | null> => {
-    toast({ title: "Authentication Disabled", description: "Sign up is currently inactive." });
-    // setUser(MOCK_GUEST_USER); // Already set
-    return MOCK_GUEST_USER;
+    setLoading(true);
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
+      setUser(userCredential.user);
+      toast({ title: "Account Created!", description: "Welcome to SagePostAI." });
+      return userCredential.user;
+    } catch (error) {
+      console.error("Sign up error:", error);
+      const authError = error as AuthError;
+      toast({ variant: "destructive", title: "Sign Up Failed", description: authError.message });
+      return authError;
+    } finally {
+      setLoading(false);
+    }
   };
 
   const logIn = async (email: string, pass: string): Promise<User | AuthError | null> => {
-    toast({ title: "Authentication Disabled", description: "Log in is currently inactive." });
-    // setUser(MOCK_GUEST_USER); // Already set
-    return MOCK_GUEST_USER;
+    setLoading(true);
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, pass);
+      setUser(userCredential.user);
+      toast({ title: "Logged In Successfully!", description: "Welcome back to SagePostAI." });
+      return userCredential.user;
+    } catch (error) {
+      console.error("Log in error:", error);
+      const authError = error as AuthError;
+      toast({ variant: "destructive", title: "Log In Failed", description: authError.message });
+      return authError;
+    } finally {
+      setLoading(false);
+    }
   };
 
   const signInWithGoogle = async (): Promise<User | AuthError | null> => {
-    toast({ title: "Authentication Disabled", description: "Google Sign-In is currently inactive." });
-    // setUser(MOCK_GUEST_USER); // Already set
-    return MOCK_GUEST_USER;
+    setLoading(true);
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      setUser(result.user);
+      toast({ title: "Signed In With Google!", description: "Welcome to SagePostAI." });
+      return result.user;
+    } catch (error) {
+      console.error("Google sign in error:", error);
+      const authError = error as AuthError;
+      toast({ variant: "destructive", title: "Google Sign-In Failed", description: authError.message });
+      return authError;
+    } finally {
+      setLoading(false);
+    }
   };
 
   const logOut = async () => {
-    toast({ title: "Authentication Disabled", description: "Log out action is inactive. You are still a guest." });
-    // setUser(MOCK_GUEST_USER); // Keep guest user, or set to null if testing logged out state explicitly
+    setLoading(true);
+    try {
+      await signOut(auth);
+      setUser(null);
+      toast({ title: "Logged Out", description: "You have been successfully logged out." });
+    } catch (error) {
+      console.error("Log out error:", error);
+      const authError = error as AuthError;
+      toast({ variant: "destructive", title: "Log Out Failed", description: authError.message });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

@@ -12,9 +12,7 @@
 import {ai} from '@/ai/ai-instance';
 import {z} from 'genkit';
 
-// import { getUserData, deductCredits } from '@/lib/firebaseUserActions'; // Auth stubbed
-
-const MOCK_USER_ID_FOR_STUBBED_AUTH = "sagepostai-guest-user";
+// import { getUserData, deductCredits } from '@/lib/firebaseUserActions'; 
 
 const ContentAngleSchema = z.object({
   title: z.string().describe('A concise, compelling title for the content angle (max 10 words).'),
@@ -70,9 +68,10 @@ const suggestContentAnglesFlow = ai.defineFlow({
   inputSchema: SuggestContentAnglesInputSchema,
   outputSchema: SuggestContentAnglesOutputSchema,
 }, async (input) => {
-  if (input.userId !== MOCK_USER_ID_FOR_STUBBED_AUTH) {
-    // Auth stubbed - credit check logic would go here
-  }
+  // Auth logic:
+  // const userData = await getUserData(input.userId);
+  // if (!userData) return { error: "User data not found." };
+  // No credit check here as this is often a precursor to a paid action or free.
 
   try {
     const { output: promptOutput } = await prompt(input);
@@ -81,9 +80,11 @@ const suggestContentAnglesFlow = ai.defineFlow({
       return { error: "AI failed to suggest any content angles." };
     }
     
-    // Auth stubbed - credit deduction logic would go here
-    // if (input.userId !== MOCK_USER_ID_FOR_STUBBED_AUTH) {
-    //   // Potentially deduct credits for angle suggestion, or bundle it with campaign generation cost
+    // Auth logic:
+    // Potentially deduct credits if this is a standalone paid feature,
+    // or if bundled, the main generation flow handles deduction.
+    // if (userData.plan !== 'infinity' && some_condition_for_charging) {
+    //   await deductCredits(input.userId, 0.5); // Example: 0.5 credits for angle suggestions
     // }
 
     return { angles: promptOutput.angles };

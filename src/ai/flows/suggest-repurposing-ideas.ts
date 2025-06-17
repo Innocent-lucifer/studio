@@ -11,9 +11,7 @@
 import {ai} from '@/ai/ai-instance';
 import {z} from 'genkit';
 
-// import { getUserData } from '@/lib/firebaseUserActions'; // Auth stubbed, no credit deduction for this usually
-
-const MOCK_USER_ID_FOR_STUBBED_AUTH = "sagepostai-guest-user";
+// import { getUserData } from '@/lib/firebaseUserActions'; 
 
 const SuggestRepurposingIdeasInputSchema = z.object({
   topic: z.string().describe('The main topic of the campaign.'),
@@ -66,9 +64,10 @@ const suggestRepurposingIdeasFlow = ai.defineFlow({
   inputSchema: SuggestRepurposingIdeasInputSchema,
   outputSchema: SuggestRepurposingIdeasOutputSchema,
 }, async (input) => {
-  if (input.userId !== MOCK_USER_ID_FOR_STUBBED_AUTH) {
-    // Auth stubbed - No credit check/deduction typically for this supportive feature.
-  }
+  // Auth logic:
+  // const userData = await getUserData(input.userId);
+  // if (!userData) return { error: "User data not found." };
+  // No credit check here as this is typically a free add-on feature.
 
   try {
     const { output: promptOutput } = await prompt(input);

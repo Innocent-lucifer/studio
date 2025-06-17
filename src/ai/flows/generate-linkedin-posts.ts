@@ -11,9 +11,7 @@
 import {ai} from '@/ai/ai-instance';
 import {z} from 'genkit';
 import {researchTopic} from "@/ai/flows/research-topic";
-// import { getUserData, deductCredits } from '@/lib/firebaseUserActions'; // Auth stubbed
-
-const MOCK_USER_ID_FOR_STUBBED_AUTH = "sagepostai-guest-user";
+// import { getUserData, deductCredits } from '@/lib/firebaseUserActions'; 
 
 const GenerateLinkedInPostsInputSchema = z.object({
   topic: z.string().describe('The topic to generate LinkedIn posts about.'),
@@ -72,15 +70,12 @@ const generateLinkedInPostsFlow = ai.defineFlow(
     outputSchema: GenerateLinkedInPostsOutputSchema,
   },
   async (input) => {
-    // Auth stubbed: Bypass credit check and deduction for MOCK_USER_ID
-    if (input.userId !== MOCK_USER_ID_FOR_STUBBED_AUTH) {
-        // This block would contain real credit check logic if auth were active
-        // const userData = await getUserData(input.userId);
-        // if (!userData) return { error: "User data not found." };
-        // if (userData.plan !== 'infinity' && (userData.credits || 0) <= 0) {
-        //   return { error: "You have no credits remaining. Please upgrade your plan." };
-        // }
-    }
+    // Auth logic:
+    // const userData = await getUserData(input.userId);
+    // if (!userData) return { error: "User data not found." };
+    // if (userData.plan !== 'infinity' && (userData.credits || 0) <= 0) {
+    //   return { error: "You have no credits remaining. Please upgrade your plan." };
+    // }
 
     const range = (numPosts: number) => {
       const arr = [];
@@ -109,12 +104,9 @@ const generateLinkedInPostsFlow = ai.defineFlow(
         return { error: "AI failed to generate LinkedIn posts content." };
       }
       
-      // Auth stubbed: Bypass credit deduction for MOCK_USER_ID
-      // if (input.userId !== MOCK_USER_ID_FOR_STUBBED_AUTH) {
-      //   const userData = await getUserData(input.userId); // Re-fetch to be safe
-      //   if (userData && userData.plan !== 'infinity') {
-      //     await deductCredits(input.userId, 1);
-      //   }
+      // Auth logic:
+      // if (userData.plan !== 'infinity') {
+      //   await deductCredits(input.userId, 1);
       // }
       
       return { posts: promptOutput.posts };

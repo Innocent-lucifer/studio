@@ -12,9 +12,7 @@
 import {ai} from '@/ai/ai-instance';
 import {z} from 'genkit';
 import { searchTwitter } from '@/ai/tools/searchTwitter';
-// import { getUserData, deductCredits } from '@/lib/firebaseUserActions'; // Auth stubbed
-
-const MOCK_USER_ID_FOR_STUBBED_AUTH = "sagepostai-guest-user";
+// import { getUserData, deductCredits } from '@/lib/firebaseUserActions'; 
 
 const ResearchTopicInputSchema = z.object({
   topic: z.string().describe('The topic to research.'),
@@ -66,15 +64,12 @@ const researchTopicFlow = ai.defineFlow(
   async (input) => {
     const { topic, userId } = input;
 
-    // Auth stubbed: Bypass credit check for MOCK_USER_ID
-    if (userId !== MOCK_USER_ID_FOR_STUBBED_AUTH) {
-        // This block would contain real credit check logic if auth were active
-        // const userData = await getUserData(userId);
-        // if (!userData) return { summary: "", error: "User data not found." };
-        // if (userData.plan !== 'infinity' && (userData.credits || 0) <= 0) {
-        //   return { summary: "", error: "You have no credits remaining. Please upgrade your plan." };
-        // }
-    }
+    // Auth logic:
+    // const userData = await getUserData(userId);
+    // if (!userData) return { summary: "", error: "User data not found." };
+    // if (userData.plan !== 'infinity' && (userData.credits || 0) <= 0) {
+    //   return { summary: "", error: "You have no credits remaining. Please upgrade your plan." };
+    // }
 
     try {
       const twitterSearchResults = await searchTwitter({ query: topic });
@@ -104,12 +99,9 @@ const researchTopicFlow = ai.defineFlow(
         return { summary: fallbackSummary }; // No error property if it's a fallback summary
       }
 
-      // Auth stubbed: Bypass credit deduction for MOCK_USER_ID
-      // if (userId !== MOCK_USER_ID_FOR_STUBBED_AUTH) {
-      //   const userData = await getUserData(userId); // Re-fetch to be safe
-      //   if (userData && userData.plan !== 'infinity') {
-      //     await deductCredits(userId, 1); // Assuming research also costs 1 credit
-      //   }
+      // Auth logic:
+      // if (userData.plan !== 'infinity') {
+      //   await deductCredits(userId, 1); 
       // }
 
       return { summary: promptOutput.summary };

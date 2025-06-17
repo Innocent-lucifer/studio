@@ -13,8 +13,6 @@ import {z} from 'genkit';
 
 // import { getUserData, deductCredits } from '@/lib/firebaseUserActions'; // Auth stubbed
 
-const MOCK_USER_ID_FOR_STUBBED_AUTH = "sagepostai-guest-user";
-
 const GenerateCampaignSeriesInputSchema = z.object({
   topic: z.string().describe('The main topic of the campaign.'),
   selectedAngle: z.string().describe('The specific content angle chosen by the user.'),
@@ -98,10 +96,14 @@ const generateCampaignSeriesFlow = ai.defineFlow({
   inputSchema: GenerateCampaignSeriesInputSchema,
   outputSchema: GenerateCampaignSeriesOutputSchema,
 }, async (input) => {
-  console.log(`[generateCampaignSeriesFlow] Starting for platform: ${input.platform}, topic: "${input.topic}", angle: "${input.selectedAngle}"`);
-  if (input.userId !== MOCK_USER_ID_FOR_STUBBED_AUTH) {
-    // Auth stubbed - credit check logic would go here
-  }
+  console.log(`[generateCampaignSeriesFlow] Starting for platform: ${input.platform}, topic: "${input.topic}", angle: "${input.selectedAngle}" for user: ${input.userId}`);
+  // Auth logic:
+  // const userData = await getUserData(input.userId);
+  // if (!userData) return { error: "User data not found." };
+  // if (userData.plan !== 'infinity' && (userData.credits || 0) <= 0) {
+  //   return { error: "You have no credits remaining. Please upgrade your plan." };
+  // }
+
 
   try {
     console.log('[generateCampaignSeriesFlow] Calling AI prompt with input:', JSON.stringify(input, null, 2));
@@ -134,7 +136,11 @@ const generateCampaignSeriesFlow = ai.defineFlow({
       return { error: errorMessage }; // Still an "error" from the user's perspective, but it's an empty list.
     }
 
-    // Auth stubbed - credit deduction logic would go here
+    // Auth logic:
+    // if (userData.plan !== 'infinity') {
+    //   await deductCredits(input.userId, 1); // Or more, depending on series length/cost
+    // }
+
 
     console.log(`[generateCampaignSeriesFlow] Successfully generated ${promptOutput.series.length} posts for ${input.platform}.`);
     return { series: promptOutput.series };
@@ -150,4 +156,3 @@ const generateCampaignSeriesFlow = ai.defineFlow({
     return { error: detailedErrorMessage };
   }
 });
-
