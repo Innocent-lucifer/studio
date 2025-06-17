@@ -86,7 +86,7 @@ export default function VisualPostPage() {
         setIsLoading(false);
       }
     }, 700),
-    [toast] 
+    [toast, userIdToPass] 
   );
 
   useEffect(() => {
@@ -99,7 +99,7 @@ export default function VisualPostPage() {
       });
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [imageDataUri, userText, selectedTone, userIdToPass, isClient]); 
+  }, [imageDataUri, userText, selectedTone, isClient]); 
 
   const handleDirectImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -246,11 +246,11 @@ export default function VisualPostPage() {
       >
         <main className="container mx-auto w-full max-w-xl">
           {commonHeader}
-          <Card className="bg-slate-800/60 backdrop-blur-md border border-slate-700 shadow-2xl rounded-2xl p-6 sm:p-10 text-center">
-            <CardHeader className="p-0 mb-6">
-              <Icons.image className="h-16 w-16 text-primary mx-auto mb-4" />
-              <CardTitle className="text-2xl sm:text-3xl font-semibold text-primary">Create Post from Image</CardTitle>
-              <CardDescription className="text-slate-400 mt-2 text-base">
+          <Card className="bg-slate-800/60 backdrop-blur-md border border-slate-700 shadow-2xl rounded-2xl p-8 sm:p-12 text-center">
+            <CardHeader className="p-0 mb-8">
+              <Icons.image className="h-20 w-20 text-primary mx-auto mb-6" />
+              <CardTitle className="text-3xl sm:text-4xl font-semibold text-primary">Create Post from Image</CardTitle>
+              <CardDescription className="text-slate-300 mt-3 text-lg">
                 Upload an image to get started. SagePostAI will craft a unique post for you.
               </CardDescription>
             </CardHeader>
@@ -258,12 +258,11 @@ export default function VisualPostPage() {
               <Button
                 onClick={() => fileInputRefVisual.current?.click()}
                 size="lg"
-                className="w-full max-w-xs mx-auto bg-primary hover:bg-primary/90 text-primary-foreground text-base py-3"
+                className="w-full max-w-sm mx-auto bg-primary hover:bg-primary/90 text-primary-foreground text-lg py-3.5 px-8 rounded-xl shadow-md hover:shadow-lg transition-all"
               >
-                <Icons.upload className="mr-2 h-5 w-5" /> Upload Image
+                <Icons.upload className="mr-2.5 h-6 w-6" /> Upload Image
               </Button>
               <HiddenFileInput />
-              <p className="mt-4 text-xs text-slate-500">Max 5MB (JPG, PNG, GIF supported)</p>
             </CardContent>
           </Card>
         </main>
