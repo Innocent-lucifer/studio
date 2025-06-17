@@ -1,6 +1,6 @@
 
 import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
-import { getAuth, Auth, GoogleAuthProvider } from 'firebase/auth'; // Added GoogleAuthProvider
+import { getAuth, Auth, GoogleAuthProvider } from 'firebase/auth';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -20,6 +20,6 @@ if (!getApps().length) {
 }
 
 const auth: Auth = getAuth(app);
-const googleProvider = new GoogleAuthProvider(); // Added GoogleAuthProvider instance
+// googleProvider is no longer exported from here, it will be instantiated in AuthContext
 
-export { app, auth, googleProvider }; // Export googleProvider
+export { app, auth };

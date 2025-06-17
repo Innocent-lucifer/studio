@@ -8,8 +8,8 @@ import { FcGoogle } from "react-icons/fc";
 import toast, { Toaster } from "react-hot-toast";
 import { useAuth } from "@/context/AuthContext";
 import { AuthError } from "firebase/auth";
-import { Button } from "@/components/ui/button"; // Assuming Button is used for consistency if needed elsewhere
-import { AppLogo } from "@/components/AppLogo"; // Import AppLogo
+import { Button as ShadButton } from "@/components/ui/button"; // Renamed to avoid conflict
+import { AppLogo } from "@/components/AppLogo";
 
 export function LoginSignUpForm() {
   const [isRegistering, setIsRegistering] = useState(false);
@@ -34,31 +34,38 @@ export function LoginSignUpForm() {
         toast.error("Passwords do not match.");
         return;
       }
-      const result = await signUp(email, password);
-      if (result && (result as AuthError).message) {
-        toast.error((result as AuthError).message);
-      } else if (result) {
-        // Successful signup, AuthContext will handle redirect via onAuthStateChanged
-        // toast.success("Account created successfully!"); // Optional: if redirect is not immediate
+      try {
+        await signUp(email, password);
+        // Successful signup, AuthContext's onAuthStateChanged will handle redirect
+        // toast.success("Account created successfully!"); // Optional
+      } catch (error) {
+        const authError = error as AuthError;
+        console.error("Sign Up Error (from component):", authError);
+        toast.error(authError.message || "Sign up failed. Please try again.");
       }
     } else {
-      const result = await logIn(email, password);
-      if (result && (result as AuthError).message) {
-        toast.error((result as AuthError).message);
-      } else if (result) {
-         // Successful login, AuthContext will handle redirect
+      try {
+        await logIn(email, password);
+        // Successful login, AuthContext's onAuthStateChanged will handle redirect
         // toast.success("Signed in successfully!"); // Optional
+      } catch (error) {
+        const authError = error as AuthError;
+        console.error("Sign In Error (from component):", authError);
+        toast.error(authError.message || "Sign in failed. Please try again.");
       }
     }
   };
 
   const handleGoogleAuth = async () => {
     if (loading) return;
-    const result = await signInWithGoogle();
-    if (result && (result as AuthError).message) {
-      toast.error((result as AuthError).message);
-    } else if (result) {
+    try {
+      await signInWithGoogle();
+      // Successful Google sign-in, AuthContext's onAuthStateChanged will handle redirect
       // toast.success(isRegistering ? "Signed up with Google!" : "Signed in with Google!"); // Optional
+    } catch (error) {
+      const authError = error as AuthError;
+      console.error("Google Sign-In Error (from component):", authError);
+      toast.error(authError.message || "Google Sign-In failed. Please try again.");
     }
   };
 
@@ -68,7 +75,7 @@ export function LoginSignUpForm() {
       toast.error("Please enter your email address to reset the password.");
       return;
     }
-    const result = await sendPasswordReset(email);
+    const result = await sendPasswordReset(email); // sendPasswordReset still returns an object
     if (result.success) {
       toast.success("Password reset email sent! Check your inbox.");
       setForgotPassword(false); 
@@ -93,7 +100,7 @@ export function LoginSignUpForm() {
     animate: "visible",
     variants: {
       hidden: {},
-      visible: { transition: { staggerChildren: 0.07, delayChildren: 0.25 } }, // Slightly increased delayChildren
+      visible: { transition: { staggerChildren: 0.07, delayChildren: 0.25 } },
     },
   };
 
@@ -124,7 +131,7 @@ export function LoginSignUpForm() {
         animate="animate"
         variants={{
             initial: {},
-            animate: {transition: {staggerChildren: 0.1, delayChildren: 0.1}} // card delay + this container delay
+            animate: {transition: {staggerChildren: 0.1, delayChildren: 0.1}}
         }}
       >
         <motion.div variants={headerContentAnimation} transition={{duration: 0.3, ease: "easeOut"}}>
@@ -218,7 +225,7 @@ export function LoginSignUpForm() {
               >
                 Enter your email above. A link to reset your password will be sent.
               </motion.p>
-            <motion.div {...formElementAnimation} className="opacity-50 cursor-not-allowed hidden"> {/* Hidden as per Firebase flow */}
+            <motion.div {...formElementAnimation} className="opacity-50 cursor-not-allowed hidden">
               <label htmlFor="verification-code" className="block text-sm font-medium mb-1 text-slate-300">Verification Code (Not Used)</label>
               <input
                 type="text"
@@ -228,7 +235,7 @@ export function LoginSignUpForm() {
                 className="w-full px-4 py-3 rounded-xl bg-[#1e293b] text-white placeholder-gray-400/70 border border-indigo-600/20 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </motion.div>
-            <motion.div {...formElementAnimation} className="opacity-50 cursor-not-allowed hidden"> {/* Hidden as per Firebase flow */}
+            <motion.div {...formElementAnimation} className="opacity-50 cursor-not-allowed hidden">
               <label htmlFor="new-password" className="block text-sm font-medium mb-1 text-slate-300">New Password (Not Used)</label>
               <input
                 type="password"
@@ -252,7 +259,7 @@ export function LoginSignUpForm() {
         )}
         
         <motion.div {...formElementAnimation}>
-          <Button
+          <ShadButton // Using renamed ShadCN button
             type="submit"
             disabled={loading}
             className="w-full py-3 mt-1 font-semibold rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 transition text-white shadow-md flex items-center justify-center"
@@ -265,7 +272,7 @@ export function LoginSignUpForm() {
               : isRegistering
               ? "Sign Up"
               : "Sign In"}
-          </Button>
+          </ShadButton>
         </motion.div>
 
         {!forgotPassword && (
@@ -282,17 +289,17 @@ export function LoginSignUpForm() {
             </motion.div>
 
             <motion.div {...formElementAnimation}>
-              <Button
+              <ShadButton // Using renamed ShadCN button
                 type="button" 
                 onClick={handleGoogleAuth}
                 disabled={loading}
                 className="w-full flex items-center justify-center gap-2 py-3 font-semibold rounded-xl border border-gray-600/40 bg-[#1e293b] text-white hover:bg-[#2a3448] transition"
               >
-                {loading ? 
+                {loading && !email && !password ? // Show spinner only if google auth is specifically loading
                   <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                 : <FcGoogle size={20} />}
                 {isRegistering ? "Sign up with Google" : "Sign in with Google"}
-              </Button>
+              </ShadButton>
             </motion.div>
           </>
         )}
@@ -323,5 +330,3 @@ export function LoginSignUpForm() {
     </motion.div>
   );
 }
-
-    

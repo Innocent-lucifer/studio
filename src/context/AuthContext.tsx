@@ -10,17 +10,18 @@ import {
   signInWithEmailAndPassword, 
   signInWithPopup, 
   signOut,
-  sendPasswordResetEmail
+  sendPasswordResetEmail,
+  GoogleAuthProvider // Keep this import
 } from 'firebase/auth';
-import { auth, googleProvider } from '@/lib/firebase';
-import { useToast } from "@/hooks/use-toast"; // This is your existing Radix-based toast
+import { auth } from '@/lib/firebase'; // googleProvider is no longer exported from here
+import { useToast } from "@/hooks/use-toast";
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  signUp: (email: string, pass: string) => Promise<User | AuthError | null>;
-  logIn: (email: string, pass: string) => Promise<User | AuthError | null>;
-  signInWithGoogle: () => Promise<User | AuthError | null>;
+  signUp: (email: string, pass: string) => Promise<User | null>; // Throws AuthError on failure
+  logIn: (email: string, pass: string) => Promise<User | null>; // Throws AuthError on failure
+  signInWithGoogle: () => Promise<User | null>; // Throws AuthError on failure
   logOut: () => Promise<void>;
   sendPasswordReset: (email: string) => Promise<{ success: boolean; error?: AuthError | null }>;
 }
@@ -30,7 +31,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const { toast } = useToast(); // Using your existing Radix toast for system messages
+  const { toast } = useToast();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -40,47 +41,48 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return () => unsubscribe();
   }, []);
 
-  const signUp = async (email: string, pass: string): Promise<User | AuthError | null> => {
+  const signUp = async (email: string, pass: string): Promise<User | null> => {
     setLoading(true);
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
-      setUser(userCredential.user);
-      // We'll let the form component handle its specific toast (react-hot-toast)
+      // onAuthStateChanged will set the user
       return userCredential.user;
     } catch (error) {
       console.error("Sign up error:", error);
       const authError = error as AuthError;
-      return authError;
+      throw authError; // Throw error
     } finally {
       setLoading(false);
     }
   };
 
-  const logIn = async (email: string, pass: string): Promise<User | AuthError | null> => {
+  const logIn = async (email: string, pass: string): Promise<User | null> => {
     setLoading(true);
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, pass);
-      setUser(userCredential.user);
+      // onAuthStateChanged will set the user
       return userCredential.user;
     } catch (error) {
       console.error("Log in error:", error);
       const authError = error as AuthError;
-      return authError;
+      throw authError; // Throw error
     } finally {
       setLoading(false);
     }
   };
 
-  const signInWithGoogle = async (): Promise<User | AuthError | null> => {
+  const signInWithGoogle = async (): Promise<User | null> => {
     setLoading(true);
+    const googleProviderInstance = new GoogleAuthProvider(); // Instantiate here
+    googleProviderInstance.setCustomParameters({ prompt: 'select_account' });
     try {
-      const result = await signInWithPopup(auth, googleProvider);
-      setUser(result.user);
+      const result = await signInWithPopup(auth, googleProviderInstance);
+      // onAuthStateChanged will set the user
       return result.user;
     } catch (error) {
-      console.error("Google sign in error:", error);
+      console.error("Google sign in error object:", error);
       const authError = error as AuthError;
-      return authError;
+      throw authError; // Throw error
     } finally {
       setLoading(false);
     }
@@ -90,8 +92,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setLoading(true);
     try {
       await signOut(auth);
-      setUser(null);
-      toast({ title: "Logged Out", description: "You have been successfully logged out." }); // Radix toast for global logout
+      // onAuthStateChanged will set user to null
+      toast({ title: "Logged Out", description: "You have been successfully logged out." });
     } catch (error) {
       console.error("Log out error:", error);
       const authError = error as AuthError;
@@ -109,7 +111,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } catch (error) {
       console.error("Password reset error:", error);
       const authError = error as AuthError;
-      return { success: false, error: authError };
+      return { success: false, error: authError }; // Keep returning object for this one as form handles differently
     } finally {
       setLoading(false);
     }
