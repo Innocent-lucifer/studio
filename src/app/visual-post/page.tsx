@@ -172,34 +172,22 @@ export default function VisualPostPage() {
   ];
 
   const commonHeader = (
-     <header className="flex justify-between items-center w-full mb-8 py-4 px-4">
-        <div className="flex items-center space-x-3">
-          <div className="hidden md:block">
+     <header className="flex justify-between items-center w-full mb-6 sm:mb-8 py-3 sm:py-4 px-4">
+        <div className="flex items-center space-x-2 sm:space-x-3">
+          <div className="md:hidden">
             <HamburgerMenu />
           </div>
           <Link href="/" passHref>
-            <div className="flex items-center space-x-3 sm:space-x-4 cursor-pointer group">
-              <AppLogo className="h-12 w-12 sm:h-16 sm:w-16 text-primary group-hover:scale-110 transition-transform" />
+            <div className="flex items-center space-x-2 sm:space-x-3 cursor-pointer group">
+              <AppLogo className="h-8 w-8 sm:h-10 sm:w-10 text-primary group-hover:scale-110 transition-transform" />
               <div>
-                <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-primary">SagePostAI</h1>
-                <p className="text-sm text-slate-400 mt-1">Visual Post Generator</p>
+                <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-primary">SagePostAI</h1>
+                <p className="text-xs sm:text-sm text-slate-400 mt-0.5">Visual Post Generator</p>
               </div>
             </div>
           </Link>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="text-right text-xs">
-              {user?.email ? (
-                  <p className="font-semibold text-primary truncate max-w-[100px] sm:max-w-[150px]" title={user.email}>{user.email}</p>
-              ) : (
-                  <p className="font-semibold text-primary">Guest</p>
-              )}
-              <p className="text-slate-400">Mode</p>
-          </div>
-          <div className="md:hidden">
-            <HamburgerMenu />
-          </div>
-        </div>
+        {/* No right-aligned content for this page's header */}
       </header>
   );
 
@@ -283,7 +271,7 @@ export default function VisualPostPage() {
           {commonHeader}
           <Card className="bg-slate-800/60 backdrop-blur-md border border-slate-700 shadow-2xl hover:shadow-primary/20 transition-shadow duration-300 rounded-2xl p-4 sm:p-8">
             <motion.div 
-              className="mb-6 flex flex-col sm:flex-row justify-center sm:justify-between gap-3"
+              className="mb-6 flex flex-col sm:flex-row sm:justify-between gap-3"
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: 0.1 }}
@@ -430,4 +418,3 @@ export default function VisualPostPage() {
 
   return null;
 }
-

@@ -13,7 +13,7 @@ import { useAuth } from "@/context/AuthContext";
 
 
 const SmartCampaignPageContent = () => {
-  const { user } = useAuth();
+  const { user } = useAuth(); // user is available if needed, but not displayed in header
 
   return (
     <motion.div 
@@ -23,27 +23,25 @@ const SmartCampaignPageContent = () => {
       className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col items-center p-4 sm:p-8"
     >
       <main className="container mx-auto w-full max-w-4xl">
-        <header className="flex justify-between items-center w-full mb-8 py-4 px-4">
-          {/* LEFT GROUP: Hamburger (MD+), Logo/Title Link */}
-          <div className="flex items-center space-x-3">
-            <div className="hidden md:block">
+        <header className="flex justify-between items-center w-full mb-6 sm:mb-8 py-3 sm:py-4 px-4">
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            <div className="md:hidden">
               <HamburgerMenu />
             </div>
             <Link href="/" passHref>
-              <div className="flex items-center space-x-3 sm:space-x-4 cursor-pointer group">
-                <AppLogo className="h-12 w-12 sm:h-16 sm:w-16 text-primary group-hover:scale-110 transition-transform" />
+              <div className="flex items-center space-x-2 sm:space-x-3 cursor-pointer group">
+                <AppLogo className="h-8 w-8 sm:h-10 sm:w-10 text-primary group-hover:scale-110 transition-transform" />
                 <div>
-                  <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-primary">
+                  <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-primary">
                     SagePostAI
                   </h1>
-                  <p className="text-sm text-slate-400 mt-1">Smart Campaign</p>
+                  <p className="text-xs sm:text-sm text-slate-400 mt-0.5">Smart Campaign</p>
                 </div>
               </div>
             </Link>
           </div>
           
-          {/* RIGHT GROUP: Action Buttons, Auth Info, Hamburger (SM) */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <div className="hidden sm:flex">
               <Link href="/quick-post" passHref legacyBehavior={false}>
                 <Button
@@ -55,19 +53,6 @@ const SmartCampaignPageContent = () => {
                   Quick Posts
                 </Button>
               </Link>
-            </div>
-            
-            <div className="text-right text-xs">
-                {user?.email ? (
-                    <p className="font-semibold text-primary truncate max-w-[100px] sm:max-w-[150px]" title={user.email}>{user.email}</p>
-                ) : (
-                    <p className="font-semibold text-primary">Guest</p>
-                )}
-                <p className="text-slate-400">Mode</p>
-            </div>
-            {/* Hamburger for screens smaller than MD */}
-            <div className="md:hidden">
-              <HamburgerMenu />
             </div>
           </div>
         </header>

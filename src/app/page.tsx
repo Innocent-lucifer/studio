@@ -8,8 +8,9 @@ import { AppLogo } from '@/components/AppLogo';
 import { HamburgerMenu } from '@/components/HamburgerMenu';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface FeatureCardProps {
   icon: keyof typeof Icons;
@@ -18,6 +19,17 @@ interface FeatureCardProps {
   href: string;
   delay?: number;
 }
+
+const extractNameFromEmail = (email: string | undefined | null): string => {
+  if (!email) return "Guest";
+  let namePart = email.split('@')[0];
+  // Replace dots/underscores with spaces and capitalize words
+  namePart = namePart.replace(/[._]/g, ' ');
+  return namePart
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
 
 const FeatureCard: React.FC<FeatureCardProps> = ({ icon, title, description, href, delay = 0 }) => {
   const IconComponent = Icons[icon] || Icons.help;
@@ -61,12 +73,26 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ icon, title, description, hre
 export default function AppHomePage() {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const isMobile = useIsMobile();
+  const [displayName, setDisplayName] = useState<string>("Guest");
 
   useEffect(() => {
     if (!loading && !user) {
       router.push('/login');
     }
   }, [user, loading, router]);
+
+  useEffect(() => {
+    if (user?.email) {
+      if (isMobile) {
+        setDisplayName(extractNameFromEmail(user.email));
+      } else {
+        setDisplayName(user.email);
+      }
+    } else {
+      setDisplayName("Guest");
+    }
+  }, [user, isMobile]);
 
   if (loading) {
     return (
@@ -78,8 +104,6 @@ export default function AppHomePage() {
   }
 
   if (!user) {
-    // This will ideally be brief as the useEffect above should redirect.
-    // Or you can show a more specific "Redirecting to login..." message.
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col items-center justify-center p-4">
         <Icons.loader className="h-16 w-16 animate-spin text-primary" />
@@ -90,31 +114,27 @@ export default function AppHomePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col items-center p-4 sm:p-6 md:p-8 overflow-x-hidden">
-      <header className="w-full max-w-6xl mx-auto py-6 sm:py-8 px-4 sm:px-0 flex justify-between items-center">
-        <div className="flex items-center space-x-3">
-          <div className="hidden md:block">
+      <header className="w-full max-w-6xl mx-auto py-4 sm:py-6 px-4 flex justify-between items-center">
+        <div className="flex items-center space-x-2 sm:space-x-3">
+          <div className="md:hidden"> {/* Hamburger for mobile/small screens */}
             <HamburgerMenu />
           </div>
           <Link href="/" passHref>
-            <div className="flex items-center space-x-3 sm:space-x-4 cursor-pointer group">
-              <AppLogo className="h-12 w-12 sm:h-16 sm:w-16 text-primary group-hover:scale-110 transition-transform" />
-              <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-primary">
+            <div className="flex items-center space-x-2 sm:space-x-3 cursor-pointer group">
+              <AppLogo className="h-8 w-8 sm:h-10 sm:w-10 text-primary group-hover:scale-110 transition-transform" />
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-primary">
                 SagePostAI
               </h1>
             </div>
           </Link>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="text-right text-xs">
-            {user?.email ? (
-              <p className="font-semibold text-primary truncate max-w-[150px] sm:max-w-[200px]" title={user.email}>{user.email}</p>
-            ) : (
-              <p className="font-semibold text-primary">Guest Mode</p> 
-            )}
+        
+        <div className="flex items-center text-right">
+          <div className="text-xs">
+            <p className="font-semibold text-primary truncate max-w-[80px] sm:max-w-[150px] md:max-w-[200px]" title={user?.email || 'User'}>
+              {displayName}
+            </p>
             <p className="text-slate-400">Welcome!</p>
-          </div>
-          <div className="md:hidden">
-            <HamburgerMenu />
           </div>
         </div>
       </header>
