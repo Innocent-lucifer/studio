@@ -212,7 +212,6 @@ export default function VisualPostPage() {
       </footer>
   );
   
-  // Hidden file input, controlled by ref
   const HiddenFileInput = () => (
     <input
       type="file"
@@ -306,7 +305,7 @@ export default function VisualPostPage() {
                   setUserText('');
                   setError(null);
                 }}
-                className="border-slate-500 text-slate-300 hover:bg-slate-700/50 hover:border-slate-400 hover:text-slate-100 rounded-lg px-5 py-2.5 text-sm"
+                className="border-primary text-primary hover:bg-primary/10 hover:border-purple-400 hover:text-purple-300 rounded-lg px-5 py-2.5 text-sm"
                 title="Clear current image and start over"
               >
                 <Icons.trash className="mr-2 h-4 w-4" /> Start Over & Upload New
