@@ -1,4 +1,5 @@
-"use client"
+"use client";
+
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
@@ -199,9 +200,6 @@ export const LoginSignUpForm: React.FC = () => {
                 ? "Already have an account? Log In"
                 : "Don't have an account? Sign Up"}
             </Button>
-            <p className="text-xs text-slate-500 text-center mt-2">
-              Powered by Firebase Authentication
-            </p>
           </CardFooter>
         </Card>
       </motion.div>
