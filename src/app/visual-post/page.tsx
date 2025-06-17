@@ -104,7 +104,7 @@ export default function VisualPostPage() {
   const handleDirectImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (fileInputRefVisual.current) {
-      fileInputRefVisual.current.value = ''; // Ensures onChange fires for same file
+      fileInputRefVisual.current.value = ''; 
     }
 
     if (file) {
@@ -116,7 +116,7 @@ export default function VisualPostPage() {
         });
         return;
       }
-      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+      if (file.size > 5 * 1024 * 1024) { 
          toast({
           variant: "destructive",
           title: "File Too Large",
@@ -128,12 +128,10 @@ export default function VisualPostPage() {
       reader.onloadend = () => {
         const result = reader.result;
         if (typeof result === 'string') {
-          // Reset relevant states before updating the image
           setGeneratedPost('');
-          setUserText(''); // Clear user context for a fresh start with the new image
+          setUserText(''); 
           setError(null);
-          
-          setImageDataUri(result); // This will trigger the useEffect for generation
+          setImageDataUri(result); 
         } else {
           toast({
             variant: "destructive",
@@ -213,6 +211,18 @@ export default function VisualPostPage() {
           </span>
       </footer>
   );
+  
+  // Hidden file input, controlled by ref
+  const HiddenFileInput = () => (
+    <input
+      type="file"
+      ref={fileInputRefVisual}
+      onChange={handleDirectImageUpload}
+      accept="image/*"
+      className="hidden"
+    />
+  );
+
 
   if (!isClient || (isClient && !initialStorageCheckDone && !imageDataUri)) {
      return (
@@ -222,6 +232,7 @@ export default function VisualPostPage() {
       >
         <Icons.loader className="h-16 w-16 animate-spin text-primary" />
         <p className="mt-4 text-xl">Loading Visual Post Tool...</p>
+        <HiddenFileInput />
       </motion.div>
     );
   }
@@ -252,13 +263,7 @@ export default function VisualPostPage() {
               >
                 <Icons.upload className="mr-2 h-5 w-5" /> Upload Image
               </Button>
-              <input
-                type="file"
-                ref={fileInputRefVisual}
-                onChange={handleDirectImageUpload}
-                accept="image/*"
-                className="hidden"
-              />
+              <HiddenFileInput />
               <p className="mt-4 text-xs text-slate-500">Max 5MB (JPG, PNG, GIF supported)</p>
             </CardContent>
           </Card>
@@ -280,7 +285,7 @@ export default function VisualPostPage() {
           {commonHeader}
           <Card className="bg-slate-800/60 backdrop-blur-md border border-slate-700 shadow-2xl hover:shadow-primary/20 transition-shadow duration-300 rounded-2xl p-4 sm:p-8">
             <motion.div 
-              className="mb-6 flex flex-col sm:flex-row justify-end gap-3"
+              className="mb-6 flex flex-col sm:flex-row justify-center sm:justify-end gap-3"
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: 0.1 }}
@@ -288,7 +293,7 @@ export default function VisualPostPage() {
               <Button
                 variant="outline"
                 onClick={() => fileInputRefVisual.current?.click()}
-                className="border-purple-400 text-purple-400 hover:bg-purple-500/10 hover:text-purple-300"
+                className="border-primary text-primary hover:bg-primary/10 hover:border-purple-400 hover:text-purple-300 rounded-lg px-5 py-2.5 text-sm"
                 title="Upload a different image"
               >
                 <Icons.refreshCw className="mr-2 h-4 w-4" /> Change Image
@@ -301,12 +306,13 @@ export default function VisualPostPage() {
                   setUserText('');
                   setError(null);
                 }}
-                className="border-slate-500 text-slate-300 hover:bg-slate-700/50 hover:text-slate-100"
+                className="border-slate-500 text-slate-300 hover:bg-slate-700/50 hover:border-slate-400 hover:text-slate-100 rounded-lg px-5 py-2.5 text-sm"
                 title="Clear current image and start over"
               >
                 <Icons.trash className="mr-2 h-4 w-4" /> Start Over & Upload New
               </Button>
             </motion.div>
+            <HiddenFileInput />
 
             <CardContent className="space-y-8 p-0">
               {imageDataUri && (
@@ -426,3 +432,4 @@ export default function VisualPostPage() {
 
   return null;
 }
+
