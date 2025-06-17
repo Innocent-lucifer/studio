@@ -57,10 +57,10 @@ export default function VisualPostPage() {
     if (isClient && !initialStorageCheckDone) {
       const storedImage = localStorage.getItem('sagepostai_visual_post_image');
       if (storedImage) {
-        setImageDataUri(storedImage); // This will cause a re-render
+        setImageDataUri(storedImage); 
         localStorage.removeItem('sagepostai_visual_post_image');
       }
-      setInitialStorageCheckDone(true); // Mark check as done, causes re-render
+      setInitialStorageCheckDone(true); 
     }
   }, [isClient, initialStorageCheckDone]);
 
@@ -86,11 +86,11 @@ export default function VisualPostPage() {
         setIsLoading(false);
       }
     }, 700),
-    [toast]
+    [toast] 
   );
 
   useEffect(() => {
-    if (imageDataUri && isClient) { // Ensure generation only happens client-side and if image is present
+    if (imageDataUri && isClient) { 
       debouncedGeneratePost({
         imageDataUri,
         userContext: userText || undefined,
@@ -99,12 +99,12 @@ export default function VisualPostPage() {
       });
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [imageDataUri, userText, selectedTone, userIdToPass, isClient]); // debouncedGeneratePost is memoized
+  }, [imageDataUri, userText, selectedTone, userIdToPass, isClient]); 
 
   const handleDirectImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (fileInputRefVisual.current) {
-      fileInputRefVisual.current.value = '';
+      fileInputRefVisual.current.value = ''; // Ensures onChange fires for same file
     }
 
     if (file) {
@@ -116,7 +116,7 @@ export default function VisualPostPage() {
         });
         return;
       }
-      if (file.size > 5 * 1024 * 1024) {
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
          toast({
           variant: "destructive",
           title: "File Too Large",
@@ -128,7 +128,12 @@ export default function VisualPostPage() {
       reader.onloadend = () => {
         const result = reader.result;
         if (typeof result === 'string') {
-          setImageDataUri(result);
+          // Reset relevant states before updating the image
+          setGeneratedPost('');
+          setUserText(''); // Clear user context for a fresh start with the new image
+          setError(null);
+          
+          setImageDataUri(result); // This will trigger the useEffect for generation
         } else {
           toast({
             variant: "destructive",
@@ -209,7 +214,6 @@ export default function VisualPostPage() {
       </footer>
   );
 
-  // Initial loading state (SSR and first client paint before initialStorageCheckDone)
   if (!isClient || (isClient && !initialStorageCheckDone && !imageDataUri)) {
      return (
       <motion.div
@@ -222,7 +226,6 @@ export default function VisualPostPage() {
     );
   }
 
-  // State after storage check is done, but no image is loaded (either from storage or upload)
   if (isClient && initialStorageCheckDone && !imageDataUri) {
     return (
        <motion.div
@@ -265,7 +268,6 @@ export default function VisualPostPage() {
     );
   }
 
-  // Image is loaded (either from storage or direct upload)
   if (isClient && imageDataUri) {
     return (
       <motion.div
@@ -277,7 +279,36 @@ export default function VisualPostPage() {
         <main className="container mx-auto w-full max-w-3xl">
           {commonHeader}
           <Card className="bg-slate-800/60 backdrop-blur-md border border-slate-700 shadow-2xl hover:shadow-primary/20 transition-shadow duration-300 rounded-2xl p-4 sm:p-8">
-            <CardContent className="space-y-8">
+            <motion.div 
+              className="mb-6 flex flex-col sm:flex-row justify-end gap-3"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.1 }}
+            >
+              <Button
+                variant="outline"
+                onClick={() => fileInputRefVisual.current?.click()}
+                className="border-purple-400 text-purple-400 hover:bg-purple-500/10 hover:text-purple-300"
+                title="Upload a different image"
+              >
+                <Icons.refreshCw className="mr-2 h-4 w-4" /> Change Image
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setImageDataUri(null);
+                  setGeneratedPost('');
+                  setUserText('');
+                  setError(null);
+                }}
+                className="border-slate-500 text-slate-300 hover:bg-slate-700/50 hover:text-slate-100"
+                title="Clear current image and start over"
+              >
+                <Icons.trash className="mr-2 h-4 w-4" /> Start Over & Upload New
+              </Button>
+            </motion.div>
+
+            <CardContent className="space-y-8 p-0">
               {imageDataUri && (
                 <motion.div
                   initial={{ opacity: 0, scale: 0.9 }}
@@ -393,7 +424,5 @@ export default function VisualPostPage() {
     );
   }
 
-  // Fallback for any unhandled state, though ideally not reached.
-  // This ensures the component always returns something, matching server's potential non-rendering path.
   return null;
 }
