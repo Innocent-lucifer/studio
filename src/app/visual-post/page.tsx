@@ -521,28 +521,29 @@ export default function VisualPostPage() {
                   <Button 
                     onClick={handleOpenEditModal}
                     disabled={!userIdToPass}
-                    className="w-full sm:w-auto bg-orange-500 hover:bg-orange-600 text-white py-2.5 px-6 rounded-lg shadow-md hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground py-2.5 px-6 rounded-lg shadow-md hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                      <Icons.edit className="mr-2 h-5 w-5" /> Edit Post
                   </Button>
                   <Button 
                     onClick={handleSaveDraft} 
                     disabled={isSavingDraft || !userIdToPass}
-                    className="w-full sm:w-auto bg-teal-600 hover:bg-teal-700 text-white py-2.5 px-6 rounded-lg shadow-md hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="w-full sm:w-auto bg-accent hover:bg-accent/90 text-white py-2.5 px-6 rounded-lg shadow-md hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                     {isSavingDraft ? <Icons.loader className="animate-pulse mr-2 h-5 w-5" /> : <Icons.save className="mr-2 h-5 w-5" />}
                     Save Draft
                   </Button>
                   <Button 
                     onClick={handleCopyPost} 
-                    className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white py-2.5 px-6 rounded-lg shadow-md hover:shadow-lg"
+                    variant="outline"
+                    className="w-full sm:w-auto border-primary text-primary hover:bg-primary/10 hover:text-purple-300 py-2.5 px-6 rounded-lg shadow-md hover:shadow-lg"
                   >
                     <Icons.copy className="mr-2 h-5 w-5" /> Copy Post
                   </Button>
                   <Button
                     onClick={handleSharePost}
                     variant="outline"
-                    className="w-full sm:w-auto border-blue-500 text-blue-400 hover:bg-blue-500/10 hover:text-blue-300 py-2.5 px-6 rounded-lg shadow-md hover:shadow-lg"
+                    className="w-full sm:w-auto border-slate-600 text-slate-300 hover:bg-slate-700 py-2.5 px-6 rounded-lg shadow-md hover:shadow-lg"
                   >
                     <Icons.share className="mr-2 h-5 w-5" /> Share
                   </Button>
