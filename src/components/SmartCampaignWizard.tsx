@@ -26,6 +26,7 @@ import { generateCampaignSeries } from '@/ai/flows/generate-campaign-series';
 import type { SuggestRepurposingIdeasInput } from '@/ai/flows/suggest-repurposing-ideas';
 import { suggestRepurposingIdeas } from '@/ai/flows/suggest-repurposing-ideas';
 import { generateEditedPost, type GenerateEditedPostInput } from '@/ai/flows/generateEditedPost';
+import { saveDraft } from '@/lib/firebaseUserActions';
 
 type WizardStep = 'topic_research' | 'angles' | 'series' | 'repurpose' | 'complete' | 'initial_error';
 
@@ -42,7 +43,6 @@ const cardMotionProps = {
   initial: { opacity: 0, y: 20, scale: 0.98 },
   animate: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.4, ease: "easeOut" } },
   exit: { opacity: 0, y: -20, scale: 0.98, transition: { duration: 0.3, ease: "easeIn" } },
-  // whileHover effect is applied directly to the Card for shadow, motion.div handles scale
 };
 
 const listItemVariants = {
@@ -83,6 +83,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
   const [currentStep, setCurrentStep] = useState<WizardStep>('topic_research');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [loadingMessage, setLoadingMessage] = useState<string>('');
+  const [isSavingDraft, setIsSavingDraft] = useState<{ platform: 'twitter' | 'linkedin', index: number } | null>(null);
 
   const [angles, setAngles] = useState<ContentAngle[]>([]);
   const [selectedAngle, setSelectedAngle] = useState<ContentAngle | null>(null);
@@ -112,16 +113,20 @@ const SmartCampaignWizardInternal: React.FC = () => {
   }, [searchParams]);
 
   useEffect(() => {
-    if (currentStep === 'angles' && campaignTopic && currentResearchedContent && angles.length === 0 && !isLoading) {
+    if (currentStep === 'angles' && campaignTopic && currentResearchedContent && angles.length === 0 && !isLoading && userIdToPass) {
       handleSuggestAngles(campaignTopic, currentResearchedContent);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentStep, campaignTopic, currentResearchedContent, angles.length, isLoading]);
+  }, [currentStep, campaignTopic, currentResearchedContent, angles.length, isLoading, userIdToPass]);
 
 
   const handleInternalTopicResearch = async () => {
     if (!campaignTopic.trim()) {
       toast({ variant: "destructive", title: "Topic Required", description: "Please enter a topic to research." });
+      return;
+    }
+    if (!userIdToPass) {
+      toast({ variant: "destructive", title: "Login Required", description: "Please log in to research topics." });
       return;
     }
     setIsLoading(true);
@@ -155,6 +160,10 @@ const SmartCampaignWizardInternal: React.FC = () => {
       toast({ variant: "destructive", title: "Missing Data", description: "Topic or research content is missing for angle suggestion." });
       return;
     }
+     if (!userIdToPass) {
+      toast({ variant: "destructive", title: "Login Required", description: "Please log in to suggest angles." });
+      return;
+    }
     setIsLoading(true);
     setLoadingMessage('Brainstorming content angles...');
     try {
@@ -183,6 +192,10 @@ const SmartCampaignWizardInternal: React.FC = () => {
     if (!selectedAngle || !campaignTopic || !currentResearchedContent) {
         toast({ variant: "destructive", title: "Missing Information", description: "Please select an angle and ensure topic research is complete." });
         return;
+    }
+    if (!userIdToPass) {
+      toast({ variant: "destructive", title: "Login Required", description: "Please log in to generate series." });
+      return;
     }
     setIsLoading(true);
     setLoadingMessage('Crafting your campaign series (Twitter & LinkedIn)...');
@@ -227,6 +240,10 @@ const SmartCampaignWizardInternal: React.FC = () => {
  const handleSuggestRepurposing = async () => {
     if (!campaignTopic || !selectedAngle || (twitterSeries.length === 0 && linkedinSeries.length === 0) ) {
       toast({ variant: "destructive", title: "Missing Information", description: "Campaign series must be generated first." });
+      return;
+    }
+     if (!userIdToPass) {
+      toast({ variant: "destructive", title: "Login Required", description: "Please log in to suggest repurposing ideas." });
       return;
     }
     setIsLoading(true);
@@ -296,6 +313,10 @@ const SmartCampaignWizardInternal: React.FC = () => {
   };
 
   const handleOpenEditModal = (platform: 'twitter' | 'linkedin', index: number, text: string) => {
+    if (!userIdToPass) {
+      toast({ variant: "destructive", title: "Login Required", description: "Please log in to edit posts." });
+      return;
+    }
     setEditingPost({ platform, index, originalText: text, currentText: text });
   };
 
@@ -314,6 +335,10 @@ const SmartCampaignWizardInternal: React.FC = () => {
   const handleAiEditForSeriesPost = async () => {
     if (!editingPost || !aiEditInstruction.trim() || !campaignTopic) {
       toast({ title: "Missing Information", description: "Post context or AI instruction is missing.", variant: "destructive" });
+      return;
+    }
+     if (!userIdToPass) {
+      toast({ variant: "destructive", title: "Login Required", description: "Please log in for AI editing." });
       return;
     }
     setIsAiSubmitting(true);
@@ -343,6 +368,27 @@ const SmartCampaignWizardInternal: React.FC = () => {
       setIsAiSubmitting(false);
     }
   };
+
+  const handleSaveCampaignPostAsDraft = async (platform: 'twitter' | 'linkedin', index: number, content: string) => {
+    if (!userIdToPass) {
+      toast({ variant: "destructive", title: "Login Required", description: "Please log in to save drafts." });
+      return;
+    }
+    setIsSavingDraft({ platform, index });
+    const draftData = {
+      content,
+      platform,
+      topic: `${campaignTopic} (${selectedAngle?.title || 'General Angle'})`,
+    };
+    const savedDraft = await saveDraft(userIdToPass, draftData);
+    if (savedDraft) {
+      toast({ title: "Draft Saved!", description: `${platform.charAt(0).toUpperCase() + platform.slice(1)} post from campaign saved.` });
+    } else {
+      toast({ variant: "destructive", title: "Save Failed", description: "Could not save the draft." });
+    }
+    setIsSavingDraft(null);
+  };
+
 
   const resetWizard = () => {
     setCampaignTopic('');
@@ -408,6 +454,23 @@ const SmartCampaignWizardInternal: React.FC = () => {
     if (isLoading && !['topic_research', 'angles', 'series', 'repurpose'].includes(currentStep)) {
       return renderLoadingState();
     }
+     if (!authLoading && !userIdToPass && currentStep !== 'initial_error' && currentStep !== 'topic_research') {
+        return (
+            <motion.div key="login-prompt" {...cardMotionProps} className="text-center space-y-4 py-8 min-h-[300px] flex flex-col justify-center items-center">
+                <Icons.lock className="h-16 w-16 text-primary mx-auto" />
+                <h3 className="text-2xl font-semibold text-slate-100">Login Required</h3>
+                <p className="text-slate-300 max-w-md mx-auto">
+                    Please log in to build your smart campaign.
+                </p>
+                <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground mt-4">
+                    <Link href="/login?redirect=/smart-campaign">
+                        <Icons.logIn className="mr-2 h-5 w-5" /> Login to Continue
+                    </Link>
+                </Button>
+            </motion.div>
+        );
+    }
+
 
     switch (currentStep) {
       case 'initial_error':
@@ -446,15 +509,17 @@ const SmartCampaignWizardInternal: React.FC = () => {
               />
               <Button
                 onClick={handleInternalTopicResearch}
-                disabled={!campaignTopic.trim() || isLoading}
+                disabled={!campaignTopic.trim() || isLoading || !userIdToPass}
                 size="lg"
-                className="bg-primary hover:bg-primary/90 text-primary-foreground sm:w-auto w-full"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground sm:w-auto w-full disabled:opacity-60"
+                 title={!userIdToPass ? "Please log in to research" : ""}
               >
                 {isLoading && loadingMessage.includes("Researching") ? <Icons.loader className="mr-2 h-5 w-5 animate-spin" /> : <Icons.search className="mr-2 h-5 w-5" />}
                 Research Topic
               </Button>
             </div>
             {isLoading && loadingMessage.includes("Researching") && <p className="text-sm text-slate-400 text-center">{loadingMessage}</p>}
+            {!userIdToPass && <p className="text-xs text-slate-400 text-center mt-2">Log in to research topics and build campaigns.</p>}
             <p className="text-xs text-slate-400">
               Alternatively, you can start from the <Link href="/quick-post" className="underline hover:text-primary">Quick Post</Link> page to pre-fill topic and research.
             </p>
@@ -554,8 +619,11 @@ const SmartCampaignWizardInternal: React.FC = () => {
                             >
                               <p className="whitespace-pre-wrap">{post}</p>
                               <div className="mt-2 flex space-x-2">
-                                <Button variant="link" size="sm" onClick={() => handleOpenEditModal('twitter', index, post)} className="text-sky-400/80 hover:text-sky-400 p-0 h-auto text-xs">
+                                <Button variant="link" size="sm" onClick={() => handleOpenEditModal('twitter', index, post)} className="text-sky-400/80 hover:text-sky-400 p-0 h-auto text-xs disabled:opacity-50" disabled={!userIdToPass || (isSavingDraft?.platform === 'twitter' && isSavingDraft?.index === index)}>
                                   <Icons.edit className="mr-1 h-3 w-3"/>Edit
+                                </Button>
+                                 <Button variant="link" size="sm" onClick={() => handleSaveCampaignPostAsDraft('twitter', index, post)} className="text-green-400/80 hover:text-green-400 p-0 h-auto text-xs disabled:opacity-50" disabled={!userIdToPass || (isSavingDraft?.platform === 'twitter' && isSavingDraft?.index === index)}>
+                                  {isSavingDraft?.platform === 'twitter' && isSavingDraft?.index === index ? <Icons.loader className="h-3 w-3 animate-spin"/> : <Icons.save className="mr-1 h-3 w-3"/>}Save Draft
                                 </Button>
                               </div>
                             </motion.div>
@@ -580,8 +648,11 @@ const SmartCampaignWizardInternal: React.FC = () => {
                               >
                                 <p className="whitespace-pre-wrap">{post}</p>
                                 <div className="mt-2 flex space-x-2">
-                                  <Button variant="link" size="sm" onClick={() => handleOpenEditModal('linkedin', index, post)} className="text-blue-400/80 hover:text-blue-400 p-0 h-auto text-xs">
+                                  <Button variant="link" size="sm" onClick={() => handleOpenEditModal('linkedin', index, post)} className="text-blue-400/80 hover:text-blue-400 p-0 h-auto text-xs disabled:opacity-50" disabled={!userIdToPass || (isSavingDraft?.platform === 'linkedin' && isSavingDraft?.index === index)}>
                                     <Icons.edit className="mr-1 h-3 w-3"/>Edit
+                                  </Button>
+                                  <Button variant="link" size="sm" onClick={() => handleSaveCampaignPostAsDraft('linkedin', index, post)} className="text-green-400/80 hover:text-green-400 p-0 h-auto text-xs disabled:opacity-50" disabled={!userIdToPass || (isSavingDraft?.platform === 'linkedin' && isSavingDraft?.index === index)}>
+                                     {isSavingDraft?.platform === 'linkedin' && isSavingDraft?.index === index ? <Icons.loader className="h-3 w-3 animate-spin"/> : <Icons.save className="mr-1 h-3 w-3"/>}Save Draft
                                   </Button>
                                 </div>
                               </motion.div>
@@ -592,11 +663,15 @@ const SmartCampaignWizardInternal: React.FC = () => {
                   </motion.div>
                 </motion.div>
               )}
+               {!userIdToPass && (twitterSeries.length > 0 || linkedinSeries.length > 0) &&
+                <p className="text-xs text-slate-400 text-center mt-2">Log in to edit or save drafts.</p>
+              }
               <Button 
                 onClick={handleSuggestRepurposing} 
-                disabled={isLoading || (twitterSeries.length === 0 && linkedinSeries.length === 0)}
+                disabled={isLoading || (twitterSeries.length === 0 && linkedinSeries.length === 0) || !userIdToPass}
                 size="lg"
-                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground mt-4"
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground mt-4 disabled:opacity-60"
+                 title={!userIdToPass ? "Log in to suggest repurposing ideas" : ""}
               >
                   {isLoading && loadingMessage.includes("Finding repurposing") ? <Icons.loader className="mr-2 h-5 w-5 animate-spin" /> : <Icons.repeat className="mr-2 h-5 w-5" />}
                 Suggest Repurposing Ideas
@@ -695,6 +770,8 @@ const SmartCampaignWizardInternal: React.FC = () => {
                 onClick={() => setCurrentStep('complete')}
                 size="lg"
                 className="w-full bg-green-600 hover:bg-green-700 text-white mt-4"
+                disabled={!userIdToPass}
+                title={!userIdToPass ? "Log in to finalize campaign" : ""}
               >
                 <Icons.checkCircle className="mr-2 h-5 w-5" />
                 Finalize Campaign
@@ -759,10 +836,9 @@ const SmartCampaignWizardInternal: React.FC = () => {
   return (
     <div className="w-full space-y-8">
       <motion.div {...cardMotionProps} 
-        // This whileHover is for the scale effect, the card itself will have hover:shadow
-        whileHover={{ scale: 1.01, transition: { type: "spring", stiffness: 300, damping: 10 } }}
+        whileHover={{ scale: 1.01, boxShadow: "0px 10px 30px -5px hsl(var(--primary)/0.2)", transition: { type: "spring", stiffness: 300, damping: 10 } }}
       >
-        <Card className="bg-slate-800/70 border-slate-700 shadow-2xl rounded-xl overflow-hidden hover:shadow-primary/20 transition-shadow duration-300">
+        <Card className="bg-slate-800/70 border-slate-700 shadow-2xl rounded-xl overflow-hidden transition-shadow duration-300">
           <CardHeader className="border-b border-slate-700">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
               <div className="flex items-center space-x-3">
@@ -783,10 +859,11 @@ const SmartCampaignWizardInternal: React.FC = () => {
                   {stepConfig['initial_error']?.description}
               </CardDescription>
             )}
+            {authLoading && <p className="text-xs text-slate-500 pt-1">Checking authentication...</p>}
           </CardHeader>
           <CardContent className="p-6">
             <AnimatePresence mode="wait">
-              {renderStepContent()}
+              {authLoading ? renderLoadingState("Initializing...") : renderStepContent()}
             </AnimatePresence>
           </CardContent>
         </Card>

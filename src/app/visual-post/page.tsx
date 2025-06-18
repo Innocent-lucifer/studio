@@ -16,6 +16,7 @@ import { generatePostFromImage, GeneratePostFromImageInput } from '@/ai/flows/ge
 import { Separator } from '@/components/ui/separator';
 import { Label } from '@/components/ui/label';
 import { useAuth } from "@/context/AuthContext";
+import { saveDraft } from '@/lib/firebaseUserActions';
 
 type Tone = 'default' | 'romantic' | 'funny' | 'professional' | 'mysterious';
 
@@ -35,13 +36,14 @@ const debounce = <F extends (...args: any[]) => any>(func: F, delay: number) => 
 
 export default function VisualPostPage() {
   const { user } = useAuth();
-  const userIdToPass = user?.uid || "sagepostai-guest-user";
+  const userIdToPass = user?.uid; // Will be undefined if user is not logged in
 
   const [imageDataUri, setImageDataUri] = useState<string | null>(null);
   const [userText, setUserText] = useState<string>('');
   const [selectedTone, setSelectedTone] = useState<Tone>('default');
   const [generatedPost, setGeneratedPost] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isSavingDraft, setIsSavingDraft] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
   const fileInputRefVisual = useRef<HTMLInputElement>(null);
@@ -86,20 +88,26 @@ export default function VisualPostPage() {
         setIsLoading(false);
       }
     }, 700),
-    [toast, userIdToPass] 
+    [toast] 
   );
 
   useEffect(() => {
-    if (imageDataUri && isClient) { 
+    if (imageDataUri && isClient && userIdToPass) { 
       debouncedGeneratePost({
         imageDataUri,
         userContext: userText || undefined,
         tone: selectedTone,
         userId: userIdToPass,
       });
+    } else if (imageDataUri && isClient && !userIdToPass) {
+      // Handle case where image is uploaded but user is not logged in
+      // For now, we might just show the image and let them interact if they log in later
+      // Or display a message "Log in to generate post"
+      setGeneratedPost(''); // Clear any previous post
+      setError(null);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [imageDataUri, userText, selectedTone, isClient]); 
+  }, [imageDataUri, userText, selectedTone, isClient, userIdToPass]); 
 
   const handleDirectImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -129,7 +137,7 @@ export default function VisualPostPage() {
         const result = reader.result;
         if (typeof result === 'string') {
           setGeneratedPost('');
-          setUserText(''); 
+          // setUserText('');  // Keep user text if they change image
           setError(null);
           setImageDataUri(result); 
         } else {
@@ -162,6 +170,31 @@ export default function VisualPostPage() {
   const handleSharePost = () => {
      toast({ title: "Feature Coming Soon", description: "Direct sharing will be available in a future update." });
   };
+  
+  const handleSaveDraft = async () => {
+    if (!userIdToPass) {
+      toast({ variant: "destructive", title: "Login Required", description: "Please log in to save drafts." });
+      return;
+    }
+    if (!generatedPost.trim()) {
+      toast({ variant: "destructive", title: "No Content", description: "Cannot save an empty post as a draft." });
+      return;
+    }
+    setIsSavingDraft(true);
+    const draftData = {
+      content: generatedPost,
+      platform: 'visual' as 'twitter' | 'linkedin' | 'visual', // Using 'visual' as a distinct platform type
+      topic: userText.trim() || "Image Post", // Use user context or a default topic
+    };
+    const savedDraft = await saveDraft(userIdToPass, draftData);
+    if (savedDraft) {
+      toast({ title: "Draft Saved!", description: "Your image-inspired post has been saved." });
+    } else {
+      toast({ variant: "destructive", title: "Save Failed", description: "Could not save the draft. Please try again." });
+    }
+    setIsSavingDraft(false);
+  };
+
 
   const toneOptions: { label: string; value: Tone, icon?: keyof typeof Icons }[] = [
     { label: 'Default', value: 'default', icon: 'sparkles' },
@@ -174,7 +207,7 @@ export default function VisualPostPage() {
   const commonHeader = (
      <header className="flex justify-between items-center w-full mb-6 sm:mb-8 py-3 sm:py-4 px-4">
         <div className="flex items-center space-x-2 sm:space-x-3">
-          <div> {/* Removed md:hidden */}
+          <div> 
             <HamburgerMenu />
           </div>
           <Link href="/" passHref>
@@ -344,11 +377,12 @@ export default function VisualPostPage() {
                       key={value}
                       onClick={() => setSelectedTone(value)}
                       variant={selectedTone === value ? "default" : "outline"}
+                      disabled={!userIdToPass && value !== 'default'} // Allow default tone for guests if post gen is allowed
                       className={`
                         ${selectedTone === value
                           ? 'bg-purple-600 hover:bg-purple-700 text-white border-purple-600'
                           : 'bg-slate-700/70 border-slate-600 text-slate-300 hover:bg-slate-600/90 hover:border-purple-500/50 hover:text-purple-300'}
-                        transition-all duration-200 ease-in-out shadow-md hover:shadow-lg rounded-lg px-4 py-2 text-sm
+                        transition-all duration-200 ease-in-out shadow-md hover:shadow-lg rounded-lg px-4 py-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed
                       `}
                     >
                       <Icon className="mr-2 h-4 w-4"/>
@@ -356,6 +390,7 @@ export default function VisualPostPage() {
                     </Button>
                   )})}
                 </div>
+                 {!userIdToPass && <p className="text-xs text-slate-400 mt-2">Log in to unlock all tone options and generate posts.</p>}
               </motion.div>
 
               <Separator className="my-8 bg-slate-700" />
@@ -385,7 +420,16 @@ export default function VisualPostPage() {
                     <p className="text-slate-100 whitespace-pre-wrap text-base leading-relaxed">{generatedPost}</p>
                   </motion.div>
                 )}
-                {!isLoading && !error && !generatedPost && (
+                {!isLoading && !error && !generatedPost && !userIdToPass && (
+                   <div className="flex flex-col items-center justify-center p-6 rounded-lg bg-slate-700/50 min-h-[150px] text-slate-400 text-center">
+                    <Icons.lock className="h-8 w-8 mb-3 text-primary"/>
+                    <span className="text-lg">Please log in to generate and view your post.</span>
+                     <Link href="/login" className="mt-3">
+                        <Button variant="link" className="text-primary hover:text-purple-400">Go to Login</Button>
+                    </Link>
+                  </div>
+                )}
+                 {!isLoading && !error && !generatedPost && userIdToPass && (
                    <div className="flex items-center justify-center p-6 rounded-lg bg-slate-700/50 min-h-[150px] text-slate-400">
                     <Icons.info className="h-8 w-8 mr-3"/>
                     <span className="text-lg">Your generated post will appear here.</span>
@@ -395,7 +439,18 @@ export default function VisualPostPage() {
 
               {!isLoading && generatedPost && (
                 <motion.div className="flex flex-col sm:flex-row gap-3 mt-8" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{delay: 0.4}}>
-                  <Button onClick={handleCopyPost} className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white py-2.5 px-6 rounded-lg shadow-md hover:shadow-lg">
+                  <Button 
+                    onClick={handleSaveDraft} 
+                    disabled={isSavingDraft || !userIdToPass}
+                    className="w-full sm:w-auto bg-teal-600 hover:bg-teal-700 text-white py-2.5 px-6 rounded-lg shadow-md hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    {isSavingDraft ? <Icons.loader className="animate-spin mr-2 h-5 w-5" /> : <Icons.save className="mr-2 h-5 w-5" />}
+                    Save Draft
+                  </Button>
+                  <Button 
+                    onClick={handleCopyPost} 
+                    className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white py-2.5 px-6 rounded-lg shadow-md hover:shadow-lg"
+                  >
                     <Icons.copy className="mr-2 h-5 w-5" /> Copy Post
                   </Button>
                   <Button
@@ -407,6 +462,11 @@ export default function VisualPostPage() {
                   </Button>
                 </motion.div>
               )}
+               {!userIdToPass && !isLoading && 
+                  <p className="mt-4 text-xs text-slate-400 text-center">
+                    Log in to save drafts or generate posts with all tone options.
+                  </p>
+                }
             </CardContent>
           </Card>
         </main>
@@ -417,3 +477,4 @@ export default function VisualPostPage() {
 
   return null;
 }
+
