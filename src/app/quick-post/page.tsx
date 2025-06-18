@@ -5,7 +5,7 @@ import { TopicResearch } from "@/components/TopicResearch";
 import { TwitterPostGenerator } from "@/components/TwitterPostGenerator";
 import { LinkedInPostGenerator } from "@/components/LinkedInPostGenerator";
 import { PostSelection } from "@/components/PostSelection";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { HamburgerMenu } from "@/components/HamburgerMenu";
@@ -14,19 +14,34 @@ import { AppLogo } from "@/components/AppLogo";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
+import { useSearchParams } from 'next/navigation';
 
-export default function QuickPostPage() {
+const QuickPostPageContent = () => {
   const { user } = useAuth();
   const userIdToPass = user?.uid || "sagepostai-guest-user";
+  const searchParams = useSearchParams();
 
   const [topic, setTopic] = useState<string>("");
   const [researchedContent, setResearchedContent] = useState<string>("");
-  const [twitterPosts, setTwitterPosts] = useState<string[]>([]);
-  const [linkedinPosts, setLinkedinPosts] = useState<string[]>([]);
   const [researchIsLoading, setResearchIsLoading] = useState(false);
 
+  const [twitterPosts, setTwitterPosts] = useState<string[]>([]);
+  const [linkedinPosts, setLinkedinPosts] = useState<string[]>([]);
+  
   const [displayTwitterInCard, setDisplayTwitterInCard] = useState(true);
   const [displayLinkedInInCard, setDisplayLinkedInInCard] = useState(true);
+
+  useEffect(() => {
+    const topicParam = searchParams.get('topic');
+    const researchedContentParam = searchParams.get('researchedContent');
+
+    if (topicParam) {
+      setTopic(topicParam);
+    }
+    if (researchedContentParam) {
+      setResearchedContent(researchedContentParam);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (researchIsLoading || !researchedContent || !topic) {
@@ -100,7 +115,7 @@ export default function QuickPostPage() {
         <main className="container mx-auto w-full max-w-4xl">
           <header className="flex justify-between items-center w-full mb-6 sm:mb-8 py-3 sm:py-4 px-4">
             <div className="flex items-center space-x-2 sm:space-x-3">
-              <div> {/* Removed md:hidden */}
+              <div> 
                 <HamburgerMenu />
               </div>
               <Link href="/" passHref>
@@ -182,6 +197,7 @@ export default function QuickPostPage() {
                 </CardHeader>
                 <CardContent>
                   <TopicResearch
+                    initialTopic={topic}
                     setTopic={setTopic}
                     setResearchedContent={setResearchedContent}
                     setIsLoading={setResearchIsLoading}
@@ -284,5 +300,20 @@ export default function QuickPostPage() {
         </footer>
       </motion.div>
     </>
+  );
+}
+
+
+export default function QuickPostPage() {
+  // Suspense is necessary because QuickPostPageContent uses useSearchParams
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col items-center justify-center p-4">
+        <Icons.loader className="h-16 w-16 animate-spin text-primary" />
+        <p className="mt-4 text-xl">Loading Quick Post Generator...</p>
+      </div>
+    }>
+      <QuickPostPageContent />
+    </Suspense>
   );
 }

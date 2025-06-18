@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { researchTopic } from "@/ai/flows/research-topic";
@@ -10,15 +10,29 @@ import { motion } from 'framer-motion';
 import { Icons } from "./icons";
 
 interface TopicResearchProps {
+  initialTopic?: string; // New prop for pre-filling
   setTopic: (topic: string) => void;
   setResearchedContent: (content: string) => void;
   setIsLoading: (isLoading: boolean) => void;
   userId: string;
 }
 
-export const TopicResearch: React.FC<TopicResearchProps> = ({ setTopic, setResearchedContent, setIsLoading, userId }) => {
-  const [topicInput, setTopicInput] = useState<string>("");
+export const TopicResearch: React.FC<TopicResearchProps> = ({ 
+  initialTopic,
+  setTopic, 
+  setResearchedContent, 
+  setIsLoading, 
+  userId 
+}) => {
+  const [topicInput, setTopicInput] = useState<string>(initialTopic || "");
   const { toast } = useToast();
+
+  useEffect(() => {
+    // If the initialTopic prop changes (e.g., from query params), update the input field
+    if (initialTopic !== undefined) {
+      setTopicInput(initialTopic);
+    }
+  }, [initialTopic]);
 
   const buttonMotionProps = {
     whileHover: { scale: 1.05, transition: { type: "spring", stiffness: 400, damping: 10 } },
@@ -37,13 +51,14 @@ export const TopicResearch: React.FC<TopicResearchProps> = ({ setTopic, setResea
     setIsLoading(true);
     setResearchedContent(""); 
     try {
+      // Use topicInput for research, which reflects the current input field value
       const result = await researchTopic({ topic: topicInput, userId: userId }); 
       if (result.error) {
         toast({ variant: "destructive", title: "Research Failed", description: result.error });
-        setTopic(topicInput); 
+        setTopic(topicInput); // Update parent's topic state with what was actually searched
         setResearchedContent(`Error researching "${topicInput}": ${result.error}`);
       } else {
-        setTopic(topicInput);
+        setTopic(topicInput); // Update parent's topic state
         setResearchedContent(result.summary);
       }
     } catch (error: any) {
@@ -53,7 +68,7 @@ export const TopicResearch: React.FC<TopicResearchProps> = ({ setTopic, setResea
         title: "Research Failed",
         description: error.message || "Failed to research topic. Please try again.",
       });
-      setTopic(topicInput);
+      setTopic(topicInput); // Update parent's topic state
       setResearchedContent(`Failed to research "${topicInput}". Please try again.`);
     } finally {
       setIsLoading(false);
@@ -70,7 +85,7 @@ export const TopicResearch: React.FC<TopicResearchProps> = ({ setTopic, setResea
       <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 items-stretch sm:items-center">
         <Input
           type="text"
-          placeholder="e.g., 'I love someone maybe its you, '"
+          placeholder="e.g., 'Latest AI advancements'"
           value={topicInput}
           onChange={(e) => setTopicInput(e.target.value)}
           className="w-full sm:flex-grow bg-slate-700 border-slate-600 placeholder-slate-400 text-white focus:ring-primary focus:border-primary"
