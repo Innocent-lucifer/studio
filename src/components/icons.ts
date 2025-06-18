@@ -5,7 +5,7 @@ import {
   Plus, PlusCircle, RefreshCw, Repeat, Save, Search, Server, Settings, Share2, Shield, Sun, Trash, User,
   UserPlus, Wand2, Workflow, Twitter, Linkedin, Sparkles, CalendarDays, Send, Feather,
   CheckCircle, Lock, X, AlertTriangle, Info, Image as ImageIconLucide, Layers3, Tag, Filter as FilterIcon, Globe2, Flame,
-  Briefcase, Heart, Smile, UploadCloud
+  Briefcase, Heart, Smile, UploadCloud, Eye
 } from 'lucide-react';
 import type { SVGProps } from 'react';
 
@@ -28,6 +28,7 @@ const Icons = {
   copy: Copy,
   creditCard: CreditCard,
   edit: Edit,
+  eye: Eye,
   externalLink: ExternalLink,
   feather: Feather,
   file: File,
@@ -78,4 +79,3 @@ const Icons = {
 
 export { Icons };
 export type { IconComponent };
-

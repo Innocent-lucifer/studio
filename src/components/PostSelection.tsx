@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from "@/hooks/use-toast";
 import { generateEditedPost } from "@/ai/flows/generateEditedPost";
+import { saveDraft } from "@/lib/firebaseUserActions";
 import {
   Dialog,
   DialogContent,
@@ -26,7 +27,7 @@ interface PostSelectionProps {
   twitterPosts: string[];
   linkedinPosts: string[];
   topic: string;
-  userId: string;
+  userId?: string; // Made optional for guest users or when auth is loading
   onUpdatePost: (type: 'twitter' | 'linkedin', index: number, newText: string) => void;
 }
 
@@ -44,6 +45,7 @@ export const PostSelection: React.FC<PostSelectionProps> = ({
   const [isAiEditingModalOpen, setIsAiEditingModalOpen] = useState(false);
   const [aiEditInstruction, setAiEditInstruction] = useState("");
   const [isAiSubmitting, setIsAiSubmitting] = useState(false);
+  const [isSavingDraft, setIsSavingDraft] = useState<{ type: 'twitter' | 'linkedin', index: number } | null>(null);
   
   const { toast } = useToast();
 
@@ -65,6 +67,10 @@ export const PostSelection: React.FC<PostSelectionProps> = ({
   };
 
   const handleEditPost = (postText: string, index: number, type: 'twitter' | 'linkedin') => {
+    if (!userId) {
+      toast({ variant: "destructive", title: "Login Required", description: "You need to be logged in to edit posts." });
+      return;
+    }
     setEditingPost({ type, index, originalTextWhileEditing: postText, currentText: postText });
   };
   
@@ -114,10 +120,10 @@ export const PostSelection: React.FC<PostSelectionProps> = ({
   };
 
   const handleAiEditSubmit = async () => {
-    if (!editingPost || !aiEditInstruction.trim()) {
+    if (!editingPost || !aiEditInstruction.trim() || !userId) {
       toast({
         title: "Missing Information",
-        description: "Please ensure a post is being edited and provide instructions for the AI.",
+        description: "Please ensure a post is being edited, you are logged in, and provide instructions for the AI.",
         variant: "destructive",
       });
       return;
@@ -156,6 +162,26 @@ export const PostSelection: React.FC<PostSelectionProps> = ({
       setIsAiSubmitting(false);
     }
   };
+
+  const handleSaveDraft = async (postContent: string, postTopic: string, platform: 'twitter' | 'linkedin', index: number) => {
+    if (!userId) {
+      toast({ variant: "destructive", title: "Login Required", description: "You need to be logged in to save drafts." });
+      return;
+    }
+    setIsSavingDraft({ type: platform, index });
+    const draftData = {
+      content: postContent,
+      platform: platform,
+      topic: postTopic,
+    };
+    const savedDraft = await saveDraft(userId, draftData);
+    if (savedDraft) {
+      toast({ title: "Draft Saved!", description: `${platform.charAt(0).toUpperCase() + platform.slice(1)} post draft has been saved.` });
+    } else {
+      toast({ variant: "destructive", title: "Save Failed", description: "Could not save the draft. Please try again." });
+    }
+    setIsSavingDraft(null);
+  };
   
   const itemVariants = {
     hidden: { opacity: 0, y: 20 },
@@ -185,11 +211,31 @@ export const PostSelection: React.FC<PostSelectionProps> = ({
                   checked={selectedTwitterPosts.includes(post)}
                   onCheckedChange={() => handlePostSelection(post, 'twitter')}
                   className="mt-1 border-slate-500 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                  disabled={!userId}
                 />
                 <Label htmlFor={`twitter-cb-${index}`} className="flex-grow text-sm text-slate-200 cursor-pointer">{post}</Label>
-                <Button variant="ghost" size="sm" onClick={() => handleEditPost(post, index, 'twitter')} className="text-primary/80 hover:text-primary h-auto p-1">
-                  <Icons.edit className="h-4 w-4"/>
-                </Button>
+                <div className="flex flex-col space-y-1 sm:flex-row sm:space-y-0 sm:space-x-1">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => handleEditPost(post, index, 'twitter')} 
+                    className="text-primary/80 hover:text-primary h-auto p-1 disabled:opacity-50"
+                    disabled={!userId || isSavingDraft?.type === 'twitter' && isSavingDraft?.index === index}
+                    title="Edit Post"
+                  >
+                    <Icons.edit className="h-4 w-4"/>
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => handleSaveDraft(post, topic, 'twitter', index)} 
+                    className="text-green-400/80 hover:text-green-400 h-auto p-1 disabled:opacity-50"
+                    disabled={!userId || (isSavingDraft?.type === 'twitter' && isSavingDraft?.index === index)}
+                    title="Save as Draft"
+                  >
+                    {isSavingDraft?.type === 'twitter' && isSavingDraft?.index === index ? <Icons.loader className="h-4 w-4 animate-spin" /> : <Icons.save className="h-4 w-4"/>}
+                  </Button>
+                </div>
               </div>
             </motion.div>
           ))}
@@ -213,11 +259,31 @@ export const PostSelection: React.FC<PostSelectionProps> = ({
                   checked={selectedLinkedInPosts.includes(post)}
                   onCheckedChange={() => handlePostSelection(post, 'linkedin')}
                    className="mt-1 border-slate-500 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                   disabled={!userId}
                 />
                 <Label htmlFor={`linkedin-cb-${index}`} className="flex-grow text-sm text-slate-200 cursor-pointer whitespace-pre-wrap">{post}</Label>
-                 <Button variant="ghost" size="sm" onClick={() => handleEditPost(post, index, 'linkedin')} className="text-primary/80 hover:text-primary h-auto p-1">
+                <div className="flex flex-col space-y-1 sm:flex-row sm:space-y-0 sm:space-x-1">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => handleEditPost(post, index, 'linkedin')} 
+                    className="text-primary/80 hover:text-primary h-auto p-1 disabled:opacity-50"
+                    disabled={!userId || isSavingDraft?.type === 'linkedin' && isSavingDraft?.index === index}
+                    title="Edit Post"
+                  >
                    <Icons.edit className="h-4 w-4"/>
-                 </Button>
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => handleSaveDraft(post, topic, 'linkedin', index)} 
+                    className="text-green-400/80 hover:text-green-400 h-auto p-1 disabled:opacity-50"
+                    disabled={!userId || (isSavingDraft?.type === 'linkedin' && isSavingDraft?.index === index)}
+                    title="Save as Draft"
+                  >
+                     {isSavingDraft?.type === 'linkedin' && isSavingDraft?.index === index ? <Icons.loader className="h-4 w-4 animate-spin" /> : <Icons.save className="h-4 w-4"/>}
+                  </Button>
+                </div>
               </div>
             </motion.div>
           ))}
@@ -286,7 +352,7 @@ export const PostSelection: React.FC<PostSelectionProps> = ({
             <DialogClose asChild>
               <Button variant="outline" className="border-slate-600 text-slate-300 hover:bg-slate-700">Cancel</Button>
             </DialogClose>
-            <Button onClick={handleAiEditSubmit} disabled={isAiSubmitting || !aiEditInstruction.trim()} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+            <Button onClick={handleAiEditSubmit} disabled={isAiSubmitting || !aiEditInstruction.trim() || !userId} className="bg-primary hover:bg-primary/90 text-primary-foreground">
               {isAiSubmitting ? <Icons.loader className="animate-spin mr-2 h-4 w-4" /> : <Icons.wand className="mr-2 h-4 w-4" />}
               Apply AI Edit
             </Button>
@@ -296,7 +362,7 @@ export const PostSelection: React.FC<PostSelectionProps> = ({
 
       <motion.div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center" variants={itemVariants}>
         <motion.div {...buttonMotionProps} className="w-full sm:w-auto">
-          <Button onClick={handleCopySelectedPosts} disabled={selectedTwitterPosts.length === 0 && selectedLinkedInPosts.length === 0} className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white py-2.5 px-6">
+          <Button onClick={handleCopySelectedPosts} disabled={(selectedTwitterPosts.length === 0 && selectedLinkedInPosts.length === 0) || !userId} className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white py-2.5 px-6">
             <Icons.copy className="mr-2 h-5 w-5" /> Copy Selected Posts
           </Button>
         </motion.div>
@@ -307,6 +373,7 @@ export const PostSelection: React.FC<PostSelectionProps> = ({
             }} 
             variant="outline" 
             className="w-full sm:w-auto border-primary text-primary hover:bg-primary/10 py-2.5 px-6"
+            disabled={!userId}
           >
             <Icons.calendar className="mr-2 h-5 w-5" /> Schedule Selected
           </Button>
@@ -318,13 +385,14 @@ export const PostSelection: React.FC<PostSelectionProps> = ({
             }} 
             variant="outline" 
             className="w-full sm:w-auto border-blue-500 text-blue-400 hover:bg-blue-500/10 py-2.5 px-6"
+            disabled={!userId}
           >
             <Icons.send className="mr-2 h-5 w-5" /> Post Selected Now
           </Button>
         </motion.div>
       </motion.div>
        <p className="mt-4 text-xs text-slate-500 text-center">
-        Select posts to copy, schedule, or post instantly. Edit posts by clicking the <Icons.edit className="inline h-3 w-3"/> icon.
+        {userId ? "Select posts to copy, schedule, or post instantly. Edit or save drafts using the icons." : "Log in to interact with posts."}
       </p>
     </motion.div>
   );

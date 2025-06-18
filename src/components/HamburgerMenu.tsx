@@ -10,6 +10,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu";
 import { Icons } from "@/components/icons";
 import { useToast } from "@/hooks/use-toast";
@@ -42,7 +43,7 @@ export function HamburgerMenu() {
       </DropdownMenuTrigger>
       <DropdownMenuContent 
         align="end" 
-        className="w-56 md:w-80 lg:w-96 bg-slate-800 border-slate-700 text-slate-200 md:max-h-[70vh] md:overflow-y-auto md:p-2"
+        className="w-60 md:w-80 bg-slate-800 border-slate-700 text-slate-200 md:max-h-[80vh] md:overflow-y-auto md:p-2"
       >
         <DropdownMenuLabel className="text-slate-400 text-sm md:text-base md:px-3 md:py-2">Navigation</DropdownMenuLabel>
         <DropdownMenuSeparator className="bg-slate-700 my-1 md:my-2" />
@@ -82,10 +83,18 @@ export function HamburgerMenu() {
         <DropdownMenuSeparator className="bg-slate-700 my-1 md:my-2" />
         {user && (
           <>
-            <DropdownMenuItem onSelect={() => handleMenuItemClick("Credits & Plan")} className="hover:bg-slate-700 focus:bg-slate-700 text-sm md:text-base md:px-3 md:py-2.5">
-              <Icons.creditCard className="mr-2 h-4 w-4 md:h-5 md:w-5 text-primary" />
-              <span>Credits & Plan</span>
-            </DropdownMenuItem>
+            <Link href="/account" passHref>
+              <DropdownMenuItem className="hover:bg-slate-700 focus:bg-slate-700 cursor-pointer text-sm md:text-base md:px-3 md:py-2.5">
+                <Icons.user className="mr-2 h-4 w-4 md:h-5 md:w-5 text-primary" />
+                <span>My Account</span>
+              </DropdownMenuItem>
+            </Link>
+            <DropdownMenuGroup>
+                <DropdownMenuItem className="text-slate-400 text-xs md:text-sm md:px-3 md:py-1.5 pointer-events-none">
+                    <Icons.creditCard className="mr-2 h-4 w-4 md:h-5 md:w-5 text-slate-500" />
+                    <span>Credits: N/A (Coming Soon)</span>
+                </DropdownMenuItem>
+            </DropdownMenuGroup>
             <DropdownMenuItem onSelect={() => handleMenuItemClick("Settings")} className="hover:bg-slate-700 focus:bg-slate-700 text-sm md:text-base md:px-3 md:py-2.5">
               <Icons.settings className="mr-2 h-4 w-4 md:h-5 md:w-5 text-primary" />
               <span>Settings</span>

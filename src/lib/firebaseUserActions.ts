@@ -6,17 +6,20 @@ import {
   setDoc,
   getDoc,
   updateDoc,
-  increment,
+  // increment, // Temporarily disabled
   arrayUnion,
   serverTimestamp,
   Timestamp,
   collection,
   query,
-  where,
+  // where, // Temporarily disabled for credit/plan features
   getDocs,
-  writeBatch,
+  // writeBatch, // Temporarily disabled
   DocumentReference,
-  DocumentData,
+  // DocumentData, // Temporarily disabled
+  deleteDoc,
+  addDoc,
+  orderBy,
 } from 'firebase/firestore';
 import { User as FirebaseAuthUser } from 'firebase/auth';
 
@@ -31,14 +34,14 @@ export interface UserData {
   // lastLogin?: Timestamp; // Temporarily disabled
   // lastFreeCreditResetTimestamp?: Timestamp; // Temporarily disabled
   // monthlyCreditsProvisionedTimestamp?: Timestamp; // Temporarily disabled
-  // creditHistory?: CreditTransaction[]; // Temporarily disabled
+  // creditHistory?: CreditTransaction[]; // Temporarily disabled - Will be re-enabled with credit system
   createdAt: Timestamp;
   referralCode?: string; // For referring others
   referredBy?: string; // UID of the user who referred this user
   referralsMade?: number; // Count of successful referrals
 }
 
-/* // Temporarily disabled
+/* // Temporarily disabled - Will be re-enabled with credit system
 export interface CreditTransaction {
   id: string;
   type: CreditTransactionType;
@@ -81,6 +84,17 @@ export const CREDIT_COSTS = {
 };
 */
 
+export interface Draft {
+  id?: string; // Firestore ID, optional when creating
+  userId: string;
+  platform: 'twitter' | 'linkedin';
+  content: string;
+  topic?: string; // Optional topic context for the draft
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+
 const generateReferralCode = (length = 8): string => {
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   let result = '';
@@ -92,7 +106,7 @@ const generateReferralCode = (length = 8): string => {
 
 export const createUserDocument = async (
   user: FirebaseAuthUser,
-  referredByCode?: string
+  referredByCode?: string // Temporarily not used for credit logic
 ): Promise<UserData | null> => {
   if (!user) return null;
   const userRef = doc(db, 'users', user.uid) as DocumentReference<UserData>;
@@ -103,57 +117,23 @@ export const createUserDocument = async (
       uid: user.uid,
       email: user.email,
       displayName: user.displayName || user.email?.split('@')[0] || 'SageUser',
-      // credits: CREDIT_COSTS.INITIAL_SIGNUP_CREDITS, // Temporarily disabled
-      // plan: 'free', // Temporarily disabled
       createdAt: serverTimestamp() as Timestamp,
-      // lastLogin: serverTimestamp() as Timestamp, // Temporarily disabled
-      // lastFreeCreditResetTimestamp: serverTimestamp() as Timestamp, // Temporarily disabled
       referralCode: generateReferralCode(),
       referralsMade: 0,
     };
-/* // Temporarily disabled
-    // Handle referral if code provided
-    if (referredByCode) {
-      const q = query(collection(db, 'users'), where('referralCode', '==', referredByCode.toUpperCase()));
-      const referrerSnap = await getDocs(q);
-      if (!referrerSnap.empty) {
-        const referrerDoc = referrerSnap.docs[0];
-        const referrerId = referrerDoc.id;
-        userData.referredBy = referrerId;
-        userData.credits = (userData.credits || 0) + CREDIT_COSTS.REFERRAL_BONUS_CREDITS; // Bonus for new user
 
-        // Award bonus to referrer (handled in a transaction for safety if needed)
-        const referrerUserRef = doc(db, 'users', referrerId) as DocumentReference<UserData>;
-        await updateDoc(referrerUserRef, {
-          credits: increment(CREDIT_COSTS.REFERRAL_BONUS_CREDITS),
-          referralsMade: increment(1),
-          // creditHistory: arrayUnion(
-          //   createTransactionObject(
-          //     CREDIT_COSTS.REFERRAL_BONUS_CREDITS,
-          //     CreditTransactionType.REFERRAL_BONUS_AWARDED,
-          //     `Referral bonus for ${user.email || user.uid}`
-          //   )
-          // ),
-        });
-        console.log(`Referral bonus awarded to ${referrerId} for referring ${user.uid}`);
-      } else {
-        console.warn(`Referral code ${referredByCode} not found.`);
-      }
+    if (referredByCode) {
+        // Placeholder for future logic when credits are re-enabled
+        // For now, just store referredBy if applicable
+        // const q = query(collection(db, 'users'), where('referralCode', '==', referredByCode.toUpperCase()));
+        // const referrerSnap = await getDocs(q);
+        // if (!referrerSnap.empty) {
+        //   const referrerDoc = referrerSnap.docs[0];
+        //   userData.referredBy = referrerDoc.id;
+        // }
+        console.log(`User referred by code: ${referredByCode} - referral logic temporarily adjusted.`);
     }
 
-    // userData.creditHistory = [
-    //   createTransactionObject(
-    //     CREDIT_COSTS.INITIAL_SIGNUP_CREDITS,
-    //     CreditTransactionType.INITIAL_SIGNUP,
-    //     'Initial signup credits'
-    //   ),
-    //   ...(userData.referredBy ? [createTransactionObject(
-    //       CREDIT_COSTS.REFERRAL_BONUS_CREDITS,
-    //       CreditTransactionType.REFERRAL_BONUS_RECEIVED,
-    //       `Bonus for being referred by ${userData.referredBy}`
-    //     )] : [])
-    // ];
-*/
     try {
       await setDoc(userRef, userData);
       console.log(`User document created for ${user.uid} with initial data.`);
@@ -163,8 +143,8 @@ export const createUserDocument = async (
       return null;
     }
   } else {
-    // User document exists, update lastLogin
-    // try { // Temporarily disabled
+    // User document exists, could update lastLogin if that field is re-enabled
+    // try {
     //   await updateDoc(userRef, { lastLogin: serverTimestamp() as Timestamp });
     // } catch (error) {
     //   console.error('Error updating lastLogin:', error);
@@ -182,10 +162,9 @@ export const getUserData = async (uid: string): Promise<UserData | null> => {
       return userSnap.data();
     } else {
       console.warn(`No user data found for UID: ${uid}. Attempting to create one if auth user exists.`);
-      // This case might happen if auth exists but Firestore doc creation failed or was delayed
       const currentUser = auth.currentUser;
       if (currentUser && currentUser.uid === uid) {
-        return await createUserDocument(currentUser); // Try to create it now
+        return await createUserDocument(currentUser);
       }
       return null;
     }
@@ -195,7 +174,8 @@ export const getUserData = async (uid: string): Promise<UserData | null> => {
   }
 };
 
-/* // Temporarily disabled
+/* // Temporarily disabled - Credit system logic will be re-enabled later
+
 const createTransactionObject = (
   amount: number,
   type: CreditTransactionType,
@@ -203,7 +183,7 @@ const createTransactionObject = (
   relatedFlow?: string
 ): CreditTransaction => {
   return {
-    id: doc(collection(db, 'dummy')).id, // Generate a unique ID
+    id: doc(collection(db, 'dummy')).id, 
     amount,
     type,
     reason,
@@ -222,41 +202,36 @@ export const deductCredits = async (
   if (!uid || amountToDeduct <= 0) {
     return { success: false, error: 'Invalid input for credit deduction.' };
   }
-  console.log(`[deductCredits] User: ${uid}, Amount: ${amountToDeduct}, Reason: ${reason}, Type: ${transactionType}`);
-
-  const userRef = doc(db, 'users', uid) as DocumentReference<UserData>;
-
-  try {
-    const userData = await getDoc(userRef);
-    if (!userData.exists()) {
-      return { success: false, error: 'User data not found for credit deduction.' };
-    }
-
-    const currentData = userData.data();
-    if (currentData.plan === 'infinity') {
-      console.log(`[deductCredits] User ${uid} is on infinity plan. No credits deducted for ${reason}.`);
-      // Optionally record the "free" transaction for tracking feature usage
-      // await recordTransaction(uid, 0, transactionType, `Feature use (Infinity Plan): ${reason}`, relatedFlow);
-      return { success: true, newBalance: Infinity }; // Or currentData.credits if you prefer
-    }
-
-    if ((currentData.credits || 0) < amountToDeduct) {
-      return { success: false, error: 'Insufficient credits.' };
-    }
-
-    const newBalance = (currentData.credits || 0) - amountToDeduct;
-    const transaction = createTransactionObject(-amountToDeduct, transactionType, reason, relatedFlow);
-
-    await updateDoc(userRef, {
-      credits: increment(-amountToDeduct),
-      creditHistory: arrayUnion(transaction),
-    });
-    console.log(`[deductCredits] Successfully deducted ${amountToDeduct} credits from user ${uid}. New balance: ${newBalance}`);
-    return { success: true, newBalance };
-  } catch (error: any) {
-    console.error(`Error deducting credits for user ${uid}:`, error);
-    return { success: false, error: error.message || 'Failed to deduct credits due to a server error.' };
-  }
+  console.log(`[Credit System Disabled] Attempted to deduct ${amountToDeduct} credits from ${uid} for ${reason}`);
+  // Bypass actual deduction
+  // const userRef = doc(db, 'users', uid) as DocumentReference<UserData>;
+  // try {
+  //   const userDataSnap = await getDoc(userRef);
+  //   if (!userDataSnap.exists()) {
+  //     return { success: false, error: 'User data not found for credit deduction.' };
+  //   }
+  //   const currentCredits = userDataSnap.data()?.credits || 0;
+  //   const plan = userDataSnap.data()?.plan;
+  //   if (plan === 'infinity') {
+  //       console.log(`User ${uid} on infinity plan. No credits deducted for ${reason}.`);
+  //       return { success: true, newBalance: Infinity };
+  //   }
+  //   if (currentCredits < amountToDeduct) {
+  //     return { success: false, error: 'Insufficient credits.' };
+  //   }
+  //   const newBalance = currentCredits - amountToDeduct;
+  //   const transaction = createTransactionObject(-amountToDeduct, transactionType, reason, relatedFlow);
+  //   await updateDoc(userRef, {
+  //     credits: increment(-amountToDeduct),
+  //     creditHistory: arrayUnion(transaction),
+  //   });
+  //   console.log(`Successfully deducted ${amountToDeduct} credits from user ${uid}. New balance: ${newBalance}`);
+  //   return { success: true, newBalance };
+  // } catch (error: any) {
+  //   console.error(`Error deducting credits for user ${uid}:`, error);
+  //   return { success: false, error: error.message || 'Failed to deduct credits due to a server error.' };
+  // }
+  return { success: true, newBalance: undefined }; // Simulate success
 };
 
 export const addCredits = async (
@@ -269,177 +244,137 @@ export const addCredits = async (
   if (!uid || amountToAdd <= 0) {
     return { success: false, error: 'Invalid input for adding credits.' };
   }
-  console.log(`[addCredits] User: ${uid}, Amount: ${amountToAdd}, Reason: ${reason}, Type: ${transactionType}`);
-
-  const userRef = doc(db, 'users', uid) as DocumentReference<UserData>;
-  try {
-    const userData = await getDoc(userRef);
-    if (!userData.exists()) {
-      // This shouldn't happen if user creation is robust, but handle it.
-      // Potentially create the user here or return error. For now, error.
-      return { success: false, error: 'User data not found for adding credits.' };
-    }
-    
-    const currentCredits = userData.data()?.credits || 0;
-    const newBalance = currentCredits + amountToAdd;
-    const transaction = createTransactionObject(amountToAdd, transactionType, reason, relatedFlow);
-
-    await updateDoc(userRef, {
-      credits: increment(amountToAdd),
-      creditHistory: arrayUnion(transaction),
-    });
-    console.log(`[addCredits] Successfully added ${amountToAdd} credits to user ${uid}. New balance: ${newBalance}`);
-    return { success: true, newBalance };
-  } catch (error: any) {
-    console.error(`Error adding credits for user ${uid}:`, error);
-    return { success: false, error: error.message || 'Failed to add credits due to a server error.' };
-  }
+  console.log(`[Credit System Disabled] Attempted to add ${amountToAdd} credits to ${uid} for ${reason}`);
+  // Bypass actual addition
+  // const userRef = doc(db, 'users', uid) as DocumentReference<UserData>;
+  // try {
+  //   const userDataSnap = await getDoc(userRef);
+  //   if (!userDataSnap.exists()) {
+  //     return { success: false, error: 'User data not found for adding credits.' };
+  //   }
+  //   const currentCredits = userDataSnap.data()?.credits || 0;
+  //   const newBalance = currentCredits + amountToAdd;
+  //   const transaction = createTransactionObject(amountToAdd, transactionType, reason, relatedFlow);
+  //   await updateDoc(userRef, {
+  //     credits: increment(amountToAdd),
+  //     creditHistory: arrayUnion(transaction),
+  //   });
+  //   console.log(`Successfully added ${amountToAdd} credits to user ${uid}. New balance: ${newBalance}`);
+  //   return { success: true, newBalance };
+  // } catch (error: any) {
+  //   console.error(`Error adding credits for user ${uid}:`, error);
+  //   return { success: false, error: error.message || 'Failed to add credits due to a server error.' };
+  // }
+  return { success: true, newBalance: undefined }; // Simulate success
 };
-
 
 export const recordTransaction = async (
   uid: string,
-  amount: number, // Can be positive or negative
+  amount: number,
   type: CreditTransactionType,
   reason: string,
   relatedFlow?: string
 ): Promise<void> => {
   if (!uid) return;
-  const userRef = doc(db, 'users', uid) as DocumentReference<UserData>;
-  const transaction = createTransactionObject(amount, type, reason, relatedFlow);
-  try {
-    await updateDoc(userRef, {
-      creditHistory: arrayUnion(transaction),
-    });
-  } catch (error) {
-    console.error('Error recording transaction:', error);
-  }
+  console.log(`[Credit System Disabled] Attempted to record transaction for ${uid}: ${amount}, ${type}, ${reason}`);
+  // const userRef = doc(db, 'users', uid) as DocumentReference<UserData>;
+  // const transaction = createTransactionObject(amount, type, reason, relatedFlow);
+  // try {
+  //   await updateDoc(userRef, {
+  //     creditHistory: arrayUnion(transaction),
+  //   });
+  // } catch (error) {
+  //   console.error('Error recording transaction:', error);
+  // }
 };
 
-// --- Scheduled Functions (to be triggered by Cloud Scheduler) ---
-
-// Resets credits for all free-tier users if it's been 2 weeks
 export const resetFreeTierCredits = async (): Promise<void> => {
-  console.log('[resetFreeTierCredits] Starting bi-weekly credit reset for free users.');
-  const twoWeeksAgo = Timestamp.fromDate(new Date(Date.now() - 14 * 24 * 60 * 60 * 1000));
-  
-  const q = query(
-    collection(db, 'users') as collectionReference<UserData>,
-    where('plan', '==', 'free'),
-    where('lastFreeCreditResetTimestamp', '<=', twoWeeksAgo)
-  );
-
-  try {
-    const querySnapshot = await getDocs(q);
-    if (querySnapshot.empty) {
-      console.log('[resetFreeTierCredits] No free users found needing a credit reset.');
-      return;
-    }
-
-    const batch = writeBatch(db);
-    querySnapshot.forEach(userDocSnap => {
-      const userRef = doc(db, 'users', userDocSnap.id) as DocumentReference<UserData>;
-      const newTransaction = createTransactionObject(
-        CREDIT_COSTS.FREE_TIER_BIWEEKLY_CREDITS,
-        CreditTransactionType.FREE_TIER_RESET,
-        'Bi-weekly free credits'
-      );
-      batch.update(userRef, {
-        credits: CREDIT_COSTS.FREE_TIER_BIWEEKLY_CREDITS, // Reset to 40, not increment
-        lastFreeCreditResetTimestamp: serverTimestamp() as Timestamp,
-        creditHistory: arrayUnion(newTransaction),
-      });
-    });
-
-    await batch.commit();
-    console.log(`[resetFreeTierCredits] Successfully reset credits for ${querySnapshot.size} free users.`);
-  } catch (error) {
-    console.error('[resetFreeTierCredits] Error resetting free tier credits:', error);
-  }
+  console.log('[Credit System Disabled] resetFreeTierCredits called.');
 };
 
-// Provisions monthly credits for starter pack users and handles expiry
 export const provisionStarterPackMonthlyCredits = async (): Promise<void> => {
-  console.log('[provisionStarterPackMonthlyCredits] Starting monthly credit provisioning for starter pack users.');
-  // This logic assumes a subscription management system (e.g., Stripe) handles actual subscription status.
-  // This function would typically be called after confirming an active subscription renewal.
+  console.log('[Credit System Disabled] provisionStarterPackMonthlyCredits called.');
+};
 
-  const oneMonthAgo = Timestamp.fromDate(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)); // Approx
-
-  const q = query(
-    collection(db, 'users') as collectionReference<UserData>,
-    where('plan', '==', 'starter'),
-    // This condition means they haven't received credits this month yet,
-    // or their last provision was over a month ago.
-    where('monthlyCreditsProvisionedTimestamp', '<=', oneMonthAgo) 
-  );
-  
-  try {
-    const querySnapshot = await getDocs(q);
-     if (querySnapshot.empty) {
-      console.log('[provisionStarterPackMonthlyCredits] No starter pack users found needing credit provisioning.');
-      return;
-    }
-
-    const batch = writeBatch(db);
-    querySnapshot.forEach(userDocSnap => {
-      // IMPORTANT: In a real system, you'd verify their subscription is still active via your payment provider
-      // before provisioning credits. This is a simplified example.
-      const userRef = doc(db, 'users', userDocSnap.id) as DocumentReference<UserData>;
-      const newTransaction = createTransactionObject(
-        CREDIT_COSTS.STARTER_PACK_MONTHLY_CREDITS,
-        CreditTransactionType.STARTER_PACK_MONTHLY,
-        'Monthly starter pack credits'
-      );
-      batch.update(userRef, {
-        credits: CREDIT_COSTS.STARTER_PACK_MONTHLY_CREDITS, // Set to 700 (expires old ones)
-        monthlyCreditsProvisionedTimestamp: serverTimestamp() as Timestamp,
-        creditHistory: arrayUnion(newTransaction),
-      });
-    });
-    
-    await batch.commit();
-    console.log(`[provisionStarterPackMonthlyCredits] Successfully provisioned monthly credits for ${querySnapshot.size} starter pack users.`);
-  } catch (error) {
-    console.error('[provisionStarterPackMonthlyCredits] Error provisioning starter pack credits:', error);
-  }
+export const awardReferralBonuses = async (referrerUid: string, newReferredUserUid: string, newReferredUserEmail?: string | null): Promise<void> => {
+  console.log(`[Credit System Disabled] awardReferralBonuses called for referrer: ${referrerUid}, new user: ${newReferredUserUid}`);
 };
 */
-export const awardReferralBonuses = async (referrerUid: string, newReferredUserUid: string, newReferredUserEmail?: string | null): Promise<void> => {
-  /* // Temporarily disabled
-  console.log(`[awardReferralBonuses] Attempting to award bonuses. Referrer: ${referrerUid}, New User: ${newReferredUserUid}`);
-  if (!referrerUid || !newReferredUserUid) {
-    console.error('[awardReferralBonuses] Missing referrerUID or newReferredUserUID.');
-    return;
+
+// --- Draft Functions ---
+export const saveDraft = async (
+  userId: string,
+  draftData: Omit<Draft, 'id' | 'userId' | 'createdAt' | 'updatedAt'>
+): Promise<Draft | null> => {
+  if (!userId) {
+    console.error("User ID is required to save a draft.");
+    return null;
   }
-
-  const batch = writeBatch(db);
-
-  // Award referrer
-  const referrerRef = doc(db, 'users', referrerUid) as DocumentReference<UserData>;
-  const referrerBonusTransaction = createTransactionObject(
-    CREDIT_COSTS.REFERRAL_BONUS_CREDITS,
-    CreditTransactionType.REFERRAL_BONUS_AWARDED,
-    `Referral bonus for new user: ${newReferredUserEmail || newReferredUserUid}`
-  );
-  batch.update(referrerRef, {
-    credits: increment(CREDIT_COSTS.REFERRAL_BONUS_CREDITS),
-    referralsMade: increment(1),
-    creditHistory: arrayUnion(referrerBonusTransaction)
-  });
-
-  // Award new referred user (they already get initial signup + referral bonus during createUserDocument if referredBy was set)
-  // This function is more about ensuring the referrer gets their part.
-  // If the new user's `referredBy` wasn't set at creation, this could be a place to correct that,
-  // but ideally, `createUserDocument` handles the new user's side of the bonus.
-
   try {
-    await batch.commit();
-    console.log(`[awardReferralBonuses] Successfully awarded referral bonuses. Referrer: ${referrerUid} incremented credits and referralsMade count.`);
+    const draftsCollectionRef = collection(db, 'users', userId, 'drafts');
+    const newDraftData: Omit<Draft, 'id'> = {
+      ...draftData,
+      userId,
+      createdAt: serverTimestamp() as Timestamp,
+      updatedAt: serverTimestamp() as Timestamp,
+    };
+    const docRef = await addDoc(draftsCollectionRef, newDraftData);
+    return { ...newDraftData, id: docRef.id };
   } catch (error) {
-    console.error('[awardReferralBonuses] Error committing batch for referral bonuses:', error);
+    console.error('Error saving draft:', error);
+    return null;
   }
-  */
 };
 
-    
+export const getDrafts = async (userId: string): Promise<Draft[]> => {
+  if (!userId) {
+    console.error("User ID is required to fetch drafts.");
+    return [];
+  }
+  try {
+    const draftsCollectionRef = collection(db, 'users', userId, 'drafts');
+    const q = query(draftsCollectionRef, orderBy('updatedAt', 'desc'));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() } as Draft));
+  } catch (error) {
+    console.error('Error fetching drafts:', error);
+    return [];
+  }
+};
+
+export const updateDraftContent = async (
+  userId: string,
+  draftId: string,
+  newContent: string
+): Promise<boolean> => {
+  if (!userId || !draftId) {
+    console.error("User ID and Draft ID are required to update a draft.");
+    return false;
+  }
+  try {
+    const draftRef = doc(db, 'users', userId, 'drafts', draftId);
+    await updateDoc(draftRef, {
+      content: newContent,
+      updatedAt: serverTimestamp() as Timestamp,
+    });
+    return true;
+  } catch (error) {
+    console.error('Error updating draft:', error);
+    return false;
+  }
+};
+
+export const deleteDraft = async (userId: string, draftId: string): Promise<boolean> => {
+  if (!userId || !draftId) {
+    console.error("User ID and Draft ID are required to delete a draft.");
+    return false;
+  }
+  try {
+    const draftRef = doc(db, 'users', userId, 'drafts', draftId);
+    await deleteDoc(draftRef);
+    return true;
+  } catch (error) {
+    console.error('Error deleting draft:', error);
+    return false;
+  }
+};
