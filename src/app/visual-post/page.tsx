@@ -13,10 +13,20 @@ import { AppLogo } from '@/components/AppLogo';
 import { HamburgerMenu } from '@/components/HamburgerMenu';
 import Link from 'next/link';
 import { generatePostFromImage, GeneratePostFromImageInput } from '@/ai/flows/generate-post-from-image';
+import { generateEditedPost, GenerateEditedPostInput } from '@/ai/flows/generateEditedPost';
 import { Separator } from '@/components/ui/separator';
 import { Label } from '@/components/ui/label';
 import { useAuth } from "@/context/AuthContext";
 import { saveDraft } from '@/lib/firebaseUserActions';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
 
 type Tone = 'default' | 'romantic' | 'funny' | 'professional' | 'mysterious';
 
@@ -50,6 +60,15 @@ export default function VisualPostPage() {
 
   const [isClient, setIsClient] = useState(false);
   const [initialStorageCheckDone, setInitialStorageCheckDone] = useState(false);
+
+  // State for editing
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingContent, setEditingContent] = useState(''); 
+  const [originalContentBeforeEdit, setOriginalContentBeforeEdit] = useState('');
+  const [isAiEditModalOpen, setIsAiEditModalOpen] = useState(false);
+  const [aiEditInstruction, setAiEditInstruction] = useState('');
+  const [isAiSubmitting, setIsAiSubmitting] = useState(false);
+
 
   useEffect(() => {
     setIsClient(true);
@@ -152,6 +171,63 @@ export default function VisualPostPage() {
         });
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  const handleOpenEditModal = () => {
+    if (!userIdToPass) {
+      toast({ variant: "destructive", title: "Login Required", description: "Please log in to edit posts." });
+      return;
+    }
+    if (!generatedPost) {
+      toast({ variant: "destructive", title: "No Post", description: "No post content to edit." });
+      return;
+    }
+    setOriginalContentBeforeEdit(generatedPost);
+    setEditingContent(generatedPost);
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveManualEdit = () => {
+    setGeneratedPost(editingContent);
+    setIsEditModalOpen(false);
+    toast({ title: "Post Updated", description: "Your changes have been applied." });
+  };
+
+  const handleOpenAiEditInstructionModal = () => {
+    // EditingContent should already be set from the main edit modal
+    setIsAiEditModalOpen(true);
+  };
+
+  const handleAiEditSubmit = async () => {
+    if (!aiEditInstruction.trim() || !userIdToPass) {
+      toast({ title: "Missing Information", description: "Please provide instructions for the AI and ensure you are logged in.", variant: "destructive" });
+      return;
+    }
+    setIsAiSubmitting(true);
+    try {
+      const result = await generateEditedPost({
+        originalPost: editingContent, // Use the content currently in the editor
+        editInstruction: aiEditInstruction,
+        topic: userText || "Post from image",
+        platform: 'twitter', // Default to 'twitter' for versatility
+        userId: userIdToPass,
+      });
+
+      if (result.error) {
+        toast({ variant: "destructive", title: "AI Edit Error", description: result.error });
+      } else if (result.editedPost) {
+        setEditingContent(result.editedPost); // Update the content in the main edit modal's textarea
+        toast({ title: "AI Edit Applied", description: "The AI has revised the post in the editor. Review and save." });
+        setIsAiEditModalOpen(false); // Close AI instruction modal
+        setAiEditInstruction(""); // Clear instruction
+      } else {
+        toast({ variant: "destructive", title: "AI Edit Failed", description: "AI did not return an edited post." });
+      }
+    } catch (error: any) {
+      toast({ title: "AI Edit Exception", description: error.message || "Could not apply AI changes.", variant: "destructive" });
+    } finally {
+      setIsAiSubmitting(false);
     }
   };
 
@@ -267,7 +343,9 @@ export default function VisualPostPage() {
       >
         <main className="container mx-auto w-full max-w-xl">
           {commonHeader}
-          <Card className="bg-slate-800/60 backdrop-blur-md border border-slate-700 shadow-2xl rounded-2xl p-8 sm:p-12 text-center hover:shadow-primary/20 transition-shadow duration-300">
+          <Card 
+            className="bg-slate-800/60 backdrop-blur-md border border-slate-700 shadow-2xl rounded-2xl p-8 sm:p-12 text-center hover:shadow-primary/20 transition-shadow duration-300"
+          >
             <CardHeader className="p-0 mb-8">
               <Icons.image className="h-20 w-20 sm:h-24 sm:w-24 text-primary mx-auto mb-6" />
               <CardTitle className="text-3xl sm:text-4xl font-semibold text-primary">Create Post from Image</CardTitle>
@@ -439,13 +517,20 @@ export default function VisualPostPage() {
               </motion.div>
 
               {!isLoading && generatedPost && (
-                <motion.div className="flex flex-col sm:flex-row gap-3 mt-8" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{delay: 0.4}}>
+                <motion.div className="flex flex-wrap gap-3 mt-8" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{delay: 0.4}}>
+                  <Button 
+                    onClick={handleOpenEditModal}
+                    disabled={!userIdToPass}
+                    className="w-full sm:w-auto bg-orange-500 hover:bg-orange-600 text-white py-2.5 px-6 rounded-lg shadow-md hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                     <Icons.edit className="mr-2 h-5 w-5" /> Edit Post
+                  </Button>
                   <Button 
                     onClick={handleSaveDraft} 
                     disabled={isSavingDraft || !userIdToPass}
                     className="w-full sm:w-auto bg-teal-600 hover:bg-teal-700 text-white py-2.5 px-6 rounded-lg shadow-md hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
                   >
-                    {isSavingDraft ? <Icons.loader className="animate-spin mr-2 h-5 w-5" /> : <Icons.save className="mr-2 h-5 w-5" />}
+                    {isSavingDraft ? <Icons.loader className="animate-pulse mr-2 h-5 w-5" /> : <Icons.save className="mr-2 h-5 w-5" />}
                     Save Draft
                   </Button>
                   <Button 
@@ -471,6 +556,64 @@ export default function VisualPostPage() {
             </CardContent>
           </Card>
         </main>
+
+        {/* Main Edit Modal */}
+        <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+            <DialogContent className="bg-slate-800 border-slate-700 text-white sm:max-w-lg">
+                <DialogHeader>
+                    <DialogTitle className="text-primary">Edit Generated Post</DialogTitle>
+                    <DialogDescription className="text-slate-400">
+                        Manually refine the post or use AI to make further changes.
+                    </DialogDescription>
+                </DialogHeader>
+                <Textarea
+                    value={editingContent}
+                    onChange={(e) => setEditingContent(e.target.value)}
+                    rows={10}
+                    className="bg-slate-700 border-slate-600 text-slate-100 focus:ring-primary focus:border-primary text-sm mt-2"
+                />
+                <DialogFooter className="mt-4 sm:justify-between">
+                     <Button variant="outline" onClick={() => { setIsEditModalOpen(false); setEditingContent(originalContentBeforeEdit); }} className="border-slate-600 text-slate-300 hover:bg-slate-700">
+                        Cancel
+                    </Button>
+                    <div className="flex flex-col sm:flex-row gap-2 mt-2 sm:mt-0">
+                        <Button onClick={handleOpenAiEditInstructionModal} className="bg-purple-600 hover:bg-purple-700 text-white">
+                            <Icons.sparkles className="mr-2 h-4 w-4" /> Edit with AI
+                        </Button>
+                        <Button onClick={handleSaveManualEdit} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+                             <Icons.save className="mr-2 h-4 w-4" /> Save Changes
+                        </Button>
+                    </div>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+
+        {/* Nested AI Edit Instruction Modal */}
+        <Dialog open={isAiEditModalOpen} onOpenChange={setIsAiEditModalOpen}>
+            <DialogContent className="bg-slate-800 border-slate-700 text-white sm:max-w-md">
+                <DialogHeader>
+                    <DialogTitle className="text-primary">AI-Powered Editing</DialogTitle>
+                    <DialogDescription className="text-slate-400">
+                        Tell the AI how you want to change the current post content.
+                    </DialogDescription>
+                </DialogHeader>
+                <Textarea
+                    placeholder="e.g., Make it more professional and add relevant hashtags"
+                    value={aiEditInstruction}
+                    onChange={(e) => setAiEditInstruction(e.target.value)}
+                    rows={3}
+                    className="bg-slate-700 border-slate-600 text-slate-100 focus:ring-primary focus:border-primary text-sm mt-2"
+                />
+                <DialogFooter className="mt-4">
+                    <Button variant="outline" onClick={() => setIsAiEditModalOpen(false)} className="border-slate-600 text-slate-300 hover:bg-slate-700">Cancel</Button>
+                    <Button onClick={handleAiEditSubmit} disabled={isAiSubmitting || !aiEditInstruction.trim()} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+                        {isAiSubmitting ? <Icons.loader className="animate-spin mr-2 h-4 w-4" /> : <Icons.wand className="mr-2 h-4 w-4" />}
+                        Apply AI Edit
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+
         {commonFooter}
       </motion.div>
     );
