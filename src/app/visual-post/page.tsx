@@ -36,7 +36,7 @@ const debounce = <F extends (...args: any[]) => any>(func: F, delay: number) => 
 
 export default function VisualPostPage() {
   const { user } = useAuth();
-  const userIdToPass = user?.uid; // Will be undefined if user is not logged in
+  const userIdToPass = user?.uid; 
 
   const [imageDataUri, setImageDataUri] = useState<string | null>(null);
   const [userText, setUserText] = useState<string>('');
@@ -100,10 +100,7 @@ export default function VisualPostPage() {
         userId: userIdToPass,
       });
     } else if (imageDataUri && isClient && !userIdToPass) {
-      // Handle case where image is uploaded but user is not logged in
-      // For now, we might just show the image and let them interact if they log in later
-      // Or display a message "Log in to generate post"
-      setGeneratedPost(''); // Clear any previous post
+      setGeneratedPost(''); 
       setError(null);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -137,7 +134,6 @@ export default function VisualPostPage() {
         const result = reader.result;
         if (typeof result === 'string') {
           setGeneratedPost('');
-          // setUserText('');  // Keep user text if they change image
           setError(null);
           setImageDataUri(result); 
         } else {
@@ -181,18 +177,23 @@ export default function VisualPostPage() {
       return;
     }
     setIsSavingDraft(true);
-    const draftData = {
-      content: generatedPost,
-      platform: 'visual' as 'twitter' | 'linkedin' | 'visual', // Using 'visual' as a distinct platform type
-      topic: userText.trim() || "Image Post", // Use user context or a default topic
-    };
-    const savedDraft = await saveDraft(userIdToPass, draftData);
-    if (savedDraft) {
-      toast({ title: "Draft Saved!", description: "Your image-inspired post has been saved." });
-    } else {
-      toast({ variant: "destructive", title: "Save Failed", description: "Could not save the draft. Please try again." });
+    try {
+      const draftData = {
+        content: generatedPost,
+        platform: 'visual' as 'twitter' | 'linkedin' | 'visual', 
+        topic: userText.trim() || "Image Post", 
+      };
+      const savedDraft = await saveDraft(userIdToPass, draftData);
+      if (savedDraft) {
+        toast({ title: "Draft Saved!", description: "Your image-inspired post has been saved." });
+      } else {
+        toast({ variant: "destructive", title: "Save Failed", description: "Could not save the draft. Please try again." });
+      }
+    } catch (error) {
+       toast({ variant: "destructive", title: "Save Error", description: "An unexpected error occurred while saving." });
+    } finally {
+      setIsSavingDraft(false);
     }
-    setIsSavingDraft(false);
   };
 
 
@@ -377,7 +378,7 @@ export default function VisualPostPage() {
                       key={value}
                       onClick={() => setSelectedTone(value)}
                       variant={selectedTone === value ? "default" : "outline"}
-                      disabled={!userIdToPass && value !== 'default'} // Allow default tone for guests if post gen is allowed
+                      disabled={!userIdToPass && value !== 'default'} 
                       className={`
                         ${selectedTone === value
                           ? 'bg-purple-600 hover:bg-purple-700 text-white border-purple-600'
