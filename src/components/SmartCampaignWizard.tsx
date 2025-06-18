@@ -38,11 +38,37 @@ const stepConfig: Record<WizardStep, { title: string; icon: keyof typeof Icons; 
   complete: { title: "Campaign Ready!", icon: "checkCircle", progress: 100, description: "Your smart campaign has been generated." },
 };
 
-const cardVariants = {
-  hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
-  exit: { opacity: 0, y: -30, transition: { duration: 0.3, ease: "easeIn" } }
+const cardMotionProps = {
+  initial: { opacity: 0, y: 20, scale: 0.98 },
+  animate: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.4, ease: "easeOut" } },
+  exit: { opacity: 0, y: -20, scale: 0.98, transition: { duration: 0.3, ease: "easeIn" } },
+  whileHover: { scale: 1.01, transition: { type: "spring", stiffness: 300, damping: 10 } },
 };
+
+const listItemVariants = {
+  hidden: { opacity: 0, y: 15 },
+  visible: (i:number) => ({
+    opacity: 1,
+    y: 0,
+    transition: {
+      delay: i * 0.07,
+      duration: 0.3,
+      ease: "easeOut"
+    },
+  }),
+};
+
+const listContainerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.2,
+    },
+  },
+};
+
 
 const SmartCampaignWizardInternal: React.FC = () => {
   const searchParams = useSearchParams();
@@ -293,7 +319,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
     setIsAiSubmitting(true);
     try {
       const input: GenerateEditedPostInput = {
-        originalPost: editingPost.currentText, // Use currentText from modal for chained AI edits
+        originalPost: editingPost.currentText, 
         editInstruction: aiEditInstruction,
         topic: campaignTopic, 
         platform: editingPost.platform,
@@ -304,9 +330,9 @@ const SmartCampaignWizardInternal: React.FC = () => {
       if (result.error) {
         toast({ variant: "destructive", title: "AI Edit Error", description: result.error });
       } else if (result.editedPost) {
-        setEditingPost(prev => prev ? { ...prev, currentText: result.editedPost! } : null); // Update currentText in the modal
+        setEditingPost(prev => prev ? { ...prev, currentText: result.editedPost! } : null); 
         toast({ title: "AI Edit Applied", description: "The AI has revised the post in the editor. Review and save." });
-        setIsAiEditModalOpen(false); // Close AI instruction modal
+        setIsAiEditModalOpen(false); 
         setAiEditInstruction("");
       } else {
          toast({ variant: "destructive", title: "AI Edit Failed", description: "AI did not return an edited post." });
@@ -369,10 +395,10 @@ const SmartCampaignWizardInternal: React.FC = () => {
     toast({ title: "Campaign Copied!", description: "Full campaign content copied to clipboard." });
   };
 
-  const renderLoadingState = () => (
+  const renderLoadingState = (message?: string) => (
     <div className="flex flex-col items-center justify-center p-10 bg-slate-800/50 rounded-xl shadow-xl min-h-[300px]">
       <Icons.loader className="h-12 w-12 animate-spin text-primary mb-4" />
-      <p className="text-lg text-slate-300">{loadingMessage || "Loading..."}</p>
+      <p className="text-lg text-slate-300">{message || loadingMessage || "Loading..."}</p>
     </div>
   );
 
@@ -386,7 +412,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
     switch (currentStep) {
       case 'initial_error':
           return (
-            <motion.div key="initial-error" initial="hidden" animate="visible" exit="exit" variants={cardVariants} className="text-center space-y-4 py-8 min-h-[300px] flex flex-col justify-center items-center">
+            <motion.div key="initial-error" {...cardMotionProps} className="text-center space-y-4 py-8 min-h-[300px] flex flex-col justify-center items-center">
               <Icons.alertTriangle className="h-16 w-16 text-yellow-400 mx-auto" />
               <h3 className="text-2xl font-semibold text-slate-100">{stepConfig.initial_error.title}</h3>
               <p className="text-slate-300 max-w-md mx-auto">
@@ -407,7 +433,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
       
       case 'topic_research':
         return (
-          <motion.div key="topic-research" initial="hidden" animate="visible" exit="exit" variants={cardVariants} className="space-y-6 min-h-[300px]">
+          <motion.div key="topic-research" {...cardMotionProps} className="space-y-6 min-h-[300px]">
             <h3 className="text-xl font-medium text-slate-200">{stepConfig.topic_research.description}</h3>
              <div className="flex flex-col sm:flex-row gap-2">
               <Input
@@ -437,35 +463,35 @@ const SmartCampaignWizardInternal: React.FC = () => {
 
       case 'angles':
           return (
-            <motion.div key="angles" initial="hidden" animate="visible" exit="exit" variants={cardVariants} className="space-y-6 min-h-[350px]">
+            <motion.div key="angles" {...cardMotionProps} className="space-y-6 min-h-[350px]">
               <h3 className="text-xl font-medium text-slate-200">{stepConfig.angles.description}</h3>
               <p className="text-slate-400">The AI will generate interconnected content based on your selection for: <span className="font-semibold text-purple-300">{campaignTopic}</span></p>
               {isLoading && loadingMessage.includes("Brainstorming") ? (
-                 <div className="flex flex-col items-center justify-center h-[250px]">
-                    <Icons.loader className="h-10 w-10 animate-spin text-primary mb-3" />
-                    <p className="text-slate-300">{loadingMessage}</p>
-                 </div>
+                 renderLoadingState('Brainstorming content angles...')
               ) : angles.length > 0 ? (
                 <ScrollArea className="h-[300px] pr-3">
-                  <RadioGroup 
-                    value={selectedAngle?.title}
-                    onValueChange={(value) => setSelectedAngle(angles.find(a => a.title === value) || null)}
-                    className="space-y-3"
-                  >
-                    {angles.map((angle, index) => (
-                      <Label 
-                        key={index} 
-                        htmlFor={`angle-${index}`}
-                        className="flex flex-col p-4 rounded-lg border border-slate-600 hover:border-primary/70 has-[:checked]:border-primary has-[:checked]:bg-primary/10 transition-all cursor-pointer"
-                      >
-                        <div className="flex items-center space-x-3">
-                          <RadioGroupItem value={angle.title} id={`angle-${index}`} className="border-slate-500 text-primary focus:ring-primary" />
-                          <span className="font-semibold text-slate-100 text-lg">{angle.title}</span>
-                        </div>
-                        <p className="ml-8 mt-1 text-sm text-slate-400">{angle.explanation}</p>
-                      </Label>
-                    ))}
-                  </RadioGroup>
+                  <motion.div variants={listContainerVariants} initial="hidden" animate="visible">
+                    <RadioGroup 
+                      value={selectedAngle?.title}
+                      onValueChange={(value) => setSelectedAngle(angles.find(a => a.title === value) || null)}
+                      className="space-y-3"
+                    >
+                      {angles.map((angle, index) => (
+                        <motion.div key={index} custom={index} variants={listItemVariants}>
+                          <Label 
+                            htmlFor={`angle-${index}`}
+                            className="flex flex-col p-4 rounded-lg border border-slate-600 hover:border-primary/70 has-[:checked]:border-primary has-[:checked]:bg-primary/10 transition-all cursor-pointer"
+                          >
+                            <div className="flex items-center space-x-3">
+                              <RadioGroupItem value={angle.title} id={`angle-${index}`} className="border-slate-500 text-primary focus:ring-primary" />
+                              <span className="font-semibold text-slate-100 text-lg">{angle.title}</span>
+                            </div>
+                            <p className="ml-8 mt-1 text-sm text-slate-400">{angle.explanation}</p>
+                          </Label>
+                        </motion.div>
+                      ))}
+                    </RadioGroup>
+                  </motion.div>
                 </ScrollArea>
               ) : (
                 <div className="flex flex-col items-center justify-center h-[250px] text-center">
@@ -501,54 +527,70 @@ const SmartCampaignWizardInternal: React.FC = () => {
       
       case 'series':
           return (
-            <motion.div key="series" initial="hidden" animate="visible" exit="exit" variants={cardVariants} className="space-y-6">
+            <motion.div key="series" {...cardMotionProps} className="space-y-6">
               <h3 className="text-xl font-medium text-slate-200">Your Campaign Series for: <span className="text-purple-400">{selectedAngle?.title || 'Selected Angle'}</span></h3>
               {isLoading && loadingMessage.includes("Crafting") ? (
-                 <div className="flex flex-col items-center justify-center h-[300px]">
-                    <Icons.loader className="h-10 w-10 animate-spin text-primary mb-3" />
-                    <p className="text-slate-300">{loadingMessage}</p>
-                 </div>
+                 renderLoadingState('Crafting your campaign...')
               ) : (
-                <div className="grid md:grid-cols-2 gap-6">
-                  <Card className="bg-slate-700/50 border-slate-600">
-                    <CardHeader>
-                      <CardTitle className="flex items-center text-lg text-sky-400"><Icons.twitter className="mr-2 h-5 w-5" /> Twitter Thread</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <ScrollArea className="h-[300px] pr-2">
-                        {twitterSeries.length > 0 ? twitterSeries.map((post, index) => (
-                          <div key={`twitter-${index}`} className="p-3 bg-slate-600/70 rounded-md text-slate-200 text-sm mb-2 group">
-                            <p className="whitespace-pre-wrap">{post}</p>
-                            <div className="mt-2 flex space-x-2">
-                               <Button variant="link" size="sm" onClick={() => handleOpenEditModal('twitter', index, post)} className="text-sky-400/80 hover:text-sky-400 p-0 h-auto text-xs">
-                                <Icons.edit className="mr-1 h-3 w-3"/>Manual Edit
-                              </Button>
-                            </div>
-                          </div>
-                        )) : <p className="text-slate-400 text-center py-4">No Twitter posts generated.</p>}
-                      </ScrollArea>
-                    </CardContent>
-                  </Card>
-                  <Card className="bg-slate-700/50 border-slate-600">
-                    <CardHeader>
-                      <CardTitle className="flex items-center text-lg text-blue-400"><Icons.linkedin className="mr-2 h-5 w-5" /> LinkedIn Series</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
+                <motion.div 
+                  className="grid md:grid-cols-2 gap-6"
+                  variants={listContainerVariants}
+                  initial="hidden"
+                  animate="visible"
+                >
+                  <motion.div variants={listItemVariants}>
+                    <Card className="bg-slate-700/50 border-slate-600 h-full">
+                      <CardHeader>
+                        <CardTitle className="flex items-center text-lg text-sky-400"><Icons.twitter className="mr-2 h-5 w-5" /> Twitter Thread</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
                         <ScrollArea className="h-[300px] pr-2">
-                          {linkedinSeries.length > 0 ? linkedinSeries.map((post, index) => (
-                            <div key={`linkedin-${index}`} className="p-3 bg-slate-600/70 rounded-md text-slate-200 text-sm mb-2 group">
+                          {twitterSeries.length > 0 ? twitterSeries.map((post, index) => (
+                            <motion.div 
+                              key={`twitter-${index}`} 
+                              custom={index}
+                              variants={listItemVariants}
+                              className="p-3 bg-slate-600/70 rounded-md text-slate-200 text-sm mb-2 group"
+                            >
                               <p className="whitespace-pre-wrap">{post}</p>
-                               <div className="mt-2 flex space-x-2">
-                                <Button variant="link" size="sm" onClick={() => handleOpenEditModal('linkedin', index, post)} className="text-blue-400/80 hover:text-blue-400 p-0 h-auto text-xs">
-                                  <Icons.edit className="mr-1 h-3 w-3"/>Manual Edit
+                              <div className="mt-2 flex space-x-2">
+                                <Button variant="link" size="sm" onClick={() => handleOpenEditModal('twitter', index, post)} className="text-sky-400/80 hover:text-sky-400 p-0 h-auto text-xs">
+                                  <Icons.edit className="mr-1 h-3 w-3"/>Edit
                                 </Button>
                               </div>
-                            </div>
-                          )) : <p className="text-slate-400 text-center py-4">No LinkedIn posts generated.</p>}
+                            </motion.div>
+                          )) : <p className="text-slate-400 text-center py-4">No Twitter posts generated.</p>}
                         </ScrollArea>
-                    </CardContent>
-                  </Card>
-                </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                  <motion.div variants={listItemVariants}>
+                    <Card className="bg-slate-700/50 border-slate-600 h-full">
+                      <CardHeader>
+                        <CardTitle className="flex items-center text-lg text-blue-400"><Icons.linkedin className="mr-2 h-5 w-5" /> LinkedIn Series</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                          <ScrollArea className="h-[300px] pr-2">
+                            {linkedinSeries.length > 0 ? linkedinSeries.map((post, index) => (
+                              <motion.div 
+                                key={`linkedin-${index}`} 
+                                custom={index}
+                                variants={listItemVariants}
+                                className="p-3 bg-slate-600/70 rounded-md text-slate-200 text-sm mb-2 group"
+                              >
+                                <p className="whitespace-pre-wrap">{post}</p>
+                                <div className="mt-2 flex space-x-2">
+                                  <Button variant="link" size="sm" onClick={() => handleOpenEditModal('linkedin', index, post)} className="text-blue-400/80 hover:text-blue-400 p-0 h-auto text-xs">
+                                    <Icons.edit className="mr-1 h-3 w-3"/>Edit
+                                  </Button>
+                                </div>
+                              </motion.div>
+                            )) : <p className="text-slate-400 text-center py-4">No LinkedIn posts generated.</p>}
+                          </ScrollArea>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                </motion.div>
               )}
               <Button 
                 onClick={handleSuggestRepurposing} 
@@ -567,56 +609,72 @@ const SmartCampaignWizardInternal: React.FC = () => {
 
       case 'repurpose':
           return (
-            <motion.div key="repurpose" initial="hidden" animate="visible" exit="exit" variants={cardVariants} className="space-y-6">
+            <motion.div key="repurpose" {...cardMotionProps} className="space-y-6">
               <h3 className="text-xl font-medium text-slate-200 mb-1">Repurposing Ideas for: <span className="text-purple-400">{selectedAngle?.title || 'Selected Angle'}</span></h3>
                {isLoading && loadingMessage.includes("Finding repurposing") ? (
-                 <div className="flex flex-col items-center justify-center h-[300px]">
-                    <Icons.loader className="h-10 w-10 animate-spin text-primary mb-3" />
-                    <p className="text-slate-300">{loadingMessage}</p>
-                 </div>
+                 renderLoadingState('Brainstorming repurposing ideas...')
               ) : (
-              <div className="grid md:grid-cols-2 gap-6">
-                  <Card className="bg-slate-700/50 border-slate-600">
-                      <CardHeader>
-                          <CardTitle className="flex items-center text-lg text-sky-400"><Icons.twitter className="mr-2 h-5 w-5" /> For Your Twitter Series</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                          <ScrollArea className="h-[250px] pr-2">
-                              {twitterRepurposingIdeas.length > 0 ? (
-                                  <ul className="list-disc list-inside space-y-2 text-slate-300">
-                                      {twitterRepurposingIdeas.map((idea, index) => (
-                                          <li key={`twitter-repurpose-${index}`} className="p-2 bg-slate-600/50 rounded-md">{idea}</li>
-                                      ))}
-                                  </ul>
-                              ) : (
-                                  <p className="text-slate-400 text-center py-4">
-                                    {twitterSeries.length > 0 ? "No specific repurposing ideas generated for Twitter." : "No Twitter series available to generate ideas."}
-                                  </p>
-                              )}
-                          </ScrollArea>
-                      </CardContent>
-                  </Card>
-                  <Card className="bg-slate-700/50 border-slate-600">
-                      <CardHeader>
-                          <CardTitle className="flex items-center text-lg text-blue-400"><Icons.linkedin className="mr-2 h-5 w-5" /> For Your LinkedIn Series</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                          <ScrollArea className="h-[250px] pr-2">
-                              {linkedinRepurposingIdeas.length > 0 ? (
-                                  <ul className="list-disc list-inside space-y-2 text-slate-300">
-                                      {linkedinRepurposingIdeas.map((idea, index) => (
-                                          <li key={`linkedin-repurpose-${index}`} className="p-2 bg-slate-600/50 rounded-md">{idea}</li>
-                                      ))}
-                                  </ul>
-                              ) : (
+              <motion.div 
+                className="grid md:grid-cols-2 gap-6"
+                variants={listContainerVariants}
+                initial="hidden"
+                animate="visible"
+              >
+                  <motion.div variants={listItemVariants}>
+                    <Card className="bg-slate-700/50 border-slate-600 h-full">
+                        <CardHeader>
+                            <CardTitle className="flex items-center text-lg text-sky-400"><Icons.twitter className="mr-2 h-5 w-5" /> For Your Twitter Series</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <ScrollArea className="h-[250px] pr-2">
+                                {twitterRepurposingIdeas.length > 0 ? (
+                                    <ul className="list-disc list-inside space-y-2 text-slate-300">
+                                        {twitterRepurposingIdeas.map((idea, index) => (
+                                            <motion.li 
+                                              key={`twitter-repurpose-${index}`} 
+                                              custom={index}
+                                              variants={listItemVariants}
+                                              className="p-2 bg-slate-600/50 rounded-md"
+                                            >{idea}</motion.li>
+                                        ))}
+                                    </ul>
+                                ) : (
                                     <p className="text-slate-400 text-center py-4">
-                                    {linkedinSeries.length > 0 ? "No specific repurposing ideas generated for LinkedIn." : "No LinkedIn series available to generate ideas."}
-                                  </p>
-                              )}
-                          </ScrollArea>
-                      </CardContent>
-                  </Card>
-              </div>
+                                      {twitterSeries.length > 0 ? "No specific repurposing ideas generated for Twitter." : "No Twitter series available to generate ideas."}
+                                    </p>
+                                )}
+                            </ScrollArea>
+                        </CardContent>
+                    </Card>
+                  </motion.div>
+                  <motion.div variants={listItemVariants}>
+                    <Card className="bg-slate-700/50 border-slate-600 h-full">
+                        <CardHeader>
+                            <CardTitle className="flex items-center text-lg text-blue-400"><Icons.linkedin className="mr-2 h-5 w-5" /> For Your LinkedIn Series</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <ScrollArea className="h-[250px] pr-2">
+                                {linkedinRepurposingIdeas.length > 0 ? (
+                                    <ul className="list-disc list-inside space-y-2 text-slate-300">
+                                        {linkedinRepurposingIdeas.map((idea, index) => (
+                                            <motion.li 
+                                              key={`linkedin-repurpose-${index}`} 
+                                              custom={index}
+                                              variants={listItemVariants}
+                                              className="p-2 bg-slate-600/50 rounded-md"
+                                            >{idea}</motion.li>
+                                        ))}
+                                    </ul>
+                                ) : (
+                                      <p className="text-slate-400 text-center py-4">
+                                      {linkedinSeries.length > 0 ? "No specific repurposing ideas generated for LinkedIn." : "No LinkedIn series available to generate ideas."}
+                                    </p>
+                                )}
+                            </ScrollArea>
+                        </CardContent>
+                    </Card>
+                  </motion.div>
+              </motion.div>
               )}
               {(twitterRepurposingIdeas.length === 0 && linkedinRepurposingIdeas.length === 0 && (twitterSeries.length > 0 || linkedinSeries.length > 0) && !isLoading) && (
                   <div className="flex flex-col items-center justify-center text-center mt-4">
@@ -649,30 +707,41 @@ const SmartCampaignWizardInternal: React.FC = () => {
       
       case 'complete':
           return (
-            <motion.div key="complete" initial="hidden" animate="visible" exit="exit" variants={cardVariants} className="text-center space-y-6 py-8 min-h-[300px] flex flex-col justify-center items-center">
-              <Icons.checkCircle className="h-20 w-20 text-green-500 mx-auto mb-4" />
+            <motion.div key="complete" {...cardMotionProps} className="text-center space-y-6 py-8 min-h-[300px] flex flex-col justify-center items-center">
+              <motion.div initial={{scale:0, rotate: -180}} animate={{scale:1, rotate:0}} transition={{type: "spring", stiffness: 150, damping:15, delay:0.2}}>
+                <Icons.checkCircle className="h-20 w-20 text-green-500 mx-auto mb-4" />
+              </motion.div>
               <h2 className="text-3xl font-bold text-slate-100">Your Smart Campaign is Ready!</h2>
               <p className="text-slate-300 max-w-md mx-auto">
                 You've successfully generated content angles, a campaign series, and repurposing ideas for your topic: <span className="font-semibold text-purple-400">{campaignTopic}</span>.
               </p>
               <p className="text-slate-400">What would you like to do next?</p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-                <Button 
-                  onClick={handleCopyCampaign}
-                  size="lg"
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground"
-                >
-                  <Icons.copy className="mr-2 h-5 w-5" /> Copy Full Campaign
-                </Button>
-                <Button 
-                  onClick={resetWizard}
-                  size="lg"
-                  variant="outline"
-                  className="border-slate-600 text-slate-300 hover:bg-slate-700"
-                >
-                  <Icons.refreshCw className="mr-2 h-5 w-5" /> Start New Campaign
-                </Button>
-              </div>
+              <motion.div 
+                className="flex flex-col sm:flex-row gap-4 justify-center pt-4"
+                variants={listContainerVariants}
+                initial="hidden"
+                animate="visible"
+              >
+                <motion.div variants={listItemVariants}>
+                  <Button 
+                    onClick={handleCopyCampaign}
+                    size="lg"
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                  >
+                    <Icons.copy className="mr-2 h-5 w-5" /> Copy Full Campaign
+                  </Button>
+                </motion.div>
+                <motion.div variants={listItemVariants}>
+                  <Button 
+                    onClick={resetWizard}
+                    size="lg"
+                    variant="outline"
+                    className="border-slate-600 text-slate-300 hover:bg-slate-700"
+                  >
+                    <Icons.refreshCw className="mr-2 h-5 w-5" /> Start New Campaign
+                  </Button>
+                </motion.div>
+              </motion.div>
                 <Button 
                   variant="link"
                   onClick={() => setCurrentStep('repurpose')} 
@@ -689,34 +758,36 @@ const SmartCampaignWizardInternal: React.FC = () => {
 
   return (
     <div className="w-full space-y-8">
-      <Card className="bg-slate-800/70 border-slate-700 shadow-2xl rounded-xl">
-        <CardHeader className="border-b border-slate-700">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-            <div className="flex items-center space-x-3">
-              <CurrentIcon className="h-8 w-8 text-primary" />
-              <CardTitle className="text-2xl font-semibold text-primary">
-                {stepConfig[currentStep]?.title || "Smart Campaign"}
-              </CardTitle>
+      <motion.div {...cardMotionProps}>
+        <Card className="bg-slate-800/70 border-slate-700 shadow-2xl rounded-xl overflow-hidden">
+          <CardHeader className="border-b border-slate-700">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+              <div className="flex items-center space-x-3">
+                <CurrentIcon className="h-8 w-8 text-primary" />
+                <CardTitle className="text-2xl font-semibold text-primary">
+                  {stepConfig[currentStep]?.title || "Smart Campaign"}
+                </CardTitle>
+              </div>
+              <Progress value={stepConfig[currentStep]?.progress || 0} className="w-full sm:w-1/3 h-2 bg-slate-700 [&>div]:bg-primary" />
             </div>
-            <Progress value={stepConfig[currentStep]?.progress || 0} className="w-full sm:w-1/3 h-2 bg-slate-700 [&>div]:bg-primary" />
-          </div>
-          {campaignTopic && currentStep !== 'topic_research' && currentStep !== 'initial_error' && (
-            <CardDescription className="text-slate-400 pt-2">
-              Campaign Topic: <span className="font-semibold text-slate-300">{campaignTopic}</span>
-            </CardDescription>
-          )}
-           {(currentStep === 'initial_error') && stepConfig['initial_error']?.description && (
-             <CardDescription className="text-slate-400 pt-2">
-                {stepConfig['initial_error']?.description}
-            </CardDescription>
-           )}
-        </CardHeader>
-        <CardContent className="p-6">
-          <AnimatePresence mode="wait">
-            {renderStepContent()}
-          </AnimatePresence>
-        </CardContent>
-      </Card>
+            {campaignTopic && currentStep !== 'topic_research' && currentStep !== 'initial_error' && (
+              <CardDescription className="text-slate-400 pt-2">
+                Campaign Topic: <span className="font-semibold text-slate-300">{campaignTopic}</span>
+              </CardDescription>
+            )}
+            {(currentStep === 'initial_error') && stepConfig['initial_error']?.description && (
+              <CardDescription className="text-slate-400 pt-2">
+                  {stepConfig['initial_error']?.description}
+              </CardDescription>
+            )}
+          </CardHeader>
+          <CardContent className="p-6">
+            <AnimatePresence mode="wait">
+              {renderStepContent()}
+            </AnimatePresence>
+          </CardContent>
+        </Card>
+      </motion.div>
 
       {/* Main Edit Modal for Series Posts */}
       <Dialog open={!!editingPost} onOpenChange={(isOpen) => !isOpen && setEditingPost(null)}>
@@ -796,3 +867,4 @@ export const SmartCampaignWizard: React.FC = () => {
     </Suspense>
   );
 };
+
