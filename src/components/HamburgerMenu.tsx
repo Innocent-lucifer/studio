@@ -95,10 +95,10 @@ export function HamburgerMenu() {
                     <span>Credits: N/A (Coming Soon)</span>
                 </DropdownMenuItem>
             </DropdownMenuGroup>
-            <DropdownMenuItem onSelect={() => handleMenuItemClick("Settings")} className="hover:bg-slate-700 focus:bg-slate-700 text-sm md:text-base md:px-3 md:py-2.5">
+            {/* <DropdownMenuItem onSelect={() => handleMenuItemClick("Settings")} className="hover:bg-slate-700 focus:bg-slate-700 text-sm md:text-base md:px-3 md:py-2.5">
               <Icons.settings className="mr-2 h-4 w-4 md:h-5 md:w-5 text-primary" />
               <span>Settings</span>
-            </DropdownMenuItem>
+            </DropdownMenuItem> */}
             <DropdownMenuSeparator className="bg-slate-700 my-1 md:my-2"/>
             <DropdownMenuItem onSelect={handleSignOut} disabled={loading} className="hover:bg-slate-700 focus:bg-slate-700 text-sm md:text-base md:px-3 md:py-2.5">
               <Icons.logOut className="mr-2 h-4 w-4 md:h-5 md:w-5 text-red-400" />

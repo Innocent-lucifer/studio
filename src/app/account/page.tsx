@@ -132,6 +132,9 @@ export default function AccountPage() {
                 <span className="font-semibold text-slate-100">Email:</span> {user?.email}
               </p>
               <p className="text-sm text-slate-300">
+                <span className="font-semibold text-slate-100">Phone:</span> N/A (Feature in development)
+              </p>
+              <p className="text-sm text-slate-300">
                 <span className="font-semibold text-slate-100">UID:</span> <span className="text-xs">{user?.uid}</span>
               </p>
             </div>
