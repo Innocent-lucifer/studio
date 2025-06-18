@@ -9,10 +9,10 @@
  * - Trend - Represents a single trend item.
  */
 
-import {ai} from '@/ai/ai-instance';
-import {z} from 'genkit';
+import {ai}from '@/ai/ai-instance';
+import {z}from 'genkit';
 import { searchTwitter } from '@/ai/tools/searchTwitter';
-// import { getUserData, deductCredits } from '@/lib/firebaseUserActions'; // Auth stubbed for now
+// import { getUserData, deductCredits, CREDIT_COSTS, CreditTransactionType } from '@/lib/firebaseUserActions'; 
 
 const TrendSchema = z.object({
   id: z.string().describe('A unique identifier for the trend.'),
@@ -28,7 +28,7 @@ export type Trend = z.infer<typeof TrendSchema>;
 const FetchPlatformTrendsInputSchema = z.object({
   platform: z.enum(['Twitter', 'LinkedIn']).describe('The social media platform (Twitter or LinkedIn).'),
   category: z.string().describe('The category to find trends for (e.g., Tech, Finance, AI). If "All", consider general trends for the platform.'),
-  userId: z.string().describe('The ID of the user requesting the trends.'),
+  userId: z.string().optional().describe('The ID of the user requesting the trends. Optional for now.'),
   numTrendsToGenerate: z.number().optional().default(6).describe('The desired number of trends to generate.'),
 });
 export type FetchPlatformTrendsInput = z.infer<typeof FetchPlatformTrendsInputSchema>;
@@ -55,7 +55,7 @@ const prompt = ai.definePrompt({
     schema: z.object({
       platform: z.enum(['Twitter', 'LinkedIn']),
       category: z.string(),
-      twitterSearchResults: z.string().optional().describe('Relevant recent tweets or search summary if the platform is Twitter. This may contain "No recent tweets found" or API error messages. Use this as primary context for Twitter trends if available and relevant. If it indicates errors or no useful data, rely more on general knowledge for the category.'),
+      twitterSearchResults: z.string().optional().describe('Relevant recent tweets or search summary if the platform is Twitter. This may contain "No recent tweets found", API error messages, or "Twitter search not configured". Use this as primary context for Twitter trends if available and relevant. If it indicates errors, "not configured", or no useful data, rely more on general knowledge for the category.'),
       numTrendsToGenerate: z.number(),
     }),
   },
@@ -70,7 +70,7 @@ If the category is "All", provide general trending topics for the {{platform}}.
 {{#if twitterSearchResults}}
 For Twitter, first consider these recent search results:
 "{{{twitterSearchResults}}}"
-If these results provide strong signals of specific trends (discussions, news, events), prioritize them. If the results are generic, indicate "no specific tweets found", or show an error, then generate trends based on your general knowledge of what's currently trending in the '{{category}}' on Twitter.
+If these results provide strong signals of specific trends (discussions, news, events), prioritize them. If the results are generic, indicate "no specific tweets found", show an API error, or state "Twitter search not configured", then generate trends based on your general knowledge of what's currently trending in the '{{category}}' on Twitter.
 {{/if}}
 
 For LinkedIn, focus on professionally relevant topics, industry news, career discussions, or significant business events within the '{{category}}'.
@@ -102,12 +102,16 @@ const fetchPlatformTrendsFlow = ai.defineFlow({
   inputSchema: FetchPlatformTrendsInputSchema,
   outputSchema: FetchPlatformTrendsOutputSchema,
 }, async (input) => {
-  console.log(`[fetchPlatformTrendsFlow] Starting for platform: ${input.platform}, category: "${input.category}" for user: ${input.userId}`);
-  // Auth Logic:
-  // const userData = await getUserData(input.userId);
-  // if (!userData) return { error: "User data not found." };
-  // if (userData.plan !== 'infinity' && (userData.credits || 0) <= 0) {
-  //   return { error: "You have no credits remaining. Please upgrade your plan." };
+  // console.log(`[fetchPlatformTrendsFlow] User: ${input.userId || 'Guest'}, Platform: ${input.platform}, Category: "${input.category}"`);
+  // if (input.userId) { // Credit check temporarily disabled
+  //   const userData = await getUserData(input.userId);
+  //   if (!userData) {
+  //      return { error: "User data not found. Cannot fetch trends." };
+  //   }
+  //   // Example: Deduct a small amount for fetching trends, or make it free.
+  //   // if (userData.plan !== 'infinity' && (userData.credits || 0) < CREDIT_COSTS.TREND_EXPLORER_FETCH) {
+  //   //   return { error: `Insufficient credits for Trend Explorer. Need ${CREDIT_COSTS.TREND_EXPLORER_FETCH}, have ${userData.credits || 0}.` };
+  //   // }
   // }
 
   let twitterSearchResults: string | undefined = undefined;
@@ -115,9 +119,9 @@ const fetchPlatformTrendsFlow = ai.defineFlow({
   try {
     if (input.platform === 'Twitter') {
       const searchQuery = input.category === 'All' ? 'trending topics' : `trending in ${input.category}`;
-      console.log(`[fetchPlatformTrendsFlow] Searching Twitter with query: "${searchQuery}"`);
+      // console.log(`[fetchPlatformTrendsFlow] Searching Twitter with query: "${searchQuery}"`);
       twitterSearchResults = await searchTwitter({ query: searchQuery });
-      console.log(`[fetchPlatformTrendsFlow] Twitter search results for "${searchQuery}": ${twitterSearchResults.substring(0, 200)}...`);
+      // console.log(`[fetchPlatformTrendsFlow] Twitter search results for "${searchQuery}": ${twitterSearchResults.substring(0, 200)}...`);
     }
 
     const promptInput = {
@@ -127,11 +131,11 @@ const fetchPlatformTrendsFlow = ai.defineFlow({
       numTrendsToGenerate: input.numTrendsToGenerate,
     };
 
-    console.log('[fetchPlatformTrendsFlow] Calling AI prompt with input:', JSON.stringify(promptInput, null, 2));
+    // console.log('[fetchPlatformTrendsFlow] Calling AI prompt with input:', JSON.stringify(promptInput, null, 2));
     const { output: promptOutput, usage } = await prompt(promptInput);
 
-    console.log('[fetchPlatformTrendsFlow] Raw AI output:', JSON.stringify(promptOutput, null, 2));
-    console.log('[fetchPlatformTrendsFlow] Usage data:', JSON.stringify(usage, null, 2));
+    // console.log('[fetchPlatformTrendsFlow] Raw AI output:', JSON.stringify(promptOutput, null, 2));
+    // console.log('[fetchPlatformTrendsFlow] Usage data:', JSON.stringify(usage, null, 2));
 
     if (!promptOutput || !promptOutput.generatedTrends || promptOutput.generatedTrends.length === 0) {
       const errorMessage = `AI returned no trends for ${input.platform}, category "${input.category}". The model might not have found relevant topics or there was an issue with its response structure.`;
@@ -147,12 +151,20 @@ const fetchPlatformTrendsFlow = ai.defineFlow({
       region: 'Global', // Default to Global for now
     }));
 
-    // Auth logic:
-    // if (userData.plan !== 'infinity') {
-    //   await deductCredits(input.userId, 1); // Or appropriate credit deduction
+    // if (input.userId) { // Credit deduction temporarily disabled
+    //   // const deductionResult = await deductCredits(
+    //   //   input.userId,
+    //   //   CREDIT_COSTS.TREND_EXPLORER_FETCH,
+    //   //   `Fetched trends for ${input.platform}, category ${input.category}`,
+    //   //   CreditTransactionType.FEATURE_USE_TREND_EXPLORER,
+    //   //   'fetchPlatformTrendsFlow'
+    //   // );
+    //   // if (!deductionResult.success) {
+    //   //    console.error(`[fetchPlatformTrendsFlow] Credit deduction failed for user ${input.userId}: ${deductionResult.error}`);
+    //   // }
     // }
 
-    console.log(`[fetchPlatformTrendsFlow] Successfully generated ${trends.length} trends for ${input.platform}, category "${input.category}".`);
+    // console.log(`[fetchPlatformTrendsFlow] Successfully generated ${trends.length} trends for ${input.platform}, category "${input.category}".`);
     return { trends };
 
   } catch (e: any) {
@@ -164,3 +176,5 @@ const fetchPlatformTrendsFlow = ai.defineFlow({
     return { error: detailedErrorMessage };
   }
 });
+
+    

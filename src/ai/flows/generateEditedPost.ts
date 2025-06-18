@@ -8,16 +8,16 @@
  * - GenerateEditedPostOutput - The return type for the generateEditedPost function.
  */
 
-import {ai} from '@/ai/ai-instance';
-import {z} from 'genkit';
-// import { getUserData, deductCredits } from '@/lib/firebaseUserActions'; 
+import {ai}from '@/ai/ai-instance';
+import {z}from 'genkit';
+// import { getUserData, deductCredits, CREDIT_COSTS, CreditTransactionType } from '@/lib/firebaseUserActions'; 
 
 const GenerateEditedPostInputSchema = z.object({
   originalPost: z.string().describe('The original social media post content.'),
   editInstruction: z.string().describe('The user\'s instruction on how to edit the post (e.g., "make it shorter", "add a call to action").'),
   topic: z.string().describe('The original topic of the post, for context.'),
   platform: z.enum(['twitter', 'linkedin']).describe('The social media platform the post is for.'),
-  userId: z.string().describe('The ID of the user requesting the edit.'),
+  userId: z.string().optional().describe('The ID of the user requesting the edit. Optional for now.'),
 });
 export type GenerateEditedPostInput = z.infer<typeof GenerateEditedPostInputSchema>;
 
@@ -61,28 +61,50 @@ const generateEditedPostFlow = ai.defineFlow(
     outputSchema: GenerateEditedPostOutputSchema,
   },
   async (input) => {
-    // Auth logic:
-    // const userData = await getUserData(input.userId);
-    // if (!userData) return { error: "User data not found." };
-    // if (userData.plan !== 'infinity' && (userData.credits || 0) <= 0) {
-    //   return { error: "You have no credits remaining. Please upgrade your plan." };
+    // console.log(`[generateEditedPostFlow] User: ${input.userId || 'Guest'}, Editing for platform: ${input.platform}`);
+    // if (input.userId) { // Credit check temporarily disabled
+    //   const userData = await getUserData(input.userId);
+    //   if (!userData) {
+    //     return { error: "User data not found. Cannot perform AI edit." };
+    //   }
+    //   if (userData.plan !== 'infinity' && (userData.credits || 0) < CREDIT_COSTS.AI_EDIT) {
+    //     return { error: `Insufficient credits for AI Edit. Need ${CREDIT_COSTS.AI_EDIT}, have ${userData.credits || 0}.` };
+    //   }
     // }
 
     try {
       const {output: promptOutput} = await prompt(input); 
       if (!promptOutput || !promptOutput.editedPost) {
-        return { editedPost: `// AI Edit Failed. Original Post:\n${input.originalPost}\n// Instruction: ${input.editInstruction}`, error: "AI failed to edit post." };
+        // Fallback to original post if AI edit fails but doesn't throw an error itself
+        return { 
+          editedPost: `// AI Edit Failed to produce new content. Original Post:\n${input.originalPost}\n// Instruction: ${input.editInstruction}`, 
+          error: "AI failed to edit post. No content returned." 
+        };
       }
       
-      // Auth logic:
-      // if (userData.plan !== 'infinity') {
-      //    await deductCredits(input.userId, 1); // Or a smaller amount if edits are cheaper
+      // if (input.userId) { // Credit deduction temporarily disabled
+      //    const deductionResult = await deductCredits(
+      //       input.userId, 
+      //       CREDIT_COSTS.AI_EDIT,
+      //       `AI Edit for platform: ${input.platform}, topic: ${input.topic}`,
+      //       CreditTransactionType.FEATURE_USE_AI_EDIT,
+      //       'generateEditedPostFlow'
+      //     );
+      //     if (!deductionResult.success) {
+      //       console.error(`[generateEditedPostFlow] Credit deduction failed for user ${input.userId}: ${deductionResult.error}`);
+      //     }
       // }
       return { editedPost: promptOutput.editedPost };
 
     } catch (e: any) {
-      console.error("Error in generateEditedPostFlow:", e);
-      return { error: e.message || "An unexpected error occurred during post editing." };
+      console.error("[generateEditedPostFlow] Error:", e);
+      return { 
+        // Provide original post in case of exception too, so user doesn't lose original content due to AI error
+        editedPost: `// AI Edit encountered an exception. Original Post:\n${input.originalPost}\n// Instruction: ${input.editInstruction}`,
+        error: e.message || "An unexpected error occurred during post editing." 
+      };
     }
   }
 );
+
+    

@@ -9,14 +9,14 @@
  * - ResearchTopicOutput - The output type for the researchTopic function, which is a summary string.
  */
 
-import {ai} from '@/ai/ai-instance';
-import {z} from 'genkit';
+import {ai}from '@/ai/ai-instance';
+import {z}from 'genkit';
 import { searchTwitter } from '@/ai/tools/searchTwitter';
-// import { getUserData, deductCredits } from '@/lib/firebaseUserActions'; 
+// import { getUserData } from '@/lib/firebaseUserActions'; // No credit deduction in research phase
 
 const ResearchTopicInputSchema = z.object({
   topic: z.string().describe('The topic to research.'),
-  userId: z.string().describe('The ID of the user requesting the research.'),
+  userId: z.string().optional().describe('The ID of the user requesting the research. Optional for now.'),
 });
 export type ResearchTopicInput = z.infer<typeof ResearchTopicInputSchema>;
 
@@ -35,7 +35,7 @@ const researchTopicPrompt = ai.definePrompt({
   input: {
     schema: z.object({
       topic: z.string().describe('The topic to research.'),
-      twitterResults: z.string().describe('The results from searching Twitter. This could include tweets, "no results found", or error messages from the Twitter API.'),
+      twitterResults: z.string().describe('The results from searching Twitter. This could include tweets, "no results found", or error messages from the Twitter API, including if search is unconfigured.'),
     }),
   },
   output: { // Ensure this output schema matches ResearchTopicOutputSchema, minus error
@@ -44,15 +44,21 @@ const researchTopicPrompt = ai.definePrompt({
     }),
   },
   prompt: `You are an expert researcher. Your goal is to provide a comprehensive, engaging, and informative summary about the given topic. 
-Integrate information from the provided Twitter results to add real-time context or recent discussions if available and relevant.
-If Twitter results indicate an error or no relevant tweets, focus on providing a general summary based on your knowledge.
+Integrate information from the provided Twitter results to add real-time context or recent discussions.
 
 Topic: {{{topic}}}
 
-Twitter Results: 
-{{{twitterResults}}}
+Twitter Search Results:
+"{{{twitterResults}}}"
 
-Based on all available information, provide a detailed summary of the topic:`,
+Based on all available information, provide a detailed summary of the topic.
+- If the Twitter Results show actual tweets or clear trend indications, synthesize them into your summary.
+- If Twitter Results indicate "No recent tweets found", "Twitter search functionality is not configured", or an API error, state that fresh Twitter data was not available for this topic and briefly explain why (e.g., "no specific recent tweets," "Twitter search offline for this query"). Then, proceed to generate a summary based on your general knowledge.
+- Do not invent tweets if none were found. Your summary should be factual based on the information provided or your existing knowledge.
+- Make the summary useful for someone wanting to create social media posts about the topic. Highlight key points, interesting angles, or recent developments if found.
+- The summary should be a well-structured paragraph or a few paragraphs.
+
+Summary:`,
 });
 
 const researchTopicFlow = ai.defineFlow(
@@ -63,12 +69,17 @@ const researchTopicFlow = ai.defineFlow(
   }, 
   async (input) => {
     const { topic, userId } = input;
+    // console.log(`[researchTopicFlow] User: ${userId || 'Guest'}, Topic: ${topic}`);
 
-    // Auth logic:
-    // const userData = await getUserData(userId);
-    // if (!userData) return { summary: "", error: "User data not found." };
-    // if (userData.plan !== 'infinity' && (userData.credits || 0) <= 0) {
-    //   return { summary: "", error: "You have no credits remaining. Please upgrade your plan." };
+    // No credit check for research itself, as it's often a precursor.
+    // Credits are typically deducted when content *generation* happens based on this research.
+    // if (userId) {
+    //   const userData = await getUserData(userId);
+    //   if (!userData) {
+    //     // If user data is critical even for research (e.g., for personalization not yet implemented),
+    //     // then this error would be appropriate. For now, research can proceed for guests.
+    //     // return { summary: "", error: "User data not found. Cannot perform research." };
+    //   }
     // }
 
     try {
@@ -80,34 +91,31 @@ const researchTopicFlow = ai.defineFlow(
       });
 
       if (!promptOutput || !promptOutput.summary || promptOutput.summary.trim() === "") {
-        console.warn(`Research topic flow for "${topic}" returned an empty or missing summary from the LLM. Using fallback summary.`);
+        console.warn(`[researchTopicFlow] Research for "${topic}" returned an empty or missing summary from the LLM. Using fallback summary.`);
         
-        let fallbackSummary = `While a detailed AI-generated summary for "${topic}" could not be fully formed, `;
+        let fallbackSummary = `AI-generated summary for "${topic}" could not be fully formed. `;
         
         if (twitterSearchResults && 
             !twitterSearchResults.toLowerCase().includes("error fetching") && 
             !twitterSearchResults.toLowerCase().includes("placeholder") &&
-            !twitterSearchResults.toLowerCase().includes("no recent tweets found")) {
-          fallbackSummary += `here's what was found on Twitter: "${twitterSearchResults}". `;
-        } else if (twitterSearchResults && (twitterSearchResults.toLowerCase().includes("error") || twitterSearchResults.toLowerCase().includes("placeholder"))) {
-          fallbackSummary += `there was an issue fetching detailed Twitter data: "${twitterSearchResults}". `;
+            !twitterSearchResults.toLowerCase().includes("no recent tweets found") &&
+            !twitterSearchResults.toLowerCase().includes("not configured")) {
+          fallbackSummary += `However, Twitter search found: "${twitterSearchResults.substring(0, 200)}...". `;
+        } else if (twitterSearchResults && (twitterSearchResults.toLowerCase().includes("error") || twitterSearchResults.toLowerCase().includes("placeholder") || twitterSearchResults.toLowerCase().includes("not configured"))) {
+          fallbackSummary += `There was an issue fetching/accessing live Twitter data: "${twitterSearchResults}". `;
         } else if (twitterSearchResults && twitterSearchResults.toLowerCase().includes("no recent tweets found")) {
-          fallbackSummary += `no recent tweets were found for this topic. `;
+          fallbackSummary += `No recent tweets were found for this topic. `;
         }
-        fallbackSummary += `Social media posts will be generated based on the core topic. You can refine them further.`;
+        fallbackSummary += `Please use this information or your own knowledge to proceed. Content generation will use the original topic if this summary is insufficient.`;
         
-        return { summary: fallbackSummary }; // No error property if it's a fallback summary
+        return { summary: fallbackSummary }; 
       }
-
-      // Auth logic:
-      // if (userData.plan !== 'infinity') {
-      //   await deductCredits(userId, 1); 
-      // }
-
       return { summary: promptOutput.summary };
 
     } catch (e: any) {
-      console.error("Error in researchTopicFlow:", e);
+      console.error("[researchTopicFlow] Error:", e);
       return { summary: "", error: e.message || "An unexpected error occurred during topic research." };
     }
 });
+
+    

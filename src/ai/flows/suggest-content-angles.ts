@@ -9,10 +9,9 @@
  * - ContentAngle - A type representing a single content angle with title and explanation.
  */
 
-import {ai} from '@/ai/ai-instance';
-import {z} from 'genkit';
-
-// import { getUserData, deductCredits } from '@/lib/firebaseUserActions'; 
+import {ai}from '@/ai/ai-instance';
+import {z}from 'genkit';
+// import { getUserData, deductCredits, CREDIT_COSTS, CreditTransactionType } from '@/lib/firebaseUserActions'; 
 
 const ContentAngleSchema = z.object({
   title: z.string().describe('A concise, compelling title for the content angle (max 10 words).'),
@@ -23,7 +22,7 @@ export type ContentAngle = z.infer<typeof ContentAngleSchema>;
 const SuggestContentAnglesInputSchema = z.object({
   topic: z.string().describe('The main topic for which to suggest content angles.'),
   researchedContext: z.string().describe('The researched information about the topic.'),
-  userId: z.string().describe('The ID of the user requesting the angles.'),
+  userId: z.string().optional().describe('The ID of the user requesting the angles. Optional for now.'),
   numAngles: z.number().optional().default(4).describe('The number of content angles to suggest (3-5 recommended).'),
 });
 export type SuggestContentAnglesInput = z.infer<typeof SuggestContentAnglesInputSchema>;
@@ -68,10 +67,16 @@ const suggestContentAnglesFlow = ai.defineFlow({
   inputSchema: SuggestContentAnglesInputSchema,
   outputSchema: SuggestContentAnglesOutputSchema,
 }, async (input) => {
-  // Auth logic:
-  // const userData = await getUserData(input.userId);
-  // if (!userData) return { error: "User data not found." };
-  // No credit check here as this is often a precursor to a paid action or free.
+  // console.log(`[suggestContentAnglesFlow] User: ${input.userId || 'Guest'}, Topic: ${input.topic}`);
+  // if (input.userId) { // Credit check temporarily disabled
+  //   const userData = await getUserData(input.userId);
+  //   if (!userData) {
+  //     return { error: "User data not found. Cannot suggest angles." };
+  //   }
+  //   if (userData.plan !== 'infinity' && (userData.credits || 0) < CREDIT_COSTS.SMART_CAMPAIGN_ANGLES) {
+  //     return { error: `Insufficient credits for angle suggestion. Need ${CREDIT_COSTS.SMART_CAMPAIGN_ANGLES}, have ${userData.credits || 0}.` };
+  //   }
+  // }
 
   try {
     const { output: promptOutput } = await prompt(input);
@@ -80,17 +85,25 @@ const suggestContentAnglesFlow = ai.defineFlow({
       return { error: "AI failed to suggest any content angles." };
     }
     
-    // Auth logic:
-    // Potentially deduct credits if this is a standalone paid feature,
-    // or if bundled, the main generation flow handles deduction.
-    // if (userData.plan !== 'infinity' && some_condition_for_charging) {
-    //   await deductCredits(input.userId, 0.5); // Example: 0.5 credits for angle suggestions
+    // if (input.userId) { // Credit deduction temporarily disabled
+    //   const deductionResult = await deductCredits(
+    //     input.userId,
+    //     CREDIT_COSTS.SMART_CAMPAIGN_ANGLES,
+    //     `Suggested content angles for topic: ${input.topic}`,
+    //     CreditTransactionType.FEATURE_USE_SMART_CAMPAIGN_ANGLES,
+    //     'suggestContentAnglesFlow'
+    //   );
+    //   if (!deductionResult.success) {
+    //     console.error(`[suggestContentAnglesFlow] Credit deduction failed for user ${input.userId}: ${deductionResult.error}`);
+    //   }
     // }
 
     return { angles: promptOutput.angles };
 
   } catch (e: any) {
-    console.error("Error in suggestContentAnglesFlow:", e);
+    console.error("[suggestContentAnglesFlow] Error:", e);
     return { error: e.message || "An unexpected error occurred while suggesting content angles." };
   }
 });
+
+    

@@ -3,11 +3,12 @@
 
 import { useState, useEffect, Suspense, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input'; // For topic input
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
@@ -15,8 +16,9 @@ import { Icons } from '@/components/icons';
 import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"; // Removed DialogClose as it's not explicitly used for manual close
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { useAuth } from "@/context/AuthContext";
+import { researchTopic, type ResearchTopicInput, type ResearchTopicOutput } from '@/ai/flows/research-topic';
 
 
 import type { SuggestContentAnglesInput, ContentAngle } from '@/ai/flows/suggest-content-angles';
@@ -28,12 +30,11 @@ import { suggestRepurposingIdeas } from '@/ai/flows/suggest-repurposing-ideas';
 import { generateEditedPost, type GenerateEditedPostInput } from '@/ai/flows/generateEditedPost';
 
 
-// const MOCK_USER_ID = "sagepostai-guest-user"; // Will use user.uid from useAuth instead
-
-type WizardStep = 'initial' | 'angles' | 'series' | 'repurpose' | 'complete';
+type WizardStep = 'topic_research' | 'angles' | 'series' | 'repurpose' | 'complete' | 'initial_error';
 
 const stepConfig: Record<WizardStep, { title: string; icon: keyof typeof Icons; progress: number; description?: string }> = {
-  initial: { title: "Smart Campaign Setup", icon: "alertTriangle", progress: 0, description: "Missing topic information to start." },
+  initial_error: { title: "Campaign Setup Needed", icon: "alertTriangle", progress: 0, description: "Please provide a topic to start." },
+  topic_research: { title: "Research Campaign Topic", icon: "search", progress: 10, description: "Enter a topic to research for your campaign." },
   angles: { title: "Select Content Angle", icon: "lightbulb", progress: 25, description: "Choose a strategic angle for your campaign." },
   series: { title: "Generate Campaign Series", icon: "listChecks", progress: 50, description: "Crafting your posts based on the selected angle." },
   repurpose: { title: "Get Repurposing Ideas", icon: "repeat", progress: 75, description: "Maximizing content value across platforms." },
@@ -50,14 +51,13 @@ const SmartCampaignWizardInternal: React.FC = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { toast } = useToast();
-  const { user } = useAuth();
-  const userIdToPass = user?.uid || "sagepostai-guest-user";
+  const { user, loading: authLoading } = useAuth();
+  const userIdToPass = user?.uid; // Will be undefined if user is not logged in
 
-  const [topic, setTopic] = useState<string>('');
-  const [researchedContent, setResearchedContent] = useState<string>('');
-  const [isDataMissing, setIsDataMissing] = useState<boolean>(true);
+  const [campaignTopic, setCampaignTopic] = useState<string>(''); // For the input field in topic_research step
+  const [currentResearchedContent, setCurrentResearchedContent] = useState<string>('');
   
-  const [currentStep, setCurrentStep] = useState<WizardStep>('initial');
+  const [currentStep, setCurrentStep] = useState<WizardStep>('topic_research');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [loadingMessage, setLoadingMessage] = useState<string>('');
 
@@ -75,16 +75,71 @@ const SmartCampaignWizardInternal: React.FC = () => {
   const [twitterRepurposingIdeas, setTwitterRepurposingIdeas] = useState<string[]>([]);
   const [linkedinRepurposingIdeas, setLinkedinRepurposingIdeas] = useState<string[]>([]);
 
-  const handleSuggestAngles = useCallback(async (currentTopic: string, currentResearchedContent: string) => {
-    if (!currentTopic || !currentResearchedContent) {
+  // Effect to handle initial data from query params or set to topic research step
+  useEffect(() => {
+    const topicParam = searchParams.get('topic');
+    const researchedContentParam = searchParams.get('researchedContent');
+
+    if (topicParam && researchedContentParam && researchedContentParam.trim() !== "") {
+      setCampaignTopic(topicParam); // Pre-fill display topic
+      setCurrentResearchedContent(researchedContentParam);
+      setCurrentStep('angles'); // Skip internal research, go to angles
+    } else {
+      setCurrentStep('topic_research'); // Start with internal research
+    }
+  }, [searchParams]);
+
+  // Effect to automatically fetch angles once topic and research are ready (and not from query params)
+  useEffect(() => {
+    if (currentStep === 'angles' && campaignTopic && currentResearchedContent && angles.length === 0 && !isLoading) {
+       // Check if we already have content (meaning we came from query params or just finished research)
+      handleSuggestAngles(campaignTopic, currentResearchedContent);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentStep, campaignTopic, currentResearchedContent, angles.length, isLoading]);
+
+
+  const handleInternalTopicResearch = async () => {
+    if (!campaignTopic.trim()) {
+      toast({ variant: "destructive", title: "Topic Required", description: "Please enter a topic to research." });
+      return;
+    }
+    setIsLoading(true);
+    setLoadingMessage(`Researching "${campaignTopic}"...`);
+    setCurrentResearchedContent(''); // Clear previous research
+    setAngles([]); // Clear previous angles
+    setSelectedAngle(null); // Clear selected angle
+
+    try {
+      const result = await researchTopic({ topic: campaignTopic, userId: userIdToPass });
+      if (result.error || !result.summary) {
+        toast({ variant: "destructive", title: "Research Failed", description: result.error || "Could not retrieve research summary." });
+        setCurrentResearchedContent(''); // Ensure it's empty on failure
+      } else {
+        setCurrentResearchedContent(result.summary);
+        toast({ title: "Research Complete!", description: `Now select a content angle for "${campaignTopic}".` });
+        setCurrentStep('angles'); // Proceed to angle selection
+        // handleSuggestAngles will be triggered by the useEffect for 'angles' step
+      }
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Research Error", description: error.message || "An unexpected error occurred." });
+      setCurrentResearchedContent('');
+    } finally {
+      setIsLoading(false);
+      setLoadingMessage('');
+    }
+  };
+
+
+  const handleSuggestAngles = useCallback(async (currentTopic: string, currentResearch: string) => {
+    if (!currentTopic || !currentResearch) {
       toast({ variant: "destructive", title: "Missing Data", description: "Topic or research content is missing for angle suggestion." });
-      setIsLoading(false); 
       return;
     }
     setIsLoading(true);
     setLoadingMessage('Brainstorming content angles...');
     try {
-      const input: SuggestContentAnglesInput = { topic: currentTopic, researchedContext: currentResearchedContent, userId: userIdToPass, numAngles: 4 };
+      const input: SuggestContentAnglesInput = { topic: currentTopic, researchedContext: currentResearch, userId: userIdToPass, numAngles: 4 };
       const result = await suggestContentAngles(input);
       if (result.error) {
         toast({ variant: "destructive", title: "Angle Suggestion Failed", description: result.error });
@@ -100,51 +155,25 @@ const SmartCampaignWizardInternal: React.FC = () => {
       setAngles([]);
     } finally {
       setIsLoading(false);
+      setLoadingMessage('');
     }
   }, [toast, userIdToPass]);
 
 
-  useEffect(() => {
-    const topicParam = searchParams.get('topic');
-    const researchedContentParam = searchParams.get('researchedContent');
-
-    if (topicParam && researchedContentParam && researchedContentParam.trim() !== "") {
-      setTopic(topicParam);
-      setResearchedContent(researchedContentParam);
-      setIsDataMissing(false);
-      if (currentStep === 'initial') {
-          setCurrentStep('angles');
-      }
-    } else {
-      setTopic(topicParam || ''); 
-      setResearchedContent(''); 
-      setIsDataMissing(true);
-      setCurrentStep('initial');
-    }
-  }, [searchParams, currentStep]); 
-
-  useEffect(() => {
-    if (currentStep === 'angles' && !isDataMissing && topic && researchedContent && angles.length === 0 && !isLoading) {
-      handleSuggestAngles(topic, researchedContent);
-    }
-  }, [currentStep, isDataMissing, topic, researchedContent, angles.length, isLoading, handleSuggestAngles]);
-
-
   const handleGenerateSeries = async () => {
-    if (!selectedAngle || !topic || isDataMissing || !researchedContent) {
+    if (!selectedAngle || !campaignTopic || !currentResearchedContent) {
         toast({ variant: "destructive", title: "Missing Information", description: "Please select an angle and ensure topic research is complete." });
         return;
     }
     setIsLoading(true);
     setLoadingMessage('Crafting your campaign series (Twitter & LinkedIn)...');
-    setCurrentStep('series');
     
     setTwitterSeries([]);
     setLinkedinSeries([]);
 
     try {
-      const twitterInput: GenerateCampaignSeriesInput = { topic, selectedAngle: selectedAngle.title, platform: 'twitter', researchedContext: researchedContent, userId: userIdToPass, numPostsInSeries: 3 };
-      const linkedinInput: GenerateCampaignSeriesInput = { topic, selectedAngle: selectedAngle.title, platform: 'linkedin', researchedContext: researchedContent, userId: userIdToPass, numPostsInSeries: 3 };
+      const twitterInput: GenerateCampaignSeriesInput = { topic: campaignTopic, selectedAngle: selectedAngle.title, platform: 'twitter', researchedContext: currentResearchedContent, userId: userIdToPass, numPostsInSeries: 3 };
+      const linkedinInput: GenerateCampaignSeriesInput = { topic: campaignTopic, selectedAngle: selectedAngle.title, platform: 'linkedin', researchedContext: currentResearchedContent, userId: userIdToPass, numPostsInSeries: 3 };
       
       const [twitterResult, linkedinResult] = await Promise.all([
         generateCampaignSeries(twitterInput),
@@ -166,22 +195,24 @@ const SmartCampaignWizardInternal: React.FC = () => {
       if ((twitterResult.series || []).length === 0 && (linkedinResult.series || []).length === 0) {
          toast({ variant: "default", title: "No Series Generated", description: "The AI couldn't generate series for this angle. You can try a different angle or topic." });
       }
+      setCurrentStep('series'); // Move to series display step
 
     } catch (error: any) {
       toast({ variant: "destructive", title: "Error Generating Series", description: error.message || "Failed to generate series." });
     } finally {
       setIsLoading(false);
+      setLoadingMessage('');
     }
   };
   
  const handleSuggestRepurposing = async () => {
-    if (!topic || !selectedAngle || (twitterSeries.length === 0 && linkedinSeries.length === 0) || isDataMissing) {
+    if (!campaignTopic || !selectedAngle || (twitterSeries.length === 0 && linkedinSeries.length === 0) ) {
       toast({ variant: "destructive", title: "Missing Information", description: "Campaign series must be generated first." });
       return;
     }
     setIsLoading(true);
     setLoadingMessage('Finding repurposing opportunities...');
-    setCurrentStep('repurpose');
+    
     setTwitterRepurposingIdeas([]);
     setLinkedinRepurposingIdeas([]);
 
@@ -189,7 +220,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
 
     if (twitterSeries.length > 0) {
       const twitterInput: SuggestRepurposingIdeasInput = {
-        topic,
+        topic: campaignTopic,
         selectedAngle: selectedAngle.title,
         campaignSummary: twitterSeries.join('\n\n---\n\n'),
         userId: userIdToPass,
@@ -202,7 +233,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
 
     if (linkedinSeries.length > 0) {
       const linkedinInput: SuggestRepurposingIdeasInput = {
-        topic,
+        topic: campaignTopic,
         selectedAngle: selectedAngle.title,
         campaignSummary: linkedinSeries.join('\n\n---\n\n'),
         userId: userIdToPass,
@@ -235,11 +266,13 @@ const SmartCampaignWizardInternal: React.FC = () => {
       if ((twitterResult?.ideas || []).length === 0 && (linkedinResult?.ideas || []).length === 0) {
          toast({ variant: "default", title: "No Repurposing Ideas", description: "The AI couldn't find repurposing ideas for this campaign." });
       }
+      setCurrentStep('repurpose'); // Move to repurpose display step
 
     } catch (error: any) {
       toast({ variant: "destructive", title: "Error Suggesting Repurposing", description: error.message || "Failed to suggest repurposing ideas." });
     } finally {
       setIsLoading(false);
+      setLoadingMessage('');
     }
   };
 
@@ -261,7 +294,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
   };
   
   const handleAiSeriesEditSubmit = async () => {
-    if (!editingSeries || !aiSeriesEditInstruction.trim() || !topic) {
+    if (!editingSeries || !aiSeriesEditInstruction.trim() || !campaignTopic) {
       toast({
         title: "Missing Information",
         description: "Post context or AI instruction is missing.",
@@ -274,7 +307,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
       const input: GenerateEditedPostInput = {
         originalPost: editingSeries.text,
         editInstruction: aiSeriesEditInstruction,
-        topic: topic, 
+        topic: campaignTopic, 
         platform: editingSeries.platform,
         userId: userIdToPass,
       };
@@ -307,10 +340,9 @@ const SmartCampaignWizardInternal: React.FC = () => {
 
 
   const resetWizard = () => {
-    setTopic('');
-    setResearchedContent('');
-    setIsDataMissing(true); 
-    setCurrentStep('initial');
+    setCampaignTopic('');
+    setCurrentResearchedContent('');
+    setCurrentStep('topic_research');
     setAngles([]);
     setSelectedAngle(null);
     setTwitterSeries([]);
@@ -320,11 +352,11 @@ const SmartCampaignWizardInternal: React.FC = () => {
     setEditingSeries(null);
     setIsAiSeriesEditModalOpen(false);
     setAiSeriesEditInstruction("");
-    router.push('/smart-campaign'); 
+    router.push('/smart-campaign'); // Clear query params by navigating to base page
   };
   
   const handleCopyCampaign = () => {
-    let contentToCopy = `Smart Campaign for Topic: ${topic}\nSelected Angle: ${selectedAngle?.title || 'N/A'}\n\n`;
+    let contentToCopy = `Smart Campaign for Topic: ${campaignTopic}\nSelected Angle: ${selectedAngle?.title || 'N/A'}\n\n`;
 
     if (twitterSeries.length > 0) {
       contentToCopy += `=== Twitter Series ===\n`;
@@ -370,39 +402,73 @@ const SmartCampaignWizardInternal: React.FC = () => {
   const CurrentIcon = Icons[stepConfig[currentStep]?.icon || 'help'] || Icons.help;
 
   const renderStepContent = () => {    
-    if (isLoading) {
+    if (isLoading && currentStep !== 'topic_research' && currentStep !== 'angles' && currentStep !== 'series' && currentStep !== 'repurpose') { // Show general loader for transitions
       return renderLoadingState();
     }
 
     switch (currentStep) {
-      case 'initial':
-        if (isDataMissing) {
+      case 'initial_error':
           return (
-            <motion.div key="initial-missing-data" initial="hidden" animate="visible" exit="exit" variants={cardVariants} className="text-center space-y-4 py-8 min-h-[300px] flex flex-col justify-center items-center">
+            <motion.div key="initial-error" initial="hidden" animate="visible" exit="exit" variants={cardVariants} className="text-center space-y-4 py-8 min-h-[300px] flex flex-col justify-center items-center">
               <Icons.alertTriangle className="h-16 w-16 text-yellow-400 mx-auto" />
-              <h3 className="text-2xl font-semibold text-slate-100">Topic Information Needed</h3>
+              <h3 className="text-2xl font-semibold text-slate-100">{stepConfig.initial_error.title}</h3>
               <p className="text-slate-300 max-w-md mx-auto">
-                To start building a Smart Campaign, please research a topic on the main page first.
-                The Smart Campaign wizard uses this researched information to generate relevant content angles and posts.
+                {stepConfig.initial_error.description}
               </p>
-              <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground mt-4">
+              <Button onClick={() => setCurrentStep('topic_research')} size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground mt-4">
+                <Icons.edit className="mr-2 h-5 w-5" />
+                Enter Topic Manually
+              </Button>
+               <p className="text-sm text-slate-400">Or</p>
+               <Button asChild variant="outline" className="border-slate-600 text-slate-300 hover:bg-slate-700">
                 <Link href="/quick-post">
-                  <Icons.arrowLeft className="mr-2 h-5 w-5" />
-                  Back to Topic Research
+                  <Icons.arrowLeft className="mr-2 h-4 w-4" /> Go to Quick Post Research
                 </Link>
               </Button>
             </motion.div>
           );
-        }
-        return <div className="min-h-[300px]" />; 
+      
+      case 'topic_research':
+        return (
+          <motion.div key="topic-research" initial="hidden" animate="visible" exit="exit" variants={cardVariants} className="space-y-6 min-h-[300px]">
+            <h3 className="text-xl font-medium text-slate-200">{stepConfig.topic_research.description}</h3>
+             <div className="flex flex-col sm:flex-row gap-2">
+              <Input
+                type="text"
+                placeholder="e.g., 'Future of AI in Marketing'"
+                value={campaignTopic}
+                onChange={(e) => setCampaignTopic(e.target.value)}
+                className="flex-grow bg-slate-700 border-slate-600 placeholder-slate-400 text-white focus:ring-primary focus:border-primary"
+                disabled={isLoading}
+              />
+              <Button
+                onClick={handleInternalTopicResearch}
+                disabled={!campaignTopic.trim() || isLoading}
+                size="lg"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground sm:w-auto w-full"
+              >
+                {isLoading && loadingMessage.includes("Researching") ? <Icons.loader className="mr-2 h-5 w-5 animate-spin" /> : <Icons.search className="mr-2 h-5 w-5" />}
+                Research Topic
+              </Button>
+            </div>
+            {isLoading && loadingMessage.includes("Researching") && <p className="text-sm text-slate-400 text-center">{loadingMessage}</p>}
+            <p className="text-xs text-slate-400">
+              Alternatively, you can start from the <Link href="/quick-post" className="underline hover:text-primary">Quick Post</Link> page to pre-fill topic and research.
+            </p>
+          </motion.div>
+        );
 
       case 'angles':
-        if (!isDataMissing) {
           return (
             <motion.div key="angles" initial="hidden" animate="visible" exit="exit" variants={cardVariants} className="space-y-6 min-h-[350px]">
               <h3 className="text-xl font-medium text-slate-200">{stepConfig.angles.description}</h3>
-              <p className="text-slate-400">The AI will generate interconnected content based on your selection.</p>
-              {angles.length > 0 ? (
+              <p className="text-slate-400">The AI will generate interconnected content based on your selection for: <span className="font-semibold text-purple-300">{campaignTopic}</span></p>
+              {isLoading && loadingMessage.includes("Brainstorming") ? (
+                 <div className="flex flex-col items-center justify-center h-[250px]">
+                    <Icons.loader className="h-10 w-10 animate-spin text-primary mb-3" />
+                    <p className="text-slate-300">{loadingMessage}</p>
+                 </div>
+              ) : angles.length > 0 ? (
                 <ScrollArea className="h-[300px] pr-3">
                   <RadioGroup 
                     value={selectedAngle?.title}
@@ -433,9 +499,9 @@ const SmartCampaignWizardInternal: React.FC = () => {
                   </p>
                     <Button 
                       variant="outline" 
-                      onClick={() => handleSuggestAngles(topic, researchedContent)} 
+                      onClick={() => handleSuggestAngles(campaignTopic, currentResearchedContent)} 
                       className="mt-4 border-slate-600 text-slate-300 hover:bg-slate-700"
-                      disabled={isLoading || !topic || !researchedContent}
+                      disabled={isLoading || !campaignTopic || !currentResearchedContent}
                     >
                       <Icons.refreshCw className="mr-2 h-4 w-4" /> Try Again
                     </Button>
@@ -447,58 +513,65 @@ const SmartCampaignWizardInternal: React.FC = () => {
                 size="lg"
                 className="w-full bg-primary hover:bg-primary/90 text-primary-foreground mt-4"
               >
-                <Icons.listChecks className="mr-2 h-5 w-5" />
+                {isLoading && loadingMessage.includes("Crafting") ? <Icons.loader className="mr-2 h-5 w-5 animate-spin" /> : <Icons.listChecks className="mr-2 h-5 w-5" />}
                 Generate Campaign Series
+              </Button>
+               <Button variant="outline" onClick={() => setCurrentStep('topic_research')} className="w-full mt-2 border-slate-600 text-slate-300 hover:bg-slate-700">
+                <Icons.arrowLeft className="mr-2 h-5 w-5" /> Back to Topic Research
               </Button>
             </motion.div>
           );
-        }
-        return <div className="min-h-[350px]" />; 
       
       case 'series':
-         if (!isDataMissing) {
           return (
             <motion.div key="series" initial="hidden" animate="visible" exit="exit" variants={cardVariants} className="space-y-6">
               <h3 className="text-xl font-medium text-slate-200">Your Campaign Series for: <span className="text-purple-400">{selectedAngle?.title || 'Selected Angle'}</span></h3>
-              <div className="grid md:grid-cols-2 gap-6">
-                <Card className="bg-slate-700/50 border-slate-600">
-                  <CardHeader>
-                    <CardTitle className="flex items-center text-lg text-sky-400"><Icons.twitter className="mr-2 h-5 w-5" /> Twitter Thread</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <ScrollArea className="h-[300px] pr-2">
-                      {twitterSeries.length > 0 ? twitterSeries.map((post, index) => (
-                        <div key={`twitter-${index}`} className="p-3 bg-slate-600/70 rounded-md text-slate-200 text-sm mb-2">
-                          <p className="whitespace-pre-wrap">{post}</p>
-                          <Button variant="link" size="sm" onClick={() => startEdit('twitter', index, post)} className="text-sky-400/80 hover:text-sky-400 p-0 h-auto mt-1">Edit</Button>
-                        </div>
-                      )) : <p className="text-slate-400 text-center py-4">No Twitter posts generated.</p>}
-                    </ScrollArea>
-                  </CardContent>
-                </Card>
-                <Card className="bg-slate-700/50 border-slate-600">
-                  <CardHeader>
-                    <CardTitle className="flex items-center text-lg text-blue-400"><Icons.linkedin className="mr-2 h-5 w-5" /> LinkedIn Series</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
+              {isLoading && loadingMessage.includes("Crafting") ? (
+                 <div className="flex flex-col items-center justify-center h-[300px]">
+                    <Icons.loader className="h-10 w-10 animate-spin text-primary mb-3" />
+                    <p className="text-slate-300">{loadingMessage}</p>
+                 </div>
+              ) : (
+                <div className="grid md:grid-cols-2 gap-6">
+                  <Card className="bg-slate-700/50 border-slate-600">
+                    <CardHeader>
+                      <CardTitle className="flex items-center text-lg text-sky-400"><Icons.twitter className="mr-2 h-5 w-5" /> Twitter Thread</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
                       <ScrollArea className="h-[300px] pr-2">
-                        {linkedinSeries.length > 0 ? linkedinSeries.map((post, index) => (
-                          <div key={`linkedin-${index}`} className="p-3 bg-slate-600/70 rounded-md text-slate-200 text-sm mb-2">
+                        {twitterSeries.length > 0 ? twitterSeries.map((post, index) => (
+                          <div key={`twitter-${index}`} className="p-3 bg-slate-600/70 rounded-md text-slate-200 text-sm mb-2">
                             <p className="whitespace-pre-wrap">{post}</p>
-                            <Button variant="link" size="sm" onClick={() => startEdit('linkedin', index, post)} className="text-blue-400/80 hover:text-blue-400 p-0 h-auto mt-1">Edit</Button>
+                            <Button variant="link" size="sm" onClick={() => startEdit('twitter', index, post)} className="text-sky-400/80 hover:text-sky-400 p-0 h-auto mt-1">Edit</Button>
                           </div>
-                        )) : <p className="text-slate-400 text-center py-4">No LinkedIn posts generated.</p>}
+                        )) : <p className="text-slate-400 text-center py-4">No Twitter posts generated.</p>}
                       </ScrollArea>
-                  </CardContent>
-                </Card>
-              </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-slate-700/50 border-slate-600">
+                    <CardHeader>
+                      <CardTitle className="flex items-center text-lg text-blue-400"><Icons.linkedin className="mr-2 h-5 w-5" /> LinkedIn Series</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                        <ScrollArea className="h-[300px] pr-2">
+                          {linkedinSeries.length > 0 ? linkedinSeries.map((post, index) => (
+                            <div key={`linkedin-${index}`} className="p-3 bg-slate-600/70 rounded-md text-slate-200 text-sm mb-2">
+                              <p className="whitespace-pre-wrap">{post}</p>
+                              <Button variant="link" size="sm" onClick={() => startEdit('linkedin', index, post)} className="text-blue-400/80 hover:text-blue-400 p-0 h-auto mt-1">Edit</Button>
+                            </div>
+                          )) : <p className="text-slate-400 text-center py-4">No LinkedIn posts generated.</p>}
+                        </ScrollArea>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
               <Button 
                 onClick={handleSuggestRepurposing} 
                 disabled={isLoading || (twitterSeries.length === 0 && linkedinSeries.length === 0)}
                 size="lg"
                 className="w-full bg-primary hover:bg-primary/90 text-primary-foreground mt-4"
               >
-                  <Icons.repeat className="mr-2 h-5 w-5" />
+                  {isLoading && loadingMessage.includes("Finding repurposing") ? <Icons.loader className="mr-2 h-5 w-5 animate-spin" /> : <Icons.repeat className="mr-2 h-5 w-5" />}
                 Suggest Repurposing Ideas
               </Button>
                 <Button variant="outline" onClick={() => setCurrentStep('angles')} className="w-full mt-2 border-slate-600 text-slate-300 hover:bg-slate-700">
@@ -506,14 +579,17 @@ const SmartCampaignWizardInternal: React.FC = () => {
               </Button>
             </motion.div>
           );
-        }
-        return <div className="min-h-[350px]" />; 
 
       case 'repurpose':
-        if (!isDataMissing) {
           return (
             <motion.div key="repurpose" initial="hidden" animate="visible" exit="exit" variants={cardVariants} className="space-y-6">
               <h3 className="text-xl font-medium text-slate-200 mb-1">Repurposing Ideas for: <span className="text-purple-400">{selectedAngle?.title || 'Selected Angle'}</span></h3>
+               {isLoading && loadingMessage.includes("Finding repurposing") ? (
+                 <div className="flex flex-col items-center justify-center h-[300px]">
+                    <Icons.loader className="h-10 w-10 animate-spin text-primary mb-3" />
+                    <p className="text-slate-300">{loadingMessage}</p>
+                 </div>
+              ) : (
               <div className="grid md:grid-cols-2 gap-6">
                   <Card className="bg-slate-700/50 border-slate-600">
                       <CardHeader>
@@ -556,7 +632,8 @@ const SmartCampaignWizardInternal: React.FC = () => {
                       </CardContent>
                   </Card>
               </div>
-              {(twitterRepurposingIdeas.length === 0 && linkedinRepurposingIdeas.length === 0 && (twitterSeries.length > 0 || linkedinSeries.length > 0)) && (
+              )}
+              {(twitterRepurposingIdeas.length === 0 && linkedinRepurposingIdeas.length === 0 && (twitterSeries.length > 0 || linkedinSeries.length > 0) && !isLoading) && (
                   <div className="flex flex-col items-center justify-center text-center mt-4">
                       <Icons.info className="w-10 h-10 text-slate-500 mb-2" />
                       <p className="text-slate-400 text-md">The AI couldn't find repurposing ideas for the generated content.</p>
@@ -584,17 +661,14 @@ const SmartCampaignWizardInternal: React.FC = () => {
               </Button>
             </motion.div>
           );
-        }
-        return <div className="min-h-[350px]" />; 
       
       case 'complete':
-        if (!isDataMissing) {
           return (
             <motion.div key="complete" initial="hidden" animate="visible" exit="exit" variants={cardVariants} className="text-center space-y-6 py-8 min-h-[300px] flex flex-col justify-center items-center">
               <Icons.checkCircle className="h-20 w-20 text-green-500 mx-auto mb-4" />
               <h2 className="text-3xl font-bold text-slate-100">Your Smart Campaign is Ready!</h2>
               <p className="text-slate-300 max-w-md mx-auto">
-                You've successfully generated content angles, a campaign series, and repurposing ideas for your topic: <span className="font-semibold text-purple-400">{topic}</span>.
+                You've successfully generated content angles, a campaign series, and repurposing ideas for your topic: <span className="font-semibold text-purple-400">{campaignTopic}</span>.
               </p>
               <p className="text-slate-400">What would you like to do next?</p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
@@ -622,11 +696,9 @@ const SmartCampaignWizardInternal: React.FC = () => {
                 </Button>
             </motion.div>
           );
-        }
-        return <div className="min-h-[300px]" />; 
 
       default:
-        return <div className="min-h-[300px]" />; 
+        return <div className="min-h-[300px]" >Unknown step: {currentStep}</div>; 
     }
   };
 
@@ -643,19 +715,21 @@ const SmartCampaignWizardInternal: React.FC = () => {
             </div>
             <Progress value={stepConfig[currentStep]?.progress || 0} className="w-full sm:w-1/3 h-2 bg-slate-700 [&>div]:bg-primary" />
           </div>
-          {topic && !isDataMissing && currentStep !== 'initial' && (
+          {campaignTopic && currentStep !== 'topic_research' && currentStep !== 'initial_error' && (
             <CardDescription className="text-slate-400 pt-2">
-              Campaign Topic: <span className="font-semibold text-slate-300">{topic}</span>
+              Campaign Topic: <span className="font-semibold text-slate-300">{campaignTopic}</span>
             </CardDescription>
           )}
-           {(isDataMissing || currentStep === 'initial') && stepConfig['initial']?.description && (
+           {(currentStep === 'initial_error') && stepConfig['initial_error']?.description && (
              <CardDescription className="text-slate-400 pt-2">
-                {stepConfig['initial']?.description}
+                {stepConfig['initial_error']?.description}
             </CardDescription>
            )}
         </CardHeader>
         <CardContent className="p-6">
-          {renderStepContent()}
+          <AnimatePresence mode="wait">
+            {renderStepContent()}
+          </AnimatePresence>
         </CardContent>
       </Card>
 
@@ -724,7 +798,9 @@ const SmartCampaignWizardInternal: React.FC = () => {
 };
 
 export const SmartCampaignWizard: React.FC = () => {
-  const searchParamsString = typeof window !== 'undefined' ? window.location.search : 'stableInitialKey';
+  // Use a key for Suspense that changes when searchParams change, ensuring re-evaluation.
+  // This is a common pattern when a component inside Suspense relies on searchParams.
+  const searchParamsString = typeof window !== 'undefined' ? window.location.search : 'initialKey';
   
   return (
     <Suspense key={searchParamsString} fallback={
@@ -737,3 +813,5 @@ export const SmartCampaignWizard: React.FC = () => {
     </Suspense>
   );
 };
+
+    

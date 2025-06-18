@@ -8,10 +8,9 @@
  * - GeneratePostFromImageOutput - The return type for the function.
  */
 
-import {ai} from '@/ai/ai-instance';
-import {z} from 'genkit';
-
-// import { getUserData, deductCredits } from '@/lib/firebaseUserActions'; 
+import {ai}from '@/ai/ai-instance';
+import {z}from 'genkit';
+// import { getUserData, deductCredits, CREDIT_COSTS, CreditTransactionType } from '@/lib/firebaseUserActions'; 
 
 const GeneratePostFromImageInputSchema = z.object({
   imageDataUri: z
@@ -28,7 +27,7 @@ const GeneratePostFromImageInputSchema = z.object({
     .optional()
     .default('default')
     .describe('The desired tone for the generated post. "default" implies a generally engaging and suitable tone based on the image.'),
-  userId: z.string().describe('The ID of the user requesting the post.'),
+  userId: z.string().optional().describe('The ID of the user requesting the post. Optional for now.'),
 });
 export type GeneratePostFromImageInput = z.infer<typeof GeneratePostFromImageInputSchema>;
 
@@ -89,19 +88,22 @@ const generatePostFromImageFlow = ai.defineFlow({
   inputSchema: GeneratePostFromImageInputSchema,
   outputSchema: GeneratePostFromImageOutputSchema,
 }, async (input) => {
-  console.log('[generatePostFromImageFlow] Received input for user:', input.userId, { ...input, imageDataUri: input.imageDataUri.substring(0,50) + "..."});
+  // console.log('[generatePostFromImageFlow] User:', input.userId || 'Guest', { ...input, imageDataUri: input.imageDataUri.substring(0,50) + "..."});
 
-  // Auth logic:
-  // const userData = await getUserData(input.userId);
-  // if (!userData) return { error: "User data not found." };
-  // if (userData.plan !== 'infinity' && (userData.credits || 0) <= 0) {
-  //   return { error: "You have no credits remaining. Please upgrade your plan." };
+  // if (input.userId) { // Credit check temporarily disabled
+  //   const userData = await getUserData(input.userId);
+  //   if (!userData) {
+  //     return { error: "User data not found. Cannot generate post from image." };
+  //   }
+  //   if (userData.plan !== 'infinity' && (userData.credits || 0) < CREDIT_COSTS.IMAGE_TO_POST) {
+  //     return { error: `Insufficient credits for Image-to-Post. Need ${CREDIT_COSTS.IMAGE_TO_POST}, have ${userData.credits || 0}.` };
+  //   }
   // }
 
   try {
     const { output: promptOutput, usage } = await prompt(input);
-    console.log('[generatePostFromImageFlow] Raw AI output:', JSON.stringify(promptOutput, null, 2));
-    console.log('[generatePostFromImageFlow] Usage data:', JSON.stringify(usage, null, 2));
+    // console.log('[generatePostFromImageFlow] Raw AI output:', JSON.stringify(promptOutput, null, 2));
+    // console.log('[generatePostFromImageFlow] Usage data:', JSON.stringify(usage, null, 2));
 
     if (!promptOutput || !promptOutput.post) {
       const errorMessage = "AI failed to generate a post from the image. The model might not have returned any content or the expected 'post' field was missing.";
@@ -109,9 +111,17 @@ const generatePostFromImageFlow = ai.defineFlow({
       return { error: errorMessage };
     }
     
-    // Auth logic:
-    // if (userData.plan !== 'infinity') {
-    //   await deductCredits(input.userId, 1); 
+    // if (input.userId) { // Credit deduction temporarily disabled
+    //   const deductionResult = await deductCredits(
+    //     input.userId,
+    //     CREDIT_COSTS.IMAGE_TO_POST,
+    //     'Generated post from image',
+    //     CreditTransactionType.FEATURE_USE_IMAGE_TO_POST,
+    //     'generatePostFromImageFlow'
+    //   );
+    //   if (!deductionResult.success) {
+    //     console.error(`[generatePostFromImageFlow] Credit deduction failed for user ${input.userId}: ${deductionResult.error}`);
+    //   }
     // }
 
     return { generatedPost: promptOutput.post };
@@ -125,4 +135,5 @@ const generatePostFromImageFlow = ai.defineFlow({
     return { error: detailedErrorMessage };
   }
 });
+
     
