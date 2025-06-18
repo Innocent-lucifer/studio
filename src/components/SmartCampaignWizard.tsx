@@ -42,7 +42,7 @@ const cardMotionProps = {
   initial: { opacity: 0, y: 20, scale: 0.98 },
   animate: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.4, ease: "easeOut" } },
   exit: { opacity: 0, y: -20, scale: 0.98, transition: { duration: 0.3, ease: "easeIn" } },
-  whileHover: { scale: 1.01, transition: { type: "spring", stiffness: 300, damping: 10 } },
+  // whileHover effect is applied directly to the Card for shadow, motion.div handles scale
 };
 
 const listItemVariants = {
@@ -539,7 +539,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
                   animate="visible"
                 >
                   <motion.div variants={listItemVariants}>
-                    <Card className="bg-slate-700/50 border-slate-600 h-full">
+                    <Card className="bg-slate-700/50 border-slate-600 h-full hover:shadow-primary/10 transition-shadow duration-300">
                       <CardHeader>
                         <CardTitle className="flex items-center text-lg text-sky-400"><Icons.twitter className="mr-2 h-5 w-5" /> Twitter Thread</CardTitle>
                       </CardHeader>
@@ -565,7 +565,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
                     </Card>
                   </motion.div>
                   <motion.div variants={listItemVariants}>
-                    <Card className="bg-slate-700/50 border-slate-600 h-full">
+                    <Card className="bg-slate-700/50 border-slate-600 h-full hover:shadow-primary/10 transition-shadow duration-300">
                       <CardHeader>
                         <CardTitle className="flex items-center text-lg text-blue-400"><Icons.linkedin className="mr-2 h-5 w-5" /> LinkedIn Series</CardTitle>
                       </CardHeader>
@@ -621,7 +621,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
                 animate="visible"
               >
                   <motion.div variants={listItemVariants}>
-                    <Card className="bg-slate-700/50 border-slate-600 h-full">
+                    <Card className="bg-slate-700/50 border-slate-600 h-full hover:shadow-primary/10 transition-shadow duration-300">
                         <CardHeader>
                             <CardTitle className="flex items-center text-lg text-sky-400"><Icons.twitter className="mr-2 h-5 w-5" /> For Your Twitter Series</CardTitle>
                         </CardHeader>
@@ -648,7 +648,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
                     </Card>
                   </motion.div>
                   <motion.div variants={listItemVariants}>
-                    <Card className="bg-slate-700/50 border-slate-600 h-full">
+                    <Card className="bg-slate-700/50 border-slate-600 h-full hover:shadow-primary/10 transition-shadow duration-300">
                         <CardHeader>
                             <CardTitle className="flex items-center text-lg text-blue-400"><Icons.linkedin className="mr-2 h-5 w-5" /> For Your LinkedIn Series</CardTitle>
                         </CardHeader>
@@ -758,8 +758,11 @@ const SmartCampaignWizardInternal: React.FC = () => {
 
   return (
     <div className="w-full space-y-8">
-      <motion.div {...cardMotionProps}>
-        <Card className="bg-slate-800/70 border-slate-700 shadow-2xl rounded-xl overflow-hidden">
+      <motion.div {...cardMotionProps} 
+        // This whileHover is for the scale effect, the card itself will have hover:shadow
+        whileHover={{ scale: 1.01, transition: { type: "spring", stiffness: 300, damping: 10 } }}
+      >
+        <Card className="bg-slate-800/70 border-slate-700 shadow-2xl rounded-xl overflow-hidden hover:shadow-primary/20 transition-shadow duration-300">
           <CardHeader className="border-b border-slate-700">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
               <div className="flex items-center space-x-3">

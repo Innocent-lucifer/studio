@@ -233,7 +233,7 @@ export default function VisualPostPage() {
       >
         <main className="container mx-auto w-full max-w-xl">
           {commonHeader}
-          <Card className="bg-slate-800/60 backdrop-blur-md border border-slate-700 shadow-2xl rounded-2xl p-8 sm:p-12 text-center">
+          <Card className="bg-slate-800/60 backdrop-blur-md border border-slate-700 shadow-2xl rounded-2xl p-8 sm:p-12 text-center hover:shadow-primary/20 transition-shadow duration-300">
             <CardHeader className="p-0 mb-8">
               <Icons.image className="h-20 w-20 sm:h-24 sm:w-24 text-primary mx-auto mb-6" />
               <CardTitle className="text-3xl sm:text-4xl font-semibold text-primary">Create Post from Image</CardTitle>
