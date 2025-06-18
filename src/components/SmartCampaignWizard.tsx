@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input'; // For topic input
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
@@ -19,8 +19,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { useAuth } from "@/context/AuthContext";
 import { researchTopic, type ResearchTopicInput, type ResearchTopicOutput } from '@/ai/flows/research-topic';
-
-
 import type { SuggestContentAnglesInput, ContentAngle } from '@/ai/flows/suggest-content-angles';
 import { suggestContentAngles } from '@/ai/flows/suggest-content-angles';
 import type { GenerateCampaignSeriesInput } from '@/ai/flows/generate-campaign-series';
@@ -29,14 +27,13 @@ import type { SuggestRepurposingIdeasInput } from '@/ai/flows/suggest-repurposin
 import { suggestRepurposingIdeas } from '@/ai/flows/suggest-repurposing-ideas';
 import { generateEditedPost, type GenerateEditedPostInput } from '@/ai/flows/generateEditedPost';
 
-
 type WizardStep = 'topic_research' | 'angles' | 'series' | 'repurpose' | 'complete' | 'initial_error';
 
 const stepConfig: Record<WizardStep, { title: string; icon: keyof typeof Icons; progress: number; description?: string }> = {
-  initial_error: { title: "Campaign Setup Needed", icon: "alertTriangle", progress: 0, description: "Please provide a topic to start." },
+  initial_error: { title: "Campaign Setup Needed", icon: "alertTriangle", progress: 0, description: "Please provide a topic to start or research one below." },
   topic_research: { title: "Research Campaign Topic", icon: "search", progress: 10, description: "Enter a topic to research for your campaign." },
   angles: { title: "Select Content Angle", icon: "lightbulb", progress: 25, description: "Choose a strategic angle for your campaign." },
-  series: { title: "Generate Campaign Series", icon: "listChecks", progress: 50, description: "Crafting your posts based on the selected angle." },
+  series: { title: "Generate & Refine Campaign Series", icon: "listChecks", progress: 50, description: "Crafting and editing your posts based on the selected angle." },
   repurpose: { title: "Get Repurposing Ideas", icon: "repeat", progress: 75, description: "Maximizing content value across platforms." },
   complete: { title: "Campaign Ready!", icon: "checkCircle", progress: 100, description: "Your smart campaign has been generated." },
 };
@@ -52,9 +49,9 @@ const SmartCampaignWizardInternal: React.FC = () => {
   const router = useRouter();
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
-  const userIdToPass = user?.uid; // Will be undefined if user is not logged in
+  const userIdToPass = user?.uid;
 
-  const [campaignTopic, setCampaignTopic] = useState<string>(''); // For the input field in topic_research step
+  const [campaignTopic, setCampaignTopic] = useState<string>('');
   const [currentResearchedContent, setCurrentResearchedContent] = useState<string>('');
   
   const [currentStep, setCurrentStep] = useState<WizardStep>('topic_research');
@@ -67,32 +64,29 @@ const SmartCampaignWizardInternal: React.FC = () => {
   const [twitterSeries, setTwitterSeries] = useState<string[]>([]);
   const [linkedinSeries, setLinkedinSeries] = useState<string[]>([]);
   
-  const [editingSeries, setEditingSeries] = useState<{ platform: 'twitter' | 'linkedin'; index: number; text: string } | null>(null);
-  const [isAiSeriesEditModalOpen, setIsAiSeriesEditModalOpen] = useState(false);
-  const [aiSeriesEditInstruction, setAiSeriesEditInstruction] = useState("");
-  const [isAiSeriesSubmitting, setIsAiSeriesSubmitting] = useState(false);
+  const [editingPost, setEditingPost] = useState<{ platform: 'twitter' | 'linkedin'; index: number; originalText: string; currentText: string } | null>(null);
+  const [isAiEditModalOpen, setIsAiEditModalOpen] = useState(false);
+  const [aiEditInstruction, setAiEditInstruction] = useState("");
+  const [isAiSubmitting, setIsAiSubmitting] = useState(false);
   
   const [twitterRepurposingIdeas, setTwitterRepurposingIdeas] = useState<string[]>([]);
   const [linkedinRepurposingIdeas, setLinkedinRepurposingIdeas] = useState<string[]>([]);
 
-  // Effect to handle initial data from query params or set to topic research step
   useEffect(() => {
     const topicParam = searchParams.get('topic');
     const researchedContentParam = searchParams.get('researchedContent');
 
     if (topicParam && researchedContentParam && researchedContentParam.trim() !== "") {
-      setCampaignTopic(topicParam); // Pre-fill display topic
+      setCampaignTopic(topicParam);
       setCurrentResearchedContent(researchedContentParam);
-      setCurrentStep('angles'); // Skip internal research, go to angles
+      setCurrentStep('angles'); 
     } else {
-      setCurrentStep('topic_research'); // Start with internal research
+      setCurrentStep('topic_research');
     }
   }, [searchParams]);
 
-  // Effect to automatically fetch angles once topic and research are ready (and not from query params)
   useEffect(() => {
     if (currentStep === 'angles' && campaignTopic && currentResearchedContent && angles.length === 0 && !isLoading) {
-       // Check if we already have content (meaning we came from query params or just finished research)
       handleSuggestAngles(campaignTopic, currentResearchedContent);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -106,20 +100,19 @@ const SmartCampaignWizardInternal: React.FC = () => {
     }
     setIsLoading(true);
     setLoadingMessage(`Researching "${campaignTopic}"...`);
-    setCurrentResearchedContent(''); // Clear previous research
-    setAngles([]); // Clear previous angles
-    setSelectedAngle(null); // Clear selected angle
+    setCurrentResearchedContent(''); 
+    setAngles([]); 
+    setSelectedAngle(null); 
 
     try {
       const result = await researchTopic({ topic: campaignTopic, userId: userIdToPass });
       if (result.error || !result.summary) {
         toast({ variant: "destructive", title: "Research Failed", description: result.error || "Could not retrieve research summary." });
-        setCurrentResearchedContent(''); // Ensure it's empty on failure
+        setCurrentResearchedContent(''); 
       } else {
         setCurrentResearchedContent(result.summary);
         toast({ title: "Research Complete!", description: `Now select a content angle for "${campaignTopic}".` });
-        setCurrentStep('angles'); // Proceed to angle selection
-        // handleSuggestAngles will be triggered by the useEffect for 'angles' step
+        setCurrentStep('angles'); 
       }
     } catch (error: any) {
       toast({ variant: "destructive", title: "Research Error", description: error.message || "An unexpected error occurred." });
@@ -195,7 +188,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
       if ((twitterResult.series || []).length === 0 && (linkedinResult.series || []).length === 0) {
          toast({ variant: "default", title: "No Series Generated", description: "The AI couldn't generate series for this angle. You can try a different angle or topic." });
       }
-      setCurrentStep('series'); // Move to series display step
+      setCurrentStep('series'); 
 
     } catch (error: any) {
       toast({ variant: "destructive", title: "Error Generating Series", description: error.message || "Failed to generate series." });
@@ -266,7 +259,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
       if ((twitterResult?.ideas || []).length === 0 && (linkedinResult?.ideas || []).length === 0) {
          toast({ variant: "default", title: "No Repurposing Ideas", description: "The AI couldn't find repurposing ideas for this campaign." });
       }
-      setCurrentStep('repurpose'); // Move to repurpose display step
+      setCurrentStep('repurpose'); 
 
     } catch (error: any) {
       toast({ variant: "destructive", title: "Error Suggesting Repurposing", description: error.message || "Failed to suggest repurposing ideas." });
@@ -276,68 +269,54 @@ const SmartCampaignWizardInternal: React.FC = () => {
     }
   };
 
-
-  const startEdit = (platform: 'twitter' | 'linkedin', index: number, text: string) => {
-    setEditingSeries({ platform, index, text });
+  const handleOpenEditModal = (platform: 'twitter' | 'linkedin', index: number, text: string) => {
+    setEditingPost({ platform, index, originalText: text, currentText: text });
   };
 
-  const saveEdit = () => {
-    if (!editingSeries) return;
-    const { platform, index, text } = editingSeries;
+  const handleSaveEditedPost = () => {
+    if (!editingPost) return;
+    const { platform, index, currentText } = editingPost;
     if (platform === 'twitter') {
-      setTwitterSeries(prev => prev.map((item, i) => i === index ? text : item));
+      setTwitterSeries(prev => prev.map((item, i) => (i === index ? currentText : item)));
     } else {
-      setLinkedinSeries(prev => prev.map((item, i) => i === index ? text : item));
+      setLinkedinSeries(prev => prev.map((item, i) => (i === index ? currentText : item)));
     }
-    setEditingSeries(null);
+    setEditingPost(null);
     toast({ title: "Post Updated", description: "Your changes have been saved to this campaign." });
   };
   
-  const handleAiSeriesEditSubmit = async () => {
-    if (!editingSeries || !aiSeriesEditInstruction.trim() || !campaignTopic) {
-      toast({
-        title: "Missing Information",
-        description: "Post context or AI instruction is missing.",
-        variant: "destructive",
-      });
+  const handleAiEditForSeriesPost = async () => {
+    if (!editingPost || !aiEditInstruction.trim() || !campaignTopic) {
+      toast({ title: "Missing Information", description: "Post context or AI instruction is missing.", variant: "destructive" });
       return;
     }
-    setIsAiSeriesSubmitting(true);
+    setIsAiSubmitting(true);
     try {
       const input: GenerateEditedPostInput = {
-        originalPost: editingSeries.text,
-        editInstruction: aiSeriesEditInstruction,
+        originalPost: editingPost.currentText, // Use currentText from modal for chained AI edits
+        editInstruction: aiEditInstruction,
         topic: campaignTopic, 
-        platform: editingSeries.platform,
+        platform: editingPost.platform,
         userId: userIdToPass,
       };
       const result = await generateEditedPost(input);
 
       if (result.error) {
-        toast({ variant: "destructive", title: "AI Edit Error", description: result.error});
+        toast({ variant: "destructive", title: "AI Edit Error", description: result.error });
       } else if (result.editedPost) {
-        setEditingSeries(prev => prev ? { ...prev, text: result.editedPost! } : null);
-        toast({
-          title: "AI Edit Applied",
-          description: "The AI has revised the post. Review and save your changes.",
-        });
-        setIsAiSeriesEditModalOpen(false);
-        setAiSeriesEditInstruction("");
+        setEditingPost(prev => prev ? { ...prev, currentText: result.editedPost! } : null); // Update currentText in the modal
+        toast({ title: "AI Edit Applied", description: "The AI has revised the post in the editor. Review and save." });
+        setIsAiEditModalOpen(false); // Close AI instruction modal
+        setAiEditInstruction("");
       } else {
-         toast({ variant: "destructive", title: "AI Edit Failed", description: "AI did not return an edited post."});
+         toast({ variant: "destructive", title: "AI Edit Failed", description: "AI did not return an edited post." });
       }
     } catch (error: any) {
-      console.error("Error applying AI edit to series post:", error);
-      toast({
-        title: "AI Edit Exception",
-        description: error.message || "Could not apply AI changes. Please try again.",
-        variant: "destructive",
-      });
+      toast({ title: "AI Edit Exception", description: error.message || "Could not apply AI changes.", variant: "destructive" });
     } finally {
-      setIsAiSeriesSubmitting(false);
+      setIsAiSubmitting(false);
     }
   };
-
 
   const resetWizard = () => {
     setCampaignTopic('');
@@ -349,10 +328,10 @@ const SmartCampaignWizardInternal: React.FC = () => {
     setLinkedinSeries([]);
     setTwitterRepurposingIdeas([]);
     setLinkedinRepurposingIdeas([]);
-    setEditingSeries(null);
-    setIsAiSeriesEditModalOpen(false);
-    setAiSeriesEditInstruction("");
-    router.push('/smart-campaign'); // Clear query params by navigating to base page
+    setEditingPost(null);
+    setIsAiEditModalOpen(false);
+    setAiEditInstruction("");
+    router.push('/smart-campaign'); 
   };
   
   const handleCopyCampaign = () => {
@@ -372,7 +351,6 @@ const SmartCampaignWizardInternal: React.FC = () => {
         contentToCopy += `\n\n`;
     }
 
-
     if (linkedinSeries.length > 0) {
       contentToCopy += `=== LinkedIn Series ===\n`;
       contentToCopy += linkedinSeries.map((post, i) => `LinkedIn Post ${i+1}:\n${post}`).join('\n\n---\n\n');
@@ -391,7 +369,6 @@ const SmartCampaignWizardInternal: React.FC = () => {
     toast({ title: "Campaign Copied!", description: "Full campaign content copied to clipboard." });
   };
 
-
   const renderLoadingState = () => (
     <div className="flex flex-col items-center justify-center p-10 bg-slate-800/50 rounded-xl shadow-xl min-h-[300px]">
       <Icons.loader className="h-12 w-12 animate-spin text-primary mb-4" />
@@ -402,7 +379,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
   const CurrentIcon = Icons[stepConfig[currentStep]?.icon || 'help'] || Icons.help;
 
   const renderStepContent = () => {    
-    if (isLoading && currentStep !== 'topic_research' && currentStep !== 'angles' && currentStep !== 'series' && currentStep !== 'repurpose') { // Show general loader for transitions
+    if (isLoading && !['topic_research', 'angles', 'series', 'repurpose'].includes(currentStep)) {
       return renderLoadingState();
     }
 
@@ -540,9 +517,13 @@ const SmartCampaignWizardInternal: React.FC = () => {
                     <CardContent className="space-y-3">
                       <ScrollArea className="h-[300px] pr-2">
                         {twitterSeries.length > 0 ? twitterSeries.map((post, index) => (
-                          <div key={`twitter-${index}`} className="p-3 bg-slate-600/70 rounded-md text-slate-200 text-sm mb-2">
+                          <div key={`twitter-${index}`} className="p-3 bg-slate-600/70 rounded-md text-slate-200 text-sm mb-2 group">
                             <p className="whitespace-pre-wrap">{post}</p>
-                            <Button variant="link" size="sm" onClick={() => startEdit('twitter', index, post)} className="text-sky-400/80 hover:text-sky-400 p-0 h-auto mt-1">Edit</Button>
+                            <div className="mt-2 flex space-x-2">
+                               <Button variant="link" size="sm" onClick={() => handleOpenEditModal('twitter', index, post)} className="text-sky-400/80 hover:text-sky-400 p-0 h-auto text-xs">
+                                <Icons.edit className="mr-1 h-3 w-3"/>Manual Edit
+                              </Button>
+                            </div>
                           </div>
                         )) : <p className="text-slate-400 text-center py-4">No Twitter posts generated.</p>}
                       </ScrollArea>
@@ -555,9 +536,13 @@ const SmartCampaignWizardInternal: React.FC = () => {
                     <CardContent className="space-y-3">
                         <ScrollArea className="h-[300px] pr-2">
                           {linkedinSeries.length > 0 ? linkedinSeries.map((post, index) => (
-                            <div key={`linkedin-${index}`} className="p-3 bg-slate-600/70 rounded-md text-slate-200 text-sm mb-2">
+                            <div key={`linkedin-${index}`} className="p-3 bg-slate-600/70 rounded-md text-slate-200 text-sm mb-2 group">
                               <p className="whitespace-pre-wrap">{post}</p>
-                              <Button variant="link" size="sm" onClick={() => startEdit('linkedin', index, post)} className="text-blue-400/80 hover:text-blue-400 p-0 h-auto mt-1">Edit</Button>
+                               <div className="mt-2 flex space-x-2">
+                                <Button variant="link" size="sm" onClick={() => handleOpenEditModal('linkedin', index, post)} className="text-blue-400/80 hover:text-blue-400 p-0 h-auto text-xs">
+                                  <Icons.edit className="mr-1 h-3 w-3"/>Manual Edit
+                                </Button>
+                              </div>
                             </div>
                           )) : <p className="text-slate-400 text-center py-4">No LinkedIn posts generated.</p>}
                         </ScrollArea>
@@ -734,30 +719,30 @@ const SmartCampaignWizardInternal: React.FC = () => {
       </Card>
 
       {/* Main Edit Modal for Series Posts */}
-      <Dialog open={!!editingSeries} onOpenChange={(isOpen) => !isOpen && setEditingSeries(null)}>
+      <Dialog open={!!editingPost} onOpenChange={(isOpen) => !isOpen && setEditingPost(null)}>
         <DialogContent className="bg-slate-800 border-slate-700 text-white sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle className="text-primary">Edit {editingSeries?.platform === 'twitter' ? 'Tweet' : 'LinkedIn Post'}</DialogTitle>
+            <DialogTitle className="text-primary">Edit {editingPost?.platform === 'twitter' ? 'Tweet' : 'LinkedIn Post'}</DialogTitle>
              <DialogDescription className="text-slate-400">
                   Refine your post. Use "Make AI Change" for AI assistance or edit manually.
               </DialogDescription>
           </DialogHeader>
           <Textarea
-            value={editingSeries?.text || ''}
-            onChange={(e) => setEditingSeries(prev => prev ? { ...prev, text: e.target.value } : null)}
+            value={editingPost?.currentText || ''}
+            onChange={(e) => setEditingPost(prev => prev ? { ...prev, currentText: e.target.value } : null)}
             rows={10}
             className="bg-slate-700 border-slate-600 text-slate-100 focus:ring-primary focus:border-primary text-sm mt-2"
-            placeholder={`Enter your revised ${editingSeries?.platform === 'twitter' ? 'tweet' : 'LinkedIn post'}...`}
+            placeholder={`Enter your revised ${editingPost?.platform === 'twitter' ? 'tweet' : 'LinkedIn post'}...`}
           />
           <DialogFooter className="mt-4 sm:justify-between">
-            <Button variant="outline" onClick={() => setEditingSeries(null)} className="border-slate-600 text-slate-300 hover:bg-slate-700">
+            <Button variant="outline" onClick={() => setEditingPost(null)} className="border-slate-600 text-slate-300 hover:bg-slate-700">
               Cancel
             </Button>
             <div className="flex space-x-2">
-              <Button onClick={() => setIsAiSeriesEditModalOpen(true)} className="bg-purple-600 hover:bg-purple-700 text-white">
+              <Button onClick={() => setIsAiEditModalOpen(true)} className="bg-purple-600 hover:bg-purple-700 text-white">
                 <Icons.sparkles className="mr-2 h-4 w-4" /> Make AI Change
               </Button>
-              <Button onClick={saveEdit} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+              <Button onClick={handleSaveEditedPost} className="bg-primary hover:bg-primary/90 text-primary-foreground">
                 <Icons.save className="mr-2 h-4 w-4"/>
                 Save Changes
               </Button>
@@ -767,7 +752,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
       </Dialog>
       
       {/* Nested AI Edit Instruction Modal for Series Posts */}
-      <Dialog open={isAiSeriesEditModalOpen} onOpenChange={setIsAiSeriesEditModalOpen}>
+      <Dialog open={isAiEditModalOpen} onOpenChange={setIsAiEditModalOpen}>
         <DialogContent className="bg-slate-800 border-slate-700 text-white sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="text-primary">AI-Powered Editing</DialogTitle>
@@ -778,15 +763,15 @@ const SmartCampaignWizardInternal: React.FC = () => {
           </DialogHeader>
           <Textarea
             placeholder="e.g., Make it more professional and add relevant hashtags"
-            value={aiSeriesEditInstruction}
-            onChange={(e) => setAiSeriesEditInstruction(e.target.value)}
+            value={aiEditInstruction}
+            onChange={(e) => setAiEditInstruction(e.target.value)}
             rows={3}
             className="bg-slate-700 border-slate-600 text-slate-100 focus:ring-primary focus:border-primary text-sm mt-2"
           />
           <DialogFooter className="mt-4">
-            <Button variant="outline" onClick={() => setIsAiSeriesEditModalOpen(false)} className="border-slate-600 text-slate-300 hover:bg-slate-700">Cancel</Button>
-            <Button onClick={handleAiSeriesEditSubmit} disabled={isAiSeriesSubmitting || !aiSeriesEditInstruction.trim()} className="bg-primary hover:bg-primary/90 text-primary-foreground">
-              {isAiSeriesSubmitting ? <Icons.loader className="animate-spin mr-2 h-4 w-4" /> : <Icons.wand className="mr-2 h-4 w-4" />}
+            <Button variant="outline" onClick={() => setIsAiEditModalOpen(false)} className="border-slate-600 text-slate-300 hover:bg-slate-700">Cancel</Button>
+            <Button onClick={handleAiEditForSeriesPost} disabled={isAiSubmitting || !aiEditInstruction.trim()} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+              {isAiSubmitting ? <Icons.loader className="animate-spin mr-2 h-4 w-4" /> : <Icons.wand className="mr-2 h-4 w-4" />}
               Apply AI Edit
             </Button>
           </DialogFooter>
@@ -798,8 +783,6 @@ const SmartCampaignWizardInternal: React.FC = () => {
 };
 
 export const SmartCampaignWizard: React.FC = () => {
-  // Use a key for Suspense that changes when searchParams change, ensuring re-evaluation.
-  // This is a common pattern when a component inside Suspense relies on searchParams.
   const searchParamsString = typeof window !== 'undefined' ? window.location.search : 'initialKey';
   
   return (
@@ -813,5 +796,3 @@ export const SmartCampaignWizard: React.FC = () => {
     </Suspense>
   );
 };
-
-    
