@@ -23,8 +23,6 @@ const platforms: Platform[] = ["Twitter", "LinkedIn"];
 
 const categories = ["All", "Tech", "Love", "Finance", "Startups", "Fashion", "Memes", "Gaming", "Travel", "Food", "Health", "AI"];
 
-// Trend interface is now imported from the flow
-
 export default function TrendsPage() {
   const { user } = useAuth();
   const userIdToPass = user?.uid || "sagepostai-guest-user";
@@ -35,15 +33,15 @@ export default function TrendsPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [selectedPlatform, setSelectedPlatform] = useState<Platform>("Twitter");
-  const [selectedCategory, setSelectedCategory] = useState<string>("All"); // Default to "All"
+  const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [filterByHype, setFilterByHype] = useState<boolean>(false);
-  const [trendingRegion, setTrendingRegion] = useState<"Global" | "Local">("Global"); // 'Local' is aspirational for now
+  const [trendingRegion, setTrendingRegion] = useState<"Global" | "Local">("Global");
 
   const debouncedFetchTrends = useCallback(
     debounce(async (platform: Platform, category: string, userId: string) => {
       setIsLoading(true);
       setError(null);
-      setTrends([]); // Clear previous trends
+      setTrends([]);
       try {
         const result = await fetchPlatformTrends({ platform, category, userId, numTrendsToGenerate: 6 });
         if (result.error) {
@@ -63,7 +61,7 @@ export default function TrendsPage() {
       } finally {
         setIsLoading(false);
       }
-    }, 500), // 500ms debounce
+    }, 500),
     [toast, userIdToPass]
   );
 
@@ -74,9 +72,8 @@ export default function TrendsPage() {
 
   const filteredTrends = useMemo(() => {
     return trends
-      // Platform and category filtering is now handled by the API call, but we keep client-side filters for hype/region
-      .filter(trend => !filterByHype || trend.hypeScore > 75) // Example hype threshold
-      .filter(trend => trendingRegion === "Global" ? trend.region === "Global" : trend.region === "Local"); // Filter by region
+      .filter(trend => !filterByHype || trend.hypeScore > 75)
+      .filter(trend => trendingRegion === "Global" ? trend.region === "Global" : trend.region === "Local");
   }, [trends, filterByHype, trendingRegion]);
 
   const cardVariants = {
@@ -93,7 +90,6 @@ export default function TrendsPage() {
     }
   };
   
-  // Debounce helper
   function debounce<F extends (...args: any[]) => any>(func: F, delay: number) {
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
     return (...args: Parameters<F>): void => {
@@ -165,23 +161,41 @@ export default function TrendsPage() {
             <ScrollBar orientation="horizontal" className="h-2 [&>div]:bg-slate-600" />
           </ScrollArea>
         </div>
+        
+        <motion.div
+            key="filter-controls"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.2 }}
+            className="mb-8 p-4 bg-slate-800/40 border border-slate-700 rounded-xl shadow-lg"
+        >
+            <div className="flex flex-col md:flex-row md:items-center md:justify-around gap-x-8 gap-y-4">
+                <div className="flex items-center space-x-3">
+                    <Switch 
+                        id="filter-hype" 
+                        checked={filterByHype} 
+                        onCheckedChange={setFilterByHype} 
+                        className="data-[state=checked]:bg-red-500"
+                    />
+                    <Label htmlFor="filter-hype" className="text-sm text-slate-200 flex items-center cursor-pointer">
+                        <Icons.flame className="mr-2 h-4 w-4 text-red-400"/>Filter by High Hype ({">"}75)
+                    </Label>
+                </div>
+                <div className="flex items-center space-x-3">
+                    <Switch
+                        id="filter-region"
+                        checked={trendingRegion === "Local"}
+                        onCheckedChange={(checked) => setTrendingRegion(checked ? "Local" : "Global")}
+                        className="data-[state=checked]:bg-blue-500"
+                        disabled // Local trends are not fully supported by the flow yet
+                    />
+                    <Label htmlFor="filter-region" className={`text-sm text-slate-200 flex items-center cursor-pointer ${true ? 'opacity-50' : ''}`}>
+                        <Icons.globe className="mr-2 h-4 w-4 text-blue-400"/>Show {trendingRegion} Trends
+                    </Label>
+                </div>
+            </div>
+        </motion.div>
 
-         <div className="fixed bottom-6 right-6 z-50 space-y-3 p-3 bg-slate-800/70 backdrop-blur-sm border border-slate-700 rounded-lg shadow-xl">
-          <div className="flex items-center space-x-2">
-            <Switch id="filter-hype" checked={filterByHype} onCheckedChange={setFilterByHype} className="data-[state=checked]:bg-red-500"/>
-            <Label htmlFor="filter-hype" className="text-sm text-slate-200 flex items-center"><Icons.flame className="mr-1.5 h-4 w-4 text-red-400"/>Hype {"(>75)"}</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="filter-region"
-              checked={trendingRegion === "Local"}
-              onCheckedChange={(checked) => setTrendingRegion(checked ? "Local" : "Global")}
-              className="data-[state=checked]:bg-blue-500"
-              disabled // Local trends are not fully supported by the flow yet
-            />
-            <Label htmlFor="filter-region" className={`text-sm text-slate-200 flex items-center ${true ? 'opacity-50' : ''}`}><Icons.globe className="mr-1.5 h-4 w-4 text-blue-400"/>{trendingRegion}</Label>
-          </div>
-        </div>
 
         <AnimatePresence>
           {isLoading ? (
@@ -274,3 +288,4 @@ export default function TrendsPage() {
     </motion.div>
   );
 }
+
