@@ -87,7 +87,7 @@ export const CREDIT_COSTS = {
 export interface Draft {
   id?: string; // Firestore ID, optional when creating
   userId: string;
-  platform: 'twitter' | 'linkedin';
+  platform: 'twitter' | 'linkedin' | 'visual'; // Added 'visual'
   content: string;
   topic?: string; // Optional topic context for the draft
   createdAt: Timestamp;

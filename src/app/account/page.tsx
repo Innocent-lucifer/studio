@@ -78,6 +78,20 @@ export default function AccountPage() {
     toast({ title: "Copied to Clipboard!", description: "Draft content has been copied." });
   };
 
+  const getDraftPlatformInfo = (platform: Draft['platform']) => {
+    switch (platform) {
+      case 'twitter':
+        return { icon: <Icons.twitter className="h-5 w-5 text-sky-400" />, name: 'Twitter Draft' };
+      case 'linkedin':
+        return { icon: <Icons.linkedin className="h-5 w-5 text-blue-400" />, name: 'LinkedIn Draft' };
+      case 'visual':
+        return { icon: <Icons.image className="h-5 w-5 text-purple-400" />, name: 'Visual Post Draft' };
+      default:
+        return { icon: <Icons.file className="h-5 w-5 text-slate-400" />, name: 'Draft' };
+    }
+  };
+
+
   if (authLoading || (!user && !authLoading)) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col items-center justify-center p-4">
@@ -164,50 +178,53 @@ export default function AccountPage() {
               ) : drafts.length > 0 ? (
                 <div className="space-y-4">
                   <AnimatePresence>
-                    {drafts.map((draft) => (
-                      <motion.div
-                        key={draft.id}
-                        layout
-                        variants={draftItemVariants}
-                        initial="initial"
-                        animate="animate"
-                        exit="exit"
-                        className="p-4 bg-slate-700/70 rounded-lg border border-slate-600 shadow-md hover:border-primary/50 transition-colors"
-                      >
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <div className="flex items-center space-x-2 mb-1">
-                              {draft.platform === 'twitter' ? <Icons.twitter className="h-5 w-5 text-sky-400" /> : <Icons.linkedin className="h-5 w-5 text-blue-400" />}
-                              <span className="font-semibold text-slate-100 capitalize">{draft.platform} Draft</span>
+                    {drafts.map((draft) => {
+                      const platformInfo = getDraftPlatformInfo(draft.platform);
+                      return (
+                        <motion.div
+                          key={draft.id}
+                          layout
+                          variants={draftItemVariants}
+                          initial="initial"
+                          animate="animate"
+                          exit="exit"
+                          className="p-4 bg-slate-700/70 rounded-lg border border-slate-600 shadow-md hover:border-primary/50 transition-colors"
+                        >
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <div className="flex items-center space-x-2 mb-1">
+                                {platformInfo.icon}
+                                <span className="font-semibold text-slate-100">{platformInfo.name}</span>
+                              </div>
+                              {draft.topic && <p className="text-xs text-slate-400 mb-1">Topic: {draft.topic}</p>}
+                              <p className="text-sm text-slate-300 line-clamp-2">{draft.content}</p>
+                              <p className="text-xs text-slate-500 mt-2">
+                                Saved: {draft.updatedAt ? formatDistanceToNow(draft.updatedAt.toDate(), { addSuffix: true }) : 'N/A'}
+                              </p>
                             </div>
-                            {draft.topic && <p className="text-xs text-slate-400 mb-1">Topic: {draft.topic}</p>}
-                            <p className="text-sm text-slate-300 line-clamp-2">{draft.content}</p>
-                            <p className="text-xs text-slate-500 mt-2">
-                              Saved: {draft.updatedAt ? formatDistanceToNow(draft.updatedAt.toDate(), { addSuffix: true }) : 'N/A'}
-                            </p>
+                            <div className="flex flex-col sm:flex-row gap-2 shrink-0 ml-2 mt-1 sm:mt-0">
+                              <Button variant="ghost" size="sm" onClick={() => setViewingDraft(draft)} className="text-primary hover:text-purple-400 p-1 h-auto">
+                                <Icons.eye className="h-4 w-4 mr-1 sm:mr-0"/> <span className="sm:hidden">View</span>
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => draft.id && handleDeleteDraft(draft.id)}
+                                disabled={deletingDraftId === draft.id}
+                                className="text-red-500 hover:text-red-400 p-1 h-auto"
+                              >
+                                {deletingDraftId === draft.id ? <Icons.loader className="h-4 w-4 animate-spin" /> : <Icons.trash className="h-4 w-4 mr-1 sm:mr-0" />}
+                                 <span className="sm:hidden">Delete</span>
+                              </Button>
+                            </div>
                           </div>
-                          <div className="flex flex-col sm:flex-row gap-2 shrink-0 ml-2 mt-1 sm:mt-0">
-                            <Button variant="ghost" size="sm" onClick={() => setViewingDraft(draft)} className="text-primary hover:text-purple-400 p-1 h-auto">
-                              <Icons.eye className="h-4 w-4 mr-1 sm:mr-0"/> <span className="sm:hidden">View</span>
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => draft.id && handleDeleteDraft(draft.id)}
-                              disabled={deletingDraftId === draft.id}
-                              className="text-red-500 hover:text-red-400 p-1 h-auto"
-                            >
-                              {deletingDraftId === draft.id ? <Icons.loader className="h-4 w-4 animate-spin" /> : <Icons.trash className="h-4 w-4 mr-1 sm:mr-0" />}
-                               <span className="sm:hidden">Delete</span>
-                            </Button>
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))}
+                        </motion.div>
+                      );
+                    })}
                   </AnimatePresence>
                 </div>
               ) : (
-                <p className="text-slate-400 text-center py-6">You have no saved drafts yet. Try saving some from the Quick Post generator!</p>
+                <p className="text-slate-400 text-center py-6">You have no saved drafts yet. Try saving some from the content generators!</p>
               )}
             </div>
 
@@ -224,8 +241,10 @@ export default function AccountPage() {
         <DialogContent className="bg-slate-800 border-slate-700 text-white sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className="text-primary flex items-center">
-                {viewingDraft?.platform === 'twitter' ? <Icons.twitter className="h-5 w-5 mr-2 text-sky-400" /> : <Icons.linkedin className="h-5 w-5 mr-2 text-blue-400" />}
-                View Draft ({viewingDraft?.platform})
+                {viewingDraft ? getDraftPlatformInfo(viewingDraft.platform).icon : ''}
+                <span className="ml-2">
+                  View {viewingDraft ? getDraftPlatformInfo(viewingDraft.platform).name : 'Draft'}
+                </span>
             </DialogTitle>
             {viewingDraft?.topic && <DialogDescription className="text-slate-400">Topic: {viewingDraft.topic}</DialogDescription>}
           </DialogHeader>
