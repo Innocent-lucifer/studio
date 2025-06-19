@@ -69,7 +69,7 @@ export const CREDIT_COSTS = {
   QUICK_POST: 20,
   QUICK_POST_REGENERATE: 5,
   IMAGE_TO_POST: 60,
-  SMART_CAMPAIGN_SUGGEST_ANGLE: 25,
+  SMART_CAMPAIGN_SUGGEST_ANGLE: 25, // This was SMART_CAMPAIGN_ANGLES
   AI_EDIT: 5,
   TREND_EXPLORER_FETCH: 0,
 };
@@ -99,60 +99,58 @@ export const createUserDocument = async (
 ): Promise<UserData | null> => {
   if (!user) return null;
   const userRef = doc(db, 'users', user.uid) as DocumentReference<UserData>;
-  const userSnap = await getDoc(userRef);
+  
+  try {
+    const userSnap = await getDoc(userRef);
 
-  if (!userSnap.exists()) {
-    const userData: UserData = {
-      uid: user.uid,
-      email: user.email,
-      displayName: user.displayName || user.email?.split('@')[0] || 'SageUser',
-      createdAt: serverTimestamp() as Timestamp,
-      referralCode: generateReferralCode(),
-      referralsMade: 0,
-      plan: 'free',
-      credits: 1000, // UPDATED: Initial credits for new users
-      freeQuickPostUsed: false,
-      freeImageToPostUsed: false,
-      freeSmartCampaignAnglesUsed: false,
-      freeAiEditUsed: false,
-    };
+    if (!userSnap.exists()) {
+      const userData: UserData = {
+        uid: user.uid,
+        email: user.email,
+        displayName: user.displayName || user.email?.split('@')[0] || 'SageUser',
+        createdAt: serverTimestamp() as Timestamp,
+        referralCode: generateReferralCode(),
+        referralsMade: 0,
+        plan: 'free',
+        credits: 1000, 
+        freeQuickPostUsed: false,
+        freeImageToPostUsed: false,
+        freeSmartCampaignAnglesUsed: false,
+        freeAiEditUsed: false,
+      };
 
-    if (referredByCode) {
-        console.log(`User referred by code: ${referredByCode} - referral logic temporarily adjusted.`);
-    }
+      if (referredByCode) {
+          console.log(`User referred by code: ${referredByCode} - referral logic temporarily adjusted.`);
+      }
 
-    try {
       await setDoc(userRef, userData);
       console.log(`User document created for ${user.uid} with initial data and 1000 free credits.`);
       return userData;
-    } catch (error) {
-      console.error('Detailed error from createUserDocument (setDoc failed):', error);
-      throw error; 
-    }
-  } else {
-    console.log(`User document for ${user.uid} already existed when createUserDocument was called. Ensuring fields are up-to-date.`);
-    const existingData = userSnap.data();
-    let needsUpdate = false;
-    const updates: Partial<UserData> = {};
-    if (existingData.plan === undefined) { updates.plan = 'free'; needsUpdate = true; }
-    if (existingData.credits === undefined) { updates.credits = 1000; needsUpdate = true; } // UPDATED: Default for migration
-    if (existingData.freeQuickPostUsed === undefined) { updates.freeQuickPostUsed = false; needsUpdate = true; }
-    if (existingData.freeImageToPostUsed === undefined) { updates.freeImageToPostUsed = false; needsUpdate = true; }
-    if (existingData.freeSmartCampaignAnglesUsed === undefined) { updates.freeSmartCampaignAnglesUsed = false; needsUpdate = true; }
-    if (existingData.freeAiEditUsed === undefined) { updates.freeAiEditUsed = false; needsUpdate = true; }
+    } else {
+      console.log(`User document for ${user.uid} already existed when createUserDocument was called. Ensuring fields are up-to-date.`);
+      const existingData = userSnap.data() as UserData; // Cast to ensure type safety
+      let needsUpdate = false;
+      const updates: Partial<UserData> = {};
+      
+      // Initialize missing fields with defaults from the free plan
+      if (existingData.plan === undefined) { updates.plan = 'free'; needsUpdate = true; }
+      if (existingData.credits === undefined) { updates.credits = 1000; needsUpdate = true; }
+      if (existingData.freeQuickPostUsed === undefined) { updates.freeQuickPostUsed = false; needsUpdate = true; }
+      if (existingData.freeImageToPostUsed === undefined) { updates.freeImageToPostUsed = false; needsUpdate = true; }
+      if (existingData.freeSmartCampaignAnglesUsed === undefined) { updates.freeSmartCampaignAnglesUsed = false; needsUpdate = true; }
+      if (existingData.freeAiEditUsed === undefined) { updates.freeAiEditUsed = false; needsUpdate = true; }
 
 
-    if (needsUpdate) {
-      try {
+      if (needsUpdate) {
         await updateDoc(userRef, updates);
         console.log(`User document for ${user.uid} updated with default credit system fields during createUserDocument call.`);
         return { ...existingData, ...updates };
-      } catch (error) {
-        console.error('Detailed error from createUserDocument (updateDoc failed for existing user):', error);
-        throw error; 
       }
+      return existingData;
     }
-    return existingData;
+  } catch (error) {
+    console.error('Detailed error from createUserDocument (setDoc/updateDoc failed):', error);
+    throw error; 
   }
 };
 
@@ -163,17 +161,15 @@ export const getUserData = async (uid: string, userForCreation?: FirebaseAuthUse
     const userSnap = await getDoc(userRef);
     if (userSnap.exists()) {
       const data = userSnap.data();
-      // Ensure all credit-related fields have defaults if missing (migration for older users)
       const migratedData: UserData = {
-        plan: 'free', // Default if plan somehow missing
-        credits: (data && data.credits !== undefined) ? data.credits : 1000, // Default to 1000 if missing
+        plan: 'free', 
+        credits: 1000, 
         freeQuickPostUsed: false,
         freeImageToPostUsed: false,
         freeSmartCampaignAnglesUsed: false,
         freeAiEditUsed: false,
-        ...data, // Spread existing data, potentially overriding defaults if present
+        ...data, 
       };
-      // Explicitly set defaults if any specific flag is undefined after spread
       if (migratedData.plan === undefined) migratedData.plan = 'free';
       if (migratedData.credits === undefined) migratedData.credits = 1000;
       if (migratedData.freeQuickPostUsed === undefined) migratedData.freeQuickPostUsed = false;
@@ -183,23 +179,20 @@ export const getUserData = async (uid: string, userForCreation?: FirebaseAuthUse
       
       return migratedData;
     } else {
-      // If document doesn't exist, try to create it only if userForCreation is provided
       if (userForCreation && userForCreation.uid === uid) {
         console.warn(`No user data found for UID: ${uid}. Attempting to create using provided user object.`);
         return await createUserDocument(userForCreation); 
       } else {
-        // If no user object is provided, or UID mismatch, we cannot create it here.
         console.warn(`No user data found for UID: ${uid}. No user object provided for creation or UID mismatch.`);
         return null;
       }
     }
   } catch (error: any) {
     console.error('Detailed error from getUserData:', error);
-    // Check for Firestore offline error
-    if (error.code === 'unavailable' || (error.message && error.message.toLowerCase().includes('offline'))) {
+    if (error.code === 'unavailable' || (typeof error.message === 'string' && error.message.toLowerCase().includes('offline'))) {
       throw new Error("Could not connect to the database. Please check your internet connection and try again.");
     }
-    throw error; // Re-throw other errors
+    throw error; 
   }
 };
 
@@ -216,7 +209,6 @@ export const deductCredits = async (
   try {
     userData = await getUserData(userId);
   } catch (error: any) {
-    // If getUserData throws (e.g., document creation failed earlier or offline), catch it here.
     return { success: false, error: `Failed to retrieve user data for credit deduction: ${error.message}` };
   }
 
@@ -232,7 +224,6 @@ export const deductCredits = async (
   let freePostUsedThisTime = false;
   const updates: Partial<UserData> = {};
 
-  // Check for free post usage only if it's not a regeneration
   if (!isRegeneration) {
     if (featureKey === 'QUICK_POST' && !userData.freeQuickPostUsed) {
       updates.freeQuickPostUsed = true;
@@ -244,14 +235,12 @@ export const deductCredits = async (
       updates.freeSmartCampaignAnglesUsed = true;
       freePostUsedThisTime = true;
     }
-    // Note: AI_EDIT and TREND_EXPLORER_FETCH don't have specific 'free use' flags in this model
-    // AI_EDIT has a cost, TREND_EXPLORER_FETCH is free (cost 0)
   }
 
 
   if (freePostUsedThisTime) {
     try {
-      await updateDoc(userRef, updates); // Only update the free use flag
+      await updateDoc(userRef, updates); 
       return { success: true, newCredits: userData.credits, freePostUsedThisTime: true };
     } catch (error: any) {
       console.error(`Error updating free post status for ${userId}:`, error);
@@ -259,14 +248,12 @@ export const deductCredits = async (
     }
   }
 
-  // Calculate cost if not a free post
   if (featureKey === 'QUICK_POST' && isRegeneration) {
     cost = CREDIT_COSTS.QUICK_POST_REGENERATE;
   } else {
     cost = CREDIT_COSTS[featureKey] * numUnits;
   }
   
-  // If cost is 0 (e.g., Trend Explorer), no deduction needed
   if (cost === 0) {
      return { success: true, newCredits: userData.credits, freePostUsedThisTime: false };
   }
@@ -275,10 +262,10 @@ export const deductCredits = async (
     return { success: false, error: "Insufficient credits." };
   }
 
-  updates.credits = userData.credits - cost; // Deduct credits
+  updates.credits = userData.credits - cost; 
 
   try {
-    await updateDoc(userRef, updates); // Update credits (and potentially free use flag if it wasn't the primary update)
+    await updateDoc(userRef, updates); 
     return { success: true, newCredits: updates.credits, freePostUsedThisTime: false };
   } catch (error: any) {
     console.error(`Error deducting credits for ${userId}:`, error);
@@ -368,7 +355,7 @@ export const deleteDraft = async (userId: string, draftId: string): Promise<bool
 // --- Campaign Draft Functions ---
 export const saveCampaignDraft = async (
   userId: string,
-  campaignCoreData: Omit<CampaignDraft, 'id' | 'userId' | 'createdAt' | 'updatedAt'>
+  campaignData: Omit<CampaignDraft, 'id' | 'userId' | 'createdAt' | 'updatedAt'>
 ): Promise<CampaignDraft | null> => {
   if (!userId) {
     console.error("User ID is required to save a campaign draft.");
@@ -378,17 +365,18 @@ export const saveCampaignDraft = async (
     const campaignDraftsCollectionRef = collection(db, 'users', userId, 'campaignDrafts');
     const newCampaignDraftData: Omit<CampaignDraft, 'id'> = {
       userId,
-      campaignTopic: campaignCoreData.campaignTopic,
-      researchedContext: campaignCoreData.researchedContext,
-      selectedAngle: campaignCoreData.selectedAngle,
-      twitterSeries: campaignCoreData.twitterSeries || undefined,
-      linkedinSeries: campaignCoreData.linkedinSeries || undefined,
-      twitterRepurposingIdeas: campaignCoreData.twitterRepurposingIdeas || undefined,
-      linkedinRepurposingIdeas: campaignCoreData.linkedinRepurposingIdeas || undefined,
+      campaignTopic: campaignData.campaignTopic,
+      researchedContext: campaignData.researchedContext,
+      selectedAngle: campaignData.selectedAngle,
+      twitterSeries: campaignData.twitterSeries || undefined,
+      linkedinSeries: campaignData.linkedinSeries || undefined,
+      twitterRepurposingIdeas: campaignData.twitterRepurposingIdeas || undefined,
+      linkedinRepurposingIdeas: campaignData.linkedinRepurposingIdeas || undefined,
       createdAt: serverTimestamp() as Timestamp,
       updatedAt: serverTimestamp() as Timestamp,
     };
     const docRef = await addDoc(campaignDraftsCollectionRef, newCampaignDraftData);
+    // Construct the full CampaignDraft object to return, including the generated ID and timestamps
     const savedData: CampaignDraft = {
       id: docRef.id,
       userId: newCampaignDraftData.userId,
@@ -399,8 +387,12 @@ export const saveCampaignDraft = async (
       linkedinSeries: newCampaignDraftData.linkedinSeries,
       twitterRepurposingIdeas: newCampaignDraftData.twitterRepurposingIdeas,
       linkedinRepurposingIdeas: newCampaignDraftData.linkedinRepurposingIdeas,
-      createdAt: newCampaignDraftData.createdAt, 
-      updatedAt: newCampaignDraftData.updatedAt, 
+      // Note: serverTimestamp() returns a sentinel. Actual Timestamps are resolved by Firestore.
+      // For the return object, we might want to fetch the doc again if exact server timestamps are needed immediately,
+      // or accept that these are client-side sentinels if used right away.
+      // For simplicity here, we'll return with the sentinels or undefined if not set.
+      createdAt: newCampaignDraftData.createdAt, // This will be a sentinel object
+      updatedAt: newCampaignDraftData.updatedAt, // This will be a sentinel object
     };
     return savedData;
   } catch (error) {
