@@ -38,7 +38,7 @@ export interface UserData {
   freeQuickPostUsed?: boolean;
   freeImageToPostUsed?: boolean;
   freeSmartCampaignAnglesUsed?: boolean;
-  freeAiEditUsed?: boolean;
+  // freeAiEditUsed removed as per plan (not listed in "1 free post" bonus)
 }
 
 export interface Draft {
@@ -69,7 +69,7 @@ export const CREDIT_COSTS = {
   QUICK_POST: 20,
   QUICK_POST_REGENERATE: 5,
   IMAGE_TO_POST: 60,
-  SMART_CAMPAIGN_SUGGEST_ANGLE: 25, // This was SMART_CAMPAIGN_ANGLES
+  SMART_CAMPAIGN_SUGGEST_ANGLE: 25,
   AI_EDIT: 5,
   TREND_EXPLORER_FETCH: 0,
 };
@@ -112,11 +112,11 @@ export const createUserDocument = async (
         referralCode: generateReferralCode(),
         referralsMade: 0,
         plan: 'free',
-        credits: 1000, 
+        credits: 40, // Updated: Starting credits for free plan
         freeQuickPostUsed: false,
         freeImageToPostUsed: false,
         freeSmartCampaignAnglesUsed: false,
-        freeAiEditUsed: false,
+        // freeAiEditUsed removed
       };
 
       if (referredByCode) {
@@ -124,7 +124,7 @@ export const createUserDocument = async (
       }
 
       await setDoc(userRef, userData);
-      console.log(`User document created for ${user.uid} with initial data and 1000 free credits.`);
+      console.log(`User document created for ${user.uid} with initial data and 40 free credits.`);
       return userData;
     } else {
       console.log(`User document for ${user.uid} already existed when createUserDocument was called. Ensuring fields are up-to-date.`);
@@ -132,14 +132,15 @@ export const createUserDocument = async (
       let needsUpdate = false;
       const updates: Partial<UserData> = {};
       
-      // Initialize missing fields with defaults from the free plan
       if (existingData.plan === undefined) { updates.plan = 'free'; needsUpdate = true; }
-      if (existingData.credits === undefined) { updates.credits = 1000; needsUpdate = true; } // Default to 1000
+      if (existingData.credits === undefined) {
+         updates.credits = (existingData.plan === 'free' || !existingData.plan) ? 40 : 700; // Default for free, placeholder for starter
+         needsUpdate = true;
+      }
       if (existingData.freeQuickPostUsed === undefined) { updates.freeQuickPostUsed = false; needsUpdate = true; }
       if (existingData.freeImageToPostUsed === undefined) { updates.freeImageToPostUsed = false; needsUpdate = true; }
       if (existingData.freeSmartCampaignAnglesUsed === undefined) { updates.freeSmartCampaignAnglesUsed = false; needsUpdate = true; }
-      if (existingData.freeAiEditUsed === undefined) { updates.freeAiEditUsed = false; needsUpdate = true; }
-
+      // freeAiEditUsed field no longer exists here
 
       if (needsUpdate) {
         await updateDoc(userRef, updates);
@@ -149,7 +150,7 @@ export const createUserDocument = async (
       return existingData;
     }
   } catch (error) {
-    console.error('Detailed error from createUserDocument (setDoc/updateDoc failed):', error);
+    console.error('Original Firestore error in createUserDocument:', error);
     throw error; 
   }
 };
@@ -161,22 +162,27 @@ export const getUserData = async (uid: string, userForCreation?: FirebaseAuthUse
     const userSnap = await getDoc(userRef);
     if (userSnap.exists()) {
       const data = userSnap.data();
+      // Ensure defaults for any missing fields if migrating older docs
       const migratedData: UserData = {
         plan: 'free', 
-        credits: 1000, // Default to 1000
+        credits: 40, // Default to 40 if plan is free or missing
         freeQuickPostUsed: false,
         freeImageToPostUsed: false,
         freeSmartCampaignAnglesUsed: false,
-        freeAiEditUsed: false,
         ...data, 
       };
-      // Ensure defaults for any missing fields
+      if (data.plan && data.plan !== 'free' && data.credits === undefined) { // If paid plan but credits somehow missing
+        migratedData.credits = 700; // Placeholder for starter
+      } else if ((!data.plan || data.plan === 'free') && data.credits === undefined) {
+        migratedData.credits = 40;
+      }
+
       if (migratedData.plan === undefined) migratedData.plan = 'free';
-      if (migratedData.credits === undefined) migratedData.credits = 1000;
+      if (migratedData.credits === undefined) migratedData.credits = (migratedData.plan === 'free' ? 40 : 700);
       if (migratedData.freeQuickPostUsed === undefined) migratedData.freeQuickPostUsed = false;
       if (migratedData.freeImageToPostUsed === undefined) migratedData.freeImageToPostUsed = false;
       if (migratedData.freeSmartCampaignAnglesUsed === undefined) migratedData.freeSmartCampaignAnglesUsed = false;
-      if (migratedData.freeAiEditUsed === undefined) migratedData.freeAiEditUsed = false;
+      // freeAiEditUsed check removed
       
       return migratedData;
     } else {
@@ -189,11 +195,10 @@ export const getUserData = async (uid: string, userForCreation?: FirebaseAuthUse
       }
     }
   } catch (error: any) {
-    console.error("Original Firestore error in getUserData:", error); // Log the original error details
+    console.error("Original Firestore error in getUserData:", error);
     if (error.code === 'unavailable' || (typeof error.message === 'string' && error.message.toLowerCase().includes('offline'))) {
       throw new Error("Could not connect to the database. Please check your internet connection and try again.");
     }
-    // For other types of errors, re-throw the original error so it can be handled or logged upstream.
     throw error; 
   }
 };
@@ -211,7 +216,6 @@ export const deductCredits = async (
   try {
     userData = await getUserData(userId);
   } catch (error: any) {
-    // This will catch the "Could not connect..." error if thrown by getUserData
     return { success: false, error: `Failed to retrieve user data for credit deduction: ${error.message}` };
   }
 
@@ -227,7 +231,6 @@ export const deductCredits = async (
   let freePostUsedThisTime = false;
   const updates: Partial<UserData> = {};
 
-  // Check for free post usage only if it's NOT a regeneration
   if (!isRegeneration) {
     if (featureKey === 'QUICK_POST' && !userData.freeQuickPostUsed) {
       updates.freeQuickPostUsed = true;
@@ -239,11 +242,7 @@ export const deductCredits = async (
       updates.freeSmartCampaignAnglesUsed = true;
       freePostUsedThisTime = true;
     }
-    // Add other free features here, e.g., AI_EDIT
-    // else if (featureKey === 'AI_EDIT' && !userData.freeAiEditUsed) {
-    //   updates.freeAiEditUsed = true;
-    //   freePostUsedThisTime = true;
-    // }
+    // No free use for AI_EDIT as per plan
   }
 
 
@@ -253,24 +252,21 @@ export const deductCredits = async (
       return { success: true, newCredits: userData.credits, freePostUsedThisTime: true };
     } catch (error: any)      {
       console.error(`Error updating free post status for ${userId}:`, error);
-      // If updating the flag fails, we shouldn't proceed as if it was free, nor should we charge.
       return { success: false, error: "Error updating free post status. Please try again." };
     }
   }
 
-  // Determine cost if not a free post
   if (featureKey === 'QUICK_POST' && isRegeneration) {
     cost = CREDIT_COSTS.QUICK_POST_REGENERATE;
   } else {
     cost = CREDIT_COSTS[featureKey] * numUnits;
   }
   
-  if (cost === 0 && featureKey !== 'TREND_EXPLORER_FETCH') { // TREND_EXPLORER_FETCH is intentionally 0
+  if (cost === 0 && featureKey !== 'TREND_EXPLORER_FETCH') {
      console.warn(`Warning: Cost for feature ${featureKey} is 0. This might be unintentional unless it's a free feature like Trend Explorer.`);
-     // If the feature is meant to be free (cost 0) and not covered by specific free use flags, it proceeds.
   }
   
-  if (featureKey === 'TREND_EXPLORER_FETCH') { // Explicitly handle free features that don't use flags
+  if (featureKey === 'TREND_EXPLORER_FETCH') {
     return { success: true, newCredits: userData.credits, freePostUsedThisTime: false };
   }
 
@@ -462,6 +458,3 @@ export const deleteCampaignDraft = async (userId: string, campaignDraftId: strin
     return false;
   }
 };
-
-
-    
