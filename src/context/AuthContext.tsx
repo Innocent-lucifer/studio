@@ -46,15 +46,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (!userData) {
         // This case should ideally be rare if getUserData's creation logic works and throws on failure.
         // Log an error or show a toast if the document still couldn't be confirmed.
-        console.error(`AuthContext: Firestore document for user ${firebaseUser.uid} could NOT be verified or created (getUserData returned falsy). This indicates a problem in the document creation/fetching logic itself OR Firestore rules preventing the operation.`);
+        console.error(`AuthContext: Firestore document for user ${firebaseUser.uid} could NOT be verified or created after login/signup.`);
+        // toast({
+        //   variant: "destructive",
+        //   title: "Account Sync Issue",
+        //   description: "Could not fully sync your account. Some features might be limited. Please try refreshing.",
+        // });
       }
     } catch (error: any) {
       // This will catch errors thrown from getUserData/createUserDocument
-      console.error(`AuthContext: Error during ensureUserDocument for ${firebaseUser.uid} (likely from Firestore operation):`, error.message, error);
+      console.error(`AuthContext: Error during ensureUserDocument for ${firebaseUser.uid} (likely from Firestore operation): `, error.message, error);
       // Potentially show a user-facing toast here for critical setup errors
       // For example, if error.message is "Could not connect...", it will be logged here.
-      // We re-throw here so it can be caught by the onAuthStateChanged listener's try/catch
-      throw error;
+      // Not re-throwing here to allow onAuthStateChanged to complete loading state,
+      // as the primary error is logged above. Subsequent operations will handle the lack of userData.
+      // throw error; // Removed re-throw
     }
   };
 
@@ -67,10 +73,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           await ensureUserDocument(currentUser);
         }
       } catch (error) {
-        // Catch errors specifically from ensureUserDocument during auth state change
-        console.error("AuthContext: Critical error during user session initialization (ensureUserDocument failed):", error);
-        // Optionally, set an app-wide error state or show a global banner
-        // For now, just logging. setUser has already been called.
+        // This catch block will now only be triggered by errors directly within this try block,
+        // not by errors re-thrown from ensureUserDocument for the connectivity issue.
+        console.error("AuthContext: Critical error during user session initialization:", error);
       } finally {
         setLoading(false);
       }
