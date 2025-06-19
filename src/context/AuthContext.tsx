@@ -15,7 +15,11 @@ import {
 } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useToast } from "@/hooks/use-toast";
-import { getUserData } from '@/lib/firebaseUserActions'; // Import getUserData
+import { getUserData, createUserDocument, type UserData } from '@/lib/firebaseUserActions'; // Import createUserDocument
+import { doc, getDoc, getFirestore, DocumentReference } from 'firebase/firestore'; // Import firestore items
+import { app } from '@/lib/firebase'; // Import app for db initialization
+
+const db = getFirestore(app); // Initialize db here
 
 interface AuthContextType {
   user: User | null;
@@ -34,28 +38,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      setLoading(false);
-    });
-    return () => unsubscribe();
-  }, []);
-
-  // Helper function to ensure Firestore user document exists
   const ensureUserDocument = async (firebaseUser: User | null): Promise<void> => {
     if (!firebaseUser) return;
     try {
-      // getUserData will create the document if it doesn't exist
-      const userData = await getUserData(firebaseUser.uid); 
+      // Pass the fresh firebaseUser to getUserData for creation attempt if needed
+      const userData = await getUserData(firebaseUser.uid, firebaseUser); 
+      
       if (!userData) {
-        // This case should ideally be rare if getUserData's creation logic works.
-        // Log an error or show a toast if the document still couldn't be confirmed.
+        // This error should ideally only occur if createUserDocument itself fails (e.g., Firestore permissions)
         console.error(`Firestore document for user ${firebaseUser.uid} could not be verified or created after login/signup.`);
+        // Potentially show a toast to the user, but be mindful of flooding them if it's a persistent issue.
         // toast({
         //   variant: "destructive",
         //   title: "Account Sync Issue",
-        //   description: "There was a problem syncing your account data. Some features might be limited.",
+        //   description: "There was a problem setting up your account data. Some features might be limited.",
         // });
       }
     } catch (error) {
@@ -63,19 +59,32 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       // toast({
       //   variant: "destructive",
       //   title: "Account Sync Error",
-      //   description: "An error occurred while syncing your account data.",
+      //   description: "An unexpected error occurred while syncing your account data.",
       // });
     }
   };
+
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      setUser(currentUser);
+      if (currentUser) {
+        // It's also good to call ensureUserDocument here on initial load if a user is already signed in
+        // This handles cases where the user had an auth session but their Firestore doc might be missing (e.g., manual deletion)
+        await ensureUserDocument(currentUser);
+      }
+      setLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
 
   const signUp = async (email: string, pass: string): Promise<User | null> => {
     setLoading(true);
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
       if (userCredential.user) {
-        await ensureUserDocument(userCredential.user); // Ensure Firestore doc
+        await ensureUserDocument(userCredential.user); 
       }
-      // onAuthStateChanged will set the user in context
       return userCredential.user;
     } catch (error) {
       console.error("Sign up error:", error);
@@ -91,9 +100,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, pass);
       if (userCredential.user) {
-        await ensureUserDocument(userCredential.user); // Ensure Firestore doc
+        await ensureUserDocument(userCredential.user); 
       }
-      // onAuthStateChanged will set the user in context
       return userCredential.user;
     } catch (error) {
       console.error("Log in error:", error);
@@ -111,9 +119,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       const result = await signInWithPopup(auth, googleProviderInstance);
       if (result.user) {
-        await ensureUserDocument(result.user); // Ensure Firestore doc
+        await ensureUserDocument(result.user); 
       }
-      // onAuthStateChanged will set the user in context
       return result.user;
     } catch (error) {
       console.error("Google sign in error object:", error);
@@ -166,3 +173,4 @@ export const useAuth = (): AuthContextType => {
   }
   return context;
 };
+

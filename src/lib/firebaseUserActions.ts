@@ -38,7 +38,7 @@ export interface UserData {
   freeQuickPostUsed?: boolean;
   freeImageToPostUsed?: boolean;
   freeSmartCampaignAnglesUsed?: boolean;
-  freeAiEditUsed?: boolean; // Plan specified "Edit with AI: 5 credits" without mentioning a free one. Assuming no free AI edit.
+  freeAiEditUsed?: boolean;
 }
 
 export interface Draft {
@@ -69,9 +69,9 @@ export const CREDIT_COSTS = {
   QUICK_POST: 20,
   QUICK_POST_REGENERATE: 5,
   IMAGE_TO_POST: 60,
-  SMART_CAMPAIGN_SUGGEST_ANGLE: 25, // This is per angle suggested. The flow will multiply by numAngles.
+  SMART_CAMPAIGN_SUGGEST_ANGLE: 25,
   AI_EDIT: 5,
-  TREND_EXPLORER_FETCH: 0, // Free
+  TREND_EXPLORER_FETCH: 0,
 };
 
 export enum CreditTransactionType {
@@ -81,7 +81,6 @@ export enum CreditTransactionType {
   FEATURE_USE_SMART_CAMPAIGN_SUGGEST_ANGLES = 'feature_use_smart_campaign_suggest_angles',
   FEATURE_USE_AI_EDIT = 'feature_use_ai_edit',
   INITIAL_CREDITS = 'initial_credits_free_plan',
-  // More types can be added for plan purchases, admin adjustments, etc.
 }
 
 
@@ -100,6 +99,7 @@ export const createUserDocument = async (
 ): Promise<UserData | null> => {
   if (!user) return null;
   const userRef = doc(db, 'users', user.uid) as DocumentReference<UserData>;
+  // Check for existence *again* right before writing to be absolutely sure and avoid overwriting if there was a race.
   const userSnap = await getDoc(userRef);
 
   if (!userSnap.exists()) {
@@ -110,13 +110,12 @@ export const createUserDocument = async (
       createdAt: serverTimestamp() as Timestamp,
       referralCode: generateReferralCode(),
       referralsMade: 0,
-      // Initialize credit system fields for new users
       plan: 'free',
-      credits: 40, // Starting credits for free plan
+      credits: 40,
       freeQuickPostUsed: false,
       freeImageToPostUsed: false,
       freeSmartCampaignAnglesUsed: false,
-      // lastCreditReset: serverTimestamp() as Timestamp, // Set on actual reset by a backend process
+      freeAiEditUsed: false, // Added as per interface
     };
 
     if (referredByCode) {
@@ -125,8 +124,6 @@ export const createUserDocument = async (
 
     try {
       await setDoc(userRef, userData);
-      // Log initial credit grant - for future auditing if needed
-      // await logCreditTransaction(user.uid, CreditTransactionType.INITIAL_CREDITS, 40, "Initial free plan credits");
       console.log(`User document created for ${user.uid} with initial data and 40 free credits.`);
       return userData;
     } catch (error) {
@@ -134,53 +131,67 @@ export const createUserDocument = async (
       return null;
     }
   } else {
-    // If user document exists, ensure credit fields are present, add if not (migration path)
+    console.log(`User document for ${user.uid} already existed when createUserDocument was called. Ensuring fields are up-to-date.`);
     const existingData = userSnap.data();
     let needsUpdate = false;
     const updates: Partial<UserData> = {};
     if (existingData.plan === undefined) { updates.plan = 'free'; needsUpdate = true; }
-    if (existingData.credits === undefined) { updates.credits = 40; needsUpdate = true; } // Or 0 if they should not get free ones retroactively
+    if (existingData.credits === undefined) { updates.credits = 40; needsUpdate = true; }
     if (existingData.freeQuickPostUsed === undefined) { updates.freeQuickPostUsed = false; needsUpdate = true; }
     if (existingData.freeImageToPostUsed === undefined) { updates.freeImageToPostUsed = false; needsUpdate = true; }
     if (existingData.freeSmartCampaignAnglesUsed === undefined) { updates.freeSmartCampaignAnglesUsed = false; needsUpdate = true; }
+    if (existingData.freeAiEditUsed === undefined) { updates.freeAiEditUsed = false; needsUpdate = true; }
+
 
     if (needsUpdate) {
       try {
         await updateDoc(userRef, updates);
-        console.log(`User document for ${user.uid} updated with default credit system fields.`);
+        console.log(`User document for ${user.uid} updated with default credit system fields during createUserDocument call.`);
         return { ...existingData, ...updates };
       } catch (error) {
-        console.error('Error updating existing user document with credit fields:', error);
-        return existingData; // Return existing data even if update fails
+        console.error('Error updating existing user document with credit fields during createUserDocument call:', error);
+        return existingData;
       }
     }
     return existingData;
   }
 };
 
-export const getUserData = async (uid: string): Promise<UserData | null> => {
+export const getUserData = async (uid: string, userForCreation?: FirebaseAuthUser): Promise<UserData | null> => {
   if (!uid) return null;
   const userRef = doc(db, 'users', uid) as DocumentReference<UserData>;
   try {
     const userSnap = await getDoc(userRef);
     if (userSnap.exists()) {
-      // Ensure required credit fields exist, providing defaults if not (simple migration for existing users)
       const data = userSnap.data();
-      return {
-        plan: 'free', // Default if not present
-        credits: 0,   // Default if not present
+      // Ensure required credit fields exist, providing defaults if not (simple migration for existing users)
+      const migratedData: UserData = {
+        plan: 'free',
+        credits: (data && data.credits !== undefined) ? data.credits : 40, // Ensure credits default to 40 if undefined
         freeQuickPostUsed: false,
         freeImageToPostUsed: false,
         freeSmartCampaignAnglesUsed: false,
-        ...data,     // Spread existing data, which will overwrite defaults if fields exist
+        freeAiEditUsed: false,
+        ...data,
       };
+      // Apply specific field defaults if they are missing
+      if (migratedData.plan === undefined) migratedData.plan = 'free';
+      if (migratedData.credits === undefined) migratedData.credits = 40;
+      if (migratedData.freeQuickPostUsed === undefined) migratedData.freeQuickPostUsed = false;
+      if (migratedData.freeImageToPostUsed === undefined) migratedData.freeImageToPostUsed = false;
+      if (migratedData.freeSmartCampaignAnglesUsed === undefined) migratedData.freeSmartCampaignAnglesUsed = false;
+      if (migratedData.freeAiEditUsed === undefined) migratedData.freeAiEditUsed = false;
+
+      return migratedData;
     } else {
-      console.warn(`No user data found for UID: ${uid}. Attempting to create one if auth user exists.`);
-      const currentUser = auth.currentUser;
-      if (currentUser && currentUser.uid === uid) {
-        return await createUserDocument(currentUser);
+      // Document doesn't exist. Create it IF userForCreation is provided.
+      if (userForCreation && userForCreation.uid === uid) {
+        console.warn(`No user data found for UID: ${uid}. Attempting to create using provided user object.`);
+        return await createUserDocument(userForCreation);
+      } else {
+        console.warn(`No user data found for UID: ${uid}. No user object provided for creation or UID mismatch.`);
+        return null;
       }
-      return null;
     }
   } catch (error) {
     console.error('Error fetching user data:', error);
@@ -188,19 +199,20 @@ export const getUserData = async (uid: string): Promise<UserData | null> => {
   }
 };
 
+
 export const deductCredits = async (
   userId: string,
   featureKey: keyof typeof CREDIT_COSTS,
-  isRegeneration: boolean = false, // Specific to Quick Post for now
-  numUnits: number = 1 // For features like suggesting multiple angles
+  isRegeneration: boolean = false,
+  numUnits: number = 1
 ): Promise<{ success: boolean; error?: string; newCredits?: number; freePostUsedThisTime?: boolean }> => {
   if (!userId) return { success: false, error: "User ID not provided." };
 
-  const userData = await getUserData(userId);
+  const userData = await getUserData(userId); // Will fetch existing or try to create if called post-auth correctly
   if (!userData) return { success: false, error: "User data not found." };
 
   if (userData.plan === 'infinity') {
-    return { success: true, newCredits: userData.credits, freePostUsedThisTime: false }; // Infinity plan has unlimited access
+    return { success: true, newCredits: userData.credits, freePostUsedThisTime: false };
   }
 
   const userRef = doc(db, 'users', userId) as DocumentReference<UserData>;
@@ -208,8 +220,7 @@ export const deductCredits = async (
   let freePostUsedThisTime = false;
   const updates: Partial<UserData> = {};
 
-  // Handle Free Post Bonus
-  if (!isRegeneration) { // Free posts don't apply to regenerations
+  if (!isRegeneration) {
     if (featureKey === 'QUICK_POST' && !userData.freeQuickPostUsed) {
       updates.freeQuickPostUsed = true;
       freePostUsedThisTime = true;
@@ -220,14 +231,16 @@ export const deductCredits = async (
       updates.freeSmartCampaignAnglesUsed = true;
       freePostUsedThisTime = true;
     }
-    // AI_EDIT does not have a free post as per the plan
+    // Add freeAiEditUsed check if it becomes a feature
+    // else if (featureKey === 'AI_EDIT' && !userData.freeAiEditUsed) {
+    //   updates.freeAiEditUsed = true;
+    //   freePostUsedThisTime = true;
+    // }
   }
 
   if (freePostUsedThisTime) {
-    // Free post was used, no credit cost
     try {
       await updateDoc(userRef, updates);
-      // console.log(`User ${userId} used free post for ${featureKey}.`);
       return { success: true, newCredits: userData.credits, freePostUsedThisTime: true };
     } catch (error: any) {
       console.error(`Error updating free post status for ${userId}:`, error);
@@ -235,14 +248,13 @@ export const deductCredits = async (
     }
   }
 
-  // Calculate actual cost if not a free post
   if (featureKey === 'QUICK_POST' && isRegeneration) {
     cost = CREDIT_COSTS.QUICK_POST_REGENERATE;
   } else {
     cost = CREDIT_COSTS[featureKey] * numUnits;
   }
   
-  if (cost === 0) { // For free features like Trend Explorer
+  if (cost === 0) {
      return { success: true, newCredits: userData.credits, freePostUsedThisTime: false };
   }
 
@@ -254,9 +266,6 @@ export const deductCredits = async (
 
   try {
     await updateDoc(userRef, updates);
-    // Log transaction (optional, for auditing)
-    // await logCreditTransaction(userId, transactionTypeMap[featureKey], cost, `Used ${featureKey}`);
-    // console.log(`User ${userId} deducted ${cost} credits for ${featureKey}. New balance: ${updates.credits}`);
     return { success: true, newCredits: updates.credits, freePostUsedThisTime: false };
   } catch (error: any) {
     console.error(`Error deducting credits for ${userId}:`, error);
@@ -346,15 +355,7 @@ export const deleteDraft = async (userId: string, draftId: string): Promise<bool
 // --- Campaign Draft Functions ---
 export const saveCampaignDraft = async (
   userId: string,
-  campaignCoreData: {
-    campaignTopic: string;
-    researchedContext: string;
-    selectedAngle: ContentAngle;
-    twitterSeries?: string[];
-    linkedinSeries?: string[];
-    twitterRepurposingIdeas?: string[];
-    linkedinRepurposingIdeas?: string[];
-  }
+  campaignCoreData: Omit<CampaignDraft, 'id' | 'userId' | 'createdAt' | 'updatedAt'>
 ): Promise<CampaignDraft | null> => {
   if (!userId) {
     console.error("User ID is required to save a campaign draft.");
@@ -362,19 +363,41 @@ export const saveCampaignDraft = async (
   }
   try {
     const campaignDraftsCollectionRef = collection(db, 'users', userId, 'campaignDrafts');
+    // Ensure all optional fields are either present or explicitly undefined
     const newCampaignDraftData: Omit<CampaignDraft, 'id'> = {
-      ...campaignCoreData,
       userId,
+      campaignTopic: campaignCoreData.campaignTopic,
+      researchedContext: campaignCoreData.researchedContext,
+      selectedAngle: campaignCoreData.selectedAngle,
+      twitterSeries: campaignCoreData.twitterSeries || undefined,
+      linkedinSeries: campaignCoreData.linkedinSeries || undefined,
+      twitterRepurposingIdeas: campaignCoreData.twitterRepurposingIdeas || undefined,
+      linkedinRepurposingIdeas: campaignCoreData.linkedinRepurposingIdeas || undefined,
       createdAt: serverTimestamp() as Timestamp,
       updatedAt: serverTimestamp() as Timestamp,
     };
     const docRef = await addDoc(campaignDraftsCollectionRef, newCampaignDraftData);
-    return { ...newCampaignDraftData, id: docRef.id };
+    // Construct the returned object carefully to match CampaignDraft
+    const savedData: CampaignDraft = {
+      id: docRef.id,
+      userId: newCampaignDraftData.userId,
+      campaignTopic: newCampaignDraftData.campaignTopic,
+      researchedContext: newCampaignDraftData.researchedContext,
+      selectedAngle: newCampaignDraftData.selectedAngle,
+      twitterSeries: newCampaignDraftData.twitterSeries,
+      linkedinSeries: newCampaignDraftData.linkedinSeries,
+      twitterRepurposingIdeas: newCampaignDraftData.twitterRepurposingIdeas,
+      linkedinRepurposingIdeas: newCampaignDraftData.linkedinRepurposingIdeas,
+      createdAt: newCampaignDraftData.createdAt, // This will be a server timestamp placeholder locally
+      updatedAt: newCampaignDraftData.updatedAt, // Same as above
+    };
+    return savedData;
   } catch (error) {
     console.error('Error saving campaign draft:', error);
     return null;
   }
 };
+
 
 export const getCampaignDrafts = async (userId: string): Promise<CampaignDraft[]> => {
   if (!userId) {
@@ -424,3 +447,4 @@ export const deleteCampaignDraft = async (userId: string, campaignDraftId: strin
     return false;
   }
 };
+
