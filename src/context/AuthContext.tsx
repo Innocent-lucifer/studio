@@ -15,11 +15,11 @@ import {
 } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useToast } from "@/hooks/use-toast";
-import { getUserData, createUserDocument, type UserData } from '@/lib/firebaseUserActions'; // Import createUserDocument
-import { doc, getDoc, getFirestore, DocumentReference } from 'firebase/firestore'; // Import firestore items
-import { app } from '@/lib/firebase'; // Import app for db initialization
+import { getUserData, createUserDocument, type UserData } from '@/lib/firebaseUserActions'; 
+import { doc, getDoc, getFirestore, DocumentReference } from 'firebase/firestore'; 
+import { app } from '@/lib/firebase'; 
 
-const db = getFirestore(app); // Initialize db here
+const db = getFirestore(app); 
 
 interface AuthContextType {
   user: User | null;
@@ -41,25 +41,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const ensureUserDocument = async (firebaseUser: User | null): Promise<void> => {
     if (!firebaseUser) return;
     try {
-      // Pass the fresh firebaseUser to getUserData for creation attempt if needed
       const userData = await getUserData(firebaseUser.uid, firebaseUser); 
-      
       if (!userData) {
-        // This error should ideally only occur if createUserDocument itself fails (e.g., Firestore permissions)
-        console.error(`Firestore document for user ${firebaseUser.uid} could not be verified or created after login/signup.`);
-        // Potentially show a toast to the user, but be mindful of flooding them if it's a persistent issue.
-        // toast({
-        //   variant: "destructive",
-        //   title: "Account Sync Issue",
-        //   description: "There was a problem setting up your account data. Some features might be limited.",
-        // });
+        // This console.error is now more likely to be hit if getUserData throws an error
+        // that isn't caught and handled before returning null, or if createUserDocument explicitly returns null
+        // after an error that it didn't re-throw (which we are changing).
+        console.error(`AuthContext: Firestore document for user ${firebaseUser.uid} could NOT be verified or created (getUserData returned falsy). This indicates a problem in the document creation/fetching logic itself OR Firestore rules preventing the operation.`);
       }
     } catch (error) {
-      console.error("Error ensuring user document:", error);
+      // This block will now catch errors thrown from getUserData/createUserDocument
+      console.error(`AuthContext: Error during ensureUserDocument for ${firebaseUser.uid} (likely from Firestore operation):`, error);
+      // Optionally, show a user-facing toast here if appropriate
       // toast({
       //   variant: "destructive",
-      //   title: "Account Sync Error",
-      //   description: "An unexpected error occurred while syncing your account data.",
+      //   title: "Account Setup Error",
+      //   description: "There was a problem initializing your account data. Please try again or contact support.",
       // });
     }
   };
@@ -69,8 +65,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
       if (currentUser) {
-        // It's also good to call ensureUserDocument here on initial load if a user is already signed in
-        // This handles cases where the user had an auth session but their Firestore doc might be missing (e.g., manual deletion)
         await ensureUserDocument(currentUser);
       }
       setLoading(false);
@@ -173,4 +167,3 @@ export const useAuth = (): AuthContextType => {
   }
   return context;
 };
-

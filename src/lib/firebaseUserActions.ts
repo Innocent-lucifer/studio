@@ -99,7 +99,6 @@ export const createUserDocument = async (
 ): Promise<UserData | null> => {
   if (!user) return null;
   const userRef = doc(db, 'users', user.uid) as DocumentReference<UserData>;
-  // Check for existence *again* right before writing to be absolutely sure and avoid overwriting if there was a race.
   const userSnap = await getDoc(userRef);
 
   if (!userSnap.exists()) {
@@ -115,7 +114,7 @@ export const createUserDocument = async (
       freeQuickPostUsed: false,
       freeImageToPostUsed: false,
       freeSmartCampaignAnglesUsed: false,
-      freeAiEditUsed: false, // Added as per interface
+      freeAiEditUsed: false,
     };
 
     if (referredByCode) {
@@ -127,8 +126,8 @@ export const createUserDocument = async (
       console.log(`User document created for ${user.uid} with initial data and 40 free credits.`);
       return userData;
     } catch (error) {
-      console.error('Error creating user document:', error);
-      return null;
+      console.error('Detailed error from createUserDocument (setDoc failed):', error);
+      throw error; 
     }
   } else {
     console.log(`User document for ${user.uid} already existed when createUserDocument was called. Ensuring fields are up-to-date.`);
@@ -149,8 +148,8 @@ export const createUserDocument = async (
         console.log(`User document for ${user.uid} updated with default credit system fields during createUserDocument call.`);
         return { ...existingData, ...updates };
       } catch (error) {
-        console.error('Error updating existing user document with credit fields during createUserDocument call:', error);
-        return existingData;
+        console.error('Detailed error from createUserDocument (updateDoc failed for existing user):', error);
+        throw error; 
       }
     }
     return existingData;
@@ -164,38 +163,34 @@ export const getUserData = async (uid: string, userForCreation?: FirebaseAuthUse
     const userSnap = await getDoc(userRef);
     if (userSnap.exists()) {
       const data = userSnap.data();
-      // Ensure required credit fields exist, providing defaults if not (simple migration for existing users)
       const migratedData: UserData = {
         plan: 'free',
-        credits: (data && data.credits !== undefined) ? data.credits : 40, // Ensure credits default to 40 if undefined
+        credits: (data && data.credits !== undefined) ? data.credits : 40,
         freeQuickPostUsed: false,
         freeImageToPostUsed: false,
         freeSmartCampaignAnglesUsed: false,
         freeAiEditUsed: false,
         ...data,
       };
-      // Apply specific field defaults if they are missing
       if (migratedData.plan === undefined) migratedData.plan = 'free';
       if (migratedData.credits === undefined) migratedData.credits = 40;
       if (migratedData.freeQuickPostUsed === undefined) migratedData.freeQuickPostUsed = false;
       if (migratedData.freeImageToPostUsed === undefined) migratedData.freeImageToPostUsed = false;
       if (migratedData.freeSmartCampaignAnglesUsed === undefined) migratedData.freeSmartCampaignAnglesUsed = false;
       if (migratedData.freeAiEditUsed === undefined) migratedData.freeAiEditUsed = false;
-
       return migratedData;
     } else {
-      // Document doesn't exist. Create it IF userForCreation is provided.
       if (userForCreation && userForCreation.uid === uid) {
         console.warn(`No user data found for UID: ${uid}. Attempting to create using provided user object.`);
-        return await createUserDocument(userForCreation);
+        return await createUserDocument(userForCreation); 
       } else {
         console.warn(`No user data found for UID: ${uid}. No user object provided for creation or UID mismatch.`);
         return null;
       }
     }
   } catch (error) {
-    console.error('Error fetching user data:', error);
-    return null;
+    console.error('Detailed error from getUserData:', error);
+    throw error; 
   }
 };
 
@@ -208,8 +203,16 @@ export const deductCredits = async (
 ): Promise<{ success: boolean; error?: string; newCredits?: number; freePostUsedThisTime?: boolean }> => {
   if (!userId) return { success: false, error: "User ID not provided." };
 
-  const userData = await getUserData(userId); // Will fetch existing or try to create if called post-auth correctly
-  if (!userData) return { success: false, error: "User data not found." };
+  let userData;
+  try {
+    userData = await getUserData(userId);
+  } catch (error: any) {
+     // If getUserData throws (e.g., document creation failed earlier), catch it here.
+    return { success: false, error: `Failed to retrieve user data for credit deduction: ${error.message}` };
+  }
+
+  if (!userData) return { success: false, error: "User data not found for credit deduction." };
+
 
   if (userData.plan === 'infinity') {
     return { success: true, newCredits: userData.credits, freePostUsedThisTime: false };
@@ -231,11 +234,6 @@ export const deductCredits = async (
       updates.freeSmartCampaignAnglesUsed = true;
       freePostUsedThisTime = true;
     }
-    // Add freeAiEditUsed check if it becomes a feature
-    // else if (featureKey === 'AI_EDIT' && !userData.freeAiEditUsed) {
-    //   updates.freeAiEditUsed = true;
-    //   freePostUsedThisTime = true;
-    // }
   }
 
   if (freePostUsedThisTime) {
@@ -363,7 +361,6 @@ export const saveCampaignDraft = async (
   }
   try {
     const campaignDraftsCollectionRef = collection(db, 'users', userId, 'campaignDrafts');
-    // Ensure all optional fields are either present or explicitly undefined
     const newCampaignDraftData: Omit<CampaignDraft, 'id'> = {
       userId,
       campaignTopic: campaignCoreData.campaignTopic,
@@ -377,7 +374,6 @@ export const saveCampaignDraft = async (
       updatedAt: serverTimestamp() as Timestamp,
     };
     const docRef = await addDoc(campaignDraftsCollectionRef, newCampaignDraftData);
-    // Construct the returned object carefully to match CampaignDraft
     const savedData: CampaignDraft = {
       id: docRef.id,
       userId: newCampaignDraftData.userId,
@@ -388,8 +384,8 @@ export const saveCampaignDraft = async (
       linkedinSeries: newCampaignDraftData.linkedinSeries,
       twitterRepurposingIdeas: newCampaignDraftData.twitterRepurposingIdeas,
       linkedinRepurposingIdeas: newCampaignDraftData.linkedinRepurposingIdeas,
-      createdAt: newCampaignDraftData.createdAt, // This will be a server timestamp placeholder locally
-      updatedAt: newCampaignDraftData.updatedAt, // Same as above
+      createdAt: newCampaignDraftData.createdAt, 
+      updatedAt: newCampaignDraftData.updatedAt, 
     };
     return savedData;
   } catch (error) {
@@ -447,4 +443,3 @@ export const deleteCampaignDraft = async (userId: string, campaignDraftId: strin
     return false;
   }
 };
-
