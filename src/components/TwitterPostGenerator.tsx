@@ -34,9 +34,12 @@ export const TwitterPostGenerator: React.FC<TwitterPostGeneratorProps> = ({
   };
 
   const callGenerateFlow = useCallback(async (isRegen: boolean) => {
-    if (!topic) {
+    if (!topic || !userId || userId === "sagepostai-guest-user") { // Ensure valid userId
       setGeneratedPostsInternal([]);
       setTwitterPosts([]); 
+      if (userId === "sagepostai-guest-user" && topic) {
+         // Optionally inform user they need to be logged in, though button disabling should also help.
+      }
       return;
     }
 
@@ -47,7 +50,7 @@ export const TwitterPostGenerator: React.FC<TwitterPostGeneratorProps> = ({
     try {
       const result = await generateTwitterPosts({ 
         topic: topic, 
-        topicDisplay: topic, // Pass topic as topicDisplay for consistency
+        topicDisplay: topic, 
         numPosts: 3, 
         userId,
         isRegeneration: isRegen 
@@ -79,14 +82,14 @@ export const TwitterPostGenerator: React.FC<TwitterPostGeneratorProps> = ({
       if(isRegen) setIsRegenerating(false); else setIsLoading(false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [topic, userId, toast, setTwitterPosts]);
+  }, [topic, userId, toast, setTwitterPosts]); // Removed setParentPostsEmpty as it's not used directly here but called via regenerate
 
   useEffect(() => {
-    // Initial generation when topic changes
-    if (topic && userId) {
+    // Initial generation when topic changes AND userId is valid
+    if (topic && userId && userId !== "sagepostai-guest-user") {
        callGenerateFlow(false);
     } else {
-      // Clear posts if topic is removed or user logs out
+      // Clear posts if topic is removed or user logs out or is guest
       setGeneratedPostsInternal([]);
       setTwitterPosts([]);
     }
@@ -99,6 +102,7 @@ export const TwitterPostGenerator: React.FC<TwitterPostGeneratorProps> = ({
   
   const showPostsInThisCard = displayGeneratedPostsInCard && generatedPostsInternal.length > 0;
   const showConfirmationMessage = !displayGeneratedPostsInCard && generatedPostsInternal.length > 0 && !isLoading && !isRegenerating;
+  const canGenerate = userId && userId !== "sagepostai-guest-user";
 
   return (
     <motion.div 
@@ -137,12 +141,13 @@ export const TwitterPostGenerator: React.FC<TwitterPostGeneratorProps> = ({
         </div>
       )}
 
-      {!isLoading && topic && ( // Show regenerate button only if not initial loading and topic exists
+      {!isLoading && topic && ( 
         <motion.div {...buttonMotionProps} className="w-full">
           <Button 
               onClick={handleRegenerate} 
-              disabled={isRegenerating || isLoading || !userId} // Disable if any loading is active or no user
+              disabled={isRegenerating || isLoading || !canGenerate} 
               className="w-full bg-primary/80 hover:bg-primary text-primary-foreground transition-colors duration-200 flex items-center justify-center py-2.5"
+              title={!canGenerate ? "Please log in to regenerate posts." : "Regenerate Twitter Posts"}
             >
             <Icons.refreshCw className="mr-2 h-4 w-4" /> 
             Regenerate Twitter Posts
@@ -152,6 +157,9 @@ export const TwitterPostGenerator: React.FC<TwitterPostGeneratorProps> = ({
 
       {!isLoading && !isRegenerating && !topic && (
         <p className="text-sm text-slate-400 text-center py-4">Research a topic to generate Twitter posts.</p>
+      )}
+      {!canGenerate && topic && !isLoading && !isRegenerating && (
+         <p className="text-xs text-slate-400 text-center py-2">Log in to generate or regenerate posts.</p>
       )}
     </motion.div>
   );
