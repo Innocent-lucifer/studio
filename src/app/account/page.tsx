@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react'; // Import React
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { Icons } from '@/components/icons';
@@ -25,6 +25,76 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { Textarea } from '@/components/ui/textarea';
+
+const getDraftPlatformInfo = (platform: Draft['platform']) => {
+  switch (platform) {
+    case 'twitter':
+      return { icon: <Icons.twitter className="h-5 w-5 text-sky-400" />, name: 'Twitter Draft' };
+    case 'linkedin':
+      return { icon: <Icons.linkedin className="h-5 w-5 text-blue-400" />, name: 'LinkedIn Draft' };
+    case 'visual':
+      return { icon: <Icons.image className="h-5 w-5 text-purple-400" />, name: 'Visual Post Draft' };
+    default:
+      return { icon: <Icons.file className="h-5 w-5 text-slate-400" />, name: 'Draft' };
+  }
+};
+
+interface DraftListItemProps {
+  draft: Draft;
+  onViewDraft: (draft: Draft) => void;
+  onDeleteDraft: (draftId: string) => void;
+  isDeleting: boolean;
+}
+
+const DraftListItemComponent: React.FC<DraftListItemProps> = ({ draft, onViewDraft, onDeleteDraft, isDeleting }) => {
+  const platformInfo = getDraftPlatformInfo(draft.platform);
+  const draftItemVariants = {
+    initial: { opacity: 0, x: -20 },
+    animate: { opacity: 1, x: 0 },
+    exit: { opacity: 0, x: 20, transition: { duration: 0.2 } },
+  };
+
+  return (
+    <motion.div
+      layout
+      variants={draftItemVariants}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+      className="p-4 bg-slate-700/70 rounded-lg border border-slate-600 shadow-md hover:border-primary/50 transition-colors"
+    >
+      <div className="flex justify-between items-start">
+        <div>
+          <div className="flex items-center space-x-2 mb-1">
+            {platformInfo.icon}
+            <span className="font-semibold text-slate-100">{platformInfo.name}</span>
+          </div>
+          {draft.topic && <p className="text-xs text-slate-400 mb-1">Topic: {draft.topic}</p>}
+          <p className="text-sm text-slate-300 line-clamp-2">{draft.content}</p>
+          <p className="text-xs text-slate-500 mt-2">
+            Saved: {draft.updatedAt ? formatDistanceToNow(draft.updatedAt.toDate(), { addSuffix: true }) : 'N/A'}
+          </p>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-2 shrink-0 ml-2 mt-1 sm:mt-0">
+          <Button variant="ghost" size="sm" onClick={() => onViewDraft(draft)} className="text-primary hover:text-purple-400 p-1 h-auto">
+            <Icons.eye className="h-4 w-4 mr-1 sm:mr-0"/> <span className="sm:hidden">View</span>
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => draft.id && onDeleteDraft(draft.id)}
+            disabled={isDeleting}
+            className="text-red-500 hover:text-red-400 p-1 h-auto"
+          >
+            {isDeleting ? <Icons.loader className="h-4 w-4 animate-spin" /> : <Icons.trash className="h-4 w-4 mr-1 sm:mr-0" />}
+            <span className="sm:hidden">Delete</span>
+          </Button>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+const DraftListItem = React.memo(DraftListItemComponent);
 
 
 export default function AccountPage() {
@@ -60,7 +130,7 @@ export default function AccountPage() {
     router.push('/login');
   };
 
-  const handleDeleteDraft = async (draftId: string) => {
+  const handleDeleteDraft = useCallback(async (draftId: string) => {
     if (!user || !draftId) return;
     setDeletingDraftId(draftId);
     const success = await deleteDraft(user.uid, draftId);
@@ -71,25 +141,12 @@ export default function AccountPage() {
       toast({ variant: "destructive", title: "Deletion Failed", description: "Could not delete the draft." });
     }
     setDeletingDraftId(null);
-  };
+  }, [user, toast]);
 
-  const handleCopyDraftContent = (content: string) => {
+  const handleCopyDraftContent = useCallback((content: string) => {
     navigator.clipboard.writeText(content);
     toast({ title: "Copied to Clipboard!", description: "Draft content has been copied." });
-  };
-
-  const getDraftPlatformInfo = (platform: Draft['platform']) => {
-    switch (platform) {
-      case 'twitter':
-        return { icon: <Icons.twitter className="h-5 w-5 text-sky-400" />, name: 'Twitter Draft' };
-      case 'linkedin':
-        return { icon: <Icons.linkedin className="h-5 w-5 text-blue-400" />, name: 'LinkedIn Draft' };
-      case 'visual':
-        return { icon: <Icons.image className="h-5 w-5 text-purple-400" />, name: 'Visual Post Draft' };
-      default:
-        return { icon: <Icons.file className="h-5 w-5 text-slate-400" />, name: 'Draft' };
-    }
-  };
+  }, [toast]);
 
 
   if (authLoading || (!user && !authLoading)) {
@@ -105,13 +162,6 @@ export default function AccountPage() {
     initial: { opacity: 0, y: 20 },
     animate: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
   };
-
-  const draftItemVariants = {
-    initial: { opacity: 0, x: -20 },
-    animate: { opacity: 1, x: 0 },
-    exit: { opacity: 0, x: 20, transition: { duration: 0.2 } },
-  };
-
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col items-center p-4 sm:p-6 md:p-8">
@@ -178,49 +228,15 @@ export default function AccountPage() {
               ) : drafts.length > 0 ? (
                 <div className="space-y-4">
                   <AnimatePresence>
-                    {drafts.map((draft) => {
-                      const platformInfo = getDraftPlatformInfo(draft.platform);
-                      return (
-                        <motion.div
-                          key={draft.id}
-                          layout
-                          variants={draftItemVariants}
-                          initial="initial"
-                          animate="animate"
-                          exit="exit"
-                          className="p-4 bg-slate-700/70 rounded-lg border border-slate-600 shadow-md hover:border-primary/50 transition-colors"
-                        >
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <div className="flex items-center space-x-2 mb-1">
-                                {platformInfo.icon}
-                                <span className="font-semibold text-slate-100">{platformInfo.name}</span>
-                              </div>
-                              {draft.topic && <p className="text-xs text-slate-400 mb-1">Topic: {draft.topic}</p>}
-                              <p className="text-sm text-slate-300 line-clamp-2">{draft.content}</p>
-                              <p className="text-xs text-slate-500 mt-2">
-                                Saved: {draft.updatedAt ? formatDistanceToNow(draft.updatedAt.toDate(), { addSuffix: true }) : 'N/A'}
-                              </p>
-                            </div>
-                            <div className="flex flex-col sm:flex-row gap-2 shrink-0 ml-2 mt-1 sm:mt-0">
-                              <Button variant="ghost" size="sm" onClick={() => setViewingDraft(draft)} className="text-primary hover:text-purple-400 p-1 h-auto">
-                                <Icons.eye className="h-4 w-4 mr-1 sm:mr-0"/> <span className="sm:hidden">View</span>
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => draft.id && handleDeleteDraft(draft.id)}
-                                disabled={deletingDraftId === draft.id}
-                                className="text-red-500 hover:text-red-400 p-1 h-auto"
-                              >
-                                {deletingDraftId === draft.id ? <Icons.loader className="h-4 w-4 animate-spin" /> : <Icons.trash className="h-4 w-4 mr-1 sm:mr-0" />}
-                                 <span className="sm:hidden">Delete</span>
-                              </Button>
-                            </div>
-                          </div>
-                        </motion.div>
-                      );
-                    })}
+                    {drafts.map((draft) => (
+                      <DraftListItem
+                        key={draft.id}
+                        draft={draft}
+                        onViewDraft={setViewingDraft}
+                        onDeleteDraft={handleDeleteDraft}
+                        isDeleting={deletingDraftId === draft.id}
+                      />
+                    ))}
                   </AnimatePresence>
                 </div>
               ) : (

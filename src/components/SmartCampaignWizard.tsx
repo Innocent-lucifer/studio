@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, Suspense, useCallback } from 'react';
+import React, { useState, useEffect, Suspense, useCallback } from 'react'; // Import React
 import { useSearchParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -69,6 +69,60 @@ const listContainerVariants = {
   },
 };
 
+// Memoized Angle Item
+interface AngleItemProps {
+  angle: ContentAngle;
+  index: number;
+  isSelected: boolean;
+  onSelect: (value: string) => void;
+}
+const AngleItemComponent: React.FC<AngleItemProps> = ({ angle, index, isSelected, onSelect }) => (
+  <motion.div custom={index} variants={listItemVariants}>
+    <Label
+      htmlFor={`angle-${index}`}
+      className={`flex flex-col p-4 rounded-lg border border-slate-600 hover:border-primary/70 transition-all cursor-pointer ${isSelected ? 'border-primary bg-primary/10' : ''}`}
+    >
+      <div className="flex items-center space-x-3">
+        <RadioGroupItem value={angle.title} id={`angle-${index}`} className="border-slate-500 text-primary focus:ring-primary" checked={isSelected} onClick={() => onSelect(angle.title)}/>
+        <span className="font-semibold text-slate-100 text-lg">{angle.title}</span>
+      </div>
+      <p className="ml-8 mt-1 text-sm text-slate-400">{angle.explanation}</p>
+    </Label>
+  </motion.div>
+);
+const AngleItem = React.memo(AngleItemComponent);
+
+// Memoized Campaign Post Item
+interface CampaignPostItemProps {
+  post: string;
+  platform: 'twitter' | 'linkedin';
+  index: number;
+  onEdit: () => void;
+  onSaveDraft: () => void;
+  isSavingThisDraft: boolean;
+  userId?: string;
+}
+const CampaignPostItemComponent: React.FC<CampaignPostItemProps> = ({ post, platform, onEdit, onSaveDraft, isSavingThisDraft, userId }) => {
+  const platformColor = platform === 'twitter' ? 'text-sky-400' : 'text-blue-400';
+  return (
+    <motion.div
+      variants={listItemVariants}
+      className="p-3 bg-slate-600/70 rounded-md text-slate-200 text-sm mb-2 group"
+    >
+      <p className="whitespace-pre-wrap">{post}</p>
+      <div className="mt-2 flex space-x-2">
+        <Button variant="link" size="sm" onClick={onEdit} className={`${platformColor}/80 hover:${platformColor} p-0 h-auto text-xs disabled:opacity-50`} disabled={!userId || isSavingThisDraft}>
+          <Icons.edit className="mr-1 h-3 w-3"/>Edit
+        </Button>
+        <Button variant="link" size="sm" onClick={onSaveDraft} className="text-green-400/80 hover:text-green-400 p-0 h-auto text-xs disabled:opacity-50" disabled={!userId || isSavingThisDraft}>
+          {isSavingThisDraft ? <Icons.loader className="h-3 w-3 animate-pulse"/> : <Icons.save className="mr-1 h-3 w-3"/>}Save Draft
+        </Button>
+      </div>
+    </motion.div>
+  );
+};
+const CampaignPostItem = React.memo(CampaignPostItemComponent);
+
 
 const SmartCampaignWizardInternal: React.FC = () => {
   const searchParams = useSearchParams();
@@ -112,15 +166,43 @@ const SmartCampaignWizardInternal: React.FC = () => {
     }
   }, [searchParams]);
 
+  const handleSuggestAngles = useCallback(async (currentTopic: string, currentResearch: string) => {
+    if (!currentTopic || !currentResearch) {
+      toast({ variant: "destructive", title: "Missing Data", description: "Topic or research content is missing for angle suggestion." });
+      return;
+    }
+     if (!userIdToPass) {
+      toast({ variant: "destructive", title: "Login Required", description: "Please log in to suggest angles." });
+      return;
+    }
+    setIsLoading(true);
+    setLoadingMessage(`Brainstorming content angles for "${currentTopic}"...`);
+    try {
+      const input: SuggestContentAnglesInput = { topic: currentTopic, researchedContext: currentResearch, userId: userIdToPass, numAngles: 4 };
+      const result = await suggestContentAngles(input);
+      if (result.error) {
+        toast({ variant: "destructive", title: "Angle Suggestion Failed", description: result.error });
+        setAngles([]);
+      } else {
+        setAngles(result.angles || []);
+      }
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Error Suggesting Angles", description: error.message || "Failed to suggest angles." });
+      setAngles([]);
+    } finally {
+      setIsLoading(false);
+      setLoadingMessage('');
+    }
+  }, [toast, userIdToPass]);
+
   useEffect(() => {
     if (currentStep === 'angles' && campaignTopic && currentResearchedContent && angles.length === 0 && !isLoading && userIdToPass) {
       handleSuggestAngles(campaignTopic, currentResearchedContent);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentStep, campaignTopic, currentResearchedContent, angles.length, isLoading, userIdToPass]);
+  }, [currentStep, campaignTopic, currentResearchedContent, angles.length, isLoading, userIdToPass, handleSuggestAngles]);
 
 
-  const handleInternalTopicResearch = async () => {
+  const handleInternalTopicResearch = useCallback(async () => {
     if (!campaignTopic.trim()) {
       toast({ variant: "destructive", title: "Topic Required", description: "Please enter a topic to research." });
       return;
@@ -152,43 +234,10 @@ const SmartCampaignWizardInternal: React.FC = () => {
       setIsLoading(false);
       setLoadingMessage('');
     }
-  };
+  }, [campaignTopic, userIdToPass, toast]);
 
 
-  const handleSuggestAngles = useCallback(async (currentTopic: string, currentResearch: string) => {
-    if (!currentTopic || !currentResearch) {
-      toast({ variant: "destructive", title: "Missing Data", description: "Topic or research content is missing for angle suggestion." });
-      return;
-    }
-     if (!userIdToPass) {
-      toast({ variant: "destructive", title: "Login Required", description: "Please log in to suggest angles." });
-      return;
-    }
-    setIsLoading(true);
-    setLoadingMessage('Brainstorming content angles... Please wait.');
-    try {
-      const input: SuggestContentAnglesInput = { topic: currentTopic, researchedContext: currentResearch, userId: userIdToPass, numAngles: 4 };
-      const result = await suggestContentAngles(input);
-      if (result.error) {
-        toast({ variant: "destructive", title: "Angle Suggestion Failed", description: result.error });
-        setAngles([]);
-      } else {
-        setAngles(result.angles || []);
-        if ((result.angles || []).length === 0) {
-          // Handled by empty state in render
-        }
-      }
-    } catch (error: any) {
-      toast({ variant: "destructive", title: "Error Suggesting Angles", description: error.message || "Failed to suggest angles." });
-      setAngles([]);
-    } finally {
-      setIsLoading(false);
-      setLoadingMessage('');
-    }
-  }, [toast, userIdToPass]);
-
-
-  const handleGenerateSeries = async () => {
+  const handleGenerateSeries = useCallback(async () => {
     if (!selectedAngle || !campaignTopic || !currentResearchedContent) {
         toast({ variant: "destructive", title: "Missing Information", description: "Please select an angle and ensure topic research is complete." });
         return;
@@ -198,7 +247,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
       return;
     }
     setIsLoading(true);
-    setLoadingMessage('Crafting your campaign series (Twitter & LinkedIn)... This can take a bit.');
+    setLoadingMessage(`Crafting campaign series for "${selectedAngle.title}"...`);
     
     setTwitterSeries([]);
     setLinkedinSeries([]);
@@ -223,21 +272,16 @@ const SmartCampaignWizardInternal: React.FC = () => {
       } else {
         setLinkedinSeries(linkedinResult.series || []);
       }
-
-      if ((twitterResult.series || []).length === 0 && (linkedinResult.series || []).length === 0) {
-         // Handled by empty state in render
-      }
       setCurrentStep('series'); 
-
     } catch (error: any) {
       toast({ variant: "destructive", title: "Error Generating Series", description: error.message || "Failed to generate series." });
     } finally {
       setIsLoading(false);
       setLoadingMessage('');
     }
-  };
+  }, [selectedAngle, campaignTopic, currentResearchedContent, userIdToPass, toast]);
   
- const handleSuggestRepurposing = async () => {
+ const handleSuggestRepurposing = useCallback(async () => {
     if (!campaignTopic || !selectedAngle || (twitterSeries.length === 0 && linkedinSeries.length === 0) ) {
       toast({ variant: "destructive", title: "Missing Information", description: "Campaign series must be generated first." });
       return;
@@ -247,34 +291,21 @@ const SmartCampaignWizardInternal: React.FC = () => {
       return;
     }
     setIsLoading(true);
-    setLoadingMessage('Finding repurposing opportunities... One moment.');
+    setLoadingMessage(`Generating repurposing ideas for "${selectedAngle.title}"...`);
     
     setTwitterRepurposingIdeas([]);
     setLinkedinRepurposingIdeas([]);
-
     const promises = [];
 
     if (twitterSeries.length > 0) {
-      const twitterInput: SuggestRepurposingIdeasInput = {
-        topic: campaignTopic,
-        selectedAngle: selectedAngle.title,
-        campaignSummary: twitterSeries.join('\n\n---\n\n'),
-        userId: userIdToPass,
-        numIdeas: 3
-      };
+      const twitterInput: SuggestRepurposingIdeasInput = { topic: campaignTopic, selectedAngle: selectedAngle.title, campaignSummary: twitterSeries.join('\n\n---\n\n'), userId: userIdToPass, numIdeas: 3 };
       promises.push(suggestRepurposingIdeas(twitterInput));
     } else {
        promises.push(Promise.resolve({ ideas: [], error: undefined })); 
     }
 
     if (linkedinSeries.length > 0) {
-      const linkedinInput: SuggestRepurposingIdeasInput = {
-        topic: campaignTopic,
-        selectedAngle: selectedAngle.title,
-        campaignSummary: linkedinSeries.join('\n\n---\n\n'),
-        userId: userIdToPass,
-        numIdeas: 3
-      };
+      const linkedinInput: SuggestRepurposingIdeasInput = { topic: campaignTopic, selectedAngle: selectedAngle.title, campaignSummary: linkedinSeries.join('\n\n---\n\n'), userId: userIdToPass, numIdeas: 3 };
       promises.push(suggestRepurposingIdeas(linkedinInput));
     } else {
         promises.push(Promise.resolve({ ideas: [], error: undefined })); 
@@ -282,45 +313,32 @@ const SmartCampaignWizardInternal: React.FC = () => {
 
     try {
       const [twitterResult, linkedinResult] = await Promise.all(promises);
-
       if (twitterSeries.length > 0 && twitterResult) {
-        if (twitterResult.error) {
-          toast({ variant: "destructive", title: "Twitter Repurposing Ideas Failed", description: twitterResult.error });
-        } else {
-          setTwitterRepurposingIdeas(twitterResult.ideas || []);
-        }
+        if (twitterResult.error) toast({ variant: "destructive", title: "Twitter Repurposing Ideas Failed", description: twitterResult.error });
+        else setTwitterRepurposingIdeas(twitterResult.ideas || []);
       }
-      
       if (linkedinSeries.length > 0 && linkedinResult) {
-        if (linkedinResult.error) {
-          toast({ variant: "destructive", title: "LinkedIn Repurposing Ideas Failed", description: linkedinResult.error });
-        } else {
-          setLinkedinRepurposingIdeas(linkedinResult.ideas || []);
-        }
-      }
-      
-      if ((twitterResult?.ideas || []).length === 0 && (linkedinResult?.ideas || []).length === 0) {
-         // Handled by empty state in render
+        if (linkedinResult.error) toast({ variant: "destructive", title: "LinkedIn Repurposing Ideas Failed", description: linkedinResult.error });
+        else setLinkedinRepurposingIdeas(linkedinResult.ideas || []);
       }
       setCurrentStep('repurpose'); 
-
     } catch (error: any) {
       toast({ variant: "destructive", title: "Error Suggesting Repurposing", description: error.message || "Failed to suggest repurposing ideas." });
     } finally {
       setIsLoading(false);
       setLoadingMessage('');
     }
-  };
+  }, [campaignTopic, selectedAngle, twitterSeries, linkedinSeries, userIdToPass, toast]);
 
-  const handleOpenEditModal = (platform: 'twitter' | 'linkedin', index: number, text: string) => {
+  const handleOpenEditModal = useCallback((platform: 'twitter' | 'linkedin', index: number, text: string) => {
     if (!userIdToPass) {
       toast({ variant: "destructive", title: "Login Required", description: "Please log in to edit posts." });
       return;
     }
     setEditingPost({ platform, index, originalText: text, currentText: text });
-  };
+  }, [userIdToPass, toast]);
 
-  const handleSaveEditedPost = () => {
+  const handleSaveEditedPost = useCallback(() => {
     if (!editingPost) return;
     const { platform, index, currentText } = editingPost;
     if (platform === 'twitter') {
@@ -330,9 +348,9 @@ const SmartCampaignWizardInternal: React.FC = () => {
     }
     setEditingPost(null);
     toast({ title: "Post Updated", description: "Your changes have been saved to this campaign." });
-  };
+  }, [editingPost, toast]);
   
-  const handleAiEditForSeriesPost = async () => {
+  const handleAiEditForSeriesPost = useCallback(async () => {
     if (!editingPost || !aiEditInstruction.trim() || !campaignTopic) {
       toast({ title: "Missing Information", description: "Post context or AI instruction is missing.", variant: "destructive" });
       return;
@@ -343,54 +361,42 @@ const SmartCampaignWizardInternal: React.FC = () => {
     }
     setIsAiSubmitting(true);
     try {
-      const input: GenerateEditedPostInput = {
-        originalPost: editingPost.currentText, 
-        editInstruction: aiEditInstruction,
-        topic: campaignTopic, 
-        platform: editingPost.platform,
-        userId: userIdToPass,
-      };
+      const input: GenerateEditedPostInput = { originalPost: editingPost.currentText, editInstruction: aiEditInstruction, topic: campaignTopic, platform: editingPost.platform, userId: userIdToPass };
       const result = await generateEditedPost(input);
-
-      if (result.error) {
-        toast({ variant: "destructive", title: "AI Edit Error", description: result.error });
-      } else if (result.editedPost) {
+      if (result.error) toast({ variant: "destructive", title: "AI Edit Error", description: result.error });
+      else if (result.editedPost) {
         setEditingPost(prev => prev ? { ...prev, currentText: result.editedPost! } : null); 
         toast({ title: "AI Edit Applied", description: "The AI has revised the post in the editor. Review and save." });
         setIsAiEditModalOpen(false); 
         setAiEditInstruction("");
-      } else {
-         toast({ variant: "destructive", title: "AI Edit Failed", description: "AI did not return an edited post." });
-      }
+      } else toast({ variant: "destructive", title: "AI Edit Failed", description: "AI did not return an edited post." });
     } catch (error: any) {
       toast({ title: "AI Edit Exception", description: error.message || "Could not apply AI changes.", variant: "destructive" });
     } finally {
       setIsAiSubmitting(false);
     }
-  };
+  }, [editingPost, aiEditInstruction, campaignTopic, userIdToPass, toast]);
 
-  const handleSaveCampaignPostAsDraft = async (platform: 'twitter' | 'linkedin', index: number, content: string) => {
+  const handleSaveCampaignPostAsDraft = useCallback(async (platform: 'twitter' | 'linkedin', index: number, content: string) => {
     if (!userIdToPass) {
       toast({ variant: "destructive", title: "Login Required", description: "Please log in to save drafts." });
       return;
     }
     setIsSavingDraft({ platform, index });
-    const draftData = {
-      content,
-      platform,
-      topic: `${campaignTopic} (${selectedAngle?.title || 'General Angle'})`,
-    };
-    const savedDraft = await saveDraft(userIdToPass, draftData);
-    if (savedDraft) {
-      toast({ title: "Draft Saved!", description: `${platform.charAt(0).toUpperCase() + platform.slice(1)} post from campaign saved.` });
-    } else {
-      toast({ variant: "destructive", title: "Save Failed", description: "Could not save the draft." });
+    const draftData = { content, platform, topic: `${campaignTopic} (${selectedAngle?.title || 'General Angle'})` };
+    try {
+      const savedDraft = await saveDraft(userIdToPass, draftData);
+      if (savedDraft) toast({ title: "Draft Saved!", description: `${platform.charAt(0).toUpperCase() + platform.slice(1)} post from campaign saved.` });
+      else toast({ variant: "destructive", title: "Save Failed", description: "Could not save the draft." });
+    } catch(e) {
+      toast({ variant: "destructive", title: "Save Error", description: "An error occurred saving the draft."});
+    } finally {
+      setIsSavingDraft(null);
     }
-    setIsSavingDraft(null);
-  };
+  }, [userIdToPass, campaignTopic, selectedAngle, toast]);
 
 
-  const resetWizard = () => {
+  const resetWizard = useCallback(() => {
     setCampaignTopic('');
     setCurrentResearchedContent('');
     setCurrentStep('topic_research');
@@ -404,42 +410,33 @@ const SmartCampaignWizardInternal: React.FC = () => {
     setIsAiEditModalOpen(false);
     setAiEditInstruction("");
     router.push('/smart-campaign'); 
-  };
+  }, [router]);
   
-  const handleCopyCampaign = () => {
+  const handleCopyCampaign = useCallback(() => {
     let contentToCopy = `Smart Campaign for Topic: ${campaignTopic}\nSelected Angle: ${selectedAngle?.title || 'N/A'}\n\n`;
-
     if (twitterSeries.length > 0) {
       contentToCopy += `=== Twitter Series ===\n`;
       contentToCopy += twitterSeries.map((post, i) => `Tweet ${i+1}:\n${post}`).join('\n\n---\n\n');
       contentToCopy += `\n\n`;
-    } else {
-      contentToCopy += `=== Twitter Series ===\nNo Twitter posts generated.\n\n`;
-    }
-    
+    } else contentToCopy += `=== Twitter Series ===\nNo Twitter posts generated.\n\n`;
     if (twitterRepurposingIdeas.length > 0) {
         contentToCopy += `--- Repurposing Ideas for Twitter ---\n`;
         contentToCopy += twitterRepurposingIdeas.map(idea => `- ${idea}`).join('\n');
         contentToCopy += `\n\n`;
     }
-
     if (linkedinSeries.length > 0) {
       contentToCopy += `=== LinkedIn Series ===\n`;
       contentToCopy += linkedinSeries.map((post, i) => `LinkedIn Post ${i+1}:\n${post}`).join('\n\n---\n\n');
       contentToCopy += `\n\n`;
-    } else {
-       contentToCopy += `=== LinkedIn Series ===\nNo LinkedIn posts generated.\n\n`;
-    }
-
+    } else contentToCopy += `=== LinkedIn Series ===\nNo LinkedIn posts generated.\n\n`;
     if (linkedinRepurposingIdeas.length > 0) {
         contentToCopy += `--- Repurposing Ideas for LinkedIn ---\n`;
         contentToCopy += linkedinRepurposingIdeas.map(idea => `- ${idea}`).join('\n');
         contentToCopy += `\n\n`;
     }
-    
     navigator.clipboard.writeText(contentToCopy.trim());
     toast({ title: "Campaign Copied!", description: "Full campaign content copied to clipboard." });
-  };
+  }, [campaignTopic, selectedAngle, twitterSeries, linkedinSeries, twitterRepurposingIdeas, linkedinRepurposingIdeas, toast]);
 
   const renderLoadingState = (message?: string) => (
     <div className="flex flex-col items-center justify-center p-10 bg-slate-800/50 rounded-xl shadow-xl min-h-[300px]">
@@ -451,7 +448,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
   const CurrentIcon = Icons[stepConfig[currentStep]?.icon || 'help'] || Icons.help;
 
   const renderStepContent = () => {    
-    if (isLoading && !['topic_research'].includes(currentStep)) { // Keep topic_research step visible while its specific loading happens
+    if (isLoading && !['topic_research'].includes(currentStep)) { 
       return renderLoadingState();
     }
      if (!authLoading && !userIdToPass && currentStep !== 'initial_error' && currentStep !== 'topic_research') {
@@ -538,22 +535,16 @@ const SmartCampaignWizardInternal: React.FC = () => {
                   <motion.div variants={listContainerVariants} initial="hidden" animate="visible">
                     <RadioGroup 
                       value={selectedAngle?.title}
-                      onValueChange={(value) => setSelectedAngle(angles.find(a => a.title === value) || null)}
                       className="space-y-3"
                     >
                       {angles.map((angle, index) => (
-                        <motion.div key={index} custom={index} variants={listItemVariants}>
-                          <Label 
-                            htmlFor={`angle-${index}`}
-                            className="flex flex-col p-4 rounded-lg border border-slate-600 hover:border-primary/70 has-[:checked]:border-primary has-[:checked]:bg-primary/10 transition-all cursor-pointer"
-                          >
-                            <div className="flex items-center space-x-3">
-                              <RadioGroupItem value={angle.title} id={`angle-${index}`} className="border-slate-500 text-primary focus:ring-primary" />
-                              <span className="font-semibold text-slate-100 text-lg">{angle.title}</span>
-                            </div>
-                            <p className="ml-8 mt-1 text-sm text-slate-400">{angle.explanation}</p>
-                          </Label>
-                        </motion.div>
+                         <AngleItem 
+                          key={index} 
+                          angle={angle} 
+                          index={index} 
+                          isSelected={selectedAngle?.title === angle.title}
+                          onSelect={(value) => setSelectedAngle(angles.find(a => a.title === value) || null)}
+                        />
                       ))}
                     </RadioGroup>
                   </motion.div>
@@ -631,22 +622,16 @@ const SmartCampaignWizardInternal: React.FC = () => {
                         <CardContent className="space-y-3">
                             <ScrollArea className="h-[300px] pr-2">
                             {twitterSeries.length > 0 ? twitterSeries.map((post, index) => (
-                                <motion.div 
-                                key={`twitter-${index}`} 
-                                custom={index}
-                                variants={listItemVariants}
-                                className="p-3 bg-slate-600/70 rounded-md text-slate-200 text-sm mb-2 group"
-                                >
-                                <p className="whitespace-pre-wrap">{post}</p>
-                                <div className="mt-2 flex space-x-2">
-                                    <Button variant="link" size="sm" onClick={() => handleOpenEditModal('twitter', index, post)} className="text-sky-400/80 hover:text-sky-400 p-0 h-auto text-xs disabled:opacity-50" disabled={!userIdToPass || (isSavingDraft?.platform === 'twitter' && isSavingDraft?.index === index)}>
-                                    <Icons.edit className="mr-1 h-3 w-3"/>Edit
-                                    </Button>
-                                    <Button variant="link" size="sm" onClick={() => handleSaveCampaignPostAsDraft('twitter', index, post)} className="text-green-400/80 hover:text-green-400 p-0 h-auto text-xs disabled:opacity-50" disabled={!userIdToPass || (isSavingDraft?.platform === 'twitter' && isSavingDraft?.index === index)}>
-                                    {isSavingDraft?.platform === 'twitter' && isSavingDraft?.index === index ? <Icons.loader className="h-3 w-3 animate-spin"/> : <Icons.save className="mr-1 h-3 w-3"/>}Save Draft
-                                    </Button>
-                                </div>
-                                </motion.div>
+                                <CampaignPostItem
+                                  key={`twitter-series-${index}`}
+                                  post={post}
+                                  platform="twitter"
+                                  index={index}
+                                  onEdit={() => handleOpenEditModal('twitter', index, post)}
+                                  onSaveDraft={() => handleSaveCampaignPostAsDraft('twitter', index, post)}
+                                  isSavingThisDraft={isSavingDraft?.platform === 'twitter' && isSavingDraft?.index === index}
+                                  userId={userIdToPass}
+                                />
                             )) : <p className="text-slate-400 text-center py-4">No Twitter posts generated for this angle.</p>}
                             </ScrollArea>
                         </CardContent>
@@ -660,22 +645,16 @@ const SmartCampaignWizardInternal: React.FC = () => {
                         <CardContent className="space-y-3">
                             <ScrollArea className="h-[300px] pr-2">
                                 {linkedinSeries.length > 0 ? linkedinSeries.map((post, index) => (
-                                <motion.div 
-                                    key={`linkedin-${index}`} 
-                                    custom={index}
-                                    variants={listItemVariants}
-                                    className="p-3 bg-slate-600/70 rounded-md text-slate-200 text-sm mb-2 group"
-                                >
-                                    <p className="whitespace-pre-wrap">{post}</p>
-                                    <div className="mt-2 flex space-x-2">
-                                    <Button variant="link" size="sm" onClick={() => handleOpenEditModal('linkedin', index, post)} className="text-blue-400/80 hover:text-blue-400 p-0 h-auto text-xs disabled:opacity-50" disabled={!userIdToPass || (isSavingDraft?.platform === 'linkedin' && isSavingDraft?.index === index)}>
-                                        <Icons.edit className="mr-1 h-3 w-3"/>Edit
-                                    </Button>
-                                    <Button variant="link" size="sm" onClick={() => handleSaveCampaignPostAsDraft('linkedin', index, post)} className="text-green-400/80 hover:text-green-400 p-0 h-auto text-xs disabled:opacity-50" disabled={!userIdToPass || (isSavingDraft?.platform === 'linkedin' && isSavingDraft?.index === index)}>
-                                        {isSavingDraft?.platform === 'linkedin' && isSavingDraft?.index === index ? <Icons.loader className="h-3 w-3 animate-spin"/> : <Icons.save className="mr-1 h-3 w-3"/>}Save Draft
-                                    </Button>
-                                    </div>
-                                </motion.div>
+                                  <CampaignPostItem
+                                    key={`linkedin-series-${index}`}
+                                    post={post}
+                                    platform="linkedin"
+                                    index={index}
+                                    onEdit={() => handleOpenEditModal('linkedin', index, post)}
+                                    onSaveDraft={() => handleSaveCampaignPostAsDraft('linkedin', index, post)}
+                                    isSavingThisDraft={isSavingDraft?.platform === 'linkedin' && isSavingDraft?.index === index}
+                                    userId={userIdToPass}
+                                  />
                                 )) : <p className="text-slate-400 text-center py-4">No LinkedIn posts generated for this angle.</p>}
                             </ScrollArea>
                         </CardContent>
@@ -696,7 +675,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
                 className="w-full bg-primary hover:bg-primary/90 text-primary-foreground mt-4 disabled:opacity-60"
                  title={!userIdToPass ? "Log in to suggest repurposing ideas" : ""}
               >
-                  {isLoading && loadingMessage.includes("Finding repurposing") ? <Icons.loader className="mr-2 h-5 w-5 animate-spin" /> : <Icons.repeat className="mr-2 h-5 w-5" />}
+                  {isLoading && loadingMessage.includes("Generating repurposing") ? <Icons.loader className="mr-2 h-5 w-5 animate-spin" /> : <Icons.repeat className="mr-2 h-5 w-5" />}
                 Suggest Repurposing Ideas
               </Button>
                 <Button variant="outline" onClick={() => setCurrentStep('angles')} className="w-full mt-2 border-slate-600 text-slate-300 hover:bg-slate-700">
@@ -709,7 +688,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
           return (
             <motion.div key="repurpose" {...cardMotionProps} className="space-y-6">
               <h3 className="text-xl font-medium text-slate-200 mb-1">Repurposing Ideas for: <span className="text-purple-400">{selectedAngle?.title || 'Selected Angle'}</span></h3>
-               {isLoading && loadingMessage.includes("Finding repurposing") ? (
+               {isLoading && loadingMessage.includes("Generating repurposing") ? (
                  renderLoadingState(loadingMessage)
               ) : (
               <>
@@ -900,7 +879,6 @@ const SmartCampaignWizardInternal: React.FC = () => {
         </Card>
       </motion.div>
 
-      {/* Main Edit Modal for Series Posts */}
       <Dialog open={!!editingPost} onOpenChange={(isOpen) => !isOpen && setEditingPost(null)}>
         <DialogContent className="bg-slate-800 border-slate-700 text-white sm:max-w-lg">
           <DialogHeader>
@@ -933,7 +911,6 @@ const SmartCampaignWizardInternal: React.FC = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Nested AI Edit Instruction Modal for Series Posts */}
       <Dialog open={isAiEditModalOpen} onOpenChange={setIsAiEditModalOpen}>
         <DialogContent className="bg-slate-800 border-slate-700 text-white sm:max-w-md">
           <DialogHeader>

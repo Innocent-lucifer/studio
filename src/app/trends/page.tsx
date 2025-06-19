@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react'; // Import React
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -22,6 +22,64 @@ type Platform = "Twitter" | "LinkedIn";
 const platforms: Platform[] = ["Twitter", "LinkedIn"];
 
 const categories = ["All", "Tech", "Love", "Finance", "Startups", "Fashion", "Memes", "Gaming", "Travel", "Food", "Health", "AI"];
+
+const getPlatformIcon = (platform: Platform) => {
+  switch (platform) {
+    case "Twitter": return <Icons.twitter className="h-4 w-4" />;
+    case "LinkedIn": return <Icons.linkedin className="h-4 w-4" />;
+    default: return null;
+  }
+};
+
+interface TrendCardItemProps {
+  trend: Trend;
+}
+
+const TrendCardItemComponent: React.FC<TrendCardItemProps> = ({ trend }) => {
+  const cardVariants = {
+    initial: { opacity: 0, scale: 0.95, y: 20 },
+    animate: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
+    exit: { opacity: 0, scale: 0.95, y: -20, transition: { duration: 0.3 } }
+  };
+
+  return (
+    <motion.div layout initial="initial" animate="animate" exit="exit" variants={cardVariants}>
+      <Card className="h-full flex flex-col bg-slate-800/60 backdrop-blur-md border border-slate-700 shadow-lg hover:shadow-primary/25 hover:border-primary/40 transition-all duration-300 rounded-xl overflow-hidden group">
+        <CardHeader className="pb-3">
+          <div className="flex justify-between items-start">
+            <CardTitle className="text-lg font-semibold text-primary group-hover:text-purple-400 transition-colors">{trend.title}</CardTitle>
+            <div className="flex flex-col items-end shrink-0 ml-2 space-y-1">
+              <Badge variant="secondary" className="bg-slate-700 text-slate-300 border-slate-600 text-xs">
+                {getPlatformIcon(trend.platform)}
+                <span className="ml-1.5">{trend.category}</span>
+              </Badge>
+               <Badge variant={trend.hypeScore > 75 ? "destructive" : "secondary"} className={`${trend.hypeScore > 75 ? 'bg-red-500/20 text-red-300 border-red-500/30' : 'bg-slate-600/80 text-slate-400 border-slate-500/50'} text-xs`}>
+                <Icons.flame className="mr-1 h-3 w-3" /> {trend.hypeScore}
+              </Badge>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="flex-grow">
+          <CardDescription className="text-slate-400 text-sm leading-relaxed mb-4 line-clamp-3">
+            {trend.description}
+          </CardDescription>
+        </CardContent>
+        <div className="p-4 pt-0 mt-auto">
+            <Link href={`/quick-post?topic=${encodeURIComponent(trend.title)}&researchedContent=${encodeURIComponent(trend.description)}`} passHref>
+                <Button
+                    variant="outline"
+                    className="w-full bg-primary/10 border-primary/50 text-primary hover:bg-primary/20 hover:text-purple-300 hover:border-primary/70 transition-all duration-200 ease-in-out transform group-hover:scale-105 shadow-md group-hover:shadow-purple-500/20"
+                >
+                    <Icons.edit className="mr-2 h-4 w-4" /> Generate Post
+                </Button>
+            </Link>
+        </div>
+      </Card>
+    </motion.div>
+  );
+};
+const TrendCardItem = React.memo(TrendCardItemComponent);
+
 
 export default function TrendsPage() {
   const { user } = useAuth();
@@ -62,7 +120,7 @@ export default function TrendsPage() {
         setIsLoading(false);
       }
     }, 500),
-    [toast, userIdToPass] 
+    [toast] 
   );
 
   useEffect(() => {
@@ -75,20 +133,6 @@ export default function TrendsPage() {
       .filter(trend => !filterByHype || trend.hypeScore > 75)
       .filter(trend => trendingRegion === "Global" ? trend.region === "Global" : trend.region === "Local");
   }, [trends, filterByHype, trendingRegion]);
-
-  const cardVariants = {
-    initial: { opacity: 0, scale: 0.95, y: 20 },
-    animate: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
-    exit: { opacity: 0, scale: 0.95, y: -20, transition: { duration: 0.3 } }
-  };
-
-  const getPlatformIcon = (platform: Platform) => {
-    switch (platform) {
-      case "Twitter": return <Icons.twitter className="h-4 w-4" />;
-      case "LinkedIn": return <Icons.linkedin className="h-4 w-4" />;
-      default: return null;
-    }
-  };
   
   function debounce<F extends (...args: any[]) => any>(func: F, delay: number) {
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
@@ -231,39 +275,7 @@ export default function TrendsPage() {
               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
             >
               {filteredTrends.map(trend => (
-                <motion.div key={trend.id} layout initial="initial" animate="animate" exit="exit" variants={cardVariants}>
-                  <Card className="h-full flex flex-col bg-slate-800/60 backdrop-blur-md border border-slate-700 shadow-lg hover:shadow-primary/25 hover:border-primary/40 transition-all duration-300 rounded-xl overflow-hidden group">
-                    <CardHeader className="pb-3">
-                      <div className="flex justify-between items-start">
-                        <CardTitle className="text-lg font-semibold text-primary group-hover:text-purple-400 transition-colors">{trend.title}</CardTitle>
-                        <div className="flex flex-col items-end shrink-0 ml-2 space-y-1">
-                          <Badge variant="secondary" className="bg-slate-700 text-slate-300 border-slate-600 text-xs">
-                            {getPlatformIcon(trend.platform)}
-                            <span className="ml-1.5">{trend.category}</span>
-                          </Badge>
-                           <Badge variant={trend.hypeScore > 75 ? "destructive" : "secondary"} className={`${trend.hypeScore > 75 ? 'bg-red-500/20 text-red-300 border-red-500/30' : 'bg-slate-600/80 text-slate-400 border-slate-500/50'} text-xs`}>
-                            <Icons.flame className="mr-1 h-3 w-3" /> {trend.hypeScore}
-                          </Badge>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="flex-grow">
-                      <CardDescription className="text-slate-400 text-sm leading-relaxed mb-4 line-clamp-3">
-                        {trend.description}
-                      </CardDescription>
-                    </CardContent>
-                    <div className="p-4 pt-0 mt-auto">
-                        <Link href={`/quick-post?topic=${encodeURIComponent(trend.title)}&researchedContent=${encodeURIComponent(trend.description)}`} passHref>
-                            <Button
-                                variant="outline"
-                                className="w-full bg-primary/10 border-primary/50 text-primary hover:bg-primary/20 hover:text-purple-300 hover:border-primary/70 transition-all duration-200 ease-in-out transform group-hover:scale-105 shadow-md group-hover:shadow-purple-500/20"
-                            >
-                                <Icons.edit className="mr-2 h-4 w-4" /> Generate Post
-                            </Button>
-                        </Link>
-                    </div>
-                  </Card>
-                </motion.div>
+                <TrendCardItem key={trend.id} trend={trend} />
               ))}
             </motion.div>
           ) : (

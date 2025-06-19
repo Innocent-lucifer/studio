@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import React, { useState, useCallback } from "react"; // Import React
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -27,9 +27,83 @@ interface PostSelectionProps {
   twitterPosts: string[];
   linkedinPosts: string[];
   topic: string;
-  userId?: string; // Made optional for guest users or when auth is loading
+  userId?: string; 
   onUpdatePost: (type: 'twitter' | 'linkedin', index: number, newText: string) => void;
 }
+
+interface PostDisplayItemProps {
+  post: string;
+  type: 'twitter' | 'linkedin';
+  index: number;
+  isSelected: boolean;
+  onSelect: () => void;
+  onEdit: () => void;
+  onSaveDraft: () => void;
+  isSavingThisDraft: boolean;
+  userId?: string;
+}
+
+const PostDisplayItemComponent: React.FC<PostDisplayItemProps> = ({
+  post,
+  type,
+  index,
+  isSelected,
+  onSelect,
+  onEdit,
+  onSaveDraft,
+  isSavingThisDraft,
+  userId
+}) => {
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
+  };
+  const platformIcon = type === 'twitter' ? <Icons.twitter className="mr-2 h-5 w-5 text-sky-400" /> : <Icons.linkedin className="mr-2 h-5 w-5 text-blue-400" />;
+  const platformColor = type === 'twitter' ? 'text-sky-400' : 'text-blue-400';
+
+  return (
+    <motion.div
+      key={`${type}-${index}`}
+      className="p-3 bg-slate-700/50 rounded-md border border-slate-600 hover:border-primary/50 transition-colors"
+      variants={itemVariants}
+    >
+      <div className="flex items-start space-x-3">
+        <Checkbox
+          id={`${type}-cb-${index}`}
+          checked={isSelected}
+          onCheckedChange={onSelect}
+          className="mt-1 border-slate-500 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+          disabled={!userId}
+        />
+        <Label htmlFor={`${type}-cb-${index}`} className="flex-grow text-sm text-slate-200 cursor-pointer whitespace-pre-wrap">{post}</Label>
+        <div className="flex flex-col space-y-1 sm:flex-row sm:space-y-0 sm:space-x-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onEdit}
+            className={`${platformColor}/80 hover:${platformColor} h-auto p-1 disabled:opacity-50`}
+            disabled={!userId || isSavingThisDraft}
+            title="Edit Post"
+          >
+            <Icons.edit className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onSaveDraft}
+            className="text-green-400/80 hover:text-green-400 h-auto p-1 disabled:opacity-50"
+            disabled={!userId || isSavingThisDraft}
+            title="Save as Draft"
+          >
+            {isSavingThisDraft ? <Icons.loader className="h-4 w-4 animate-pulse" /> : <Icons.save className="h-4 w-4" />}
+          </Button>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+const PostDisplayItem = React.memo(PostDisplayItemComponent);
+
 
 export const PostSelection: React.FC<PostSelectionProps> = ({ 
   twitterPosts, 
@@ -54,7 +128,7 @@ export const PostSelection: React.FC<PostSelectionProps> = ({
     whileTap: { scale: 0.97, transition: { type: "spring", stiffness: 400, damping: 17 } },
   };
 
-  const handlePostSelection = (post: string, type: 'twitter' | 'linkedin') => {
+  const handlePostSelection = useCallback((post: string, type: 'twitter' | 'linkedin') => {
     if (type === 'twitter') {
       setSelectedTwitterPosts(prev => 
         prev.includes(post) ? prev.filter(p => p !== post) : [...prev, post]
@@ -64,18 +138,18 @@ export const PostSelection: React.FC<PostSelectionProps> = ({
         prev.includes(post) ? prev.filter(p => p !== post) : [...prev, post]
       );
     }
-  };
+  }, []);
 
-  const handleEditPost = (postText: string, index: number, type: 'twitter' | 'linkedin') => {
+  const handleEditPost = useCallback((postText: string, index: number, type: 'twitter' | 'linkedin') => {
     if (!userId) {
       toast({ variant: "destructive", title: "Login Required", description: "You need to be logged in to edit posts." });
       return;
     }
     setEditingPost({ type, index, originalTextWhileEditing: postText, currentText: postText });
-  };
+  }, [userId, toast]);
   
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = useCallback(() => {
     if (editingPost) {
       onUpdatePost(editingPost.type, editingPost.index, editingPost.currentText);
       toast({
@@ -84,13 +158,13 @@ export const PostSelection: React.FC<PostSelectionProps> = ({
       });
       setEditingPost(null);
     }
-  };
+  }, [editingPost, onUpdatePost, toast]);
   
-  const handleCancelEdit = () => {
+  const handleCancelEdit = useCallback(() => {
     setEditingPost(null);
-  };
+  }, []);
 
-  const handleCopySelectedPosts = () => {
+  const handleCopySelectedPosts = useCallback(() => {
     const allSelectedPosts = [...selectedTwitterPosts, ...selectedLinkedInPosts];
     if (allSelectedPosts.length === 0) {
       toast({
@@ -105,9 +179,9 @@ export const PostSelection: React.FC<PostSelectionProps> = ({
       title: "Posts Copied!",
       description: "Selected posts have been copied to your clipboard.",
     });
-  };
+  }, [selectedTwitterPosts, selectedLinkedInPosts, toast]);
 
-  const openAiEditModal = () => {
+  const openAiEditModal = useCallback(() => {
     if (!editingPost) {
        toast({
         variant: "destructive",
@@ -117,9 +191,9 @@ export const PostSelection: React.FC<PostSelectionProps> = ({
       return;
     }
     setIsAiEditingModalOpen(true);
-  };
+  }, [editingPost, toast]);
 
-  const handleAiEditSubmit = async () => {
+  const handleAiEditSubmit = useCallback(async () => {
     if (!editingPost || !aiEditInstruction.trim() || !userId) {
       toast({
         title: "Missing Information",
@@ -161,9 +235,9 @@ export const PostSelection: React.FC<PostSelectionProps> = ({
     } finally {
       setIsAiSubmitting(false);
     }
-  };
+  }, [editingPost, aiEditInstruction, userId, topic, toast]);
 
-  const handleSaveDraft = async (postContent: string, postTopic: string, platform: 'twitter' | 'linkedin', index: number) => {
+  const handleSaveDraft = useCallback(async (postContent: string, postTopic: string, platform: 'twitter' | 'linkedin', index: number) => {
     if (!userId) {
       toast({ variant: "destructive", title: "Login Required", description: "You need to be logged in to save drafts." });
       return;
@@ -174,14 +248,19 @@ export const PostSelection: React.FC<PostSelectionProps> = ({
       platform: platform,
       topic: postTopic,
     };
-    const savedDraft = await saveDraft(userId, draftData);
-    if (savedDraft) {
-      toast({ title: "Draft Saved!", description: `${platform.charAt(0).toUpperCase() + platform.slice(1)} post draft has been saved.` });
-    } else {
-      toast({ variant: "destructive", title: "Save Failed", description: "Could not save the draft. Please try again." });
+    try {
+      const savedDraft = await saveDraft(userId, draftData);
+      if (savedDraft) {
+        toast({ title: "Draft Saved!", description: `${platform.charAt(0).toUpperCase() + platform.slice(1)} post draft has been saved.` });
+      } else {
+        toast({ variant: "destructive", title: "Save Failed", description: "Could not save the draft. Please try again." });
+      }
+    } catch (e) {
+      toast({ variant: "destructive", title: "Save Error", description: "An error occurred while saving." });
+    } finally {
+      setIsSavingDraft(null);
     }
-    setIsSavingDraft(null);
-  };
+  }, [userId, toast]);
   
   const itemVariants = {
     hidden: { opacity: 0, y: 20 },
@@ -200,44 +279,18 @@ export const PostSelection: React.FC<PostSelectionProps> = ({
         <ScrollArea className="h-[250px] pr-3">
         <div className="space-y-3">
           {twitterPosts.map((post, index) => (
-            <motion.div 
-              key={`twitter-${index}`} 
-              className="p-3 bg-slate-700/50 rounded-md border border-slate-600 hover:border-primary/50 transition-colors"
-              variants={itemVariants}
-            >
-              <div className="flex items-start space-x-3">
-                <Checkbox
-                  id={`twitter-cb-${index}`}
-                  checked={selectedTwitterPosts.includes(post)}
-                  onCheckedChange={() => handlePostSelection(post, 'twitter')}
-                  className="mt-1 border-slate-500 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                  disabled={!userId}
-                />
-                <Label htmlFor={`twitter-cb-${index}`} className="flex-grow text-sm text-slate-200 cursor-pointer">{post}</Label>
-                <div className="flex flex-col space-y-1 sm:flex-row sm:space-y-0 sm:space-x-1">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => handleEditPost(post, index, 'twitter')} 
-                    className="text-primary/80 hover:text-primary h-auto p-1 disabled:opacity-50"
-                    disabled={!userId || isSavingDraft?.type === 'twitter' && isSavingDraft?.index === index}
-                    title="Edit Post"
-                  >
-                    <Icons.edit className="h-4 w-4"/>
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => handleSaveDraft(post, topic, 'twitter', index)} 
-                    className="text-green-400/80 hover:text-green-400 h-auto p-1 disabled:opacity-50"
-                    disabled={!userId || (isSavingDraft?.type === 'twitter' && isSavingDraft?.index === index)}
-                    title="Save as Draft"
-                  >
-                    {isSavingDraft?.type === 'twitter' && isSavingDraft?.index === index ? <Icons.loader className="h-4 w-4 animate-spin" /> : <Icons.save className="h-4 w-4"/>}
-                  </Button>
-                </div>
-              </div>
-            </motion.div>
+            <PostDisplayItem
+              key={`twitter-${index}`}
+              post={post}
+              type="twitter"
+              index={index}
+              isSelected={selectedTwitterPosts.includes(post)}
+              onSelect={() => handlePostSelection(post, 'twitter')}
+              onEdit={() => handleEditPost(post, index, 'twitter')}
+              onSaveDraft={() => handleSaveDraft(post, topic, 'twitter', index)}
+              isSavingThisDraft={isSavingDraft?.type === 'twitter' && isSavingDraft?.index === index}
+              userId={userId}
+            />
           ))}
         </div>
         </ScrollArea>
@@ -248,44 +301,18 @@ export const PostSelection: React.FC<PostSelectionProps> = ({
          <ScrollArea className="h-[250px] pr-3">
         <div className="space-y-3">
           {linkedinPosts.map((post, index) => (
-            <motion.div 
-              key={`linkedin-${index}`} 
-              className="p-3 bg-slate-700/50 rounded-md border border-slate-600 hover:border-primary/50 transition-colors"
-              variants={itemVariants}
-            >
-              <div className="flex items-start space-x-3">
-                <Checkbox
-                  id={`linkedin-cb-${index}`}
-                  checked={selectedLinkedInPosts.includes(post)}
-                  onCheckedChange={() => handlePostSelection(post, 'linkedin')}
-                   className="mt-1 border-slate-500 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                   disabled={!userId}
-                />
-                <Label htmlFor={`linkedin-cb-${index}`} className="flex-grow text-sm text-slate-200 cursor-pointer whitespace-pre-wrap">{post}</Label>
-                <div className="flex flex-col space-y-1 sm:flex-row sm:space-y-0 sm:space-x-1">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => handleEditPost(post, index, 'linkedin')} 
-                    className="text-primary/80 hover:text-primary h-auto p-1 disabled:opacity-50"
-                    disabled={!userId || isSavingDraft?.type === 'linkedin' && isSavingDraft?.index === index}
-                    title="Edit Post"
-                  >
-                   <Icons.edit className="h-4 w-4"/>
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => handleSaveDraft(post, topic, 'linkedin', index)} 
-                    className="text-green-400/80 hover:text-green-400 h-auto p-1 disabled:opacity-50"
-                    disabled={!userId || (isSavingDraft?.type === 'linkedin' && isSavingDraft?.index === index)}
-                    title="Save as Draft"
-                  >
-                     {isSavingDraft?.type === 'linkedin' && isSavingDraft?.index === index ? <Icons.loader className="h-4 w-4 animate-spin" /> : <Icons.save className="h-4 w-4"/>}
-                  </Button>
-                </div>
-              </div>
-            </motion.div>
+             <PostDisplayItem
+              key={`linkedin-${index}`}
+              post={post}
+              type="linkedin"
+              index={index}
+              isSelected={selectedLinkedInPosts.includes(post)}
+              onSelect={() => handlePostSelection(post, 'linkedin')}
+              onEdit={() => handleEditPost(post, index, 'linkedin')}
+              onSaveDraft={() => handleSaveDraft(post, topic, 'linkedin', index)}
+              isSavingThisDraft={isSavingDraft?.type === 'linkedin' && isSavingDraft?.index === index}
+              userId={userId}
+            />
           ))}
         </div>
         </ScrollArea>

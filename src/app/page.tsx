@@ -8,7 +8,7 @@ import { AppLogo } from '@/components/AppLogo';
 import { HamburgerMenu } from '@/components/HamburgerMenu';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react'; // Import React
 import { useRouter } from 'next/navigation';
 
 interface FeatureCardProps {
@@ -29,7 +29,7 @@ const extractNameFromEmail = (email: string | undefined | null): string => {
     .join(' ');
 };
 
-const FeatureCard: React.FC<FeatureCardProps> = ({ icon, title, description, href, delay = 0 }) => {
+const FeatureCardComponent: React.FC<FeatureCardProps> = ({ icon, title, description, href, delay = 0 }) => {
   const IconComponent = Icons[icon] || Icons.help;
   return (
     <motion.div
@@ -67,6 +67,8 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ icon, title, description, hre
     </motion.div>
   );
 };
+const FeatureCard = React.memo(FeatureCardComponent);
+
 
 export default function AppHomePage() {
   const { user, loading } = useAuth();
