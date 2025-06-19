@@ -87,9 +87,25 @@ export const CREDIT_COSTS = {
 export interface Draft {
   id?: string; // Firestore ID, optional when creating
   userId: string;
-  platform: 'twitter' | 'linkedin' | 'visual'; // Added 'visual'
+  platform: 'twitter' | 'linkedin' | 'visual';
   content: string;
   topic?: string; // Optional topic context for the draft
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+export interface CampaignDraft {
+  id?: string; // Firestore ID
+  userId: string;
+  campaignTopic: string;
+  selectedAngle: { // Store the chosen angle's details
+    title: string;
+    explanation: string;
+  };
+  twitterSeries?: string[];
+  linkedinSeries?: string[];
+  twitterRepurposingIdeas?: string[];
+  linkedinRepurposingIdeas?: string[];
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }

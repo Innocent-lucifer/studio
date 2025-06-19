@@ -130,7 +130,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
       return;
     }
     setIsLoading(true);
-    setLoadingMessage(`Researching "${campaignTopic}"...`);
+    setLoadingMessage(`Researching "${campaignTopic}"... This may take a moment.`);
     setCurrentResearchedContent(''); 
     setAngles([]); 
     setSelectedAngle(null); 
@@ -165,7 +165,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
       return;
     }
     setIsLoading(true);
-    setLoadingMessage('Brainstorming content angles...');
+    setLoadingMessage('Brainstorming content angles... Please wait.');
     try {
       const input: SuggestContentAnglesInput = { topic: currentTopic, researchedContext: currentResearch, userId: userIdToPass, numAngles: 4 };
       const result = await suggestContentAngles(input);
@@ -175,7 +175,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
       } else {
         setAngles(result.angles || []);
         if ((result.angles || []).length === 0) {
-          toast({ variant: "default", title: "No Angles Suggested", description: "The AI couldn't find specific angles. Try rephrasing your topic or proceed with general content generation."})
+          // Handled by empty state in render
         }
       }
     } catch (error: any) {
@@ -198,7 +198,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
       return;
     }
     setIsLoading(true);
-    setLoadingMessage('Crafting your campaign series (Twitter & LinkedIn)...');
+    setLoadingMessage('Crafting your campaign series (Twitter & LinkedIn)... This can take a bit.');
     
     setTwitterSeries([]);
     setLinkedinSeries([]);
@@ -225,7 +225,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
       }
 
       if ((twitterResult.series || []).length === 0 && (linkedinResult.series || []).length === 0) {
-         toast({ variant: "default", title: "No Series Generated", description: "The AI couldn't generate series for this angle. You can try a different angle or topic." });
+         // Handled by empty state in render
       }
       setCurrentStep('series'); 
 
@@ -247,7 +247,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
       return;
     }
     setIsLoading(true);
-    setLoadingMessage('Finding repurposing opportunities...');
+    setLoadingMessage('Finding repurposing opportunities... One moment.');
     
     setTwitterRepurposingIdeas([]);
     setLinkedinRepurposingIdeas([]);
@@ -300,7 +300,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
       }
       
       if ((twitterResult?.ideas || []).length === 0 && (linkedinResult?.ideas || []).length === 0) {
-         toast({ variant: "default", title: "No Repurposing Ideas", description: "The AI couldn't find repurposing ideas for this campaign." });
+         // Handled by empty state in render
       }
       setCurrentStep('repurpose'); 
 
@@ -451,7 +451,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
   const CurrentIcon = Icons[stepConfig[currentStep]?.icon || 'help'] || Icons.help;
 
   const renderStepContent = () => {    
-    if (isLoading && !['topic_research', 'angles', 'series', 'repurpose'].includes(currentStep)) {
+    if (isLoading && !['topic_research'].includes(currentStep)) { // Keep topic_research step visible while its specific loading happens
       return renderLoadingState();
     }
      if (!authLoading && !userIdToPass && currentStep !== 'initial_error' && currentStep !== 'topic_research') {
@@ -532,7 +532,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
               <h3 className="text-xl font-medium text-slate-200">{stepConfig.angles.description}</h3>
               <p className="text-slate-400">The AI will generate interconnected content based on your selection for: <span className="font-semibold text-purple-300">{campaignTopic}</span></p>
               {isLoading && loadingMessage.includes("Brainstorming") ? (
-                 renderLoadingState('Brainstorming content angles...')
+                 renderLoadingState(loadingMessage)
               ) : angles.length > 0 ? (
                 <ScrollArea className="h-[300px] pr-3">
                   <motion.div variants={listContainerVariants} initial="hidden" animate="visible">
@@ -559,27 +559,27 @@ const SmartCampaignWizardInternal: React.FC = () => {
                   </motion.div>
                 </ScrollArea>
               ) : (
-                <div className="flex flex-col items-center justify-center h-[250px] text-center">
-                  <Icons.info className="w-12 h-12 text-slate-500 mb-4" />
-                  <p className="text-slate-400 text-lg">No content angles available currently.</p>
-                  <p className="text-slate-500 text-sm mt-1">
-                    This might be due to the nature of the topic or a temporary issue.
+                <div className="flex flex-col items-center justify-center h-[250px] text-center p-6 bg-slate-700/30 rounded-lg border border-slate-600/50">
+                  <Icons.lightbulb className="w-12 h-12 text-slate-500 mb-4" />
+                  <p className="text-slate-300 text-lg font-medium">No Content Angles Suggested</p>
+                  <p className="text-slate-400 text-sm mt-1 max-w-xs mx-auto">
+                    The AI couldn't find specific angles for "{campaignTopic}". Try rephrasing your topic or researching again.
                   </p>
                     <Button 
                       variant="outline" 
                       onClick={() => handleSuggestAngles(campaignTopic, currentResearchedContent)} 
-                      className="mt-4 border-slate-600 text-slate-300 hover:bg-slate-700"
-                      disabled={isLoading || !campaignTopic || !currentResearchedContent}
+                      className="mt-6 border-primary text-primary hover:bg-primary/10"
+                      disabled={isLoading || !campaignTopic || !currentResearchedContent || !userIdToPass}
                     >
-                      <Icons.refreshCw className="mr-2 h-4 w-4" /> Try Again
+                      <Icons.refreshCw className="mr-2 h-4 w-4" /> Try Generating Angles Again
                     </Button>
                 </div>
               )}
               <Button 
                 onClick={handleGenerateSeries} 
-                disabled={!selectedAngle || isLoading || angles.length === 0}
+                disabled={!selectedAngle || isLoading || (angles.length === 0 && !isLoading) || !userIdToPass}
                 size="lg"
-                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground mt-4"
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground mt-4 disabled:opacity-60"
               >
                 {isLoading && loadingMessage.includes("Crafting") ? <Icons.loader className="mr-2 h-5 w-5 animate-spin" /> : <Icons.listChecks className="mr-2 h-5 w-5" />}
                 Generate Campaign Series
@@ -595,80 +595,103 @@ const SmartCampaignWizardInternal: React.FC = () => {
             <motion.div key="series" {...cardMotionProps} className="space-y-6">
               <h3 className="text-xl font-medium text-slate-200">Your Campaign Series for: <span className="text-purple-400">{selectedAngle?.title || 'Selected Angle'}</span></h3>
               {isLoading && loadingMessage.includes("Crafting") ? (
-                 renderLoadingState('Crafting your campaign...')
+                 renderLoadingState(loadingMessage)
               ) : (
+                <>
+                {(twitterSeries.length === 0 && linkedinSeries.length === 0 && !isLoading) && (
+                   <div className="flex flex-col items-center justify-center h-[250px] text-center p-6 bg-slate-700/30 rounded-lg border border-slate-600/50">
+                      <Icons.file className="w-12 h-12 text-slate-500 mb-4" />
+                      <p className="text-slate-300 text-lg font-medium">No Campaign Series Generated</p>
+                      <p className="text-slate-400 text-sm mt-1 max-w-xs mx-auto">
+                        The AI couldn't generate posts for this angle. You might want to try a different angle or topic.
+                      </p>
+                       <Button 
+                          variant="outline" 
+                          onClick={handleGenerateSeries} 
+                          className="mt-6 border-primary text-primary hover:bg-primary/10"
+                          disabled={isLoading || !selectedAngle}
+                        >
+                          <Icons.refreshCw className="mr-2 h-4 w-4" /> Try Generating Series Again
+                        </Button>
+                    </div>
+                )}
                 <motion.div 
                   className="grid md:grid-cols-2 gap-6"
                   variants={listContainerVariants}
                   initial="hidden"
                   animate="visible"
                 >
-                  <motion.div variants={listItemVariants}>
-                    <Card className="bg-slate-700/50 border-slate-600 h-full hover:shadow-primary/10 transition-shadow duration-300">
-                      <CardHeader>
-                        <CardTitle className="flex items-center text-lg text-sky-400"><Icons.twitter className="mr-2 h-5 w-5" /> Twitter Thread</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        <ScrollArea className="h-[300px] pr-2">
-                          {twitterSeries.length > 0 ? twitterSeries.map((post, index) => (
-                            <motion.div 
-                              key={`twitter-${index}`} 
-                              custom={index}
-                              variants={listItemVariants}
-                              className="p-3 bg-slate-600/70 rounded-md text-slate-200 text-sm mb-2 group"
-                            >
-                              <p className="whitespace-pre-wrap">{post}</p>
-                              <div className="mt-2 flex space-x-2">
-                                <Button variant="link" size="sm" onClick={() => handleOpenEditModal('twitter', index, post)} className="text-sky-400/80 hover:text-sky-400 p-0 h-auto text-xs disabled:opacity-50" disabled={!userIdToPass || (isSavingDraft?.platform === 'twitter' && isSavingDraft?.index === index)}>
-                                  <Icons.edit className="mr-1 h-3 w-3"/>Edit
-                                </Button>
-                                 <Button variant="link" size="sm" onClick={() => handleSaveCampaignPostAsDraft('twitter', index, post)} className="text-green-400/80 hover:text-green-400 p-0 h-auto text-xs disabled:opacity-50" disabled={!userIdToPass || (isSavingDraft?.platform === 'twitter' && isSavingDraft?.index === index)}>
-                                  {isSavingDraft?.platform === 'twitter' && isSavingDraft?.index === index ? <Icons.loader className="h-3 w-3 animate-spin"/> : <Icons.save className="mr-1 h-3 w-3"/>}Save Draft
-                                </Button>
-                              </div>
-                            </motion.div>
-                          )) : <p className="text-slate-400 text-center py-4">No Twitter posts generated.</p>}
-                        </ScrollArea>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                  <motion.div variants={listItemVariants}>
-                    <Card className="bg-slate-700/50 border-slate-600 h-full hover:shadow-primary/10 transition-shadow duration-300">
-                      <CardHeader>
-                        <CardTitle className="flex items-center text-lg text-blue-400"><Icons.linkedin className="mr-2 h-5 w-5" /> LinkedIn Series</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                          <ScrollArea className="h-[300px] pr-2">
-                            {linkedinSeries.length > 0 ? linkedinSeries.map((post, index) => (
-                              <motion.div 
-                                key={`linkedin-${index}`} 
+                  { (twitterSeries.length > 0 || linkedinSeries.length > 0) && (
+                    <>
+                    <motion.div variants={listItemVariants}>
+                        <Card className="bg-slate-700/50 border-slate-600 h-full hover:shadow-primary/10 transition-shadow duration-300">
+                        <CardHeader>
+                            <CardTitle className="flex items-center text-lg text-sky-400"><Icons.twitter className="mr-2 h-5 w-5" /> Twitter Thread</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                            <ScrollArea className="h-[300px] pr-2">
+                            {twitterSeries.length > 0 ? twitterSeries.map((post, index) => (
+                                <motion.div 
+                                key={`twitter-${index}`} 
                                 custom={index}
                                 variants={listItemVariants}
                                 className="p-3 bg-slate-600/70 rounded-md text-slate-200 text-sm mb-2 group"
-                              >
+                                >
                                 <p className="whitespace-pre-wrap">{post}</p>
                                 <div className="mt-2 flex space-x-2">
-                                  <Button variant="link" size="sm" onClick={() => handleOpenEditModal('linkedin', index, post)} className="text-blue-400/80 hover:text-blue-400 p-0 h-auto text-xs disabled:opacity-50" disabled={!userIdToPass || (isSavingDraft?.platform === 'linkedin' && isSavingDraft?.index === index)}>
+                                    <Button variant="link" size="sm" onClick={() => handleOpenEditModal('twitter', index, post)} className="text-sky-400/80 hover:text-sky-400 p-0 h-auto text-xs disabled:opacity-50" disabled={!userIdToPass || (isSavingDraft?.platform === 'twitter' && isSavingDraft?.index === index)}>
                                     <Icons.edit className="mr-1 h-3 w-3"/>Edit
-                                  </Button>
-                                  <Button variant="link" size="sm" onClick={() => handleSaveCampaignPostAsDraft('linkedin', index, post)} className="text-green-400/80 hover:text-green-400 p-0 h-auto text-xs disabled:opacity-50" disabled={!userIdToPass || (isSavingDraft?.platform === 'linkedin' && isSavingDraft?.index === index)}>
-                                     {isSavingDraft?.platform === 'linkedin' && isSavingDraft?.index === index ? <Icons.loader className="h-3 w-3 animate-spin"/> : <Icons.save className="mr-1 h-3 w-3"/>}Save Draft
-                                  </Button>
+                                    </Button>
+                                    <Button variant="link" size="sm" onClick={() => handleSaveCampaignPostAsDraft('twitter', index, post)} className="text-green-400/80 hover:text-green-400 p-0 h-auto text-xs disabled:opacity-50" disabled={!userIdToPass || (isSavingDraft?.platform === 'twitter' && isSavingDraft?.index === index)}>
+                                    {isSavingDraft?.platform === 'twitter' && isSavingDraft?.index === index ? <Icons.loader className="h-3 w-3 animate-spin"/> : <Icons.save className="mr-1 h-3 w-3"/>}Save Draft
+                                    </Button>
                                 </div>
-                              </motion.div>
-                            )) : <p className="text-slate-400 text-center py-4">No LinkedIn posts generated.</p>}
-                          </ScrollArea>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
+                                </motion.div>
+                            )) : <p className="text-slate-400 text-center py-4">No Twitter posts generated for this angle.</p>}
+                            </ScrollArea>
+                        </CardContent>
+                        </Card>
+                    </motion.div>
+                    <motion.div variants={listItemVariants}>
+                        <Card className="bg-slate-700/50 border-slate-600 h-full hover:shadow-primary/10 transition-shadow duration-300">
+                        <CardHeader>
+                            <CardTitle className="flex items-center text-lg text-blue-400"><Icons.linkedin className="mr-2 h-5 w-5" /> LinkedIn Series</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                            <ScrollArea className="h-[300px] pr-2">
+                                {linkedinSeries.length > 0 ? linkedinSeries.map((post, index) => (
+                                <motion.div 
+                                    key={`linkedin-${index}`} 
+                                    custom={index}
+                                    variants={listItemVariants}
+                                    className="p-3 bg-slate-600/70 rounded-md text-slate-200 text-sm mb-2 group"
+                                >
+                                    <p className="whitespace-pre-wrap">{post}</p>
+                                    <div className="mt-2 flex space-x-2">
+                                    <Button variant="link" size="sm" onClick={() => handleOpenEditModal('linkedin', index, post)} className="text-blue-400/80 hover:text-blue-400 p-0 h-auto text-xs disabled:opacity-50" disabled={!userIdToPass || (isSavingDraft?.platform === 'linkedin' && isSavingDraft?.index === index)}>
+                                        <Icons.edit className="mr-1 h-3 w-3"/>Edit
+                                    </Button>
+                                    <Button variant="link" size="sm" onClick={() => handleSaveCampaignPostAsDraft('linkedin', index, post)} className="text-green-400/80 hover:text-green-400 p-0 h-auto text-xs disabled:opacity-50" disabled={!userIdToPass || (isSavingDraft?.platform === 'linkedin' && isSavingDraft?.index === index)}>
+                                        {isSavingDraft?.platform === 'linkedin' && isSavingDraft?.index === index ? <Icons.loader className="h-3 w-3 animate-spin"/> : <Icons.save className="mr-1 h-3 w-3"/>}Save Draft
+                                    </Button>
+                                    </div>
+                                </motion.div>
+                                )) : <p className="text-slate-400 text-center py-4">No LinkedIn posts generated for this angle.</p>}
+                            </ScrollArea>
+                        </CardContent>
+                        </Card>
+                    </motion.div>
+                    </>
+                  )}
                 </motion.div>
+                </>
               )}
                {!userIdToPass && (twitterSeries.length > 0 || linkedinSeries.length > 0) &&
                 <p className="text-xs text-slate-400 text-center mt-2">Log in to edit or save drafts.</p>
               }
               <Button 
                 onClick={handleSuggestRepurposing} 
-                disabled={isLoading || (twitterSeries.length === 0 && linkedinSeries.length === 0) || !userIdToPass}
+                disabled={isLoading || (twitterSeries.length === 0 && linkedinSeries.length === 0 && !isLoading) || !userIdToPass}
                 size="lg"
                 className="w-full bg-primary hover:bg-primary/90 text-primary-foreground mt-4 disabled:opacity-60"
                  title={!userIdToPass ? "Log in to suggest repurposing ideas" : ""}
@@ -687,14 +710,32 @@ const SmartCampaignWizardInternal: React.FC = () => {
             <motion.div key="repurpose" {...cardMotionProps} className="space-y-6">
               <h3 className="text-xl font-medium text-slate-200 mb-1">Repurposing Ideas for: <span className="text-purple-400">{selectedAngle?.title || 'Selected Angle'}</span></h3>
                {isLoading && loadingMessage.includes("Finding repurposing") ? (
-                 renderLoadingState('Brainstorming repurposing ideas...')
+                 renderLoadingState(loadingMessage)
               ) : (
+              <>
+              {(twitterRepurposingIdeas.length === 0 && linkedinRepurposingIdeas.length === 0 && (twitterSeries.length > 0 || linkedinSeries.length > 0) && !isLoading) && (
+                  <div className="flex flex-col items-center justify-center text-center p-6 bg-slate-700/30 rounded-lg border border-slate-600/50 min-h-[200px]">
+                      <Icons.info className="w-10 h-10 text-slate-500 mb-3" />
+                      <p className="text-slate-300 text-md font-medium">No Repurposing Ideas Found</p>
+                      <p className="text-slate-400 text-sm mt-1">The AI couldn't find specific repurposing ideas for the generated content.</p>
+                      <Button 
+                          variant="outline" 
+                          onClick={handleSuggestRepurposing} 
+                          className="mt-4 border-primary text-primary hover:bg-primary/10"
+                          disabled={isLoading || !userIdToPass}
+                      >
+                          <Icons.refreshCw className="mr-2 h-4 w-4" /> Try Generating Ideas Again
+                      </Button>
+                  </div>
+              )}
               <motion.div 
                 className="grid md:grid-cols-2 gap-6"
                 variants={listContainerVariants}
                 initial="hidden"
                 animate="visible"
               >
+                {(twitterRepurposingIdeas.length > 0 || linkedinRepurposingIdeas.length > 0) && (
+                  <>
                   <motion.div variants={listItemVariants}>
                     <Card className="bg-slate-700/50 border-slate-600 h-full hover:shadow-primary/10 transition-shadow duration-300">
                         <CardHeader>
@@ -715,7 +756,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
                                     </ul>
                                 ) : (
                                     <p className="text-slate-400 text-center py-4">
-                                      {twitterSeries.length > 0 ? "No specific repurposing ideas generated for Twitter." : "No Twitter series available to generate ideas."}
+                                      {twitterSeries.length > 0 ? "No repurposing ideas generated for Twitter this time." : "No Twitter series was generated to create ideas from."}
                                     </p>
                                 )}
                             </ScrollArea>
@@ -742,34 +783,24 @@ const SmartCampaignWizardInternal: React.FC = () => {
                                     </ul>
                                 ) : (
                                       <p className="text-slate-400 text-center py-4">
-                                      {linkedinSeries.length > 0 ? "No specific repurposing ideas generated for LinkedIn." : "No LinkedIn series available to generate ideas."}
+                                      {linkedinSeries.length > 0 ? "No repurposing ideas generated for LinkedIn this time." : "No LinkedIn series was generated to create ideas from."}
                                     </p>
                                 )}
                             </ScrollArea>
                         </CardContent>
                     </Card>
                   </motion.div>
+                  </>
+                )}
               </motion.div>
+              </>
               )}
-              {(twitterRepurposingIdeas.length === 0 && linkedinRepurposingIdeas.length === 0 && (twitterSeries.length > 0 || linkedinSeries.length > 0) && !isLoading) && (
-                  <div className="flex flex-col items-center justify-center text-center mt-4">
-                      <Icons.info className="w-10 h-10 text-slate-500 mb-2" />
-                      <p className="text-slate-400 text-md">The AI couldn't find repurposing ideas for the generated content.</p>
-                      <Button 
-                          variant="outline" 
-                          onClick={handleSuggestRepurposing} 
-                          className="mt-3 border-slate-600 text-slate-300 hover:bg-slate-700"
-                          disabled={isLoading}
-                      >
-                          <Icons.refreshCw className="mr-2 h-4 w-4" /> Try Generating Ideas Again
-                      </Button>
-                  </div>
-              )}
+              
               <Separator className="my-6 bg-slate-700" />
                 <Button 
                 onClick={() => setCurrentStep('complete')}
                 size="lg"
-                className="w-full bg-green-600 hover:bg-green-700 text-white mt-4"
+                className="w-full bg-green-600 hover:bg-green-700 text-white mt-4 disabled:opacity-60"
                 disabled={!userIdToPass}
                 title={!userIdToPass ? "Log in to finalize campaign" : ""}
               >
@@ -947,4 +978,3 @@ export const SmartCampaignWizard: React.FC = () => {
     </Suspense>
   );
 };
-

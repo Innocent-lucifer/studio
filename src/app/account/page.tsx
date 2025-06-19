@@ -224,7 +224,21 @@ export default function AccountPage() {
                   </AnimatePresence>
                 </div>
               ) : (
-                <p className="text-slate-400 text-center py-6">You have no saved drafts yet. Try saving some from the content generators!</p>
+                <div className="text-center py-8 px-4 bg-slate-700/30 rounded-lg border border-slate-600/50">
+                  <Icons.file className="h-12 w-12 text-slate-500 mx-auto mb-4" />
+                  <h4 className="text-lg font-semibold text-slate-300 mb-1">No Drafts Yet!</h4>
+                  <p className="text-slate-400 text-sm max-w-xs mx-auto">
+                    Looks like your creative space is empty. Head over to a content generator and save your masterpieces here!
+                  </p>
+                  <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
+                    <Button asChild variant="outline" className="border-primary text-primary hover:bg-primary/10">
+                      <Link href="/quick-post"><Icons.edit className="mr-2 h-4 w-4" />Quick Post</Link>
+                    </Button>
+                    <Button asChild variant="outline" className="border-purple-500 text-purple-400 hover:bg-purple-500/10">
+                      <Link href="/visual-post"><Icons.image className="mr-2 h-4 w-4" />Image to Post</Link>
+                    </Button>
+                  </div>
+                </div>
               )}
             </div>
 

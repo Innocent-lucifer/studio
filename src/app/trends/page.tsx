@@ -51,7 +51,7 @@ export default function TrendsPage() {
         } else {
           setTrends(result.trends || []);
           if ((result.trends || []).length === 0) {
-            toast({ title: "No Trends Found", description: `Could not find trends for ${category} on ${platform}. Try a different selection.` });
+            // No specific toast here; the empty state message will cover this.
           }
         }
       } catch (e: any) {
@@ -62,7 +62,7 @@ export default function TrendsPage() {
         setIsLoading(false);
       }
     }, 500),
-    [toast, userIdToPass]
+    [toast, userIdToPass] 
   );
 
   useEffect(() => {
@@ -216,7 +216,7 @@ export default function TrendsPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="flex flex-col items-center justify-center min-h-[300px] text-center text-red-400"
+              className="flex flex-col items-center justify-center min-h-[300px] text-center text-red-400 p-6 bg-red-900/20 border border-red-700 rounded-xl"
             >
               <Icons.alertTriangle className="h-16 w-16 text-red-500 mb-4" />
               <p className="text-xl font-semibold">Oops! Something went wrong.</p>
@@ -269,12 +269,18 @@ export default function TrendsPage() {
           ) : (
              <motion.div
               key="no-trends"
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-              className="flex flex-col items-center justify-center min-h-[300px] text-center"
+              initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+              className="flex flex-col items-center justify-center min-h-[300px] text-center p-6 bg-slate-800/40 border border-slate-700 rounded-xl"
             >
               <Icons.search className="h-16 w-16 text-slate-600 mx-auto mb-4" />
-              <p className="text-xl text-slate-400">No trends match your current filters.</p>
-              <p className="text-sm text-slate-500 mt-1">Try adjusting the platform, category, or filter toggles.</p>
+              <h4 className="text-xl font-semibold text-slate-300">No Trends Found</h4>
+              <p className="text-slate-400 mt-2 max-w-md">
+                We couldn't find any trending topics for <span className="font-semibold text-primary">{selectedPlatform}</span> in the <span className="font-semibold text-primary">{selectedCategory}</span> category that match your filters.
+              </p>
+              <p className="text-sm text-slate-500 mt-1">Try a different category, adjust the filters, or check back later!</p>
+               <Button onClick={() => debouncedFetchTrends(selectedPlatform, selectedCategory, userIdToPass)} variant="outline" className="mt-6 border-primary text-primary hover:bg-primary/10">
+                <Icons.refreshCw className="mr-2 h-4 w-4" /> Refresh Trends
+              </Button>
             </motion.div>
           )}
         </AnimatePresence>
@@ -288,4 +294,3 @@ export default function TrendsPage() {
     </motion.div>
   );
 }
-
