@@ -1,7 +1,7 @@
 
 import {
-  ArrowLeft, ArrowRight, BarChartBig, Check, ChevronsUpDown, Circle, Copy, CreditCard, Edit, ExternalLink,
-  File, HelpCircle, Home, Lightbulb, ListChecks, Loader2, LogIn, LogOut, Mail, Menu, MessageSquare, Moon,
+  Archive, ArchiveRestore, ArrowLeft, ArrowRight, BarChartBig, Check, ChevronsUpDown, Circle, Copy, CreditCard, Edit, ExternalLink,
+  File, FileText, HelpCircle, Home, Lightbulb, ListChecks, Loader2, LogIn, LogOut, Mail, Menu, MessageSquare, Moon,
   Plus, PlusCircle, RefreshCw, Repeat, Save, Search, Server, Settings, Share2, Shield, Sun, Trash, User,
   UserPlus, Wand2, Workflow, Twitter, Linkedin, Sparkles, CalendarDays, Send, Feather,
   CheckCircle, Lock, X, AlertTriangle, Info, Image as ImageIconLucide, Layers3, Tag, Filter as FilterIcon, Globe2, Flame,
@@ -15,6 +15,8 @@ type IconComponent = (props: SVGProps<SVGSVGElement> & { className?: string }) =
 
 const Icons = {
   alertTriangle: AlertTriangle,
+  archive: Archive,
+  archiveRestore: ArchiveRestore,
   arrowLeft: ArrowLeft,
   arrowRight: ArrowRight,
   barChartBig: BarChartBig,
@@ -32,6 +34,7 @@ const Icons = {
   externalLink: ExternalLink,
   feather: Feather,
   file: File,
+  fileText: FileText, 
   filter: FilterIcon,
   flame: Flame,
   globe: Globe2,
@@ -79,4 +82,3 @@ const Icons = {
 
 export { Icons };
 export type { IconComponent };
-

@@ -21,7 +21,9 @@ import {
   addDoc,
   orderBy,
 } from 'firebase/firestore';
-import { User as FirebaseAuthUser } from 'firebase/auth';
+import type { User as FirebaseAuthUser } from 'firebase/auth';
+import type { ContentAngle } from '@/ai/flows/suggest-content-angles';
+
 
 const db = getFirestore(app);
 
@@ -29,79 +31,28 @@ export interface UserData {
   uid: string;
   email: string | null;
   displayName: string | null;
-  // credits?: number; // Temporarily disabled
-  // plan?: 'free' | 'starter' | 'infinity'; // Temporarily disabled
-  // lastLogin?: Timestamp; // Temporarily disabled
-  // lastFreeCreditResetTimestamp?: Timestamp; // Temporarily disabled
-  // monthlyCreditsProvisionedTimestamp?: Timestamp; // Temporarily disabled
-  // creditHistory?: CreditTransaction[]; // Temporarily disabled - Will be re-enabled with credit system
   createdAt: Timestamp;
-  referralCode?: string; // For referring others
-  referredBy?: string; // UID of the user who referred this user
-  referralsMade?: number; // Count of successful referrals
+  referralCode?: string; 
+  referredBy?: string; 
+  referralsMade?: number; 
 }
-
-/* // Temporarily disabled - Will be re-enabled with credit system
-export interface CreditTransaction {
-  id: string;
-  type: CreditTransactionType;
-  amount: number;
-  reason: string;
-  timestamp: Timestamp;
-  relatedFlow?: string; // e.g., 'generateTwitterPosts', 'imageToPost'
-}
-
-export enum CreditTransactionType {
-  INITIAL_SIGNUP = 'INITIAL_SIGNUP',
-  PURCHASE = 'PURCHASE',
-  FEATURE_USE_QUICK_POST = 'FEATURE_USE_QUICK_POST',
-  FEATURE_USE_SMART_CAMPAIGN_ANGLES = 'FEATURE_USE_SMART_CAMPAIGN_ANGLES',
-  FEATURE_USE_SMART_CAMPAIGN_SERIES = 'FEATURE_USE_SMART_CAMPAIGN_SERIES',
-  FEATURE_USE_IMAGE_TO_POST = 'FEATURE_USE_IMAGE_TO_POST',
-  FEATURE_USE_AI_EDIT = 'FEATURE_USE_AI_EDIT',
-  FEATURE_USE_TREND_EXPLORER = 'FEATURE_USE_TREND_EXPLORER',
-  REGENERATE_POST = 'REGENERATE_POST',
-  ADMIN_ADJUSTMENT_ADD = 'ADMIN_ADJUSTMENT_ADD',
-  ADMIN_ADJUSTMENT_DEDUCT = 'ADMIN_ADJUSTMENT_DEDUCT',
-  FREE_TIER_RESET = 'FREE_TIER_RESET',
-  STARTER_PACK_MONTHLY = 'STARTER_PACK_MONTHLY',
-  REFERRAL_BONUS_AWARDED = 'REFERRAL_BONUS_AWARDED', // For the referrer
-  REFERRAL_BONUS_RECEIVED = 'REFERRAL_BONUS_RECEIVED', // For the new user
-}
-
-export const CREDIT_COSTS = {
-  QUICK_POST_GENERATION: 20,
-  REGENERATE_POST: 5,
-  AI_EDIT: 5,
-  SMART_CAMPAIGN_ANGLES: 25,
-  SMART_CAMPAIGN_SERIES: 30, // Per platform series
-  IMAGE_TO_POST: 60,
-  TREND_EXPLORER_FETCH: 2, // Example cost
-  INITIAL_SIGNUP_CREDITS: 40,
-  FREE_TIER_BIWEEKLY_CREDITS: 40,
-  STARTER_PACK_MONTHLY_CREDITS: 700,
-  REFERRAL_BONUS_CREDITS: 50, // Credits for both referrer and new user
-};
-*/
 
 export interface Draft {
-  id?: string; // Firestore ID, optional when creating
+  id?: string; 
   userId: string;
   platform: 'twitter' | 'linkedin' | 'visual';
   content: string;
-  topic?: string; // Optional topic context for the draft
+  topic?: string; 
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
 
 export interface CampaignDraft {
-  id?: string; // Firestore ID
-  userId: string;
+  id?: string; 
+  userId: string; 
   campaignTopic: string;
-  selectedAngle: { // Store the chosen angle's details
-    title: string;
-    explanation: string;
-  };
+  researchedContext: string; 
+  selectedAngle: ContentAngle; 
   twitterSeries?: string[];
   linkedinSeries?: string[];
   twitterRepurposingIdeas?: string[];
@@ -122,7 +73,7 @@ const generateReferralCode = (length = 8): string => {
 
 export const createUserDocument = async (
   user: FirebaseAuthUser,
-  referredByCode?: string // Temporarily not used for credit logic
+  referredByCode?: string 
 ): Promise<UserData | null> => {
   if (!user) return null;
   const userRef = doc(db, 'users', user.uid) as DocumentReference<UserData>;
@@ -139,14 +90,6 @@ export const createUserDocument = async (
     };
 
     if (referredByCode) {
-        // Placeholder for future logic when credits are re-enabled
-        // For now, just store referredBy if applicable
-        // const q = query(collection(db, 'users'), where('referralCode', '==', referredByCode.toUpperCase()));
-        // const referrerSnap = await getDocs(q);
-        // if (!referrerSnap.empty) {
-        //   const referrerDoc = referrerSnap.docs[0];
-        //   userData.referredBy = referrerDoc.id;
-        // }
         console.log(`User referred by code: ${referredByCode} - referral logic temporarily adjusted.`);
     }
 
@@ -159,12 +102,6 @@ export const createUserDocument = async (
       return null;
     }
   } else {
-    // User document exists, could update lastLogin if that field is re-enabled
-    // try {
-    //   await updateDoc(userRef, { lastLogin: serverTimestamp() as Timestamp });
-    // } catch (error) {
-    //   console.error('Error updating lastLogin:', error);
-    // }
     return userSnap.data();
   }
 };
@@ -190,132 +127,6 @@ export const getUserData = async (uid: string): Promise<UserData | null> => {
   }
 };
 
-/* // Temporarily disabled - Credit system logic will be re-enabled later
-
-const createTransactionObject = (
-  amount: number,
-  type: CreditTransactionType,
-  reason: string,
-  relatedFlow?: string
-): CreditTransaction => {
-  return {
-    id: doc(collection(db, 'dummy')).id, 
-    amount,
-    type,
-    reason,
-    timestamp: serverTimestamp() as Timestamp,
-    ...(relatedFlow && { relatedFlow }),
-  };
-};
-
-export const deductCredits = async (
-  uid: string,
-  amountToDeduct: number,
-  reason: string,
-  transactionType: CreditTransactionType,
-  relatedFlow?: string
-): Promise<{ success: boolean; error?: string; newBalance?: number }> => {
-  if (!uid || amountToDeduct <= 0) {
-    return { success: false, error: 'Invalid input for credit deduction.' };
-  }
-  console.log(`[Credit System Disabled] Attempted to deduct ${amountToDeduct} credits from ${uid} for ${reason}`);
-  // Bypass actual deduction
-  // const userRef = doc(db, 'users', uid) as DocumentReference<UserData>;
-  // try {
-  //   const userDataSnap = await getDoc(userRef);
-  //   if (!userDataSnap.exists()) {
-  //     return { success: false, error: 'User data not found for credit deduction.' };
-  //   }
-  //   const currentCredits = userDataSnap.data()?.credits || 0;
-  //   const plan = userDataSnap.data()?.plan;
-  //   if (plan === 'infinity') {
-  //       console.log(`User ${uid} on infinity plan. No credits deducted for ${reason}.`);
-  //       return { success: true, newBalance: Infinity };
-  //   }
-  //   if (currentCredits < amountToDeduct) {
-  //     return { success: false, error: 'Insufficient credits.' };
-  //   }
-  //   const newBalance = currentCredits - amountToDeduct;
-  //   const transaction = createTransactionObject(-amountToDeduct, transactionType, reason, relatedFlow);
-  //   await updateDoc(userRef, {
-  //     credits: increment(-amountToDeduct),
-  //     creditHistory: arrayUnion(transaction),
-  //   });
-  //   console.log(`Successfully deducted ${amountToDeduct} credits from user ${uid}. New balance: ${newBalance}`);
-  //   return { success: true, newBalance };
-  // } catch (error: any) {
-  //   console.error(`Error deducting credits for user ${uid}:`, error);
-  //   return { success: false, error: error.message || 'Failed to deduct credits due to a server error.' };
-  // }
-  return { success: true, newBalance: undefined }; // Simulate success
-};
-
-export const addCredits = async (
-  uid: string,
-  amountToAdd: number,
-  reason: string,
-  transactionType: CreditTransactionType,
-  relatedFlow?: string
-): Promise<{ success: boolean; error?: string; newBalance?: number }> => {
-  if (!uid || amountToAdd <= 0) {
-    return { success: false, error: 'Invalid input for adding credits.' };
-  }
-  console.log(`[Credit System Disabled] Attempted to add ${amountToAdd} credits to ${uid} for ${reason}`);
-  // Bypass actual addition
-  // const userRef = doc(db, 'users', uid) as DocumentReference<UserData>;
-  // try {
-  //   const userDataSnap = await getDoc(userRef);
-  //   if (!userDataSnap.exists()) {
-  //     return { success: false, error: 'User data not found for adding credits.' };
-  //   }
-  //   const currentCredits = userDataSnap.data()?.credits || 0;
-  //   const newBalance = currentCredits + amountToAdd;
-  //   const transaction = createTransactionObject(amountToAdd, transactionType, reason, relatedFlow);
-  //   await updateDoc(userRef, {
-  //     credits: increment(amountToAdd),
-  //     creditHistory: arrayUnion(transaction),
-  //   });
-  //   console.log(`Successfully added ${amountToAdd} credits to user ${uid}. New balance: ${newBalance}`);
-  //   return { success: true, newBalance };
-  // } catch (error: any) {
-  //   console.error(`Error adding credits for user ${uid}:`, error);
-  //   return { success: false, error: error.message || 'Failed to add credits due to a server error.' };
-  // }
-  return { success: true, newBalance: undefined }; // Simulate success
-};
-
-export const recordTransaction = async (
-  uid: string,
-  amount: number,
-  type: CreditTransactionType,
-  reason: string,
-  relatedFlow?: string
-): Promise<void> => {
-  if (!uid) return;
-  console.log(`[Credit System Disabled] Attempted to record transaction for ${uid}: ${amount}, ${type}, ${reason}`);
-  // const userRef = doc(db, 'users', uid) as DocumentReference<UserData>;
-  // const transaction = createTransactionObject(amount, type, reason, relatedFlow);
-  // try {
-  //   await updateDoc(userRef, {
-  //     creditHistory: arrayUnion(transaction),
-  //   });
-  // } catch (error) {
-  //   console.error('Error recording transaction:', error);
-  // }
-};
-
-export const resetFreeTierCredits = async (): Promise<void> => {
-  console.log('[Credit System Disabled] resetFreeTierCredits called.');
-};
-
-export const provisionStarterPackMonthlyCredits = async (): Promise<void> => {
-  console.log('[Credit System Disabled] provisionStarterPackMonthlyCredits called.');
-};
-
-export const awardReferralBonuses = async (referrerUid: string, newReferredUserUid: string, newReferredUserEmail?: string | null): Promise<void> => {
-  console.log(`[Credit System Disabled] awardReferralBonuses called for referrer: ${referrerUid}, new user: ${newReferredUserUid}`);
-};
-*/
 
 // --- Draft Functions ---
 export const saveDraft = async (
@@ -391,6 +202,88 @@ export const deleteDraft = async (userId: string, draftId: string): Promise<bool
     return true;
   } catch (error) {
     console.error('Error deleting draft:', error);
+    return false;
+  }
+};
+
+// --- Campaign Draft Functions ---
+export const saveCampaignDraft = async (
+  userId: string,
+  campaignCoreData: {
+    campaignTopic: string;
+    researchedContext: string;
+    selectedAngle: ContentAngle;
+    twitterSeries?: string[];
+    linkedinSeries?: string[];
+    twitterRepurposingIdeas?: string[];
+    linkedinRepurposingIdeas?: string[];
+  }
+): Promise<CampaignDraft | null> => {
+  if (!userId) {
+    console.error("User ID is required to save a campaign draft.");
+    return null;
+  }
+  try {
+    const campaignDraftsCollectionRef = collection(db, 'users', userId, 'campaignDrafts');
+    const newCampaignDraftData: Omit<CampaignDraft, 'id'> = {
+      ...campaignCoreData,
+      userId,
+      createdAt: serverTimestamp() as Timestamp,
+      updatedAt: serverTimestamp() as Timestamp,
+    };
+    const docRef = await addDoc(campaignDraftsCollectionRef, newCampaignDraftData);
+    return { ...newCampaignDraftData, id: docRef.id };
+  } catch (error) {
+    console.error('Error saving campaign draft:', error);
+    return null;
+  }
+};
+
+export const getCampaignDrafts = async (userId: string): Promise<CampaignDraft[]> => {
+  if (!userId) {
+    console.error("User ID is required to fetch campaign drafts.");
+    return [];
+  }
+  try {
+    const campaignDraftsCollectionRef = collection(db, 'users', userId, 'campaignDrafts');
+    const q = query(campaignDraftsCollectionRef, orderBy('updatedAt', 'desc'));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() } as CampaignDraft));
+  } catch (error) {
+    console.error('Error fetching campaign drafts:', error);
+    return [];
+  }
+};
+
+export const getCampaignDraftById = async (userId: string, campaignDraftId: string): Promise<CampaignDraft | null> => {
+  if (!userId || !campaignDraftId) {
+    console.error("User ID and Campaign Draft ID are required.");
+    return null;
+  }
+  try {
+    const campaignDraftRef = doc(db, 'users', userId, 'campaignDrafts', campaignDraftId) as DocumentReference<CampaignDraft>;
+    const docSnap = await getDoc(campaignDraftRef);
+    if (docSnap.exists()) {
+      return { id: docSnap.id, ...docSnap.data() };
+    }
+    return null;
+  } catch (error) {
+    console.error('Error fetching campaign draft by ID:', error);
+    return null;
+  }
+};
+
+export const deleteCampaignDraft = async (userId: string, campaignDraftId: string): Promise<boolean> => {
+  if (!userId || !campaignDraftId) {
+    console.error("User ID and Campaign Draft ID are required to delete.");
+    return false;
+  }
+  try {
+    const campaignDraftRef = doc(db, 'users', userId, 'campaignDrafts', campaignDraftId);
+    await deleteDoc(campaignDraftRef);
+    return true;
+  } catch (error) {
+    console.error('Error deleting campaign draft:', error);
     return false;
   }
 };

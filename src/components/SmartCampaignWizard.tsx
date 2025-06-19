@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect, Suspense, useCallback } from 'react'; // Import React
+import React, { useState, useEffect, Suspense, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -17,8 +17,9 @@ import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAuth } from "@/context/AuthContext";
-import { researchTopic, type ResearchTopicInput, type ResearchTopicOutput } from '@/ai/flows/research-topic';
+import { researchTopic } from '@/ai/flows/research-topic';
 import type { SuggestContentAnglesInput, ContentAngle } from '@/ai/flows/suggest-content-angles';
 import { suggestContentAngles } from '@/ai/flows/suggest-content-angles';
 import type { GenerateCampaignSeriesInput } from '@/ai/flows/generate-campaign-series';
@@ -26,7 +27,7 @@ import { generateCampaignSeries } from '@/ai/flows/generate-campaign-series';
 import type { SuggestRepurposingIdeasInput } from '@/ai/flows/suggest-repurposing-ideas';
 import { suggestRepurposingIdeas } from '@/ai/flows/suggest-repurposing-ideas';
 import { generateEditedPost, type GenerateEditedPostInput } from '@/ai/flows/generateEditedPost';
-import { saveDraft } from '@/lib/firebaseUserActions';
+import { saveDraft, saveCampaignDraft, getCampaignDraftById, type CampaignDraft } from '@/lib/firebaseUserActions';
 
 type WizardStep = 'topic_research' | 'angles' | 'series' | 'repurpose' | 'complete' | 'initial_error';
 
@@ -69,7 +70,6 @@ const listContainerVariants = {
   },
 };
 
-// Memoized Angle Item
 interface AngleItemProps {
   angle: ContentAngle;
   index: number;
@@ -92,7 +92,6 @@ const AngleItemComponent: React.FC<AngleItemProps> = ({ angle, index, isSelected
 );
 const AngleItem = React.memo(AngleItemComponent);
 
-// Memoized Campaign Post Item
 interface CampaignPostItemProps {
   post: string;
   platform: 'twitter' | 'linkedin';
@@ -137,7 +136,8 @@ const SmartCampaignWizardInternal: React.FC = () => {
   const [currentStep, setCurrentStep] = useState<WizardStep>('topic_research');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [loadingMessage, setLoadingMessage] = useState<string>('');
-  const [isSavingDraft, setIsSavingDraft] = useState<{ platform: 'twitter' | 'linkedin', index: number } | null>(null);
+  const [isSavingIndividualDraft, setIsSavingIndividualDraft] = useState<{ platform: 'twitter' | 'linkedin', index: number } | null>(null);
+  const [isSavingCampaign, setIsSavingCampaign] = useState<boolean>(false);
 
   const [angles, setAngles] = useState<ContentAngle[]>([]);
   const [selectedAngle, setSelectedAngle] = useState<ContentAngle | null>(null);
@@ -152,19 +152,67 @@ const SmartCampaignWizardInternal: React.FC = () => {
   
   const [twitterRepurposingIdeas, setTwitterRepurposingIdeas] = useState<string[]>([]);
   const [linkedinRepurposingIdeas, setLinkedinRepurposingIdeas] = useState<string[]>([]);
+  const [loadedCampaignId, setLoadedCampaignId] = useState<string | null>(null);
+
+
+  const loadCampaignData = useCallback(async (campaignId: string) => {
+    if (!userIdToPass) {
+      toast({ variant: "destructive", title: "Login Required", description: "Please log in to load campaigns." });
+      return;
+    }
+    setIsLoading(true);
+    setLoadingMessage("Loading your saved campaign...");
+    try {
+      const campaign = await getCampaignDraftById(userIdToPass, campaignId);
+      if (campaign) {
+        setCampaignTopic(campaign.campaignTopic);
+        setCurrentResearchedContent(campaign.researchedContext);
+        setSelectedAngle(campaign.selectedAngle);
+        setTwitterSeries(campaign.twitterSeries || []);
+        setLinkedinSeries(campaign.linkedinSeries || []);
+        setTwitterRepurposingIdeas(campaign.twitterRepurposingIdeas || []);
+        setLinkedinRepurposingIdeas(campaign.linkedinRepurposingIdeas || []);
+        setLoadedCampaignId(campaign.id || null);
+
+        if (campaign.twitterRepurposingIdeas?.length || campaign.linkedinRepurposingIdeas?.length) {
+          setCurrentStep('repurpose');
+        } else if (campaign.twitterSeries?.length || campaign.linkedinSeries?.length) {
+          setCurrentStep('series');
+        } else if (campaign.selectedAngle) {
+          setCurrentStep('angles');
+        } else {
+          setCurrentStep('topic_research');
+        }
+        toast({ title: "Campaign Loaded", description: `Successfully loaded "${campaign.campaignTopic}".` });
+      } else {
+        toast({ variant: "destructive", title: "Load Failed", description: "Could not find the campaign draft." });
+        router.replace('/smart-campaign', undefined); // Clear query param
+      }
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Load Error", description: error.message || "Failed to load campaign." });
+      router.replace('/smart-campaign', undefined); 
+    } finally {
+      setIsLoading(false);
+      setLoadingMessage('');
+    }
+  }, [userIdToPass, toast, router]);
 
   useEffect(() => {
+    const campaignIdFromParams = searchParams.get('campaignDraftId');
     const topicParam = searchParams.get('topic');
     const researchedContentParam = searchParams.get('researchedContent');
 
-    if (topicParam && researchedContentParam && researchedContentParam.trim() !== "") {
+    if (campaignIdFromParams && !loadedCampaignId) { // Check !loadedCampaignId to prevent re-loading
+      loadCampaignData(campaignIdFromParams);
+    } else if (topicParam && researchedContentParam && researchedContentParam.trim() !== "" && !campaignIdFromParams) {
       setCampaignTopic(topicParam);
       setCurrentResearchedContent(researchedContentParam);
       setCurrentStep('angles'); 
-    } else {
+    } else if (!campaignIdFromParams && !topicParam && !researchedContentParam) {
       setCurrentStep('topic_research');
     }
-  }, [searchParams]);
+  }, [searchParams, loadCampaignData, loadedCampaignId]);
+
 
   const handleSuggestAngles = useCallback(async (currentTopic: string, currentResearch: string) => {
     if (!currentTopic || !currentResearch) {
@@ -196,10 +244,11 @@ const SmartCampaignWizardInternal: React.FC = () => {
   }, [toast, userIdToPass]);
 
   useEffect(() => {
-    if (currentStep === 'angles' && campaignTopic && currentResearchedContent && angles.length === 0 && !isLoading && userIdToPass) {
+    if (currentStep === 'angles' && campaignTopic && currentResearchedContent && angles.length === 0 && !isLoading && userIdToPass && !loadedCampaignId) {
+      // Only auto-fetch if not loading a campaign that might already have angles
       handleSuggestAngles(campaignTopic, currentResearchedContent);
     }
-  }, [currentStep, campaignTopic, currentResearchedContent, angles.length, isLoading, userIdToPass, handleSuggestAngles]);
+  }, [currentStep, campaignTopic, currentResearchedContent, angles.length, isLoading, userIdToPass, handleSuggestAngles, loadedCampaignId]);
 
 
   const handleInternalTopicResearch = useCallback(async () => {
@@ -216,6 +265,8 @@ const SmartCampaignWizardInternal: React.FC = () => {
     setCurrentResearchedContent(''); 
     setAngles([]); 
     setSelectedAngle(null); 
+    setLoadedCampaignId(null); // Reset loaded campaign ID if researching new
+    router.replace('/smart-campaign', undefined); // Clear query params
 
     try {
       const result = await researchTopic({ topic: campaignTopic, userId: userIdToPass });
@@ -234,7 +285,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
       setIsLoading(false);
       setLoadingMessage('');
     }
-  }, [campaignTopic, userIdToPass, toast]);
+  }, [campaignTopic, userIdToPass, toast, router]);
 
 
   const handleGenerateSeries = useCallback(async () => {
@@ -247,7 +298,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
       return;
     }
     setIsLoading(true);
-    setLoadingMessage(`Crafting campaign series for "${selectedAngle.title}"...`);
+    setLoadingMessage(`Crafting campaign series for "${selectedAngle.title}"... This might take a few moments.`);
     
     setTwitterSeries([]);
     setLinkedinSeries([]);
@@ -377,12 +428,12 @@ const SmartCampaignWizardInternal: React.FC = () => {
     }
   }, [editingPost, aiEditInstruction, campaignTopic, userIdToPass, toast]);
 
-  const handleSaveCampaignPostAsDraft = useCallback(async (platform: 'twitter' | 'linkedin', index: number, content: string) => {
+  const handleSaveIndividualCampaignPostAsDraft = useCallback(async (platform: 'twitter' | 'linkedin', index: number, content: string) => {
     if (!userIdToPass) {
       toast({ variant: "destructive", title: "Login Required", description: "Please log in to save drafts." });
       return;
     }
-    setIsSavingDraft({ platform, index });
+    setIsSavingIndividualDraft({ platform, index });
     const draftData = { content, platform, topic: `${campaignTopic} (${selectedAngle?.title || 'General Angle'})` };
     try {
       const savedDraft = await saveDraft(userIdToPass, draftData);
@@ -391,9 +442,41 @@ const SmartCampaignWizardInternal: React.FC = () => {
     } catch(e) {
       toast({ variant: "destructive", title: "Save Error", description: "An error occurred saving the draft."});
     } finally {
-      setIsSavingDraft(null);
+      setIsSavingIndividualDraft(null);
     }
   }, [userIdToPass, campaignTopic, selectedAngle, toast]);
+
+  const handleSaveFullCampaign = useCallback(async () => {
+    if (!userIdToPass || !campaignTopic || !currentResearchedContent || !selectedAngle) {
+      toast({ variant: "destructive", title: "Missing Data", description: "Cannot save campaign: core information missing." });
+      return;
+    }
+    setIsSavingCampaign(true);
+    setLoadingMessage("Saving your campaign progress...");
+    const campaignDataToSave = {
+      campaignTopic,
+      researchedContext: currentResearchedContent,
+      selectedAngle,
+      twitterSeries: twitterSeries.length > 0 ? twitterSeries : undefined,
+      linkedinSeries: linkedinSeries.length > 0 ? linkedinSeries : undefined,
+      twitterRepurposingIdeas: twitterRepurposingIdeas.length > 0 ? twitterRepurposingIdeas : undefined,
+      linkedinRepurposingIdeas: linkedinRepurposingIdeas.length > 0 ? linkedinRepurposingIdeas : undefined,
+    };
+    try {
+      const savedCampaign = await saveCampaignDraft(userIdToPass, campaignDataToSave);
+      if (savedCampaign && savedCampaign.id) {
+        setLoadedCampaignId(savedCampaign.id); // Update loadedCampaignId to reflect this save
+        toast({ title: "Campaign Saved!", description: "Your smart campaign progress has been saved." });
+      } else {
+        toast({ variant: "destructive", title: "Save Failed", description: "Could not save the campaign draft." });
+      }
+    } catch (error) {
+      toast({ variant: "destructive", title: "Save Error", description: "An unexpected error occurred while saving the campaign." });
+    } finally {
+      setIsSavingCampaign(false);
+      setLoadingMessage("");
+    }
+  }, [userIdToPass, campaignTopic, currentResearchedContent, selectedAngle, twitterSeries, linkedinSeries, twitterRepurposingIdeas, linkedinRepurposingIdeas, toast]);
 
 
   const resetWizard = useCallback(() => {
@@ -409,7 +492,8 @@ const SmartCampaignWizardInternal: React.FC = () => {
     setEditingPost(null);
     setIsAiEditModalOpen(false);
     setAiEditInstruction("");
-    router.push('/smart-campaign'); 
+    setLoadedCampaignId(null);
+    router.replace('/smart-campaign', undefined); 
   }, [router]);
   
   const handleCopyCampaign = useCallback(() => {
@@ -504,16 +588,24 @@ const SmartCampaignWizardInternal: React.FC = () => {
                 className="flex-grow bg-slate-700 border-slate-600 placeholder-slate-400 text-white focus:ring-primary focus:border-primary"
                 disabled={isLoading}
               />
-              <Button
-                onClick={handleInternalTopicResearch}
-                disabled={!campaignTopic.trim() || isLoading || !userIdToPass}
-                size="lg"
-                className="bg-primary hover:bg-primary/90 text-primary-foreground sm:w-auto w-full disabled:opacity-60"
-                 title={!userIdToPass ? "Please log in to research" : ""}
-              >
-                {isLoading && loadingMessage.includes("Researching") ? <Icons.loader className="mr-2 h-5 w-5 animate-spin" /> : <Icons.search className="mr-2 h-5 w-5" />}
-                Research Topic
-              </Button>
+               <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      onClick={handleInternalTopicResearch}
+                      disabled={!campaignTopic.trim() || isLoading || !userIdToPass}
+                      size="lg"
+                      className="bg-primary hover:bg-primary/90 text-primary-foreground sm:w-auto w-full disabled:opacity-60"
+                    >
+                      {isLoading && loadingMessage.includes("Researching") ? <Icons.loader className="mr-2 h-5 w-5 animate-spin" /> : <Icons.search className="mr-2 h-5 w-5" />}
+                      Research Topic
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent className="bg-slate-800 text-slate-200 border-slate-700">
+                    <p>{!userIdToPass ? "Please log in to research topics." : "Research the entered topic for content insights."}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
             {isLoading && loadingMessage.includes("Researching") && <p className="text-sm text-slate-400 text-center">{loadingMessage}</p>}
             {!userIdToPass && <p className="text-xs text-slate-400 text-center mt-2">Log in to research topics and build campaigns.</p>}
@@ -566,15 +658,24 @@ const SmartCampaignWizardInternal: React.FC = () => {
                     </Button>
                 </div>
               )}
-              <Button 
-                onClick={handleGenerateSeries} 
-                disabled={!selectedAngle || isLoading || (angles.length === 0 && !isLoading) || !userIdToPass}
-                size="lg"
-                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground mt-4 disabled:opacity-60"
-              >
-                {isLoading && loadingMessage.includes("Crafting") ? <Icons.loader className="mr-2 h-5 w-5 animate-spin" /> : <Icons.listChecks className="mr-2 h-5 w-5" />}
-                Generate Campaign Series
-              </Button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      onClick={handleGenerateSeries} 
+                      disabled={!selectedAngle || isLoading || (angles.length === 0 && !isLoading) || !userIdToPass}
+                      size="lg"
+                      className="w-full bg-primary hover:bg-primary/90 text-primary-foreground mt-4 disabled:opacity-60"
+                    >
+                      {isLoading && loadingMessage.includes("Crafting") ? <Icons.loader className="mr-2 h-5 w-5 animate-spin" /> : <Icons.listChecks className="mr-2 h-5 w-5" />}
+                      Generate Campaign Series
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent className="bg-slate-800 text-slate-200 border-slate-700">
+                    <p>{!selectedAngle ? "Select a content angle first." : "Generates Twitter and LinkedIn posts for the chosen angle."}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
                <Button variant="outline" onClick={() => setCurrentStep('topic_research')} className="w-full mt-2 border-slate-600 text-slate-300 hover:bg-slate-700">
                 <Icons.arrowLeft className="mr-2 h-5 w-5" /> Back to Topic Research
               </Button>
@@ -584,7 +685,29 @@ const SmartCampaignWizardInternal: React.FC = () => {
       case 'series':
           return (
             <motion.div key="series" {...cardMotionProps} className="space-y-6">
-              <h3 className="text-xl font-medium text-slate-200">Your Campaign Series for: <span className="text-purple-400">{selectedAngle?.title || 'Selected Angle'}</span></h3>
+              <div className="flex justify-between items-center">
+                <h3 className="text-xl font-medium text-slate-200">Your Campaign Series for: <span className="text-purple-400">{selectedAngle?.title || 'Selected Angle'}</span></h3>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        onClick={handleSaveFullCampaign} 
+                        variant="outline" 
+                        size="sm"
+                        className="border-accent text-accent hover:bg-accent/10 disabled:opacity-60"
+                        disabled={isSavingCampaign || !userIdToPass || !campaignTopic || !selectedAngle || !currentResearchedContent}
+                      >
+                        {isSavingCampaign ? <Icons.loader className="mr-2 h-4 w-4 animate-spin" /> : <Icons.archive className="mr-2 h-4 w-4" />}
+                        Save Campaign
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent className="bg-slate-800 text-slate-200 border-slate-700">
+                      <p>Save the current campaign progress (topic, angle, series, ideas).</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+              {isSavingCampaign && <p className="text-sm text-slate-400 text-center">{loadingMessage}</p>}
               {isLoading && loadingMessage.includes("Crafting") ? (
                  renderLoadingState(loadingMessage)
               ) : (
@@ -628,8 +751,8 @@ const SmartCampaignWizardInternal: React.FC = () => {
                                   platform="twitter"
                                   index={index}
                                   onEdit={() => handleOpenEditModal('twitter', index, post)}
-                                  onSaveDraft={() => handleSaveCampaignPostAsDraft('twitter', index, post)}
-                                  isSavingThisDraft={isSavingDraft?.platform === 'twitter' && isSavingDraft?.index === index}
+                                  onSaveDraft={() => handleSaveIndividualCampaignPostAsDraft('twitter', index, post)}
+                                  isSavingThisDraft={isSavingIndividualDraft?.platform === 'twitter' && isSavingIndividualDraft?.index === index}
                                   userId={userIdToPass}
                                 />
                             )) : <p className="text-slate-400 text-center py-4">No Twitter posts generated for this angle.</p>}
@@ -651,8 +774,8 @@ const SmartCampaignWizardInternal: React.FC = () => {
                                     platform="linkedin"
                                     index={index}
                                     onEdit={() => handleOpenEditModal('linkedin', index, post)}
-                                    onSaveDraft={() => handleSaveCampaignPostAsDraft('linkedin', index, post)}
-                                    isSavingThisDraft={isSavingDraft?.platform === 'linkedin' && isSavingDraft?.index === index}
+                                    onSaveDraft={() => handleSaveIndividualCampaignPostAsDraft('linkedin', index, post)}
+                                    isSavingThisDraft={isSavingIndividualDraft?.platform === 'linkedin' && isSavingIndividualDraft?.index === index}
                                     userId={userIdToPass}
                                   />
                                 )) : <p className="text-slate-400 text-center py-4">No LinkedIn posts generated for this angle.</p>}
@@ -668,16 +791,24 @@ const SmartCampaignWizardInternal: React.FC = () => {
                {!userIdToPass && (twitterSeries.length > 0 || linkedinSeries.length > 0) &&
                 <p className="text-xs text-slate-400 text-center mt-2">Log in to edit or save drafts.</p>
               }
-              <Button 
-                onClick={handleSuggestRepurposing} 
-                disabled={isLoading || (twitterSeries.length === 0 && linkedinSeries.length === 0 && !isLoading) || !userIdToPass}
-                size="lg"
-                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground mt-4 disabled:opacity-60"
-                 title={!userIdToPass ? "Log in to suggest repurposing ideas" : ""}
-              >
-                  {isLoading && loadingMessage.includes("Generating repurposing") ? <Icons.loader className="mr-2 h-5 w-5 animate-spin" /> : <Icons.repeat className="mr-2 h-5 w-5" />}
-                Suggest Repurposing Ideas
-              </Button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      onClick={handleSuggestRepurposing} 
+                      disabled={isLoading || (twitterSeries.length === 0 && linkedinSeries.length === 0 && !isLoading) || !userIdToPass}
+                      size="lg"
+                      className="w-full bg-primary hover:bg-primary/90 text-primary-foreground mt-4 disabled:opacity-60"
+                    >
+                        {isLoading && loadingMessage.includes("Generating repurposing") ? <Icons.loader className="mr-2 h-5 w-5 animate-spin" /> : <Icons.repeat className="mr-2 h-5 w-5" />}
+                      Suggest Repurposing Ideas
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent className="bg-slate-800 text-slate-200 border-slate-700">
+                    <p>Get ideas on how to reuse the generated series on other platforms.</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
                 <Button variant="outline" onClick={() => setCurrentStep('angles')} className="w-full mt-2 border-slate-600 text-slate-300 hover:bg-slate-700">
                 <Icons.arrowLeft className="mr-2 h-5 w-5" /> Back to Angles
               </Button>
@@ -687,7 +818,29 @@ const SmartCampaignWizardInternal: React.FC = () => {
       case 'repurpose':
           return (
             <motion.div key="repurpose" {...cardMotionProps} className="space-y-6">
-              <h3 className="text-xl font-medium text-slate-200 mb-1">Repurposing Ideas for: <span className="text-purple-400">{selectedAngle?.title || 'Selected Angle'}</span></h3>
+              <div className="flex justify-between items-center">
+                <h3 className="text-xl font-medium text-slate-200 mb-1">Repurposing Ideas for: <span className="text-purple-400">{selectedAngle?.title || 'Selected Angle'}</span></h3>
+                 <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        onClick={handleSaveFullCampaign} 
+                        variant="outline" 
+                        size="sm"
+                        className="border-accent text-accent hover:bg-accent/10 disabled:opacity-60"
+                        disabled={isSavingCampaign || !userIdToPass || !campaignTopic || !selectedAngle || !currentResearchedContent}
+                      >
+                        {isSavingCampaign ? <Icons.loader className="mr-2 h-4 w-4 animate-spin" /> : <Icons.archive className="mr-2 h-4 w-4" />}
+                        Save Campaign
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent className="bg-slate-800 text-slate-200 border-slate-700">
+                      <p>Save the current campaign progress (topic, angle, series, ideas).</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+              {isSavingCampaign && <p className="text-sm text-slate-400 text-center">{loadingMessage}</p>}
                {isLoading && loadingMessage.includes("Generating repurposing") ? (
                  renderLoadingState(loadingMessage)
               ) : (
@@ -776,16 +929,24 @@ const SmartCampaignWizardInternal: React.FC = () => {
               )}
               
               <Separator className="my-6 bg-slate-700" />
-                <Button 
-                onClick={() => setCurrentStep('complete')}
-                size="lg"
-                className="w-full bg-green-600 hover:bg-green-700 text-white mt-4 disabled:opacity-60"
-                disabled={!userIdToPass}
-                title={!userIdToPass ? "Log in to finalize campaign" : ""}
-              >
-                <Icons.checkCircle className="mr-2 h-5 w-5" />
-                Finalize Campaign
-              </Button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      onClick={() => setCurrentStep('complete')}
+                      size="lg"
+                      className="w-full bg-green-600 hover:bg-green-700 text-white mt-4 disabled:opacity-60"
+                      disabled={!userIdToPass}
+                    >
+                      <Icons.checkCircle className="mr-2 h-5 w-5" />
+                      Finalize Campaign
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent className="bg-slate-800 text-slate-200 border-slate-700">
+                    <p>{!userIdToPass ? "Log in to finalize your campaign." : "Proceed to the final campaign summary."}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
               <Button variant="outline" onClick={() => setCurrentStep('series')} className="w-full mt-2 border-slate-600 text-slate-300 hover:bg-slate-700">
                 <Icons.arrowLeft className="mr-2 h-5 w-5" /> Back to Series
               </Button>
@@ -810,23 +971,62 @@ const SmartCampaignWizardInternal: React.FC = () => {
                 animate="visible"
               >
                 <motion.div variants={listItemVariants}>
-                  <Button 
-                    onClick={handleCopyCampaign}
-                    size="lg"
-                    className="bg-primary hover:bg-primary/90 text-primary-foreground"
-                  >
-                    <Icons.copy className="mr-2 h-5 w-5" /> Copy Full Campaign
-                  </Button>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          onClick={handleCopyCampaign}
+                          size="lg"
+                          className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                        >
+                          <Icons.copy className="mr-2 h-5 w-5" /> Copy Full Campaign
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent className="bg-slate-800 text-slate-200 border-slate-700">
+                        <p>Copies all generated campaign content to your clipboard.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </motion.div>
+                 <motion.div variants={listItemVariants}>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          onClick={handleSaveFullCampaign} 
+                          size="lg"
+                          variant="outline"
+                          className="border-accent text-accent hover:bg-accent/10 disabled:opacity-60"
+                          disabled={isSavingCampaign || !userIdToPass || !campaignTopic || !selectedAngle || !currentResearchedContent}
+                        >
+                          {isSavingCampaign ? <Icons.loader className="mr-2 h-5 w-5 animate-spin" /> : <Icons.archive className="mr-2 h-5 w-5" />}
+                          {loadedCampaignId ? "Update Saved Campaign" : "Save Full Campaign"}
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent className="bg-slate-800 text-slate-200 border-slate-700">
+                        <p>{loadedCampaignId ? "Update this campaign in your saved drafts." : "Save this entire campaign for later."}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </motion.div>
                 <motion.div variants={listItemVariants}>
-                  <Button 
-                    onClick={resetWizard}
-                    size="lg"
-                    variant="outline"
-                    className="border-slate-600 text-slate-300 hover:bg-slate-700"
-                  >
-                    <Icons.refreshCw className="mr-2 h-5 w-5" /> Start New Campaign
-                  </Button>
+                 <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          onClick={resetWizard}
+                          size="lg"
+                          variant="outline"
+                          className="border-slate-600 text-slate-300 hover:bg-slate-700"
+                        >
+                          <Icons.refreshCw className="mr-2 h-5 w-5" /> Start New Campaign
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent className="bg-slate-800 text-slate-200 border-slate-700">
+                        <p>Clears the current wizard and starts a new campaign.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </motion.div>
               </motion.div>
                 <Button 
@@ -862,6 +1062,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
             {campaignTopic && currentStep !== 'topic_research' && currentStep !== 'initial_error' && (
               <CardDescription className="text-slate-400 pt-2">
                 Campaign Topic: <span className="font-semibold text-slate-300">{campaignTopic}</span>
+                {loadedCampaignId && <span className="text-xs text-purple-400 ml-2">(Loaded Campaign)</span>}
               </CardDescription>
             )}
             {(currentStep === 'initial_error') && stepConfig['initial_error']?.description && (
