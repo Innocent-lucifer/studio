@@ -110,7 +110,7 @@ export const createUserDocument = async (
       referralCode: generateReferralCode(),
       referralsMade: 0,
       plan: 'free',
-      credits: 40,
+      credits: 1000, // UPDATED: Initial credits for new users
       freeQuickPostUsed: false,
       freeImageToPostUsed: false,
       freeSmartCampaignAnglesUsed: false,
@@ -123,7 +123,7 @@ export const createUserDocument = async (
 
     try {
       await setDoc(userRef, userData);
-      console.log(`User document created for ${user.uid} with initial data and 40 free credits.`);
+      console.log(`User document created for ${user.uid} with initial data and 1000 free credits.`);
       return userData;
     } catch (error) {
       console.error('Detailed error from createUserDocument (setDoc failed):', error);
@@ -135,7 +135,7 @@ export const createUserDocument = async (
     let needsUpdate = false;
     const updates: Partial<UserData> = {};
     if (existingData.plan === undefined) { updates.plan = 'free'; needsUpdate = true; }
-    if (existingData.credits === undefined) { updates.credits = 40; needsUpdate = true; }
+    if (existingData.credits === undefined) { updates.credits = 1000; needsUpdate = true; } // UPDATED: Default for migration
     if (existingData.freeQuickPostUsed === undefined) { updates.freeQuickPostUsed = false; needsUpdate = true; }
     if (existingData.freeImageToPostUsed === undefined) { updates.freeImageToPostUsed = false; needsUpdate = true; }
     if (existingData.freeSmartCampaignAnglesUsed === undefined) { updates.freeSmartCampaignAnglesUsed = false; needsUpdate = true; }
@@ -163,34 +163,43 @@ export const getUserData = async (uid: string, userForCreation?: FirebaseAuthUse
     const userSnap = await getDoc(userRef);
     if (userSnap.exists()) {
       const data = userSnap.data();
+      // Ensure all credit-related fields have defaults if missing (migration for older users)
       const migratedData: UserData = {
-        plan: 'free',
-        credits: (data && data.credits !== undefined) ? data.credits : 40,
+        plan: 'free', // Default if plan somehow missing
+        credits: (data && data.credits !== undefined) ? data.credits : 1000, // Default to 1000 if missing
         freeQuickPostUsed: false,
         freeImageToPostUsed: false,
         freeSmartCampaignAnglesUsed: false,
         freeAiEditUsed: false,
-        ...data,
+        ...data, // Spread existing data, potentially overriding defaults if present
       };
+      // Explicitly set defaults if any specific flag is undefined after spread
       if (migratedData.plan === undefined) migratedData.plan = 'free';
-      if (migratedData.credits === undefined) migratedData.credits = 40;
+      if (migratedData.credits === undefined) migratedData.credits = 1000;
       if (migratedData.freeQuickPostUsed === undefined) migratedData.freeQuickPostUsed = false;
       if (migratedData.freeImageToPostUsed === undefined) migratedData.freeImageToPostUsed = false;
       if (migratedData.freeSmartCampaignAnglesUsed === undefined) migratedData.freeSmartCampaignAnglesUsed = false;
       if (migratedData.freeAiEditUsed === undefined) migratedData.freeAiEditUsed = false;
+      
       return migratedData;
     } else {
+      // If document doesn't exist, try to create it only if userForCreation is provided
       if (userForCreation && userForCreation.uid === uid) {
         console.warn(`No user data found for UID: ${uid}. Attempting to create using provided user object.`);
         return await createUserDocument(userForCreation); 
       } else {
+        // If no user object is provided, or UID mismatch, we cannot create it here.
         console.warn(`No user data found for UID: ${uid}. No user object provided for creation or UID mismatch.`);
         return null;
       }
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Detailed error from getUserData:', error);
-    throw error; 
+    // Check for Firestore offline error
+    if (error.code === 'unavailable' || (error.message && error.message.toLowerCase().includes('offline'))) {
+      throw new Error("Could not connect to the database. Please check your internet connection and try again.");
+    }
+    throw error; // Re-throw other errors
   }
 };
 
@@ -207,7 +216,7 @@ export const deductCredits = async (
   try {
     userData = await getUserData(userId);
   } catch (error: any) {
-     // If getUserData throws (e.g., document creation failed earlier), catch it here.
+    // If getUserData throws (e.g., document creation failed earlier or offline), catch it here.
     return { success: false, error: `Failed to retrieve user data for credit deduction: ${error.message}` };
   }
 
@@ -223,6 +232,7 @@ export const deductCredits = async (
   let freePostUsedThisTime = false;
   const updates: Partial<UserData> = {};
 
+  // Check for free post usage only if it's not a regeneration
   if (!isRegeneration) {
     if (featureKey === 'QUICK_POST' && !userData.freeQuickPostUsed) {
       updates.freeQuickPostUsed = true;
@@ -234,11 +244,14 @@ export const deductCredits = async (
       updates.freeSmartCampaignAnglesUsed = true;
       freePostUsedThisTime = true;
     }
+    // Note: AI_EDIT and TREND_EXPLORER_FETCH don't have specific 'free use' flags in this model
+    // AI_EDIT has a cost, TREND_EXPLORER_FETCH is free (cost 0)
   }
+
 
   if (freePostUsedThisTime) {
     try {
-      await updateDoc(userRef, updates);
+      await updateDoc(userRef, updates); // Only update the free use flag
       return { success: true, newCredits: userData.credits, freePostUsedThisTime: true };
     } catch (error: any) {
       console.error(`Error updating free post status for ${userId}:`, error);
@@ -246,12 +259,14 @@ export const deductCredits = async (
     }
   }
 
+  // Calculate cost if not a free post
   if (featureKey === 'QUICK_POST' && isRegeneration) {
     cost = CREDIT_COSTS.QUICK_POST_REGENERATE;
   } else {
     cost = CREDIT_COSTS[featureKey] * numUnits;
   }
   
+  // If cost is 0 (e.g., Trend Explorer), no deduction needed
   if (cost === 0) {
      return { success: true, newCredits: userData.credits, freePostUsedThisTime: false };
   }
@@ -260,10 +275,10 @@ export const deductCredits = async (
     return { success: false, error: "Insufficient credits." };
   }
 
-  updates.credits = userData.credits - cost;
+  updates.credits = userData.credits - cost; // Deduct credits
 
   try {
-    await updateDoc(userRef, updates);
+    await updateDoc(userRef, updates); // Update credits (and potentially free use flag if it wasn't the primary update)
     return { success: true, newCredits: updates.credits, freePostUsedThisTime: false };
   } catch (error: any) {
     console.error(`Error deducting credits for ${userId}:`, error);
@@ -443,3 +458,4 @@ export const deleteCampaignDraft = async (userId: string, campaignDraftId: strin
     return false;
   }
 };
+
