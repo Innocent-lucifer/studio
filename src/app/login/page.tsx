@@ -15,7 +15,7 @@ export default function LoginPage() {
     if (!loading && user) {
       router.push('/'); 
     }
-  }, [user, loading, router]);
+  }, [user, loading,]);
 
   if (loading) { 
     return (
