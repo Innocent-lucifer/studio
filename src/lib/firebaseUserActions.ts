@@ -189,11 +189,10 @@ export const getUserData = async (uid: string, userForCreation?: FirebaseAuthUse
       }
     }
   } catch (error: any) {
-    console.error("Detailed error from getUserData (raw error object):", error); // Log the full error object
+    console.error("Original Firestore error in getUserData:", error); // Log the original error
     if (error.code === 'unavailable' || (typeof error.message === 'string' && error.message.toLowerCase().includes('offline'))) {
       throw new Error("Could not connect to the database. Please check your internet connection and try again.");
     }
-    // If it's not a known offline error, re-throw the original error for more specific debugging if needed
     throw error; 
   }
 };
