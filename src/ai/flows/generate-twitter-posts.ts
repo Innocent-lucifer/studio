@@ -8,16 +8,17 @@
  * - GenerateTwitterPostsOutput - The return type for the generateTwitterPosts function.
  */
 
-import {ai} from '@/ai/ai-instance';
+import {ai}from '@/ai/ai-instance';
 import {z}from 'genkit';
 import {researchTopic} from "@/ai/flows/research-topic";
-// import { getUserData, deductCredits, CREDIT_COSTS, CreditTransactionType } from '@/lib/firebaseUserActions';
+import { deductCredits, CREDIT_COSTS, CreditTransactionType, getUserData } from '@/lib/firebaseUserActions';
 
 const GenerateTwitterPostsInputSchema = z.object({
   topic: z.string().describe('The topic to generate Twitter posts about. This might be a simple topic string or a more detailed researched summary.'),
   topicDisplay: z.string().optional().describe('The original, user-facing topic string, used for display and context if the main "topic" field contains a lengthy research summary.'),
   numPosts: z.number().describe('The number of Twitter posts to generate.'),
-  userId: z.string().optional().describe('The ID of the user requesting the posts. Optional for now, to support guest users or scenarios where credits are not deducted.'),
+  userId: z.string().optional().describe('The ID of the user requesting the posts. Required for credit deduction.'),
+  isRegeneration: z.boolean().optional().default(false).describe('Whether this is a regeneration request, which may have a different cost.'),
 });
 export type GenerateTwitterPostsInput = z.infer<typeof GenerateTwitterPostsInputSchema>;
 
@@ -26,6 +27,8 @@ const GenerateTwitterPostsOutputSchema = z.object({
     z.string().describe('A generated Twitter post.')
   ).describe('The list of generated Twitter posts.').optional(),
   error: z.string().optional().describe('An error message if generation failed.'),
+  creditsSpent: z.number().optional().describe('Number of credits spent for this operation.'),
+  freePostUsed: z.boolean().optional().describe('Indicates if a free post was used for this operation.'),
 });
 export type GenerateTwitterPostsOutput = z.infer<typeof GenerateTwitterPostsOutputSchema>;
 
@@ -40,10 +43,9 @@ const generateTwitterPostsPrompt = ai.definePrompt({
       topicForAI: z.string().describe('The topic or researched information to generate Twitter posts about.'),
       displayTopic: z.string().describe('The original user-facing topic, for context in the prompt.'),
       numPosts: z.number().describe('The number of Twitter posts to generate.'),
-      // researchedInformation: z.string().describe('The researched information about the topic.'), // Now part of topicForAI
     }),
   },
-  output: { // Output from LLM direct
+  output: { 
     schema: z.object({
       posts: z.array(
         z.string().describe('A generated Twitter post.')
@@ -80,25 +82,26 @@ const generateTwitterPostsFlow = ai.defineFlow(
     outputSchema: GenerateTwitterPostsOutputSchema,
   },
   async (input) => {
-    // console.log(`[generateTwitterPostsFlow] User: ${input.userId || 'Guest'}, Topic: ${input.topicDisplay || input.topic}`);
-    // if (input.userId) { // Credit check temporarily disabled
-    //   const userData = await getUserData(input.userId);
-    //   if (!userData) {
-    //     return { error: "User data not found. Cannot generate posts." };
-    //   }
-    //   if (userData.plan !== 'infinity' && (userData.credits || 0) < CREDIT_COSTS.QUICK_POST_GENERATION) {
-    //     return { error: `Insufficient credits. Need ${CREDIT_COSTS.QUICK_POST_GENERATION}, have ${userData.credits || 0}.` };
-    //   }
-    // }
+    if (!input.userId) {
+      return { error: "User ID is required for credit deduction." };
+    }
+    
+    const costKey = input.isRegeneration ? 'QUICK_POST_REGENERATE' : 'QUICK_POST';
+    const creditCheckResult = await deductCredits(input.userId, costKey, input.isRegeneration);
+
+    if (!creditCheckResult.success) {
+      return { error: creditCheckResult.error || "Credit deduction failed." };
+    }
     
     try {
       let researchedInformation = input.topic;
-      if ((!input.topicDisplay && input.topic.length < 100) || (input.topicDisplay && input.topic.length < 100 && input.topic === input.topicDisplay)) {
-        console.log(`[generateTwitterPostsFlow] Short topic detected, performing research for: "${input.topic}"`);
+      // Perform research only if it's not a regeneration and the topic seems basic
+      if (!input.isRegeneration && ((!input.topicDisplay && input.topic.length < 100) || (input.topicDisplay && input.topic.length < 100 && input.topic === input.topicDisplay))) {
+        // console.log(`[generateTwitterPostsFlow] Short topic detected, performing research for: "${input.topic}"`);
         const researchedInfoResult = await researchTopic({ topic: input.topic, userId: input.userId });
         if (researchedInfoResult.error) {
-          console.warn(`[generateTwitterPostsFlow] Research failed: ${researchedInfoResult.error}. Proceeding with basic topic.`);
-          researchedInformation = input.topic; 
+          // console.warn(`[generateTwitterPostsFlow] Research failed: ${researchedInfoResult.error}. Proceeding with basic topic.`);
+          // Keep researchedInformation as input.topic if research fails.
         } else {
           researchedInformation = researchedInfoResult.summary;
         }
@@ -114,26 +117,16 @@ const generateTwitterPostsFlow = ai.defineFlow(
         return { error: "AI failed to generate Twitter posts content." };
       }
       
-      // if (input.userId) { // Credit deduction temporarily disabled
-      //   const deductionResult = await deductCredits(
-      //     input.userId,
-      //     CREDIT_COSTS.QUICK_POST_GENERATION,
-      //     `Generated Twitter posts for topic: ${input.topicDisplay || input.topic}`,
-      //     CreditTransactionType.FEATURE_USE_QUICK_POST,
-      //     'generateTwitterPostsFlow'
-      //   );
-      //   if (!deductionResult.success) {
-      //     console.error(`[generateTwitterPostsFlow] Credit deduction failed for user ${input.userId}: ${deductionResult.error}`);
-      //   }
-      // }
-
-      return { posts: promptOutput.posts };
+      return { 
+        posts: promptOutput.posts, 
+        creditsSpent: creditCheckResult.freePostUsedThisTime ? 0 : CREDIT_COSTS[costKey],
+        freePostUsed: creditCheckResult.freePostUsedThisTime 
+      };
 
     } catch (e: any) {
-      console.error("[generateTwitterPostsFlow] Error:", e);
+      // console.error("[generateTwitterPostsFlow] Error:", e);
+      // Consider refunding credits if AI call fails after deduction, though this can be complex
       return { error: e.message || "An unexpected error occurred during Twitter post generation." };
     }
   }
 );
-
-    

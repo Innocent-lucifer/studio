@@ -16,10 +16,28 @@ import { Icons } from "@/components/icons";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext"; 
 import Link from "next/link";
+import { getUserData, type UserData } from "@/lib/firebaseUserActions";
 
 export function HamburgerMenu() {
   const { toast } = useToast();
-  const { user, logOut, loading } = useAuth(); 
+  const { user, logOut, loading: authLoading } = useAuth(); 
+  const [userData, setUserData] = React.useState<UserData | null>(null);
+  const [isLoadingUserData, setIsLoadingUserData] = React.useState(false);
+
+  React.useEffect(() => {
+    const fetchUserData = async () => {
+      if (user && !userData) {
+        setIsLoadingUserData(true);
+        const data = await getUserData(user.uid);
+        setUserData(data);
+        setIsLoadingUserData(false);
+      } else if (!user) {
+        setUserData(null); // Clear user data if logged out
+      }
+    };
+    fetchUserData();
+  }, [user, userData]);
+
 
   const handleMenuItemClick = (featureName: string) => {
     toast({
@@ -31,6 +49,7 @@ export function HamburgerMenu() {
 
   const handleSignOut = async () => {
     await logOut();
+    setUserData(null); // Clear user data on logout
   };
 
   return (
@@ -92,30 +111,31 @@ export function HamburgerMenu() {
             <DropdownMenuGroup>
                 <DropdownMenuItem className="text-slate-400 text-xs md:text-sm md:px-3 md:py-1.5 pointer-events-none">
                     <Icons.creditCard className="mr-2 h-4 w-4 md:h-5 md:w-5 text-slate-500" />
-                    <span>Credits: N/A (Coming Soon)</span>
+                    <span>
+                      Credits: {isLoadingUserData ? <Icons.loader className="inline h-3 w-3 animate-spin ml-1" /> : (userData?.credits ?? 'N/A')}
+                    </span>
+                </DropdownMenuItem>
+                 <DropdownMenuItem className="text-slate-400 text-xs md:text-sm md:px-3 md:py-1.5 pointer-events-none">
+                    <Icons.shield className="mr-2 h-4 w-4 md:h-5 md:w-5 text-slate-500" />
+                    <span>Plan: {isLoadingUserData ? <Icons.loader className="inline h-3 w-3 animate-spin ml-1" /> : (userData?.plan ? userData.plan.charAt(0).toUpperCase() + userData.plan.slice(1) : 'N/A')}</span>
                 </DropdownMenuItem>
             </DropdownMenuGroup>
-            {/* <DropdownMenuItem onSelect={() => handleMenuItemClick("Settings")} className="hover:bg-slate-700 focus:bg-slate-700 text-sm md:text-base md:px-3 md:py-2.5">
-              <Icons.settings className="mr-2 h-4 w-4 md:h-5 md:w-5 text-primary" />
-              <span>Settings</span>
-            </DropdownMenuItem> */}
             <DropdownMenuSeparator className="bg-slate-700 my-1 md:my-2"/>
-            <DropdownMenuItem onSelect={handleSignOut} disabled={loading} className="hover:bg-slate-700 focus:bg-slate-700 text-sm md:text-base md:px-3 md:py-2.5">
+            <DropdownMenuItem onSelect={handleSignOut} disabled={authLoading} className="hover:bg-slate-700 focus:bg-slate-700 text-sm md:text-base md:px-3 md:py-2.5">
               <Icons.logOut className="mr-2 h-4 w-4 md:h-5 md:w-5 text-red-400" />
               <span>Sign Out</span>
             </DropdownMenuItem>
           </>
         )}
         {!user && (
-          <DropdownMenuItem 
-            onSelect={() => {
-               toast({ title: "Authentication", description: "Please use the form on the main page to log in or sign up." });
-            }} 
-            className="hover:bg-slate-700 focus:bg-slate-700 text-sm md:text-base md:px-3 md:py-2.5"
-          >
-            <Icons.logIn className="mr-2 h-4 w-4 md:h-5 md:w-5 text-primary" />
-            <span>Login / Sign Up</span>
-          </DropdownMenuItem>
+          <Link href="/login" passHref>
+            <DropdownMenuItem 
+              className="hover:bg-slate-700 focus:bg-slate-700 text-sm md:text-base md:px-3 md:py-2.5 cursor-pointer"
+            >
+              <Icons.logIn className="mr-2 h-4 w-4 md:h-5 md:w-5 text-primary" />
+              <span>Login / Sign Up</span>
+            </DropdownMenuItem>
+          </Link>
         )}
       </DropdownMenuContent>
     </DropdownMenu>

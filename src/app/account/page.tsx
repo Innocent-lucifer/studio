@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from "@/hooks/use-toast";
-import { getDrafts, deleteDraft, type Draft, getCampaignDrafts, deleteCampaignDraft, type CampaignDraft } from '@/lib/firebaseUserActions';
+import { getDrafts, deleteDraft, type Draft, getCampaignDrafts, deleteCampaignDraft, type CampaignDraft, getUserData, UserData } from '@/lib/firebaseUserActions';
 import { formatDistanceToNow } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
@@ -164,6 +164,9 @@ export default function AccountPage() {
   const router = useRouter();
   const { toast } = useToast();
   
+  const [userData, setUserData] = useState<UserData | null>(null);
+  const [isLoadingUserDetails, setIsLoadingUserDetails] = useState(true);
+
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [isLoadingDrafts, setIsLoadingDrafts] = useState(true);
   const [viewingDraft, setViewingDraft] = useState<Draft | null>(null);
@@ -180,28 +183,31 @@ export default function AccountPage() {
     }
   }, [user, authLoading, router]);
 
-  const fetchUserDrafts = useCallback(async () => {
+  const fetchAllUserData = useCallback(async () => {
     if (user) {
+      setIsLoadingUserDetails(true);
       setIsLoadingDrafts(true);
-      const userDrafts = await getDrafts(user.uid);
-      setDrafts(userDrafts);
-      setIsLoadingDrafts(false);
-    }
-  }, [user]);
-
-  const fetchUserCampaignDrafts = useCallback(async () => {
-    if (user) {
       setIsLoadingCampaignDrafts(true);
-      const userCampaignDrafts = await getCampaignDrafts(user.uid);
+
+      const [fetchedUserData, userDrafts, userCampaignDrafts] = await Promise.all([
+        getUserData(user.uid),
+        getDrafts(user.uid),
+        getCampaignDrafts(user.uid)
+      ]);
+
+      setUserData(fetchedUserData);
+      setDrafts(userDrafts);
       setCampaignDrafts(userCampaignDrafts);
+
+      setIsLoadingUserDetails(false);
+      setIsLoadingDrafts(false);
       setIsLoadingCampaignDrafts(false);
     }
   }, [user]);
 
   useEffect(() => {
-    fetchUserDrafts();
-    fetchUserCampaignDrafts();
-  }, [fetchUserDrafts, fetchUserCampaignDrafts]);
+    fetchAllUserData();
+  }, [fetchAllUserData]);
 
   const handleLogout = async () => {
     await logOut();
@@ -244,7 +250,7 @@ export default function AccountPage() {
   }, [toast]);
 
 
-  if (authLoading || (!user && !authLoading)) {
+  if (authLoading || (!user && !authLoading) || isLoadingUserDetails) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col items-center justify-center p-4">
         <Icons.loader className="h-16 w-16 animate-spin text-primary" />
@@ -288,10 +294,10 @@ export default function AccountPage() {
             <div className="space-y-2 p-4 bg-slate-700/50 rounded-lg border border-slate-600">
               <h3 className="text-lg font-medium text-slate-200">User Information</h3>
               <p className="text-sm text-slate-300">
-                <span className="font-semibold text-slate-100">Email:</span> {user?.email}
+                <span className="font-semibold text-slate-100">Email:</span> {userData?.email || user?.email}
               </p>
               <p className="text-sm text-slate-300">
-                <span className="font-semibold text-slate-100">Phone:</span> N/A (Feature in development)
+                <span className="font-semibold text-slate-100">Phone:</span> <span className="text-slate-400 italic">N/A (Add phone number - Coming soon)</span>
               </p>
               <p className="text-sm text-slate-300">
                 <span className="font-semibold text-slate-100">UID:</span> <span className="text-xs">{user?.uid}</span>
@@ -299,15 +305,15 @@ export default function AccountPage() {
             </div>
 
             <div className="space-y-2 p-4 bg-slate-700/50 rounded-lg border border-slate-600">
-              <h3 className="text-lg font-medium text-slate-200">Plan & Credits (Coming Soon)</h3>
-              <p className="text-sm text-slate-400">
-                Current Plan: <span className="font-semibold text-purple-400">Free Tier (Placeholder)</span>
+              <h3 className="text-lg font-medium text-slate-200">Plan & Credits</h3>
+              <p className="text-sm text-slate-300">
+                Current Plan: <span className="font-semibold text-purple-400">{userData?.plan ? userData.plan.charAt(0).toUpperCase() + userData.plan.slice(1) : 'Loading...'}</span>
               </p>
-              <p className="text-sm text-slate-400">
-                Available Credits: <span className="font-semibold text-purple-400">N/A (Feature in development)</span>
+              <p className="text-sm text-slate-300">
+                Available Credits: <span className="font-semibold text-purple-400">{userData?.credits ?? 'Loading...'}</span>
               </p>
               <Button variant="outline" className="mt-2 border-primary text-primary hover:bg-primary/10" disabled>
-                Manage Subscription / Buy Credits
+                Manage Subscription / Buy Credits (Coming Soon)
               </Button>
             </div>
             
@@ -335,11 +341,11 @@ export default function AccountPage() {
                   </AnimatePresence>
                 </div>
               ) : (
-                <div className="text-center py-8 px-4 bg-slate-700/30 rounded-lg border border-slate-600/50">
+                 <div className="text-center py-8 px-4 bg-slate-700/30 rounded-lg border border-slate-600/50">
                   <Icons.fileText className="h-12 w-12 text-slate-500 mx-auto mb-4" />
                   <h4 className="text-lg font-semibold text-slate-300 mb-1">No Post Drafts Yet!</h4>
                   <p className="text-slate-400 text-sm max-w-xs mx-auto">
-                    Looks like your creative space is empty. Head over to a content generator and save your individual posts here!
+                    Your creative ideas will be saved here. Try generating some content and save it as a draft!
                   </p>
                   <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
                     <Button asChild variant="outline" className="border-primary text-primary hover:bg-primary/10">

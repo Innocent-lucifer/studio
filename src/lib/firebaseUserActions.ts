@@ -6,17 +6,13 @@ import {
   setDoc,
   getDoc,
   updateDoc,
-  // increment, // Temporarily disabled
   arrayUnion,
   serverTimestamp,
   Timestamp,
   collection,
   query,
-  // where, // Temporarily disabled for credit/plan features
   getDocs,
-  // writeBatch, // Temporarily disabled
   DocumentReference,
-  // DocumentData, // Temporarily disabled
   deleteDoc,
   addDoc,
   orderBy,
@@ -32,33 +28,60 @@ export interface UserData {
   email: string | null;
   displayName: string | null;
   createdAt: Timestamp;
-  referralCode?: string; 
-  referredBy?: string; 
-  referralsMade?: number; 
+  referralCode?: string;
+  referredBy?: string;
+  referralsMade?: number;
+  // Credit system fields
+  plan: 'free' | 'starter' | 'infinity';
+  credits: number;
+  lastCreditReset?: Timestamp; // For future use with scheduled functions
+  freeQuickPostUsed?: boolean;
+  freeImageToPostUsed?: boolean;
+  freeSmartCampaignAnglesUsed?: boolean;
+  freeAiEditUsed?: boolean; // Plan specified "Edit with AI: 5 credits" without mentioning a free one. Assuming no free AI edit.
 }
 
 export interface Draft {
-  id?: string; 
+  id?: string;
   userId: string;
   platform: 'twitter' | 'linkedin' | 'visual';
   content: string;
-  topic?: string; 
+  topic?: string;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
 
 export interface CampaignDraft {
-  id?: string; 
-  userId: string; 
+  id?: string;
+  userId: string;
   campaignTopic: string;
-  researchedContext: string; 
-  selectedAngle: ContentAngle; 
+  researchedContext: string;
+  selectedAngle: ContentAngle;
   twitterSeries?: string[];
   linkedinSeries?: string[];
   twitterRepurposingIdeas?: string[];
   linkedinRepurposingIdeas?: string[];
   createdAt: Timestamp;
   updatedAt: Timestamp;
+}
+
+export const CREDIT_COSTS = {
+  QUICK_POST: 20,
+  QUICK_POST_REGENERATE: 5,
+  IMAGE_TO_POST: 60,
+  SMART_CAMPAIGN_SUGGEST_ANGLE: 25, // This is per angle suggested. The flow will multiply by numAngles.
+  AI_EDIT: 5,
+  TREND_EXPLORER_FETCH: 0, // Free
+};
+
+export enum CreditTransactionType {
+  FEATURE_USE_QUICK_POST = 'feature_use_quick_post',
+  FEATURE_USE_QUICK_POST_REGENERATE = 'feature_use_quick_post_regenerate',
+  FEATURE_USE_IMAGE_TO_POST = 'feature_use_image_to_post',
+  FEATURE_USE_SMART_CAMPAIGN_SUGGEST_ANGLES = 'feature_use_smart_campaign_suggest_angles',
+  FEATURE_USE_AI_EDIT = 'feature_use_ai_edit',
+  INITIAL_CREDITS = 'initial_credits_free_plan',
+  // More types can be added for plan purchases, admin adjustments, etc.
 }
 
 
@@ -73,7 +96,7 @@ const generateReferralCode = (length = 8): string => {
 
 export const createUserDocument = async (
   user: FirebaseAuthUser,
-  referredByCode?: string 
+  referredByCode?: string
 ): Promise<UserData | null> => {
   if (!user) return null;
   const userRef = doc(db, 'users', user.uid) as DocumentReference<UserData>;
@@ -87,6 +110,13 @@ export const createUserDocument = async (
       createdAt: serverTimestamp() as Timestamp,
       referralCode: generateReferralCode(),
       referralsMade: 0,
+      // Initialize credit system fields for new users
+      plan: 'free',
+      credits: 40, // Starting credits for free plan
+      freeQuickPostUsed: false,
+      freeImageToPostUsed: false,
+      freeSmartCampaignAnglesUsed: false,
+      // lastCreditReset: serverTimestamp() as Timestamp, // Set on actual reset by a backend process
     };
 
     if (referredByCode) {
@@ -95,14 +125,36 @@ export const createUserDocument = async (
 
     try {
       await setDoc(userRef, userData);
-      console.log(`User document created for ${user.uid} with initial data.`);
+      // Log initial credit grant - for future auditing if needed
+      // await logCreditTransaction(user.uid, CreditTransactionType.INITIAL_CREDITS, 40, "Initial free plan credits");
+      console.log(`User document created for ${user.uid} with initial data and 40 free credits.`);
       return userData;
     } catch (error) {
       console.error('Error creating user document:', error);
       return null;
     }
   } else {
-    return userSnap.data();
+    // If user document exists, ensure credit fields are present, add if not (migration path)
+    const existingData = userSnap.data();
+    let needsUpdate = false;
+    const updates: Partial<UserData> = {};
+    if (existingData.plan === undefined) { updates.plan = 'free'; needsUpdate = true; }
+    if (existingData.credits === undefined) { updates.credits = 40; needsUpdate = true; } // Or 0 if they should not get free ones retroactively
+    if (existingData.freeQuickPostUsed === undefined) { updates.freeQuickPostUsed = false; needsUpdate = true; }
+    if (existingData.freeImageToPostUsed === undefined) { updates.freeImageToPostUsed = false; needsUpdate = true; }
+    if (existingData.freeSmartCampaignAnglesUsed === undefined) { updates.freeSmartCampaignAnglesUsed = false; needsUpdate = true; }
+
+    if (needsUpdate) {
+      try {
+        await updateDoc(userRef, updates);
+        console.log(`User document for ${user.uid} updated with default credit system fields.`);
+        return { ...existingData, ...updates };
+      } catch (error) {
+        console.error('Error updating existing user document with credit fields:', error);
+        return existingData; // Return existing data even if update fails
+      }
+    }
+    return existingData;
   }
 };
 
@@ -112,7 +164,16 @@ export const getUserData = async (uid: string): Promise<UserData | null> => {
   try {
     const userSnap = await getDoc(userRef);
     if (userSnap.exists()) {
-      return userSnap.data();
+      // Ensure required credit fields exist, providing defaults if not (simple migration for existing users)
+      const data = userSnap.data();
+      return {
+        plan: 'free', // Default if not present
+        credits: 0,   // Default if not present
+        freeQuickPostUsed: false,
+        freeImageToPostUsed: false,
+        freeSmartCampaignAnglesUsed: false,
+        ...data,     // Spread existing data, which will overwrite defaults if fields exist
+      };
     } else {
       console.warn(`No user data found for UID: ${uid}. Attempting to create one if auth user exists.`);
       const currentUser = auth.currentUser;
@@ -124,6 +185,82 @@ export const getUserData = async (uid: string): Promise<UserData | null> => {
   } catch (error) {
     console.error('Error fetching user data:', error);
     return null;
+  }
+};
+
+export const deductCredits = async (
+  userId: string,
+  featureKey: keyof typeof CREDIT_COSTS,
+  isRegeneration: boolean = false, // Specific to Quick Post for now
+  numUnits: number = 1 // For features like suggesting multiple angles
+): Promise<{ success: boolean; error?: string; newCredits?: number; freePostUsedThisTime?: boolean }> => {
+  if (!userId) return { success: false, error: "User ID not provided." };
+
+  const userData = await getUserData(userId);
+  if (!userData) return { success: false, error: "User data not found." };
+
+  if (userData.plan === 'infinity') {
+    return { success: true, newCredits: userData.credits, freePostUsedThisTime: false }; // Infinity plan has unlimited access
+  }
+
+  const userRef = doc(db, 'users', userId) as DocumentReference<UserData>;
+  let cost = 0;
+  let freePostUsedThisTime = false;
+  const updates: Partial<UserData> = {};
+
+  // Handle Free Post Bonus
+  if (!isRegeneration) { // Free posts don't apply to regenerations
+    if (featureKey === 'QUICK_POST' && !userData.freeQuickPostUsed) {
+      updates.freeQuickPostUsed = true;
+      freePostUsedThisTime = true;
+    } else if (featureKey === 'IMAGE_TO_POST' && !userData.freeImageToPostUsed) {
+      updates.freeImageToPostUsed = true;
+      freePostUsedThisTime = true;
+    } else if (featureKey === 'SMART_CAMPAIGN_SUGGEST_ANGLE' && !userData.freeSmartCampaignAnglesUsed) {
+      updates.freeSmartCampaignAnglesUsed = true;
+      freePostUsedThisTime = true;
+    }
+    // AI_EDIT does not have a free post as per the plan
+  }
+
+  if (freePostUsedThisTime) {
+    // Free post was used, no credit cost
+    try {
+      await updateDoc(userRef, updates);
+      // console.log(`User ${userId} used free post for ${featureKey}.`);
+      return { success: true, newCredits: userData.credits, freePostUsedThisTime: true };
+    } catch (error: any) {
+      console.error(`Error updating free post status for ${userId}:`, error);
+      return { success: false, error: "Error updating free post status." };
+    }
+  }
+
+  // Calculate actual cost if not a free post
+  if (featureKey === 'QUICK_POST' && isRegeneration) {
+    cost = CREDIT_COSTS.QUICK_POST_REGENERATE;
+  } else {
+    cost = CREDIT_COSTS[featureKey] * numUnits;
+  }
+  
+  if (cost === 0) { // For free features like Trend Explorer
+     return { success: true, newCredits: userData.credits, freePostUsedThisTime: false };
+  }
+
+  if (userData.credits < cost) {
+    return { success: false, error: "Insufficient credits." };
+  }
+
+  updates.credits = userData.credits - cost;
+
+  try {
+    await updateDoc(userRef, updates);
+    // Log transaction (optional, for auditing)
+    // await logCreditTransaction(userId, transactionTypeMap[featureKey], cost, `Used ${featureKey}`);
+    // console.log(`User ${userId} deducted ${cost} credits for ${featureKey}. New balance: ${updates.credits}`);
+    return { success: true, newCredits: updates.credits, freePostUsedThisTime: false };
+  } catch (error: any) {
+    console.error(`Error deducting credits for ${userId}:`, error);
+    return { success: false, error: "Error deducting credits." };
   }
 };
 
