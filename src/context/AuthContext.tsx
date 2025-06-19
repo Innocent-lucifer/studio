@@ -2,24 +2,24 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { 
-  User, 
-  AuthError, 
-  onAuthStateChanged, 
-  createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword, 
-  signInWithPopup, 
+import {
+  User,
+  AuthError,
+  onAuthStateChanged,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signInWithPopup,
   signOut,
   sendPasswordResetEmail,
   GoogleAuthProvider
 } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useToast } from "@/hooks/use-toast";
-import { getUserData, createUserDocument, type UserData } from '@/lib/firebaseUserActions'; 
-import { doc, getDoc, getFirestore, DocumentReference } from 'firebase/firestore'; 
-import { app } from '@/lib/firebase'; 
+import { getUserData, createUserDocument, type UserData } from '@/lib/firebaseUserActions';
+import { doc, getDoc, getFirestore, DocumentReference } from 'firebase/firestore';
+import { app } from '@/lib/firebase';
 
-const db = getFirestore(app); 
+const db = getFirestore(app);
 
 interface AuthContextType {
   user: User | null;
@@ -41,33 +41,39 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const ensureUserDocument = async (firebaseUser: User | null): Promise<void> => {
     if (!firebaseUser) return;
     try {
-      const userData = await getUserData(firebaseUser.uid, firebaseUser); 
+      // Pass the fresh firebaseUser object to getUserData
+      const userData = await getUserData(firebaseUser.uid, firebaseUser);
       if (!userData) {
-        // This console.error is now more likely to be hit if getUserData throws an error
-        // that isn't caught and handled before returning null, or if createUserDocument explicitly returns null
-        // after an error that it didn't re-throw (which we are changing).
+        // This case should ideally be rare if getUserData's creation logic works and throws on failure.
+        // Log an error or show a toast if the document still couldn't be confirmed.
         console.error(`AuthContext: Firestore document for user ${firebaseUser.uid} could NOT be verified or created (getUserData returned falsy). This indicates a problem in the document creation/fetching logic itself OR Firestore rules preventing the operation.`);
       }
-    } catch (error) {
-      // This block will now catch errors thrown from getUserData/createUserDocument
-      console.error(`AuthContext: Error during ensureUserDocument for ${firebaseUser.uid} (likely from Firestore operation):`, error);
-      // Optionally, show a user-facing toast here if appropriate
-      // toast({
-      //   variant: "destructive",
-      //   title: "Account Setup Error",
-      //   description: "There was a problem initializing your account data. Please try again or contact support.",
-      // });
+    } catch (error: any) {
+      // This will catch errors thrown from getUserData/createUserDocument
+      console.error(`AuthContext: Error during ensureUserDocument for ${firebaseUser.uid} (likely from Firestore operation):`, error.message, error);
+      // Potentially show a user-facing toast here for critical setup errors
+      // For example, if error.message is "Could not connect...", it will be logged here.
+      // We re-throw here so it can be caught by the onAuthStateChanged listener's try/catch
+      throw error;
     }
   };
 
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      setUser(currentUser);
-      if (currentUser) {
-        await ensureUserDocument(currentUser);
+      try {
+        setUser(currentUser);
+        if (currentUser) {
+          await ensureUserDocument(currentUser);
+        }
+      } catch (error) {
+        // Catch errors specifically from ensureUserDocument during auth state change
+        console.error("AuthContext: Critical error during user session initialization (ensureUserDocument failed):", error);
+        // Optionally, set an app-wide error state or show a global banner
+        // For now, just logging. setUser has already been called.
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     });
     return () => unsubscribe();
   }, []);
@@ -77,7 +83,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
       if (userCredential.user) {
-        await ensureUserDocument(userCredential.user); 
+        await ensureUserDocument(userCredential.user);
       }
       return userCredential.user;
     } catch (error) {
@@ -94,7 +100,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, pass);
       if (userCredential.user) {
-        await ensureUserDocument(userCredential.user); 
+        await ensureUserDocument(userCredential.user);
       }
       return userCredential.user;
     } catch (error) {
@@ -113,7 +119,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       const result = await signInWithPopup(auth, googleProviderInstance);
       if (result.user) {
-        await ensureUserDocument(result.user); 
+        await ensureUserDocument(result.user);
       }
       return result.user;
     } catch (error) {
