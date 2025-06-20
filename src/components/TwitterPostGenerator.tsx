@@ -7,6 +7,7 @@ import { generateTwitterPosts } from "@/ai/flows/generate-twitter-posts";
 import { motion } from 'framer-motion';
 import { useToast } from "@/hooks/use-toast";
 import { Icons } from "./icons";
+import { FEATURE_DESCRIPTIONS, CREDIT_COSTS } from "@/lib/firebaseUserActions";
 
 interface TwitterPostGeneratorProps {
   topic: string;
@@ -37,7 +38,6 @@ export const TwitterPostGenerator: React.FC<TwitterPostGeneratorProps> = ({
   // Reset flag when topic changes
   useEffect(() => {
     setInitialGenerationProcessedForTopic(false);
-    // Clear previous posts when topic changes to avoid showing stale content before new generation
     setGeneratedPostsInternal([]);
     setTwitterPosts([]);
   }, [topic, setTwitterPosts]);
@@ -49,19 +49,14 @@ export const TwitterPostGenerator: React.FC<TwitterPostGeneratorProps> = ({
       return;
     }
 
+    const featureKey: keyof typeof CREDIT_COSTS = isRegen ? 'QUICK_POST_REGENERATE' : 'QUICK_POST';
+    
     if (isRegen) {
       setIsRegenerating(true);
     } else {
-      // This is an initial generation attempt for the current topic
       if (initialGenerationProcessedForTopic) {
-        // console.log("[TwitterPostGenerator] Initial generation already processed for this topic. Skipping credit deduction call.");
-        // Potentially, if we want to refresh posts without re-charging if user navigates away and back,
-        // we might still call generateTwitterPosts but pass a flag to skip credit check in the flow,
-        // or the flow itself should be idempotent if called with same params and no regen flag.
-        // For now, we assume if already processed, the posts are there or will be fetched by LinkedIn independently.
-        // OR, we can just let it fetch but the credit system should handle it via free post logic / idempotency.
-        // The `deductCredits` 'QUICK_POST' part will use the free post only once. If called again, it will charge.
-        // The `initialGenerationProcessedForTopic` ensures *this component* only *initiates* that charge once.
+        setIsLoading(false); // Prevent multiple initial loads if already processed
+        return;
       }
       setIsLoading(true);
     }
@@ -70,8 +65,6 @@ export const TwitterPostGenerator: React.FC<TwitterPostGeneratorProps> = ({
     setTwitterPosts([]); 
 
     try {
-      // For initial generation, set the flag before the async call
-      // This specific component instance tries to trigger the "initial charge" only once.
       if (!isRegen && !initialGenerationProcessedForTopic) {
         setInitialGenerationProcessedForTopic(true); 
       }
@@ -81,7 +74,7 @@ export const TwitterPostGenerator: React.FC<TwitterPostGeneratorProps> = ({
         topicDisplay: topic, 
         numPosts: 3, 
         userId,
-        isRegeneration: isRegen // Pass the regeneration flag to the flow
+        isRegeneration: isRegen 
       });
 
       if (result.error) {
@@ -91,14 +84,10 @@ export const TwitterPostGenerator: React.FC<TwitterPostGeneratorProps> = ({
       } else {
         setGeneratedPostsInternal(result.posts || []);
         setTwitterPosts(result.posts || []);
-        if (!isRegen) { // Only show credit messages for initial generation, not regen. Regen has its own cost.
-          if (result.freePostUsedThisTime) {
-            toast({ title: "Free Quick Post Used!", description: "Your first Quick Post generation was on us!" });
-          } else if (result.creditsSpent && result.creditsSpent > 0) {
-            toast({ title: "Credits Used", description: `${result.creditsSpent} credits were used for Quick Post.`});
-          }
-        } else if (isRegen && result.creditsSpent && result.creditsSpent > 0) {
-            toast({ title: "Credits Used", description: `${result.creditsSpent} credits were used for regeneration.`});
+        if (result.freePostUsedThisTime) {
+          toast({ title: "Free Action Used", description: `Your free ${FEATURE_DESCRIPTIONS[featureKey].toLowerCase()} was successful!` });
+        } else if (result.creditsSpent && result.creditsSpent > 0) {
+          toast({ title: "Credits Used", description: `${result.creditsSpent} credits used for ${FEATURE_DESCRIPTIONS[featureKey]}.`});
         }
       }
     } catch (error: any) {
@@ -111,33 +100,30 @@ export const TwitterPostGenerator: React.FC<TwitterPostGeneratorProps> = ({
       setGeneratedPostsInternal([]);
       setTwitterPosts([]); 
       if (!isRegen) {
-        setInitialGenerationProcessedForTopic(false); // Reset if initial attempt failed catastrophically
+        setInitialGenerationProcessedForTopic(false); 
       }
     } finally {
       if(isRegen) setIsRegenerating(false); else setIsLoading(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [topic, userId, toast, setTwitterPosts, initialGenerationProcessedForTopic]);
 
   useEffect(() => {
     const canGenerateInitial = topic && userId && userId !== "sagepostai-guest-user";
     
     if (canGenerateInitial && !initialGenerationProcessedForTopic && !isLoading) {
-        // console.log(`[TwitterPostGenerator] useEffect triggering initial callGenerateFlow. Topic: "${topic}", UserID: "${userId}", InitialProcessed: ${initialGenerationProcessedForTopic}`);
-        // console.log("[TwitterPostGenerator] Applying TEMPORARY 1s delay for auth sync debug...");
-        // setTimeout(() => {
-            // console.log("[TwitterPostGenerator] TEMPORARY 1s delay ended. Calling callGenerateFlow.");
-            callGenerateFlow(false);
-        // }, 1000);
+        // console.log(`[TwitterPostGenerator] TEMPORARY 1s delay ended. Calling callGenerateFlow.`);
+        callGenerateFlow(false);
     } else if (!canGenerateInitial) {
       setGeneratedPostsInternal([]);
       setTwitterPosts([]);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [topic, userId, initialGenerationProcessedForTopic]); // callGenerateFlow is memoized, isLoading added to deps to re-evaluate if it becomes false
+  }, [topic, userId, initialGenerationProcessedForTopic, isLoading]); // callGenerateFlow is memoized
 
   const handleRegenerate = () => {
-     setParentPostsEmpty(); // Clear posts in parent (PostSelection)
-     callGenerateFlow(true); // Call with isRegen true
+     setParentPostsEmpty(); 
+     callGenerateFlow(true); 
   };
   
   const showPostsInThisCard = displayGeneratedPostsInCard && generatedPostsInternal.length > 0;
@@ -187,7 +173,7 @@ export const TwitterPostGenerator: React.FC<TwitterPostGeneratorProps> = ({
               onClick={handleRegenerate} 
               disabled={isRegenerating || isLoading || !canGenerateOrRegenerate} 
               className="w-full bg-primary/80 hover:bg-primary text-primary-foreground transition-colors duration-200 flex items-center justify-center py-2.5"
-              title={!canGenerateOrRegenerate ? "Please log in to regenerate posts." : "Regenerate Twitter Posts (costs 5 credits)"}
+              title={!canGenerateOrRegenerate ? "Please log in to regenerate posts." : `Regenerate Twitter Posts (${CREDIT_COSTS.QUICK_POST_REGENERATE} credits)`}
             >
             <Icons.refreshCw className="mr-2 h-4 w-4" /> 
             Regenerate Twitter Posts

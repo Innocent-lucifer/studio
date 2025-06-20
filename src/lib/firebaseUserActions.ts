@@ -69,12 +69,24 @@ export const CREDIT_COSTS = {
   QUICK_POST: 20,
   QUICK_POST_REGENERATE: 5,
   IMAGE_TO_POST: 60,
-  IMAGE_TO_POST_REGENERATE: 5, // New cost for tone/context change
-  SMART_CAMPAIGN_SUGGEST_ANGLE: 25,
+  IMAGE_TO_POST_REGENERATE: 5, 
+  SMART_CAMPAIGN_SUGGEST_ANGLE: 25, // Currently not active but defined
   SMART_CAMPAIGN_RESEARCH_TOPIC: 30,
-  AI_EDIT: 5, // This will be used for AI edit in visual-post as well
+  AI_EDIT: 5, 
   TREND_EXPLORER_FETCH: 0,
 };
+
+export const FEATURE_DESCRIPTIONS: Record<keyof typeof CREDIT_COSTS, string> = {
+  QUICK_POST: "Quick Post generation",
+  QUICK_POST_REGENERATE: "Quick Post regeneration",
+  IMAGE_TO_POST: "Image to Post generation",
+  IMAGE_TO_POST_REGENERATE: "Image to Post regeneration (e.g., tone change)",
+  SMART_CAMPAIGN_SUGGEST_ANGLE: "Smart Campaign angle suggestion",
+  SMART_CAMPAIGN_RESEARCH_TOPIC: "Smart Campaign topic research",
+  AI_EDIT: "AI-powered post editing",
+  TREND_EXPLORER_FETCH: "exploring trends",
+};
+
 
 export enum CreditTransactionType {
   FEATURE_USE_QUICK_POST = 'feature_use_quick_post',
@@ -177,7 +189,7 @@ export const getUserData = async (uid: string, userForCreation?: FirebaseAuthUse
     const userSnap = await getDoc(userRef);
     if (userSnap.exists()) {
       const data = userSnap.data();
-      console.log(`[getUserData] Document found for UID: '${uid}'. Data:`, JSON.stringify(data).substring(0, 200) + "...");
+      // console.log(`[getUserData] Document found for UID: '${uid}'. Data:`, JSON.stringify(data).substring(0, 200) + "...");
 
       let isSpecialUser = data.email === "rishabhnauhowar@gmail.com";
       // In case email is not yet populated in Firestore but we have it from Auth context
@@ -213,20 +225,20 @@ export const getUserData = async (uid: string, userForCreation?: FirebaseAuthUse
       
       return migratedData;
     } else {
-      console.warn(`[getUserData] No user data found for UID: '${uid}'. Attempting creation if userForCreation object is provided.`);
+      // console.warn(`[getUserData] No user data found for UID: '${uid}'. Attempting creation if userForCreation object is provided.`);
       if (userForCreation && userForCreation.uid === uid) {
         return await createUserDocument(userForCreation); 
       } else if (userForCreation && userForCreation.uid !== uid) {
         console.error(`[getUserData] UID mismatch: function called with '${uid}', but userForCreation has UID '${userForCreation.uid}'.`);
         return null;
       } else {
-        console.warn(`[getUserData] No user object provided for creation for UID: '${uid}'. Returning null.`);
+        // console.warn(`[getUserData] No user object provided for creation for UID: '${uid}'. Returning null.`);
         return null;
       }
     }
   } catch (error: any) {
     console.error(`[getUserData] >>> CRITICAL Firestore Error for UID ${uid} <<< :`, error);
-    console.error(`[getUserData] Full error object for Firestore exception:`, JSON.stringify(error));
+    // console.error(`[getUserData] Full error object for Firestore exception:`, JSON.stringify(error));
     if (error.code === 'unavailable' || (typeof error.message === 'string' && error.message.toLowerCase().includes('offline'))) {
       throw new Error("Could not connect to the database. Please check your internet connection and try again.");
     }
@@ -238,10 +250,10 @@ export const getUserData = async (uid: string, userForCreation?: FirebaseAuthUse
 export const deductCredits = async (
   userId: string,
   featureKey: keyof typeof CREDIT_COSTS,
-  isRegeneration: boolean = false, // Primarily for Quick Post, now potentially less needed for IMAGE_TO_POST itself
+  isRegeneration: boolean = false, 
   numUnits: number = 1
 ): Promise<{ success: boolean; error?: string; newCredits?: number; freePostUsedThisTime?: boolean }> => {
-  console.log(`[deductCredits] Attempting for user: ${userId}, feature: ${featureKey}, isRegen (context): ${isRegeneration}, units: ${numUnits}`);
+  // console.log(`[deductCredits] Attempting for user: ${userId}, feature: ${featureKey}, isRegen (context): ${isRegeneration}, units: ${numUnits}`);
   if (!userId) return { success: false, error: "User ID not provided." };
 
   let userData;
@@ -259,7 +271,7 @@ export const deductCredits = async (
 
 
   if (userData.plan === 'infinity') {
-    console.log(`[deductCredits] User ${userId} is on infinity plan. No credits deducted for ${featureKey}.`);
+    // console.log(`[deductCredits] User ${userId} is on infinity plan. No credits deducted for ${featureKey}.`);
     return { success: true, newCredits: userData.credits, freePostUsedThisTime: false };
   }
 
@@ -268,31 +280,30 @@ export const deductCredits = async (
   let freePostUsedThisTime = false;
   const updates: Partial<UserData> = {};
 
-  // Check for free uses (only if not a regeneration type that explicitly skips free use)
-  // The `isRegeneration` flag is less relevant for IMAGE_TO_POST here since its free use is a one-time thing.
-  // The distinction between initial IMAGE_TO_POST and IMAGE_TO_POST_REGENERATE is handled by *which* featureKey is passed.
+
   if (featureKey === 'QUICK_POST' && !isRegeneration && !userData.freeQuickPostUsed) {
     updates.freeQuickPostUsed = true;
     freePostUsedThisTime = true;
-    console.log(`[deductCredits] Using free Quick Post for user ${userId}.`);
+    // console.log(`[deductCredits] Using free Quick Post for user ${userId}.`);
   } else if (featureKey === 'IMAGE_TO_POST' && !userData.freeImageToPostUsed) { 
-    // This is for the initial 60-credit equivalent free use
     updates.freeImageToPostUsed = true;
     freePostUsedThisTime = true;
-    console.log(`[deductCredits] Using free Image to Post (initial) for user ${userId}.`);
+    // console.log(`[deductCredits] Using free Image to Post (initial) for user ${userId}.`);
   } else if (featureKey === 'SMART_CAMPAIGN_SUGGEST_ANGLE' && !userData.freeSmartCampaignAnglesUsed) {
     updates.freeSmartCampaignAnglesUsed = true;
     freePostUsedThisTime = true;
-    console.log(`[deductCredits] Using free Smart Campaign Angles for user ${userId}.`);
+    // console.log(`[deductCredits] Using free Smart Campaign Angles for user ${userId}.`);
+  } else if (featureKey === 'SMART_CAMPAIGN_RESEARCH_TOPIC' && !userData.freeSmartCampaignResearchTopicUsed) {
+    updates.freeSmartCampaignResearchTopicUsed = true;
+    freePostUsedThisTime = true;
+    // console.log(`[deductCredits] Using free Smart Campaign Research for user ${userId}.`);
   }
-  // IMAGE_TO_POST_REGENERATE and AI_EDIT do not have their own "free use" flags; they always cost if not on infinity plan.
-  // SMART_CAMPAIGN_RESEARCH_TOPIC and QUICK_POST_REGENERATE also don't have specific free flags.
 
 
   if (freePostUsedThisTime) {
     try {
       await updateDoc(userRef, updates); 
-      console.log(`[deductCredits] Successfully updated free use flag for user ${userId}. Feature: ${featureKey}`);
+      // console.log(`[deductCredits] Successfully updated free use flag for user ${userId}. Feature: ${featureKey}`);
       return { success: true, newCredits: userData.credits, freePostUsedThisTime: true };
     } catch (error: any)      {
       console.error(`[deductCredits] Error updating free post status for user ${userId}:`, error);
@@ -300,28 +311,26 @@ export const deductCredits = async (
     }
   }
 
-  // Calculate cost if not a free use
-  // The isRegeneration flag is specifically for QUICK_POST to distinguish initial vs regen cost
   if (featureKey === 'QUICK_POST' && isRegeneration) { 
     cost = CREDIT_COSTS.QUICK_POST_REGENERATE * numUnits;
   } else {
     cost = CREDIT_COSTS[featureKey] * numUnits;
   }
   
-  console.log(`[deductCredits] Calculated cost for user ${userId}, feature ${featureKey}: ${cost}`);
+  // console.log(`[deductCredits] Calculated cost for user ${userId}, feature ${featureKey}: ${cost}`);
   
-  if (cost === 0 && featureKey !== 'TREND_EXPLORER_FETCH') { // Trend explorer is free
-     console.warn(`[deductCredits] Warning: Cost for feature ${featureKey} is 0. This might be unintentional unless it's a free feature like Trend Explorer.`);
+  if (cost === 0 && featureKey !== 'TREND_EXPLORER_FETCH') { 
+    //  console.warn(`[deductCredits] Warning: Cost for feature ${featureKey} is 0. This might be unintentional unless it's a free feature like Trend Explorer.`);
   }
   
-  if (featureKey === 'TREND_EXPLORER_FETCH') { // Explicitly free
-    console.log(`[deductCredits] Feature ${featureKey} is free for user ${userId}. No credits deducted.`);
+  if (featureKey === 'TREND_EXPLORER_FETCH') { 
+    // console.log(`[deductCredits] Feature ${featureKey} is free for user ${userId}. No credits deducted.`);
     return { success: true, newCredits: userData.credits, freePostUsedThisTime: false };
   }
 
 
   if (userData.credits < cost) {
-    console.log(`[deductCredits] User ${userId} has insufficient credits. Has: ${userData.credits}, Needs: ${cost}`);
+    // console.log(`[deductCredits] User ${userId} has insufficient credits. Has: ${userData.credits}, Needs: ${cost}`);
     return { success: false, error: `Insufficient credits. You need ${cost} credits, but have ${userData.credits}.` };
   }
 
@@ -329,7 +338,7 @@ export const deductCredits = async (
 
   try {
     await updateDoc(userRef, updates); 
-    console.log(`[deductCredits] Successfully deducted ${cost} credits from user ${userId}. New balance: ${updates.credits}`);
+    // console.log(`[deductCredits] Successfully deducted ${cost} credits from user ${userId}. New balance: ${updates.credits}`);
     return { success: true, newCredits: updates.credits, freePostUsedThisTime: false };
   } catch (error: any) {
     console.error(`[deductCredits] Error deducting credits for user ${userId}:`, error);

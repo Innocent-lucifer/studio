@@ -27,7 +27,7 @@ import { generateCampaignSeries } from '@/ai/flows/generate-campaign-series';
 import type { SuggestRepurposingIdeasInput } from '@/ai/flows/suggest-repurposing-ideas';
 import { suggestRepurposingIdeas } from '@/ai/flows/suggest-repurposing-ideas';
 import { generateEditedPost, type GenerateEditedPostInput } from '@/ai/flows/generateEditedPost';
-import { saveDraft, saveCampaignDraft, getCampaignDraftById, type CampaignDraft, deductCredits, getUserData, CREDIT_COSTS } from '@/lib/firebaseUserActions';
+import { saveDraft, saveCampaignDraft, getCampaignDraftById, type CampaignDraft, deductCredits, getUserData, CREDIT_COSTS, FEATURE_DESCRIPTIONS } from '@/lib/firebaseUserActions';
 
 type WizardStep = 'topic_research' | 'angles' | 'series' | 'repurpose' | 'complete' | 'initial_error';
 
@@ -282,17 +282,18 @@ const SmartCampaignWizardInternal: React.FC = () => {
     setLoadedCampaignId(null); // Reset loaded campaign ID if researching new
     router.replace('/smart-campaign', undefined); // Clear query params
 
-    // Deduct credits for topic research
-    const creditDeductionResult = await deductCredits(userIdToPass, 'SMART_CAMPAIGN_RESEARCH_TOPIC');
+    const creditFeatureKey: keyof typeof CREDIT_COSTS = 'SMART_CAMPAIGN_RESEARCH_TOPIC';
+    const creditDeductionResult = await deductCredits(userIdToPass, creditFeatureKey);
     if (!creditDeductionResult.success) {
       toast({ variant: "destructive", title: "Credit Deduction Failed", description: creditDeductionResult.error || "Could not deduct credits for research." });
       setIsLoading(false);
       setLoadingMessage('');
       return;
     }
-    if (creditDeductionResult.newCredits !== undefined) {
-      // Optionally update UI or context with new credit count if needed globally
-      toast({ title: "Credits Deducted", description: `${CREDIT_COSTS.SMART_CAMPAIGN_RESEARCH_TOPIC} credits used for topic research.`});
+    if (creditDeductionResult.creditsSpent && creditDeductionResult.creditsSpent > 0) {
+      toast({ title: "Credits Used", description: `${creditDeductionResult.creditsSpent} credits used for ${FEATURE_DESCRIPTIONS[creditFeatureKey]}.`});
+    } else if (creditDeductionResult.freePostUsedThisTime) {
+      toast({ title: "Free Action Used", description: `Your free ${FEATURE_DESCRIPTIONS[creditFeatureKey].toLowerCase()} was successful!`});
     }
 
 
