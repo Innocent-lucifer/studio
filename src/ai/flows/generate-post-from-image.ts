@@ -10,7 +10,7 @@
 
 import {ai}from '@/ai/ai-instance';
 import {z}from 'genkit';
-// import { getUserData, deductCredits, CREDIT_COSTS, CreditTransactionType } from '@/lib/firebaseUserActions'; 
+import { getUserData, deductCredits, CREDIT_COSTS, CreditTransactionType } from '@/lib/firebaseUserActions'; 
 
 const GeneratePostFromImageInputSchema = z.object({
   imageDataUri: z
@@ -34,6 +34,8 @@ export type GeneratePostFromImageInput = z.infer<typeof GeneratePostFromImageInp
 const GeneratePostFromImageOutputSchema = z.object({
   generatedPost: z.string().optional().describe('The AI-generated social media post based on the image and inputs.'),
   error: z.string().optional().describe('An error message if generation failed.'),
+  creditsSpent: z.number().optional().describe('Number of credits spent for this operation.'),
+  freePostUsed: z.boolean().optional().describe('Indicates if a free post was used for this operation.'),
 });
 export type GeneratePostFromImageOutput = z.infer<typeof GeneratePostFromImageOutputSchema>;
 
@@ -90,15 +92,14 @@ const generatePostFromImageFlow = ai.defineFlow({
 }, async (input) => {
   // console.log('[generatePostFromImageFlow] User:', input.userId || 'Guest', { ...input, imageDataUri: input.imageDataUri.substring(0,50) + "..."});
 
-  // if (input.userId) { // Credit check temporarily disabled
-  //   const userData = await getUserData(input.userId);
-  //   if (!userData) {
-  //     return { error: "User data not found. Cannot generate post from image." };
-  //   }
-  //   if (userData.plan !== 'infinity' && (userData.credits || 0) < CREDIT_COSTS.IMAGE_TO_POST) {
-  //     return { error: `Insufficient credits for Image-to-Post. Need ${CREDIT_COSTS.IMAGE_TO_POST}, have ${userData.credits || 0}.` };
-  //   }
-  // }
+  if (!input.userId) {
+    return { error: "User ID is required to generate post from image." };
+  }
+
+  const creditCheckResult = await deductCredits(input.userId, 'IMAGE_TO_POST');
+  if (!creditCheckResult.success) {
+    return { error: creditCheckResult.error || "Credit deduction failed for Image-to-Post." };
+  }
 
   try {
     const { output: promptOutput, usage } = await prompt(input);
@@ -111,20 +112,11 @@ const generatePostFromImageFlow = ai.defineFlow({
       return { error: errorMessage };
     }
     
-    // if (input.userId) { // Credit deduction temporarily disabled
-    //   const deductionResult = await deductCredits(
-    //     input.userId,
-    //     CREDIT_COSTS.IMAGE_TO_POST,
-    //     'Generated post from image',
-    //     CreditTransactionType.FEATURE_USE_IMAGE_TO_POST,
-    //     'generatePostFromImageFlow'
-    //   );
-    //   if (!deductionResult.success) {
-    //     console.error(`[generatePostFromImageFlow] Credit deduction failed for user ${input.userId}: ${deductionResult.error}`);
-    //   }
-    // }
-
-    return { generatedPost: promptOutput.post };
+    return { 
+        generatedPost: promptOutput.post,
+        creditsSpent: creditCheckResult.freePostUsedThisTime ? 0 : CREDIT_COSTS.IMAGE_TO_POST,
+        freePostUsed: creditCheckResult.freePostUsedThisTime 
+    };
 
   } catch (e: any) {
     console.error('[generatePostFromImageFlow] Exception during post generation:', e);
@@ -132,8 +124,7 @@ const generatePostFromImageFlow = ai.defineFlow({
     if (e.data?.error?.message) {
         detailedErrorMessage += ` (AI Provider Error: ${e.data.error.message})`;
     }
+    // Consider refunding credits if AI call fails after deduction, though this can be complex
     return { error: detailedErrorMessage };
   }
 });
-
-    
