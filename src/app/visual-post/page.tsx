@@ -69,7 +69,7 @@ export default function VisualPostPage() {
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedUserText(userText);
-    }, 500); // 500ms delay
+    }, 500); 
 
     return () => {
       clearTimeout(handler);
@@ -113,9 +113,10 @@ export default function VisualPostPage() {
       let shouldCallAi = false;
       let creditFeatureKey: keyof typeof CREDIT_COSTS | null = null;
       let costForThisAction = 0;
+      let isRegenerationForCosting = false;
 
-      if (!userIdToPass) { // Guest user trying to generate
-        if (generatedPost) setGeneratedPost(''); // Clear previous guest post if any
+      if (!userIdToPass) { 
+        if (generatedPost) setGeneratedPost(''); 
         toast({
           title: "Login Required",
           description: "Please log in to generate posts from images.",
@@ -124,24 +125,25 @@ export default function VisualPostPage() {
         return;
       }
       
-      setIsLoading(true); // General loading state for AI call
+      setIsLoading(true); 
 
       if (!creditProcessedForCurrentImage) { // Initial processing for this image
         creditFeatureKey = 'IMAGE_TO_POST';
         costForThisAction = CREDIT_COSTS.IMAGE_TO_POST;
-      } else { // Image already processed, check for regeneration due to TONE change
+      } else { // Image already processed, check for regeneration
+         // Only charge for regeneration if the TONE changed. Text changes are free for the same image.
         if (debouncedSelectedTone !== selectedToneRef.current) { // Tone changed
             creditFeatureKey = 'IMAGE_TO_POST_REGENERATE';
             costForThisAction = CREDIT_COSTS.IMAGE_TO_POST_REGENERATE;
-        } else if (debouncedUserText !== userTextRef.current) { // Only text changed (free regen)
-             shouldCallAi = true; // No credit key, no cost
+            isRegenerationForCosting = true;
+        } else { // Only text changed (free regen) or no relevant change for costing
+             shouldCallAi = true; // No credit key, no cost for this specific path
         }
       }
       
-      // Handle credit deduction if a featureKey is set (i.e., it's not just a free text regen)
       if (userIdToPass && creditFeatureKey) {
         setIsProcessingCredits(true);
-        const creditCheckResult = await deductCredits(userIdToPass, creditFeatureKey);
+        const creditCheckResult = await deductCredits(userIdToPass, creditFeatureKey, isRegenerationForCosting); // Pass isRegeneration context
         setIsProcessingCredits(false);
 
         if (!creditCheckResult.success) {
@@ -159,7 +161,7 @@ export default function VisualPostPage() {
         if (creditFeatureKey === 'IMAGE_TO_POST') {
           setCreditProcessedForCurrentImage(true);
         }
-        shouldCallAi = true; // Credit check passed, proceed to AI
+        shouldCallAi = true; 
       }
 
 
@@ -184,9 +186,7 @@ export default function VisualPostPage() {
         }
       }
       
-      // Update refs for next comparison *after* this generation cycle is complete
-      userTextRef.current = debouncedUserText;
-      selectedToneRef.current = debouncedSelectedTone;
+      selectedToneRef.current = debouncedSelectedTone; // Update ref after processing
       setIsLoading(false);
     };
 
@@ -194,13 +194,7 @@ export default function VisualPostPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [imageDataUri, debouncedUserText, debouncedSelectedTone, isClient, userIdToPass, initialStorageCheckDone]);
 
-  // Refs to store previous values of debounced states for comparison
-  const userTextRef = useRef(debouncedUserText);
   const selectedToneRef = useRef(debouncedSelectedTone);
-
-  useEffect(() => {
-    userTextRef.current = debouncedUserText;
-  }, [debouncedUserText]);
 
   useEffect(() => {
     selectedToneRef.current = debouncedSelectedTone;
@@ -237,12 +231,11 @@ export default function VisualPostPage() {
           setGeneratedPost(''); 
           setError(null);
           setImageDataUri(result); 
-          setCreditProcessedForCurrentImage(false); // Reset for new image
+          setCreditProcessedForCurrentImage(false); 
           setUserText(''); 
           setDebouncedUserText('');
           setSelectedTone('default');
           setDebouncedSelectedTone('default');
-          userTextRef.current = ''; // Reset refs
           selectedToneRef.current = 'default';
         } else {
           toast({
@@ -453,7 +446,7 @@ export default function VisualPostPage() {
               <Icons.image className="h-20 w-20 sm:h-24 sm:w-24 text-primary mx-auto mb-6" />
               <CardTitle className="text-3xl sm:text-4xl font-semibold text-primary">Create Post from Image</CardTitle>
               <CardDescription className="text-slate-300 mt-3 text-lg sm:text-xl">
-                Upload an image to get started. SagePostAI will craft a unique post for you. (Costs {CREDIT_COSTS.IMAGE_TO_POST} credits or uses 1 free pass)
+                Upload an image to get started. SagePostAI will craft a unique post for you.
               </CardDescription>
             </CardHeader>
             <CardContent className="p-0">
@@ -494,7 +487,7 @@ export default function VisualPostPage() {
                 variant="outline"
                 onClick={() => fileInputRefVisual.current?.click()}
                 className="border-primary text-primary hover:bg-primary/10 hover:border-purple-400 hover:text-purple-300 rounded-lg px-5 py-2.5 text-sm"
-                title={`Upload a different image (costs ${CREDIT_COSTS.IMAGE_TO_POST} credits or uses 1 free pass for new image)`}
+                title="Upload a different image"
               >
                 <Icons.refreshCw className="mr-2 h-4 w-4" /> Change Image
               </Button>
@@ -532,10 +525,7 @@ export default function VisualPostPage() {
 
               <motion.div initial={{ opacity: 0, y:10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
                 <Label htmlFor="userContext" className="text-lg font-medium text-purple-300 mb-2 block">
-                  Want to add a few words for deeper personalization? 
-                  <span className="text-xs text-slate-400">
-                    {creditProcessedForCurrentImage ? " (Regenerating with text changes is free for this image)" : ""}
-                  </span>
+                  Add a few words for deeper personalization? (Free for this image)
                 </Label>
                 <Textarea
                   id="userContext"
@@ -552,7 +542,7 @@ export default function VisualPostPage() {
                 <Label className="text-lg font-medium text-purple-300 mb-3 block">
                   Generate in a different tone: 
                   <span className="text-xs text-slate-400">
-                    {creditProcessedForCurrentImage ? ` (Regenerating with tone change costs ${CREDIT_COSTS.IMAGE_TO_POST_REGENERATE} credits for this image)` : ` (Initial image processing costs ${CREDIT_COSTS.IMAGE_TO_POST} credits or uses free pass)`}
+                    {creditProcessedForCurrentImage ? ` (Regenerating with tone change costs ${CREDIT_COSTS.IMAGE_TO_POST_REGENERATE} credits for this image)` : ` (Initial image processing)`}
                   </span>
                 </Label>
                 <div className="flex flex-wrap gap-3">
@@ -630,7 +620,7 @@ export default function VisualPostPage() {
                     disabled={!userIdToPass || isLoading || isProcessingCredits}
                     className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground py-2.5 px-6 rounded-lg shadow-md hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
                   >
-                     <Icons.edit className="mr-2 h-5 w-5" /> Edit Post (AI Edit costs {CREDIT_COSTS.AI_EDIT})
+                     <Icons.edit className="mr-2 h-5 w-5" /> Refine Post
                   </Button>
                   <Button 
                     onClick={handleSaveDraft} 
@@ -671,9 +661,9 @@ export default function VisualPostPage() {
         <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
             <DialogContent className="bg-slate-800 border-slate-700 text-white sm:max-w-lg">
                 <DialogHeader>
-                    <DialogTitle className="text-primary">Edit Generated Post</DialogTitle>
+                    <DialogTitle className="text-primary">Refine Generated Post</DialogTitle>
                     <DialogDescription className="text-slate-400">
-                        Manually refine the post or use AI to make further changes (AI Edit costs {CREDIT_COSTS.AI_EDIT} credits).
+                        Manually refine the post or use AI to make further changes.
                     </DialogDescription>
                 </DialogHeader>
                 <Textarea
@@ -704,7 +694,7 @@ export default function VisualPostPage() {
                 <DialogHeader>
                     <DialogTitle className="text-primary">AI-Powered Editing</DialogTitle>
                     <DialogDescription className="text-slate-400">
-                        Tell the AI how you want to change the current post content. (Costs {CREDIT_COSTS.AI_EDIT} credits)
+                        Tell the AI how you want to change the current post content.
                     </DialogDescription>
                 </DialogHeader>
                 <Textarea
@@ -731,4 +721,3 @@ export default function VisualPostPage() {
 
   return null;
 }
-

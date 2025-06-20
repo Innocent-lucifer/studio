@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from "@/hooks/use-toast";
 import { generateEditedPost } from "@/ai/flows/generateEditedPost";
-import { saveDraft } from "@/lib/firebaseUserActions";
+import { saveDraft, deductCredits, CREDIT_COSTS, FEATURE_DESCRIPTIONS } from "@/lib/firebaseUserActions"; // Added deductCredits, CREDIT_COSTS, FEATURE_DESCRIPTIONS
 import {
   Dialog,
   DialogContent,
@@ -203,6 +203,21 @@ export const PostSelection: React.FC<PostSelectionProps> = ({
       return;
     }
     setIsAiSubmitting(true);
+    
+    const creditFeatureKey: keyof typeof CREDIT_COSTS = 'AI_EDIT';
+    const creditCheckResult = await deductCredits(userId, creditFeatureKey);
+
+    if (!creditCheckResult.success) {
+        toast({ variant: "destructive", title: "Credit Error", description: creditCheckResult.error || `Could not process credits for AI Edit.` });
+        setIsAiSubmitting(false);
+        return;
+    }
+     if (CREDIT_COSTS.AI_EDIT > 0 && !creditCheckResult.freePostUsedThisTime) { 
+       toast({ title: "Credits Used", description: `${CREDIT_COSTS.AI_EDIT} credits used for ${FEATURE_DESCRIPTIONS[creditFeatureKey]}.` });
+    } else if (creditCheckResult.freePostUsedThisTime) {
+        toast({ title: "Free Action Used", description: `Your free ${FEATURE_DESCRIPTIONS[creditFeatureKey].toLowerCase()} was successful!`});
+    }
+
     try {
       const result = await generateEditedPost({
         originalPost: editingPost.currentText, 
@@ -325,7 +340,7 @@ export const PostSelection: React.FC<PostSelectionProps> = ({
               <DialogHeader>
                 <DialogTitle className="text-primary">Edit Post ({editingPost.type})</DialogTitle>
                 <DialogDescription className="text-slate-400">
-                  Refine your post content here. Use AI changes or edit manually.
+                  Refine your post content here. Use AI to make changes or edit manually.
                 </DialogDescription>
               </DialogHeader>
               <motion.div
@@ -347,7 +362,7 @@ export const PostSelection: React.FC<PostSelectionProps> = ({
                 </Button>
                 <div className="flex space-x-2">
                    <Button onClick={openAiEditModal} className="bg-purple-600 hover:bg-purple-700 text-white">
-                    <Icons.sparkles className="mr-2 h-4 w-4" /> Make AI Changes
+                    <Icons.sparkles className="mr-2 h-4 w-4" /> Edit with AI
                   </Button>
                   <Button onClick={handleSaveEdit} className="bg-primary hover:bg-primary/90 text-primary-foreground">
                     <Icons.save className="mr-2 h-4 w-4" /> Save Changes
