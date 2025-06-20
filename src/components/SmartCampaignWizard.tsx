@@ -27,7 +27,7 @@ import { generateCampaignSeries } from '@/ai/flows/generate-campaign-series';
 import type { SuggestRepurposingIdeasInput } from '@/ai/flows/suggest-repurposing-ideas';
 import { suggestRepurposingIdeas } from '@/ai/flows/suggest-repurposing-ideas';
 import { generateEditedPost, type GenerateEditedPostInput } from '@/ai/flows/generateEditedPost';
-import { saveDraft, saveCampaignDraft, getCampaignDraftById, type CampaignDraft } from '@/lib/firebaseUserActions';
+import { saveDraft, saveCampaignDraft, getCampaignDraftById, type CampaignDraft, deductCredits, getUserData, CREDIT_COSTS } from '@/lib/firebaseUserActions';
 
 type WizardStep = 'topic_research' | 'angles' | 'series' | 'repurpose' | 'complete' | 'initial_error';
 
@@ -129,6 +129,8 @@ const SmartCampaignWizardInternal: React.FC = () => {
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
   const userIdToPass = user?.uid;
+  const [userPlan, setUserPlan] = useState<'free' | 'starter' | 'infinity' | null>(null);
+
 
   const [campaignTopic, setCampaignTopic] = useState<string>('');
   const [currentResearchedContent, setCurrentResearchedContent] = useState<string>('');
@@ -153,6 +155,18 @@ const SmartCampaignWizardInternal: React.FC = () => {
   const [twitterRepurposingIdeas, setTwitterRepurposingIdeas] = useState<string[]>([]);
   const [linkedinRepurposingIdeas, setLinkedinRepurposingIdeas] = useState<string[]>([]);
   const [loadedCampaignId, setLoadedCampaignId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchUserPlan = async () => {
+      if (userIdToPass) {
+        const userData = await getUserData(userIdToPass);
+        if (userData) {
+          setUserPlan(userData.plan);
+        }
+      }
+    };
+    fetchUserPlan();
+  }, [userIdToPass]);
 
 
   const loadCampaignData = useCallback(async (campaignId: string) => {
@@ -267,6 +281,20 @@ const SmartCampaignWizardInternal: React.FC = () => {
     setSelectedAngle(null); 
     setLoadedCampaignId(null); // Reset loaded campaign ID if researching new
     router.replace('/smart-campaign', undefined); // Clear query params
+
+    // Deduct credits for topic research
+    const creditDeductionResult = await deductCredits(userIdToPass, 'SMART_CAMPAIGN_RESEARCH_TOPIC');
+    if (!creditDeductionResult.success) {
+      toast({ variant: "destructive", title: "Credit Deduction Failed", description: creditDeductionResult.error || "Could not deduct credits for research." });
+      setIsLoading(false);
+      setLoadingMessage('');
+      return;
+    }
+    if (creditDeductionResult.newCredits !== undefined) {
+      // Optionally update UI or context with new credit count if needed globally
+      toast({ title: "Credits Deducted", description: `${CREDIT_COSTS.SMART_CAMPAIGN_RESEARCH_TOPIC} credits used for topic research.`});
+    }
+
 
     try {
       const result = await researchTopic({ topic: campaignTopic, userId: userIdToPass });
@@ -493,8 +521,12 @@ const SmartCampaignWizardInternal: React.FC = () => {
     setIsAiEditModalOpen(false);
     setAiEditInstruction("");
     setLoadedCampaignId(null);
+    setUserPlan(null); // Reset user plan as well
+    if (userIdToPass) { // Re-fetch user plan for new campaign
+        getUserData(userIdToPass).then(data => setUserPlan(data?.plan || null));
+    }
     router.replace('/smart-campaign', undefined); 
-  }, [router]);
+  }, [router, userIdToPass]);
   
   const handleCopyCampaign = useCallback(() => {
     let contentToCopy = `Smart Campaign for Topic: ${campaignTopic}\nSelected Angle: ${selectedAngle?.title || 'N/A'}\n\n`;
@@ -530,6 +562,12 @@ const SmartCampaignWizardInternal: React.FC = () => {
   );
 
   const CurrentIcon = Icons[stepConfig[currentStep]?.icon || 'help'] || Icons.help;
+
+  const researchTopicButtonTooltip = () => {
+    if (!userIdToPass) return "Please log in to research topics.";
+    if (userPlan === 'infinity') return "Research the entered topic (Free for Infinity plan).";
+    return `Research topic (${CREDIT_COSTS.SMART_CAMPAIGN_RESEARCH_TOPIC} credits).`;
+  };
 
   const renderStepContent = () => {    
     if (isLoading && !['topic_research'].includes(currentStep)) { 
@@ -602,7 +640,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent className="bg-slate-800 text-slate-200 border-slate-700">
-                    <p>{!userIdToPass ? "Please log in to research topics." : "Research the entered topic for content insights."}</p>
+                    <p>{researchTopicButtonTooltip()}</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -1156,3 +1194,4 @@ export const SmartCampaignWizard: React.FC = () => {
     </Suspense>
   );
 };
+
