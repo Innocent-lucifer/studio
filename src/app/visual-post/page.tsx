@@ -98,6 +98,11 @@ export default function VisualPostPage() {
           toast({ variant: "destructive", title: "Post Generation Failed", description: result.error });
         } else {
           setGeneratedPost(result.generatedPost || '');
+          if (result.freePostUsed) {
+            toast({ title: "Free Image Post Used!", description: "Your first Image-to-Post generation was on us!"});
+          } else if (result.creditsSpent && result.creditsSpent > 0) {
+            toast({ title: "Credits Used", description: `${result.creditsSpent} credits were used for this Image-to-Post generation.`});
+          }
         }
       } catch (e: any) {
         setError(e.message || "An unexpected error occurred.");
@@ -140,11 +145,11 @@ export default function VisualPostPage() {
         });
         return;
       }
-      if (file.size > 5 * 1024 * 1024) { 
+      if (file.size > 10 * 1024 * 1024) { // Updated from 5MB to 10MB
          toast({
           variant: "destructive",
           title: "File Too Large",
-          description: "Please upload an image smaller than 5MB.",
+          description: "Please upload an image smaller than 10MB.", // Updated message
         });
         return;
       }
