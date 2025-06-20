@@ -1,0 +1,57 @@
+{
+  "hosting": {
+    "public": ".next", // Standard for server-side Next.js, ensure this matches your setup
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "run": {
+          "serviceId": "YOUR_CLOUD_RUN_SERVICE_ID", // TODO: Replace with your Cloud Run service ID
+          "region": "YOUR_REGION" // TODO: Replace with your Cloud Run service region (e.g., us-central1)
+        }
+      }
+    ],
+    "headers": [
+      {
+        "source": "/_next/static/**", // Next.js static assets (hashed)
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=31536000, immutable"
+          }
+        ]
+      },
+      {
+        "source": "**/*.@(js|css|jpg|jpeg|gif|png|svg|webp|ico|woff|woff2|ttf|otf|eot|json|txt)", // Other static assets
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=3600, s-maxage=86400" // Cache for 1 hour on browser, 1 day on CDN
+          }
+        ]
+      },
+      {
+        "source": "**/*.html", // HTML files (or pages served by Next.js)
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=0, must-revalidate" // Always revalidate HTML
+          }
+        ]
+      },
+      {
+        "source": "/", // Root path, often an HTML page
+         "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=0, must-revalidate" // Always revalidate HTML
+          }
+        ]
+      }
+    ]
+  }
+}
