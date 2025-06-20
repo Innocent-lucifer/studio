@@ -38,7 +38,7 @@ export interface UserData {
   freeQuickPostUsed?: boolean;
   freeImageToPostUsed?: boolean;
   freeSmartCampaignAnglesUsed?: boolean;
-  freeSmartCampaignResearchTopicUsed?: boolean; 
+  freeSmartCampaignResearchTopicUsed?: boolean;
 }
 
 export interface Draft {
@@ -69,10 +69,10 @@ export const CREDIT_COSTS = {
   QUICK_POST: 20,
   QUICK_POST_REGENERATE: 5,
   IMAGE_TO_POST: 60,
-  IMAGE_TO_POST_REGENERATE: 5, 
+  IMAGE_TO_POST_REGENERATE: 5,
   SMART_CAMPAIGN_RESEARCH_TOPIC: 30,
-  SMART_CAMPAIGN_ADDITIONAL_ANGLE: 10, 
-  AI_EDIT: 5, 
+  SMART_CAMPAIGN_ADDITIONAL_ANGLE: 10,
+  AI_EDIT: 5,
   TREND_EXPLORER_FETCH: 0,
 };
 
@@ -115,7 +115,11 @@ export const createUserDocument = async (
 ): Promise<UserData | null> => {
   if (!user) return null;
   const userRef = doc(db, 'users', user.uid) as DocumentReference<UserData>;
-  
+
+  // Default plan and credits for any new user
+  const defaultPlan: UserData['plan'] = 'free';
+  const defaultCredits = 40;
+
   try {
     const userSnap = await getDoc(userRef);
 
@@ -127,8 +131,8 @@ export const createUserDocument = async (
         createdAt: serverTimestamp() as Timestamp,
         referralCode: generateReferralCode(),
         referralsMade: 0,
-        plan: 'free', // Default plan
-        credits: 40, // Default credits for free plan
+        plan: defaultPlan,
+        credits: defaultCredits,
         freeQuickPostUsed: false,
         freeImageToPostUsed: false,
         freeSmartCampaignAnglesUsed: false,
@@ -144,17 +148,23 @@ export const createUserDocument = async (
       return userData;
     } else {
       console.log(`User document for ${user.uid} already existed. Ensuring fields are up-to-date.`);
-      const existingData = userSnap.data() as UserData; 
+      const existingData = userSnap.data() as UserData;
       let needsUpdate = false;
       const updates: Partial<UserData> = {};
-      
-      // Ensure default plan and credits if they are missing
-      if (existingData.plan === undefined) { updates.plan = 'free'; needsUpdate = true; }
-      if (existingData.credits === undefined) {
-        updates.credits = (existingData.plan === 'free' || !existingData.plan) ? 40 : 700; // Assuming starter plan gets 700
+
+      if (existingData.plan === undefined) {
+        updates.plan = defaultPlan; // Ensure it defaults to 'free'
         needsUpdate = true;
       }
-      
+      if (existingData.credits === undefined) {
+        // Use the plan that will be set (either existing or the new default)
+        const planForCreditCalc = updates.plan || existingData.plan || defaultPlan;
+        updates.credits = planForCreditCalc === 'free' ? 40 :
+                          planForCreditCalc === 'starter' ? 700 : // Assuming starter if not free and not infinity
+                          planForCreditCalc === 'infinity' ? 999999 : 40; // Fallback to free credits
+        needsUpdate = true;
+      }
+
       if (existingData.freeQuickPostUsed === undefined) { updates.freeQuickPostUsed = false; needsUpdate = true; }
       if (existingData.freeImageToPostUsed === undefined) { updates.freeImageToPostUsed = false; needsUpdate = true; }
       if (existingData.freeSmartCampaignAnglesUsed === undefined) { updates.freeSmartCampaignAnglesUsed = false; needsUpdate = true; }
@@ -170,7 +180,7 @@ export const createUserDocument = async (
     }
   } catch (error) {
     console.error('Original Firestore error in createUserDocument:', error);
-    throw error; 
+    throw error;
   }
 };
 
@@ -187,29 +197,32 @@ export const getUserData = async (uid: string, userForCreation?: FirebaseAuthUse
       const data = userSnap.data();
       // console.log(`[getUserData] Document found for UID: '${uid}'. Data:`, JSON.stringify(data).substring(0, 200) + "...");
 
+      const planToUse = data.plan || 'free';
+      const creditsToUse = data.credits ?? (planToUse === 'free' ? 40 : (planToUse === 'starter' ? 700 : (planToUse === 'infinity' ? 999999 : 40)));
+
       const migratedData: UserData = {
-        plan: (data.plan || 'free'),
-        credits: (data.credits ?? (data.plan === 'free' || !data.plan ? 40 : 700)),
+        ...data, // Spread existing data first
+        plan: planToUse,
+        credits: creditsToUse,
         freeQuickPostUsed: data.freeQuickPostUsed ?? false,
         freeImageToPostUsed: data.freeImageToPostUsed ?? false,
         freeSmartCampaignAnglesUsed: data.freeSmartCampaignAnglesUsed ?? false,
         freeSmartCampaignResearchTopicUsed: data.freeSmartCampaignResearchTopicUsed ?? false,
-        ...data,
       };
 
       // Further safety checks for undefined fields even after spread
       if (migratedData.plan === undefined) migratedData.plan = 'free';
-      if (migratedData.credits === undefined) migratedData.credits = (migratedData.plan === 'free' ? 40 : 700);
+      if (migratedData.credits === undefined) migratedData.credits = (migratedData.plan === 'free' ? 40 : 700); // Default to starter if plan isn't free and credits missing
       if (migratedData.freeQuickPostUsed === undefined) migratedData.freeQuickPostUsed = false;
       if (migratedData.freeImageToPostUsed === undefined) migratedData.freeImageToPostUsed = false;
       if (migratedData.freeSmartCampaignAnglesUsed === undefined) migratedData.freeSmartCampaignAnglesUsed = false;
       if (migratedData.freeSmartCampaignResearchTopicUsed === undefined) migratedData.freeSmartCampaignResearchTopicUsed = false;
-      
+
       return migratedData;
     } else {
       // console.warn(`[getUserData] No user data found for UID: '${uid}'. Attempting creation if userForCreation object is provided.`);
       if (userForCreation && userForCreation.uid === uid) {
-        return await createUserDocument(userForCreation); 
+        return await createUserDocument(userForCreation);
       } else if (userForCreation && userForCreation.uid !== uid) {
         console.error(`[getUserData] UID mismatch: function called with '${uid}', but userForCreation has UID '${userForCreation.uid}'.`);
         return null;
@@ -224,7 +237,7 @@ export const getUserData = async (uid: string, userForCreation?: FirebaseAuthUse
     if (error.code === 'unavailable' || (typeof error.message === 'string' && error.message.toLowerCase().includes('offline'))) {
       throw new Error("Could not connect to the database. Please check your internet connection and try again.");
     }
-    throw error; 
+    throw error;
   }
 };
 
@@ -232,7 +245,7 @@ export const getUserData = async (uid: string, userForCreation?: FirebaseAuthUse
 export const deductCredits = async (
   userId: string,
   featureKey: keyof typeof CREDIT_COSTS,
-  isRegeneration: boolean = false, 
+  isRegeneration: boolean = false,
   numUnits: number = 1
 ): Promise<{ success: boolean; error?: string; newCredits?: number; freePostUsedThisTime?: boolean; creditsSpent?: number }> => {
   // console.log(`[deductCredits] Attempting for user: ${userId}, feature: ${featureKey}, isRegen (context): ${isRegeneration}, units: ${numUnits}`);
@@ -267,7 +280,7 @@ export const deductCredits = async (
     updates.freeQuickPostUsed = true;
     freePostUsedThisTime = true;
     // console.log(`[deductCredits] Using free Quick Post for user ${userId}.`);
-  } else if (featureKey === 'IMAGE_TO_POST' && !userData.freeImageToPostUsed) { 
+  } else if (featureKey === 'IMAGE_TO_POST' && !userData.freeImageToPostUsed) {
     updates.freeImageToPostUsed = true;
     freePostUsedThisTime = true;
     // console.log(`[deductCredits] Using free Image to Post (initial) for user ${userId}.`);
@@ -280,7 +293,7 @@ export const deductCredits = async (
 
   if (freePostUsedThisTime) {
     try {
-      await updateDoc(userRef, updates); 
+      await updateDoc(userRef, updates);
       // console.log(`[deductCredits] Successfully updated free use flag for user ${userId}. Feature: ${featureKey}`);
       return { success: true, newCredits: userData.credits, freePostUsedThisTime: true, creditsSpent: 0 };
     } catch (error: any)      {
@@ -289,19 +302,19 @@ export const deductCredits = async (
     }
   }
 
-  if (featureKey === 'QUICK_POST' && isRegeneration) { 
+  if (featureKey === 'QUICK_POST' && isRegeneration) {
     cost = CREDIT_COSTS.QUICK_POST_REGENERATE * numUnits;
   } else {
     cost = CREDIT_COSTS[featureKey] * numUnits;
   }
-  
+
   // console.log(`[deductCredits] Calculated cost for user ${userId}, feature ${featureKey}: ${cost}`);
-  
-  if (cost === 0 && featureKey !== 'TREND_EXPLORER_FETCH') { 
+
+  if (cost === 0 && featureKey !== 'TREND_EXPLORER_FETCH') {
     //  console.warn(`[deductCredits] Warning: Cost for feature ${featureKey} is 0. This might be unintentional unless it's a free feature like Trend Explorer.`);
   }
-  
-  if (featureKey === 'TREND_EXPLORER_FETCH') { 
+
+  if (featureKey === 'TREND_EXPLORER_FETCH') {
     // console.log(`[deductCredits] Feature ${featureKey} is free for user ${userId}. No credits deducted.`);
     return { success: true, newCredits: userData.credits, freePostUsedThisTime: false, creditsSpent: 0 };
   }
@@ -312,10 +325,10 @@ export const deductCredits = async (
     return { success: false, error: `Insufficient credits. You need ${cost} credits, but have ${userData.credits}.` };
   }
 
-  updates.credits = userData.credits - cost; 
+  updates.credits = userData.credits - cost;
 
   try {
-    await updateDoc(userRef, updates); 
+    await updateDoc(userRef, updates);
     // console.log(`[deductCredits] Successfully deducted ${cost} credits from user ${userId}. New balance: ${updates.credits}`);
     return { success: true, newCredits: updates.credits, freePostUsedThisTime: false, creditsSpent: cost };
   } catch (error: any) {
@@ -437,8 +450,8 @@ export const saveCampaignDraft = async (
       linkedinSeries: newCampaignDraftData.linkedinSeries,
       twitterRepurposingIdeas: newCampaignDraftData.twitterRepurposingIdeas,
       linkedinRepurposingIdeas: newCampaignDraftData.linkedinRepurposingIdeas,
-      createdAt: newCampaignDraftData.createdAt, 
-      updatedAt: newCampaignDraftData.updatedAt, 
+      createdAt: newCampaignDraftData.createdAt,
+      updatedAt: newCampaignDraftData.updatedAt,
     };
     return savedData;
   } catch (error) {
