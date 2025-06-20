@@ -150,7 +150,7 @@ type ToastInput = Omit<ToasterToast, "id" | "open" | "onOpenChange"> & {
   duration?: number;
 };
 
-function toast({ duration = 3000, ...props }: ToastInput) { // Default duration 3s
+function toast({ duration = 2000, ...props }: ToastInput) { // Default duration 2s
   const id = genId()
 
   const update = (props: ToasterToast) =>
