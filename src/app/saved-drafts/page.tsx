@@ -373,7 +373,7 @@ export default function SavedDraftsPage() {
                   <span className="text-lg text-slate-300">Loading your drafts...</span>
                 </div>
               ) : displayItems.length > 0 ? (
-                <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2 -mr-2"> {/* Added scroll */}
+                <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2 -mr-2"> {/* Increased max-h here */}
                   <AnimatePresence>
                     {displayItems.map((item) => 
                       'content' in item ? ( // It's a Draft
@@ -458,3 +458,4 @@ export default function SavedDraftsPage() {
     </div>
   );
 }
+
