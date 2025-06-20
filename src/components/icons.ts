@@ -4,7 +4,7 @@ import {
   File, FileText, HelpCircle, Home, Lightbulb, ListChecks, Loader2, LogIn, LogOut, Mail, Menu, MessageSquare, Moon,
   Plus, PlusCircle, RefreshCw, Repeat, Save, Search, Server, Settings, Share2, Shield, Sun, Trash, User,
   UserPlus, Wand2, Workflow, Twitter, Linkedin, Sparkles, CalendarDays, Send, Feather,
-  CheckCircle, Lock, X, AlertTriangle, Info, Image as ImageIconLucide, Layers3, Tag, Filter as FilterIcon, Globe2, Flame,
+  CheckCircle, Lock, X, AlertTriangle, Info, Image as ImageIconLucide, Layers as LayersIcon, Tag, Filter as FilterIcon, Globe2, Flame,
   Briefcase, Heart, Smile, UploadCloud, Eye
 } from 'lucide-react';
 import type { SVGProps } from 'react';
@@ -43,7 +43,7 @@ const Icons = {
   home: Home,
   image: ImageIconLucide,
   info: Info,
-  layers: Layers3,
+  layers: LayersIcon, // Changed from Layers3 to Layers to match typical usage
   light: Sun, 
   lightbulb: Lightbulb,
   linkedin: Linkedin,
@@ -82,3 +82,4 @@ const Icons = {
 
 export { Icons };
 export type { IconComponent };
+

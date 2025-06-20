@@ -108,6 +108,12 @@ export function HamburgerMenu() {
                 <span>My Account</span>
               </DropdownMenuItem>
             </Link>
+             <Link href="/saved-drafts" passHref>
+              <DropdownMenuItem className="hover:bg-slate-700 focus:bg-slate-700 cursor-pointer text-sm md:text-base md:px-3 md:py-2.5">
+                <Icons.archive className="mr-2 h-4 w-4 md:h-5 md:w-5 text-primary" />
+                <span>Saved Drafts</span>
+              </DropdownMenuItem>
+            </Link>
             <DropdownMenuGroup>
                 <DropdownMenuItem className="text-slate-400 text-xs md:text-sm md:px-3 md:py-1.5 pointer-events-none">
                     <Icons.creditCard className="mr-2 h-4 w-4 md:h-5 md:w-5 text-slate-500" />
@@ -141,3 +147,4 @@ export function HamburgerMenu() {
     </DropdownMenu>
   );
 }
+
