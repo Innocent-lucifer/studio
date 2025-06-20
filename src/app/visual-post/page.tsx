@@ -47,7 +47,6 @@ export default function VisualPostPage() {
   const [isClient, setIsClient] = useState(false);
   const [initialStorageCheckDone, setInitialStorageCheckDone] = useState(false);
 
-  // State for editing
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingContent, setEditingContent] = useState(''); 
   const [originalContentBeforeEdit, setOriginalContentBeforeEdit] = useState('');
@@ -55,25 +54,48 @@ export default function VisualPostPage() {
   const [aiEditInstruction, setAiEditInstruction] = useState('');
   const [isAiSubmitting, setIsAiSubmitting] = useState(false);
 
-  // Credit processing state
   const [creditProcessedForCurrentImage, setCreditProcessedForCurrentImage] = useState<boolean>(false);
   const [isProcessingCredits, setIsProcessingCredits] = useState<boolean>(false);
 
-  // State to help useEffect re-trigger correctly on meaningful changes for already processed images
   const [previousUserTextForEffect, setPreviousUserTextForEffect] = useState<string | null>(null);
   const [previousSelectedToneForEffect, setPreviousSelectedToneForEffect] = useState<Tone | null>(null);
 
+  // Debounced states for triggering generation
+  const [debouncedUserText, setDebouncedUserText] = useState<string>(userText);
+  const [debouncedSelectedTone, setDebouncedSelectedTone] = useState<Tone>(selectedTone);
 
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  // Debounce userText
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedUserText(userText);
+    }, 500); // 500ms delay
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [userText]);
+
+  // Debounce selectedTone
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSelectedTone(selectedTone);
+    }, 300); // Shorter delay for tone, or could be instant if preferred
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [selectedTone]);
+
 
   useEffect(() => {
     if (isClient && !initialStorageCheckDone) {
       const storedImage = localStorage.getItem('sagepostai_visual_post_image');
       if (storedImage) {
         setImageDataUri(storedImage); 
-        // When loading from storage, assume credits need processing unless explicitly tracked otherwise
         setCreditProcessedForCurrentImage(false); 
         setPreviousUserTextForEffect(null);
         setPreviousSelectedToneForEffect(null);
@@ -90,73 +112,75 @@ export default function VisualPostPage() {
             return; 
         }
         
-        // Prevent multiple simultaneous processing runs
         if (isLoading || isProcessingCredits) {
             return;
         }
 
-        setIsLoading(true);
         setError(null);
 
-        let canProceedWithAiCall = true;
-        let isNewImageContext = !creditProcessedForCurrentImage || previousUserTextForEffect === null || previousSelectedToneForEffect === null;
-        
-        // Determine if this specific run should attempt a credit deduction
+        let shouldCallAi = false;
         let attemptCreditDeduction = false;
-        let creditFeatureKey: keyof typeof CREDIT_COSTS = 'IMAGE_TO_POST'; // Default for new image
+        let creditFeatureKey: keyof typeof CREDIT_COSTS = 'IMAGE_TO_POST';
+        let costForThisAction = 0;
 
-        if (userIdToPass) {
-            if (isNewImageContext) {
+        if (!creditProcessedForCurrentImage) { // Initial processing for this image
+            shouldCallAi = true;
+            if (userIdToPass) {
                 attemptCreditDeduction = true;
                 creditFeatureKey = 'IMAGE_TO_POST';
-            } else {
-                // Image already processed. Check if TONE changed for regeneration cost.
-                const toneChanged = selectedTone !== previousSelectedToneForEffect;
-                const textChanged = userText !== previousUserTextForEffect;
+                costForThisAction = CREDIT_COSTS.IMAGE_TO_POST;
+            }
+        } else { // Image already processed, check for regeneration due to text or tone change
+            const userTextChanged = debouncedUserText !== previousUserTextForEffect;
+            const toneChanged = debouncedSelectedTone !== previousSelectedToneForEffect;
 
-                if (toneChanged) { // Tone change costs credits
+            if (userTextChanged && !toneChanged) { // Only text changed (free regeneration)
+                shouldCallAi = true;
+                // No credit deduction, no cost
+            } else if (toneChanged) { // Tone changed (costs 5 credits)
+                shouldCallAi = true;
+                if (userIdToPass) {
                     attemptCreditDeduction = true;
                     creditFeatureKey = 'IMAGE_TO_POST_REGENERATE';
-                } else if (textChanged) {
-                    // Text changed, but tone didn't. This is a free regeneration.
-                    // No credit deduction, AI call will proceed if user is logged in.
-                } else if (!generatedPost) {
-                    // No text/tone change, but no post exists yet (e.g., initial load from storage, then login)
-                    // This implies it should behave like an initial generation for this user.
-                    // However, the `isNewImageContext` should handle this if `creditProcessedForCurrentImage` is false.
-                    // If `creditProcessedForCurrentImage` is true but no post, something is off.
-                    // For safety, let's assume if no post, and not new context, it's a free re-attempt.
-                } else {
-                  // No relevant changes (text or tone) and post already exists, so don't call AI.
-                  canProceedWithAiCall = false;
+                    costForThisAction = CREDIT_COSTS.IMAGE_TO_POST_REGENERATE;
                 }
+            } else if (!generatedPost && (previousUserTextForEffect !== null || previousSelectedToneForEffect !== null)) {
+                // This might be a case where an initial generation failed, and we're re-attempting (e.g., after login)
+                // without explicit text/tone change from the *last* attempt.
+                shouldCallAi = true; 
+                // No credit deduction here; initial one would have failed or this is a retry.
+            }
+        }
+        
+        if (shouldCallAi || attemptCreditDeduction) {
+          setIsLoading(true);
+        } else {
+          return; // No reason to proceed if no AI call and no credit deduction needed
+        }
+
+
+        if (userIdToPass && attemptCreditDeduction) {
+            setIsProcessingCredits(true);
+            const creditCheckResult = await deductCredits(userIdToPass, creditFeatureKey);
+            setIsProcessingCredits(false);
+
+            if (!creditCheckResult.success) {
+                toast({ variant: "destructive", title: "Credit Error", description: creditCheckResult.error || `Could not process credits for ${creditFeatureKey}.` });
+                setIsLoading(false);
+                return; // Stop if credit check fails
+            }
+            
+            // Set flag for initial 60-credit processing
+            if (creditFeatureKey === 'IMAGE_TO_POST') {
+                setCreditProcessedForCurrentImage(true);
             }
 
-            if (attemptCreditDeduction) {
-                setIsProcessingCredits(true);
-                const creditCheckResult = await deductCredits(userIdToPass, creditFeatureKey);
-                setIsProcessingCredits(false);
-
-                if (!creditCheckResult.success) {
-                    toast({ variant: "destructive", title: "Credit Error", description: creditCheckResult.error || `Could not process credits.` });
-                    canProceedWithAiCall = false;
-                } else {
-                    if (creditFeatureKey === 'IMAGE_TO_POST') {
-                        setCreditProcessedForCurrentImage(true); // Mark 60-credit processing as done for this image
-                        if (creditCheckResult.freePostUsedThisTime) {
-                            toast({ title: "Free Image Post Used!", description: "Your first Image-to-Post generation was on us!" });
-                        } else if (CREDIT_COSTS.IMAGE_TO_POST > 0) {
-                            toast({ title: "Credits Used", description: `${CREDIT_COSTS.IMAGE_TO_POST} credits used for image processing.` });
-                        }
-                    } else if (creditFeatureKey === 'IMAGE_TO_POST_REGENERATE') {
-                         if (CREDIT_COSTS.IMAGE_TO_POST_REGENERATE > 0 && !creditCheckResult.freePostUsedThisTime) { // freePostUsedThisTime unlikely for regen
-                            toast({ title: "Credits Used", description: `${CREDIT_COSTS.IMAGE_TO_POST_REGENERATE} credits used for tone change.` });
-                        }
-                    }
-                }
+            if (creditCheckResult.freePostUsedThisTime) {
+                toast({ title: `Free Use: ${creditFeatureKey}`, description: `Your free use for this feature was applied.` });
+            } else if (costForThisAction > 0) {
+                toast({ title: "Credits Used", description: `${costForThisAction} credits used for ${creditFeatureKey}.` });
             }
-        } else if (imageDataUri && isClient && initialStorageCheckDone) { // Guest user with an image
-             canProceedWithAiCall = false;
+        } else if (!userIdToPass && shouldCallAi && imageDataUri) { // Guest user with an image, trying to generate
              setGeneratedPost(''); 
              setError(null);
              toast({
@@ -164,45 +188,44 @@ export default function VisualPostPage() {
                  description: "Please log in to generate posts from images.",
                  variant: "destructive"
              });
+             setIsLoading(false);
+             return;
         }
 
-        if (canProceedWithAiCall && userIdToPass) {
-             // Only call AI if it's a new image context, or if text/tone changed, or if no post exists yet
-            if (isNewImageContext || userText !== previousUserTextForEffect || selectedTone !== previousSelectedToneForEffect || !generatedPost) {
-                const generationInput: GeneratePostFromImageInput = {
-                    imageDataUri,
-                    userContext: userText || undefined,
-                    tone: selectedTone,
-                    userId: userIdToPass,
-                };
-                try {
-                    const result = await generatePostFromImage(generationInput);
-                    if (result.error) {
-                        setError(result.error);
-                        toast({ variant: "destructive", title: "Post Generation Failed", description: result.error });
-                    } else {
-                        setGeneratedPost(result.generatedPost || '');
-                    }
-                } catch (e: any) {
-                    setError(e.message || "An unexpected error occurred during post generation.");
-                    toast({ variant: "destructive", title: "Error", description: e.message || "Failed to generate post." });
+
+        if (shouldCallAi && userIdToPass) {
+            const generationInput: GeneratePostFromImageInput = {
+                imageDataUri,
+                userContext: debouncedUserText || undefined,
+                tone: debouncedSelectedTone,
+                userId: userIdToPass,
+            };
+            try {
+                const result = await generatePostFromImage(generationInput);
+                if (result.error) {
+                    setError(result.error);
+                    toast({ variant: "destructive", title: "Post Generation Failed", description: result.error });
+                } else {
+                    setGeneratedPost(result.generatedPost || '');
                 }
+            } catch (e: any) {
+                setError(e.message || "An unexpected error occurred during post generation.");
+                toast({ variant: "destructive", title: "Error", description: e.message || "Failed to generate post." });
             }
-            // Update previous states *after* this generation cycle is complete,
-            // so the *next* cycle can compare against what was just processed.
-            setPreviousUserTextForEffect(userText);
-            setPreviousSelectedToneForEffect(selectedTone);
+            // Update previous states *after* this generation cycle is complete
+            setPreviousUserTextForEffect(debouncedUserText);
+            setPreviousSelectedToneForEffect(debouncedSelectedTone);
         }
         setIsLoading(false);
     };
     
-    // This effect should run when the core inputs (image, text, tone) change,
-    // or when the user logs in/out, or client-side flags are ready.
     processImageAndGenerate();
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [imageDataUri, userText, selectedTone, isClient, userIdToPass, initialStorageCheckDone]);
-  // Removed internal state vars like isLoading, isProcessingCredits, creditProcessedForCurrentImage, previousUserText/Tone from deps to avoid loops.
+  }, [imageDataUri, debouncedUserText, debouncedSelectedTone, isClient, userIdToPass, initialStorageCheckDone]);
+  // creditProcessedForCurrentImage, previousUserTextForEffect, previousSelectedToneForEffect removed from direct deps of this effect,
+  // as their change logic is now internal to processImageAndGenerate or handled by other effects (like image upload).
+
 
   const handleDirectImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -234,9 +257,13 @@ export default function VisualPostPage() {
           setGeneratedPost(''); 
           setError(null);
           setImageDataUri(result); 
-          setCreditProcessedForCurrentImage(false); // Key: reset for new image
-          setPreviousUserTextForEffect(null); // Reset effect comparison state
-          setPreviousSelectedToneForEffect(null); // Reset effect comparison state
+          setCreditProcessedForCurrentImage(false);
+          setUserText(''); // Reset user text for new image
+          setDebouncedUserText('');// Reset debounced user text
+          setSelectedTone('default'); // Reset tone for new image
+          setDebouncedSelectedTone('default'); // Reset debounced tone
+          setPreviousUserTextForEffect(null); 
+          setPreviousSelectedToneForEffect(null);
         } else {
           toast({
             variant: "destructive",
@@ -492,7 +519,7 @@ export default function VisualPostPage() {
               <Button
                 variant="outline"
                 onClick={() => {
-                  setImageDataUri(null); // This will trigger the useEffect to reset states
+                  setImageDataUri(null); 
                 }}
                 className="border-primary text-primary hover:bg-primary/10 hover:border-purple-400 hover:text-purple-300 rounded-lg px-5 py-2.5 text-sm"
                 title="Clear current image and start over"
@@ -523,7 +550,7 @@ export default function VisualPostPage() {
 
               <motion.div initial={{ opacity: 0, y:10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
                 <Label htmlFor="userContext" className="text-lg font-medium text-purple-300 mb-2 block">
-                  Want to add a few words for deeper personalization? <span className="text-xs text-slate-400">(Regenerating with text changes is free for this image)</span>
+                  Want to add a few words for deeper personalization?
                 </Label>
                 <Textarea
                   id="userContext"
