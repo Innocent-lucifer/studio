@@ -70,8 +70,8 @@ export const CREDIT_COSTS = {
   QUICK_POST_REGENERATE: 5,
   IMAGE_TO_POST: 60,
   IMAGE_TO_POST_REGENERATE: 5, 
-  SMART_CAMPAIGN_SUGGEST_ANGLE: 25, // Currently not active but defined
   SMART_CAMPAIGN_RESEARCH_TOPIC: 30,
+  SMART_CAMPAIGN_ADDITIONAL_ANGLE: 10, // New cost for additional angles
   AI_EDIT: 5, 
   TREND_EXPLORER_FETCH: 0,
 };
@@ -81,8 +81,8 @@ export const FEATURE_DESCRIPTIONS: Record<keyof typeof CREDIT_COSTS, string> = {
   QUICK_POST_REGENERATE: "Quick Post regeneration",
   IMAGE_TO_POST: "Image to Post generation",
   IMAGE_TO_POST_REGENERATE: "Image to Post regeneration (e.g., tone change)",
-  SMART_CAMPAIGN_SUGGEST_ANGLE: "Smart Campaign angle suggestion",
   SMART_CAMPAIGN_RESEARCH_TOPIC: "Smart Campaign topic research",
+  SMART_CAMPAIGN_ADDITIONAL_ANGLE: "Smart Campaign (new angle post generation)",
   AI_EDIT: "AI-powered post editing",
   TREND_EXPLORER_FETCH: "exploring trends",
 };
@@ -93,8 +93,8 @@ export enum CreditTransactionType {
   FEATURE_USE_QUICK_POST_REGENERATE = 'feature_use_quick_post_regenerate',
   FEATURE_USE_IMAGE_TO_POST = 'feature_use_image_to_post',
   FEATURE_USE_IMAGE_TO_POST_REGENERATE = 'feature_use_image_to_post_regenerate',
-  FEATURE_USE_SMART_CAMPAIGN_SUGGEST_ANGLES = 'feature_use_smart_campaign_suggest_angles',
   FEATURE_USE_SMART_CAMPAIGN_RESEARCH_TOPIC = 'feature_use_smart_campaign_research_topic',
+  FEATURE_USE_SMART_CAMPAIGN_ADDITIONAL_ANGLE = 'feature_use_smart_campaign_additional_angle',
   FEATURE_USE_AI_EDIT = 'feature_use_ai_edit',
   INITIAL_CREDITS = 'initial_credits_free_plan',
 }
@@ -252,7 +252,7 @@ export const deductCredits = async (
   featureKey: keyof typeof CREDIT_COSTS,
   isRegeneration: boolean = false, 
   numUnits: number = 1
-): Promise<{ success: boolean; error?: string; newCredits?: number; freePostUsedThisTime?: boolean }> => {
+): Promise<{ success: boolean; error?: string; newCredits?: number; freePostUsedThisTime?: boolean; creditsSpent?: number }> => {
   // console.log(`[deductCredits] Attempting for user: ${userId}, feature: ${featureKey}, isRegen (context): ${isRegeneration}, units: ${numUnits}`);
   if (!userId) return { success: false, error: "User ID not provided." };
 
@@ -272,7 +272,7 @@ export const deductCredits = async (
 
   if (userData.plan === 'infinity') {
     // console.log(`[deductCredits] User ${userId} is on infinity plan. No credits deducted for ${featureKey}.`);
-    return { success: true, newCredits: userData.credits, freePostUsedThisTime: false };
+    return { success: true, newCredits: userData.credits, freePostUsedThisTime: false, creditsSpent: 0 };
   }
 
   const userRef = doc(db, 'users', userId) as DocumentReference<UserData>;
@@ -289,10 +289,6 @@ export const deductCredits = async (
     updates.freeImageToPostUsed = true;
     freePostUsedThisTime = true;
     // console.log(`[deductCredits] Using free Image to Post (initial) for user ${userId}.`);
-  } else if (featureKey === 'SMART_CAMPAIGN_SUGGEST_ANGLE' && !userData.freeSmartCampaignAnglesUsed) {
-    updates.freeSmartCampaignAnglesUsed = true;
-    freePostUsedThisTime = true;
-    // console.log(`[deductCredits] Using free Smart Campaign Angles for user ${userId}.`);
   } else if (featureKey === 'SMART_CAMPAIGN_RESEARCH_TOPIC' && !userData.freeSmartCampaignResearchTopicUsed) {
     updates.freeSmartCampaignResearchTopicUsed = true;
     freePostUsedThisTime = true;
@@ -304,7 +300,7 @@ export const deductCredits = async (
     try {
       await updateDoc(userRef, updates); 
       // console.log(`[deductCredits] Successfully updated free use flag for user ${userId}. Feature: ${featureKey}`);
-      return { success: true, newCredits: userData.credits, freePostUsedThisTime: true };
+      return { success: true, newCredits: userData.credits, freePostUsedThisTime: true, creditsSpent: 0 };
     } catch (error: any)      {
       console.error(`[deductCredits] Error updating free post status for user ${userId}:`, error);
       return { success: false, error: "Error updating free post status. Please try again." };
@@ -325,7 +321,7 @@ export const deductCredits = async (
   
   if (featureKey === 'TREND_EXPLORER_FETCH') { 
     // console.log(`[deductCredits] Feature ${featureKey} is free for user ${userId}. No credits deducted.`);
-    return { success: true, newCredits: userData.credits, freePostUsedThisTime: false };
+    return { success: true, newCredits: userData.credits, freePostUsedThisTime: false, creditsSpent: 0 };
   }
 
 
@@ -339,7 +335,7 @@ export const deductCredits = async (
   try {
     await updateDoc(userRef, updates); 
     // console.log(`[deductCredits] Successfully deducted ${cost} credits from user ${userId}. New balance: ${updates.credits}`);
-    return { success: true, newCredits: updates.credits, freePostUsedThisTime: false };
+    return { success: true, newCredits: updates.credits, freePostUsedThisTime: false, creditsSpent: cost };
   } catch (error: any) {
     console.error(`[deductCredits] Error deducting credits for user ${userId}:`, error);
     return { success: false, error: "Error deducting credits. Please try again." };

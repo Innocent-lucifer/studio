@@ -155,6 +155,9 @@ const SmartCampaignWizardInternal: React.FC = () => {
   const [twitterRepurposingIdeas, setTwitterRepurposingIdeas] = useState<string[]>([]);
   const [linkedinRepurposingIdeas, setLinkedinRepurposingIdeas] = useState<string[]>([]);
   const [loadedCampaignId, setLoadedCampaignId] = useState<string | null>(null);
+  
+  const [generatedAnglesForCurrentResearch, setGeneratedAnglesForCurrentResearch] = useState<Set<string>>(new Set());
+
 
   useEffect(() => {
     const fetchUserPlan = async () => {
@@ -187,6 +190,13 @@ const SmartCampaignWizardInternal: React.FC = () => {
         setTwitterRepurposingIdeas(campaign.twitterRepurposingIdeas || []);
         setLinkedinRepurposingIdeas(campaign.linkedinRepurposingIdeas || []);
         setLoadedCampaignId(campaign.id || null);
+
+        // If series exist for the loaded angle, it means that angle was processed.
+        if (campaign.selectedAngle && (campaign.twitterSeries?.length || campaign.linkedinSeries?.length)) {
+            setGeneratedAnglesForCurrentResearch(new Set([campaign.selectedAngle.title]));
+        } else {
+            setGeneratedAnglesForCurrentResearch(new Set());
+        }
 
         if (campaign.twitterRepurposingIdeas?.length || campaign.linkedinRepurposingIdeas?.length) {
           setCurrentStep('repurpose');
@@ -221,6 +231,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
     } else if (topicParam && researchedContentParam && researchedContentParam.trim() !== "" && !campaignIdFromParams) {
       setCampaignTopic(topicParam);
       setCurrentResearchedContent(researchedContentParam);
+      setGeneratedAnglesForCurrentResearch(new Set()); // New research context from quick-post
       setCurrentStep('angles'); 
     } else if (!campaignIdFromParams && !topicParam && !researchedContentParam) {
       setCurrentStep('topic_research');
@@ -304,6 +315,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
         setCurrentResearchedContent(''); 
       } else {
         setCurrentResearchedContent(result.summary);
+        setGeneratedAnglesForCurrentResearch(new Set()); // Reset for new research
         toast({ title: "Research Complete!", description: `Now select a content angle for "${campaignTopic}".` });
         setCurrentStep('angles'); 
       }
@@ -326,9 +338,45 @@ const SmartCampaignWizardInternal: React.FC = () => {
       toast({ variant: "destructive", title: "Login Required", description: "Please log in to generate series." });
       return;
     }
+    
+    let proceedWithGeneration = false;
+    let costForThisAngleGeneration: keyof typeof CREDIT_COSTS | null = null;
+
+    if (generatedAnglesForCurrentResearch.has(selectedAngle.title)) {
+        // Regenerating for an already processed angle (for this research cycle) is free
+        proceedWithGeneration = true;
+        toast({ title: "Regenerating Posts", description: `Regenerating posts for '${selectedAngle.title}' (no extra cost for this research batch).` });
+    } else if (generatedAnglesForCurrentResearch.size === 0) {
+        // First angle for this research cycle is free (covered by initial research fee)
+        proceedWithGeneration = true;
+        toast({ title: "First Angle Generation", description: `Generating posts for your first angle '${selectedAngle.title}' (covered by research fee).` });
+    } else {
+        // Subsequent new angle, costs 10 credits
+        costForThisAngleGeneration = 'SMART_CAMPAIGN_ADDITIONAL_ANGLE';
+    }
+
+    if (costForThisAngleGeneration) {
+        setIsLoading(true); // Show loading only if credits are being processed
+        setLoadingMessage(`Processing credits for new angle: "${selectedAngle.title}"...`);
+        const creditResult = await deductCredits(userIdToPass, costForThisAngleGeneration);
+        setIsLoading(false);
+        setLoadingMessage('');
+
+        if (!creditResult.success) {
+            toast({ variant: "destructive", title: "Credit Deduction Failed", description: creditResult.error || `Could not deduct ${CREDIT_COSTS[costForThisAngleGeneration]} credits.` });
+            return;
+        }
+        if (creditResult.creditsSpent && creditResult.creditsSpent > 0) {
+             toast({ title: "Credits Used", description: `${creditResult.creditsSpent} credits used for ${FEATURE_DESCRIPTIONS[costForThisAngleGeneration]}.` });
+        }
+        proceedWithGeneration = true;
+    }
+
+    if (!proceedWithGeneration) return;
+
+
     setIsLoading(true);
     setLoadingMessage(`Crafting campaign series for "${selectedAngle.title}"... This might take a few moments.`);
-    
     setTwitterSeries([]);
     setLinkedinSeries([]);
 
@@ -352,6 +400,11 @@ const SmartCampaignWizardInternal: React.FC = () => {
       } else {
         setLinkedinSeries(linkedinResult.series || []);
       }
+      
+      // Add to processed angles only on successful generation of at least one series
+      if (!twitterResult.error || !linkedinResult.error) {
+         setGeneratedAnglesForCurrentResearch(prev => new Set(prev).add(selectedAngle.title));
+      }
       setCurrentStep('series'); 
     } catch (error: any) {
       toast({ variant: "destructive", title: "Error Generating Series", description: error.message || "Failed to generate series." });
@@ -359,7 +412,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
       setIsLoading(false);
       setLoadingMessage('');
     }
-  }, [selectedAngle, campaignTopic, currentResearchedContent, userIdToPass, toast]);
+  }, [selectedAngle, campaignTopic, currentResearchedContent, userIdToPass, toast, generatedAnglesForCurrentResearch]);
   
  const handleSuggestRepurposing = useCallback(async () => {
     if (!campaignTopic || !selectedAngle || (twitterSeries.length === 0 && linkedinSeries.length === 0) ) {
@@ -441,6 +494,21 @@ const SmartCampaignWizardInternal: React.FC = () => {
     }
     setIsAiSubmitting(true);
     try {
+      // AI_EDIT cost (5 credits)
+      const creditFeatureKey: keyof typeof CREDIT_COSTS = 'AI_EDIT';
+      const creditCheckResult = await deductCredits(userIdToPass, creditFeatureKey);
+      if (!creditCheckResult.success) {
+          toast({ variant: "destructive", title: "Credit Error", description: creditCheckResult.error || `Could not process credits for AI Edit.` });
+          setIsAiSubmitting(false);
+          return;
+      }
+      if (CREDIT_COSTS.AI_EDIT > 0 && !creditCheckResult.freePostUsedThisTime) { 
+         toast({ title: "Credits Used", description: `${CREDIT_COSTS.AI_EDIT} credits used for ${FEATURE_DESCRIPTIONS[creditFeatureKey]}.` });
+      } else if (creditCheckResult.freePostUsedThisTime) {
+          toast({ title: "Free Action Used", description: `Your free ${FEATURE_DESCRIPTIONS[creditFeatureKey].toLowerCase()} was successful!`});
+      }
+
+
       const input: GenerateEditedPostInput = { originalPost: editingPost.currentText, editInstruction: aiEditInstruction, topic: campaignTopic, platform: editingPost.platform, userId: userIdToPass };
       const result = await generateEditedPost(input);
       if (result.error) toast({ variant: "destructive", title: "AI Edit Error", description: result.error });
@@ -523,6 +591,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
     setAiEditInstruction("");
     setLoadedCampaignId(null);
     setUserPlan(null); // Reset user plan as well
+    setGeneratedAnglesForCurrentResearch(new Set());
     if (userIdToPass) { // Re-fetch user plan for new campaign
         getUserData(userIdToPass).then(data => setUserPlan(data?.plan || null));
     }
@@ -567,8 +636,18 @@ const SmartCampaignWizardInternal: React.FC = () => {
   const researchTopicButtonTooltip = () => {
     if (!userIdToPass) return "Please log in to research topics.";
     if (userPlan === 'infinity') return "Research the entered topic (Free for Infinity plan).";
-    return `Research topic (${CREDIT_COSTS.SMART_CAMPAIGN_RESEARCH_TOPIC} credits).`;
+    const cost = CREDIT_COSTS.SMART_CAMPAIGN_RESEARCH_TOPIC;
+    return `Research topic (${cost} credits). Your first angle's post generation will be covered by this.`;
   };
+  
+  const generateSeriesButtonTooltip = () => {
+    if (!userIdToPass) return "Please log in to generate series.";
+    if (!selectedAngle) return "Select a content angle first.";
+    if (generatedAnglesForCurrentResearch.has(selectedAngle.title)) return "Regenerate posts for this angle (no extra cost).";
+    if (generatedAnglesForCurrentResearch.size === 0) return "Generate posts for your first angle (covered by research fee).";
+    return `Generate posts for new angle (${CREDIT_COSTS.SMART_CAMPAIGN_ADDITIONAL_ANGLE} credits).`;
+  };
+
 
   const renderStepContent = () => {    
     if (isLoading && !['topic_research'].includes(currentStep)) { 
@@ -618,13 +697,13 @@ const SmartCampaignWizardInternal: React.FC = () => {
         return (
           <motion.div key="topic-research" {...cardMotionProps} className="space-y-6 min-h-[300px]">
             <h3 className="text-xl font-medium text-slate-200">{stepConfig.topic_research.description}</h3>
-             <div className="flex flex-col sm:flex-row gap-2">
+             <div className="flex flex-col sm:flex-row gap-3">
               <Input
                 type="text"
                 placeholder="e.g., 'Future of AI in Marketing'"
                 value={campaignTopic}
                 onChange={(e) => setCampaignTopic(e.target.value)}
-                className="flex-grow bg-slate-700 border-slate-600 placeholder-slate-400 text-white focus:ring-primary focus:border-primary"
+                className="flex-grow bg-slate-700 border-slate-600 placeholder-slate-400 text-white focus:ring-primary focus:border-primary h-12 text-base"
                 disabled={isLoading}
               />
                <TooltipProvider>
@@ -634,13 +713,13 @@ const SmartCampaignWizardInternal: React.FC = () => {
                       onClick={handleInternalTopicResearch}
                       disabled={!campaignTopic.trim() || isLoading || !userIdToPass}
                       size="lg"
-                      className="bg-primary hover:bg-primary/90 text-primary-foreground sm:w-auto w-full disabled:opacity-60"
+                      className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white sm:w-auto w-full disabled:opacity-60 h-12 shadow-lg hover:shadow-purple-500/30 transition-all duration-300 ease-in-out transform hover:scale-105"
                     >
                       {isLoading && loadingMessage.includes("Researching") ? <Icons.loader className="mr-2 h-5 w-5 animate-spin" /> : <Icons.search className="mr-2 h-5 w-5" />}
                       Research Topic
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent className="bg-slate-800 text-slate-200 border-slate-700">
+                  <TooltipContent className="bg-slate-800 text-slate-200 border-slate-700 shadow-lg">
                     <p>{researchTopicButtonTooltip()}</p>
                   </TooltipContent>
                 </Tooltip>
@@ -711,7 +790,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent className="bg-slate-800 text-slate-200 border-slate-700">
-                    <p>{!selectedAngle ? "Select a content angle first." : "Generates Twitter and LinkedIn posts for the chosen angle."}</p>
+                     <p>{generateSeriesButtonTooltip()}</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
