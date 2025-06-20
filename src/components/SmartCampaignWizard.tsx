@@ -105,7 +105,7 @@ const CampaignPostItemComponent: React.FC<CampaignPostItemProps> = ({ post, plat
   return (
     <motion.div
       variants={listItemVariants}
-      className="p-3 bg-slate-700/50 rounded-md text-slate-200 text-sm mb-2 group" // Updated background
+      className="p-3 bg-slate-700/50 rounded-md text-slate-200 text-sm mb-2 group"
     >
       <p className="whitespace-pre-wrap">{post}</p>
       <div className="mt-2 flex items-center space-x-2">
@@ -372,7 +372,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
         toast({ title: "Regenerating Posts", description: `Regenerating posts for '${selectedAngle.title}' (no extra cost for this research batch).` });
         proceedWithGeneration = true;
     } else if (generatedAnglesForCurrentResearch.size === 0) {
-        toast({ title: "First Angle Generation", description: `Generating posts for your first angle '${selectedAngle.title}' (covered by research fee).` });
+        // Removed the specific toast "First Angle Generation: Generating posts for your first angle... (covered by research fee)"
         proceedWithGeneration = true;
     } else {
         costForThisAngleGeneration = 'SMART_CAMPAIGN_ADDITIONAL_ANGLE';
@@ -742,7 +742,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
                         onClick={handleInternalTopicResearch}
                         disabled={!campaignTopic.trim() || isLoading || !userIdToPass}
                         size="lg"
-                        className="bg-primary hover:bg-primary/90 text-white sm:w-auto w-full disabled:opacity-60 h-12 text-base shadow-md"
+                        className="bg-primary hover:bg-primary/90 text-primary-foreground sm:w-auto w-full disabled:opacity-60 h-12 text-base shadow-md"
                       >
                         <Icons.search className="mr-2 h-5 w-5" />
                         Research Topic
