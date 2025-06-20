@@ -1,11 +1,13 @@
+
 "use client"
 
 import * as React from "react"
 import * as ToastPrimitives from "@radix-ui/react-toast"
 import { cva, type VariantProps } from "class-variance-authority"
 import { X } from "lucide-react"
-
 import { cn } from "@/lib/utils"
+import { Icons } from "@/components/icons" // Import Icons
+import type { ToastIconType } from "@/hooks/use-toast"; // Import IconType
 
 const ToastProvider = ToastPrimitives.Provider
 
@@ -40,17 +42,32 @@ const toastVariants = cva(
   }
 )
 
+interface ExtendedToastProps extends React.ComponentPropsWithoutRef<typeof ToastPrimitives.Root>, VariantProps<typeof toastVariants> {
+  iconType?: ToastIconType;
+}
+
 const Toast = React.forwardRef<
   React.ElementRef<typeof ToastPrimitives.Root>,
-  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Root> &
-    VariantProps<typeof toastVariants>
->(({ className, variant, ...props }, ref) => {
+  ExtendedToastProps
+>(({ className, variant, iconType, children, ...props }, ref) => {
+  const IconComponent = iconType ? Icons[iconType] : null;
+
   return (
     <ToastPrimitives.Root
       ref={ref}
       className={cn(toastVariants({ variant }), className)}
       {...props}
-    />
+    >
+      {IconComponent && (
+        <div className="shrink-0">
+          <IconComponent className={cn(
+            "h-6 w-6",
+            variant === "destructive" ? "text-destructive-foreground/80" : "text-primary/80"
+          )} />
+        </div>
+      )}
+      <div className="flex-1">{children}</div>
+    </ToastPrimitives.Root>
   )
 })
 Toast.displayName = ToastPrimitives.Root.displayName
@@ -112,7 +129,7 @@ const ToastDescription = React.forwardRef<
 ))
 ToastDescription.displayName = ToastPrimitives.Description.displayName
 
-type ToastProps = React.ComponentPropsWithoutRef<typeof Toast>
+type ToastProps = ExtendedToastProps; // Use the extended props
 
 type ToastActionElement = React.ReactElement<typeof ToastAction>
 

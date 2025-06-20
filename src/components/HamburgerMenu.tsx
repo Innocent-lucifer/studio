@@ -43,13 +43,14 @@ export function HamburgerMenu() {
     toast({
       title: "Feature Coming Soon!",
       description: `${featureName} functionality will be implemented in a future update.`,
+      iconType: "info",
     });
     console.log(`${featureName} clicked`);
   };
 
   const handleSignOut = async () => {
-    await logOut();
-    setUserData(null); // Clear user data on logout
+    await logOut(); // AuthContext's logOut handles the success toast
+    setUserData(null); 
   };
 
   return (

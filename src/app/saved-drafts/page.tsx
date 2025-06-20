@@ -205,10 +205,10 @@ export default function SavedDraftsPage() {
     setDeletingDraftId(draftId);
     const success = await deleteDraft(user.uid, draftId);
     if (success) {
-      toast({ title: "Draft Deleted", description: "Your post draft has been removed." });
+      toast({ title: "Draft Deleted!", description: "Your post draft has been removed.", iconType: "checkCircle" });
       setAllPostDrafts(prev => prev.filter(d => d.id !== draftId));
     } else {
-      toast({ variant: "destructive", title: "Deletion Failed", description: "Could not delete post draft." });
+      toast({ variant: "destructive", title: "Deletion Failed", description: "Could not delete post draft. Please try again.", iconType: "alertTriangle" });
     }
     setDeletingDraftId(null);
   }, [user, toast]);
@@ -218,10 +218,10 @@ export default function SavedDraftsPage() {
     setDeletingCampaignDraftId(campaignDraftId);
     const success = await deleteCampaignDraft(user.uid, campaignDraftId);
     if (success) {
-      toast({ title: "Campaign Draft Deleted", description: "Campaign draft removed." });
+      toast({ title: "Campaign Draft Deleted!", description: "Your campaign draft has been removed.", iconType: "checkCircle" });
       setAllCampaignDrafts(prev => prev.filter(c => c.id !== campaignDraftId));
     } else {
-      toast({ variant: "destructive", title: "Deletion Failed", description: "Could not delete campaign draft." });
+      toast({ variant: "destructive", title: "Deletion Failed", description: "Could not delete campaign draft. Please try again.", iconType: "alertTriangle" });
     }
     setDeletingCampaignDraftId(null);
   }, [user, toast]);
@@ -232,7 +232,7 @@ export default function SavedDraftsPage() {
 
   const handleCopyDraftContent = useCallback((content: string) => {
     navigator.clipboard.writeText(content);
-    toast({ title: "Copied to Clipboard!", description: "Draft content copied." });
+    toast({ title: "Copied to Clipboard!", description: "Draft content is now on your clipboard.", iconType: "copy" });
   }, [toast]);
 
   const filteredPostDrafts = useMemo(() => {

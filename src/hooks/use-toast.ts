@@ -1,3 +1,4 @@
+
 "use client"
 
 // Inspired by react-hot-toast library
@@ -7,15 +8,20 @@ import type {
   ToastActionElement,
   ToastProps,
 } from "@/components/ui/toast"
+import type { Icons } from "@/components/icons"; // Added for icon types
 
 const TOAST_LIMIT = 1
-const TOAST_REMOVE_DELAY = 1000000
+const TOAST_REMOVE_DELAY = 5000 // Keep a reasonable delay for memory cleanup after visual dismiss
+
+type IconType = keyof Pick<typeof Icons, 'checkCircle' | 'alertTriangle' | 'info' | 'flame' | 'lock' | 'save' | 'copy' | 'wand'>;
+
 
 type ToasterToast = ToastProps & {
   id: string
   title?: React.ReactNode
   description?: React.ReactNode
   action?: ToastActionElement
+  iconType?: IconType; // Added for custom icons
 }
 
 const actionTypes = {
@@ -140,9 +146,11 @@ function dispatch(action: Action) {
   })
 }
 
-type Toast = Omit<ToasterToast, "id">
+type ToastInput = Omit<ToasterToast, "id" | "open" | "onOpenChange"> & {
+  duration?: number;
+};
 
-function toast({ ...props }: Toast) {
+function toast({ duration = 3000, ...props }: ToastInput) { // Default duration 3s
   const id = genId()
 
   const update = (props: ToasterToast) =>
@@ -158,6 +166,7 @@ function toast({ ...props }: Toast) {
       ...props,
       id,
       open: true,
+      duration: duration, // Pass duration to the toast component
       onOpenChange: (open) => {
         if (!open) dismiss()
       },
@@ -191,4 +200,5 @@ function useToast() {
   }
 }
 
-export { useToast, toast }
+export { useToast, toast };
+export type { IconType as ToastIconType };

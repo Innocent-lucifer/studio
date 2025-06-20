@@ -45,22 +45,22 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const userData = await getUserData(firebaseUser.uid, firebaseUser);
       if (!userData) {
         // This case should ideally be rare if getUserData's creation logic works and throws on failure.
-        // Log an error or show a toast if the document still couldn't be confirmed.
         console.error(`AuthContext: Firestore document for user ${firebaseUser.uid} could NOT be verified or created after login/signup.`);
         // toast({
         //   variant: "destructive",
         //   title: "Account Sync Issue",
         //   description: "Could not fully sync your account. Some features might be limited. Please try refreshing.",
+        //   iconType: "alertTriangle"
         // });
       }
     } catch (error: any) {
-      // This will catch errors thrown from getUserData/createUserDocument
       console.error(`AuthContext: Error during ensureUserDocument for ${firebaseUser.uid} (likely from Firestore operation): `, error.message, error);
-      // Potentially show a user-facing toast here for critical setup errors
-      // For example, if error.message is "Could not connect...", it will be logged here.
-      // Not re-throwing here to allow onAuthStateChanged to complete loading state,
-      // as the primary error is logged above. Subsequent operations will handle the lack of userData.
-      // throw error; // Removed re-throw
+      // toast({
+      //   variant: "destructive",
+      //   title: "Database Connection Issue",
+      //   description: "Could not connect to the database. Some account features might be unavailable. Please check your internet connection or try again later.",
+      //   iconType: "alertTriangle"
+      // });
     }
   };
 
@@ -73,9 +73,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           await ensureUserDocument(currentUser);
         }
       } catch (error) {
-        // This catch block will now only be triggered by errors directly within this try block,
-        // not by errors re-thrown from ensureUserDocument for the connectivity issue.
         console.error("AuthContext: Critical error during user session initialization:", error);
+        // toast({
+        //   title: "Session Error",
+        //   description: "There was an issue initializing your session. Please refresh the page.",
+        //   variant: "destructive",
+        //   iconType: "alertTriangle"
+        // });
       } finally {
         setLoading(false);
       }
@@ -90,11 +94,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (userCredential.user) {
         await ensureUserDocument(userCredential.user);
       }
+      // Toast for successful sign up is now handled in LoginSignUpForm
       return userCredential.user;
     } catch (error) {
       console.error("Sign up error:", error);
       const authError = error as AuthError;
-      throw authError;
+      throw authError; // Re-throw for LoginSignUpForm to handle specific toast
     } finally {
       setLoading(false);
     }
@@ -107,11 +112,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (userCredential.user) {
         await ensureUserDocument(userCredential.user);
       }
+      // Toast for successful sign in is now handled in LoginSignUpForm
       return userCredential.user;
     } catch (error) {
       console.error("Log in error:", error);
       const authError = error as AuthError;
-      throw authError;
+      throw authError; // Re-throw for LoginSignUpForm to handle specific toast
     } finally {
       setLoading(false);
     }
@@ -126,11 +132,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (result.user) {
         await ensureUserDocument(result.user);
       }
+      // Toast for successful Google sign-in is now handled in LoginSignUpForm
       return result.user;
     } catch (error) {
       console.error("Google sign in error object:", error);
       const authError = error as AuthError;
-      throw authError;
+      throw authError; // Re-throw for LoginSignUpForm to handle specific toast
     } finally {
       setLoading(false);
     }
@@ -140,11 +147,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setLoading(true);
     try {
       await signOut(auth);
-      toast({ title: "Logged Out", description: "You have been successfully logged out." });
+      toast({ title: "Logged Out", description: "You have been successfully logged out.", iconType: "checkCircle" });
     } catch (error) {
       console.error("Log out error:", error);
       const authError = error as AuthError;
-      toast({ variant: "destructive", title: "Log Out Failed", description: authError.message });
+      toast({ variant: "destructive", title: "Log Out Failed", description: authError.message, iconType: "alertTriangle" });
     } finally {
       setLoading(false);
     }
@@ -154,6 +161,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setLoading(true);
     try {
       await sendPasswordResetEmail(auth, email);
+      // Toast for password reset success/failure is handled in LoginSignUpForm
       return { success: true };
     } catch (error) {
       console.error("Password reset error:", error);
