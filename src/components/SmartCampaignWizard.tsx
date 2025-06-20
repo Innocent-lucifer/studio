@@ -102,19 +102,46 @@ interface CampaignPostItemProps {
   userId?: string;
 }
 const CampaignPostItemComponent: React.FC<CampaignPostItemProps> = ({ post, platform, onEdit, onSaveDraft, isSavingThisDraft, userId }) => {
-  const platformColor = platform === 'twitter' ? 'text-sky-400' : 'text-blue-400';
   return (
     <motion.div
       variants={listItemVariants}
       className="p-3 bg-slate-600/70 rounded-md text-slate-200 text-sm mb-2 group"
     >
       <p className="whitespace-pre-wrap">{post}</p>
-      <div className="mt-2 flex space-x-2">
-        <Button variant="link" size="sm" onClick={onEdit} className={`${platformColor}/80 hover:${platformColor} p-0 h-auto text-xs disabled:opacity-50`} disabled={!userId || isSavingThisDraft}>
-          <Icons.edit className="mr-1 h-3 w-3"/>Edit
+      <div className="mt-2 flex items-center space-x-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onEdit}
+          className={`
+            ${platform === 'twitter' ? 'text-sky-400 hover:text-sky-300' : 'text-blue-400 hover:text-blue-300'}
+            hover:bg-slate-700/60 
+            disabled:opacity-50
+          `}
+          disabled={!userId || isSavingThisDraft}
+          title="Edit Post"
+        >
+          <Icons.edit className="h-4 w-4" />
+          Edit
         </Button>
-        <Button variant="link" size="sm" onClick={onSaveDraft} className="text-green-400/80 hover:text-green-400 p-0 h-auto text-xs disabled:opacity-50" disabled={!userId || isSavingThisDraft}>
-          {isSavingThisDraft ? <Icons.loader className="h-3 w-3 animate-pulse"/> : <Icons.save className="mr-1 h-3 w-3"/>}Save Draft
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onSaveDraft}
+          className="
+            text-green-400 hover:text-green-300
+            hover:bg-slate-700/60 
+            disabled:opacity-50
+          "
+          disabled={!userId || isSavingThisDraft}
+          title="Save as Draft"
+        >
+          {isSavingThisDraft ? (
+            <Icons.loader className="h-4 w-4 animate-spin" />
+          ) : (
+            <Icons.save className="h-4 w-4" />
+          )}
+          Save
         </Button>
       </div>
     </motion.div>
@@ -343,20 +370,17 @@ const SmartCampaignWizardInternal: React.FC = () => {
     let costForThisAngleGeneration: keyof typeof CREDIT_COSTS | null = null;
 
     if (generatedAnglesForCurrentResearch.has(selectedAngle.title)) {
-        // Regenerating for an already processed angle (for this research cycle) is free
-        proceedWithGeneration = true;
         toast({ title: "Regenerating Posts", description: `Regenerating posts for '${selectedAngle.title}' (no extra cost for this research batch).` });
-    } else if (generatedAnglesForCurrentResearch.size === 0) {
-        // First angle for this research cycle is free (covered by initial research fee)
         proceedWithGeneration = true;
+    } else if (generatedAnglesForCurrentResearch.size === 0) {
         toast({ title: "First Angle Generation", description: `Generating posts for your first angle '${selectedAngle.title}' (covered by research fee).` });
+        proceedWithGeneration = true;
     } else {
-        // Subsequent new angle, costs 10 credits
         costForThisAngleGeneration = 'SMART_CAMPAIGN_ADDITIONAL_ANGLE';
     }
 
     if (costForThisAngleGeneration) {
-        setIsLoading(true); // Show loading only if credits are being processed
+        setIsLoading(true); 
         setLoadingMessage(`Processing credits for new angle: "${selectedAngle.title}"...`);
         const creditResult = await deductCredits(userIdToPass, costForThisAngleGeneration);
         setIsLoading(false);
@@ -368,6 +392,8 @@ const SmartCampaignWizardInternal: React.FC = () => {
         }
         if (creditResult.creditsSpent && creditResult.creditsSpent > 0) {
              toast({ title: "Credits Used", description: `${creditResult.creditsSpent} credits used for ${FEATURE_DESCRIPTIONS[costForThisAngleGeneration]}.` });
+        } else if (creditResult.freePostUsedThisTime) {
+             toast({ title: "Free Action Used", description: `Your free ${FEATURE_DESCRIPTIONS[costForThisAngleGeneration].toLowerCase()} was successful!`});
         }
         proceedWithGeneration = true;
     }
@@ -401,7 +427,6 @@ const SmartCampaignWizardInternal: React.FC = () => {
         setLinkedinSeries(linkedinResult.series || []);
       }
       
-      // Add to processed angles only on successful generation of at least one series
       if (!twitterResult.error || !linkedinResult.error) {
          setGeneratedAnglesForCurrentResearch(prev => new Set(prev).add(selectedAngle.title));
       }
@@ -494,7 +519,6 @@ const SmartCampaignWizardInternal: React.FC = () => {
     }
     setIsAiSubmitting(true);
     try {
-      // AI_EDIT cost (5 credits)
       const creditFeatureKey: keyof typeof CREDIT_COSTS = 'AI_EDIT';
       const creditCheckResult = await deductCredits(userIdToPass, creditFeatureKey);
       if (!creditCheckResult.success) {
@@ -590,9 +614,9 @@ const SmartCampaignWizardInternal: React.FC = () => {
     setIsAiEditModalOpen(false);
     setAiEditInstruction("");
     setLoadedCampaignId(null);
-    setUserPlan(null); // Reset user plan as well
+    setUserPlan(null); 
     setGeneratedAnglesForCurrentResearch(new Set());
-    if (userIdToPass) { // Re-fetch user plan for new campaign
+    if (userIdToPass) { 
         getUserData(userIdToPass).then(data => setUserPlan(data?.plan || null));
     }
     router.replace('/smart-campaign', undefined); 
@@ -643,7 +667,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
   const generateSeriesButtonTooltip = () => {
     if (!userIdToPass) return "Please log in to generate series.";
     if (!selectedAngle) return "Select a content angle first.";
-    if (generatedAnglesForCurrentResearch.has(selectedAngle.title)) return "Regenerate posts for this angle (no extra cost).";
+    if (generatedAnglesForCurrentResearch.has(selectedAngle.title)) return "Regenerate posts for this angle (no extra cost for this research batch).";
     if (generatedAnglesForCurrentResearch.size === 0) return "Generate posts for your first angle (covered by research fee).";
     return `Generate posts for new angle (${CREDIT_COSTS.SMART_CAMPAIGN_ADDITIONAL_ANGLE} credits).`;
   };
@@ -713,7 +737,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
                       onClick={handleInternalTopicResearch}
                       disabled={!campaignTopic.trim() || isLoading || !userIdToPass}
                       size="lg"
-                      className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white sm:w-auto w-full disabled:opacity-60 h-12 shadow-lg hover:shadow-purple-500/30 transition-all duration-300 ease-in-out transform hover:scale-105"
+                      className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white sm:w-auto w-full disabled:opacity-60 h-12 text-base shadow-lg hover:shadow-purple-500/30 transition-all duration-300 ease-in-out transform hover:scale-105"
                     >
                       {isLoading && loadingMessage.includes("Researching") ? <Icons.loader className="mr-2 h-5 w-5 animate-spin" /> : <Icons.search className="mr-2 h-5 w-5" />}
                       Research Topic
