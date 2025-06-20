@@ -71,7 +71,7 @@ export const CREDIT_COSTS = {
   IMAGE_TO_POST: 60,
   IMAGE_TO_POST_REGENERATE: 5, 
   SMART_CAMPAIGN_RESEARCH_TOPIC: 30,
-  SMART_CAMPAIGN_ADDITIONAL_ANGLE: 10, // New cost for additional angles
+  SMART_CAMPAIGN_ADDITIONAL_ANGLE: 10, 
   AI_EDIT: 5, 
   TREND_EXPLORER_FETCH: 0,
 };
@@ -118,7 +118,6 @@ export const createUserDocument = async (
   
   try {
     const userSnap = await getDoc(userRef);
-    const isSpecialUser = user.email === "rishabhnauhowar@gmail.com";
 
     if (!userSnap.exists()) {
       const userData: UserData = {
@@ -128,8 +127,8 @@ export const createUserDocument = async (
         createdAt: serverTimestamp() as Timestamp,
         referralCode: generateReferralCode(),
         referralsMade: 0,
-        plan: isSpecialUser ? 'infinity' : 'free',
-        credits: isSpecialUser ? 999999 : 40,
+        plan: 'free', // Default plan
+        credits: 40, // Default credits for free plan
         freeQuickPostUsed: false,
         freeImageToPostUsed: false,
         freeSmartCampaignAnglesUsed: false,
@@ -149,16 +148,13 @@ export const createUserDocument = async (
       let needsUpdate = false;
       const updates: Partial<UserData> = {};
       
-      if (isSpecialUser) {
-        if (existingData.plan !== 'infinity') { updates.plan = 'infinity'; needsUpdate = true; }
-        if (existingData.credits !== 999999) { updates.credits = 999999; needsUpdate = true; }
-      } else {
-         if (existingData.plan === undefined) { updates.plan = 'free'; needsUpdate = true; }
-         if (existingData.credits === undefined) {
-           updates.credits = (existingData.plan === 'free' || !existingData.plan) ? 40 : 700;
-           needsUpdate = true;
-         }
+      // Ensure default plan and credits if they are missing
+      if (existingData.plan === undefined) { updates.plan = 'free'; needsUpdate = true; }
+      if (existingData.credits === undefined) {
+        updates.credits = (existingData.plan === 'free' || !existingData.plan) ? 40 : 700; // Assuming starter plan gets 700
+        needsUpdate = true;
       }
+      
       if (existingData.freeQuickPostUsed === undefined) { updates.freeQuickPostUsed = false; needsUpdate = true; }
       if (existingData.freeImageToPostUsed === undefined) { updates.freeImageToPostUsed = false; needsUpdate = true; }
       if (existingData.freeSmartCampaignAnglesUsed === undefined) { updates.freeSmartCampaignAnglesUsed = false; needsUpdate = true; }
@@ -191,28 +187,15 @@ export const getUserData = async (uid: string, userForCreation?: FirebaseAuthUse
       const data = userSnap.data();
       // console.log(`[getUserData] Document found for UID: '${uid}'. Data:`, JSON.stringify(data).substring(0, 200) + "...");
 
-      let isSpecialUser = data.email === "rishabhnauhowar@gmail.com";
-      // In case email is not yet populated in Firestore but we have it from Auth context
-      if (!data.email && userForCreation && userForCreation.email === "rishabhnauhowar@gmail.com") {
-          isSpecialUser = true;
-      }
-
-
       const migratedData: UserData = {
-        plan: isSpecialUser ? 'infinity' : (data.plan || 'free'),
-        credits: isSpecialUser ? 999999 : (data.credits ?? (data.plan === 'free' || !data.plan ? 40 : 700)),
+        plan: (data.plan || 'free'),
+        credits: (data.credits ?? (data.plan === 'free' || !data.plan ? 40 : 700)),
         freeQuickPostUsed: data.freeQuickPostUsed ?? false,
         freeImageToPostUsed: data.freeImageToPostUsed ?? false,
         freeSmartCampaignAnglesUsed: data.freeSmartCampaignAnglesUsed ?? false,
         freeSmartCampaignResearchTopicUsed: data.freeSmartCampaignResearchTopicUsed ?? false,
         ...data,
       };
-      // Ensure special user override is applied after spreading existing data
-      if (isSpecialUser) {
-        migratedData.plan = 'infinity';
-        migratedData.credits = 999999;
-      }
-
 
       // Further safety checks for undefined fields even after spread
       if (migratedData.plan === undefined) migratedData.plan = 'free';
@@ -221,7 +204,6 @@ export const getUserData = async (uid: string, userForCreation?: FirebaseAuthUse
       if (migratedData.freeImageToPostUsed === undefined) migratedData.freeImageToPostUsed = false;
       if (migratedData.freeSmartCampaignAnglesUsed === undefined) migratedData.freeSmartCampaignAnglesUsed = false;
       if (migratedData.freeSmartCampaignResearchTopicUsed === undefined) migratedData.freeSmartCampaignResearchTopicUsed = false;
-
       
       return migratedData;
     } else {
