@@ -17,7 +17,7 @@ import { generateEditedPost, GenerateEditedPostInput } from '@/ai/flows/generate
 import { Separator } from '@/components/ui/separator';
 import { Label } from '@/components/ui/label';
 import { useAuth } from "@/context/AuthContext";
-import { saveDraft } from '@/lib/firebaseUserActions';
+import { saveDraft, deductCredits, CREDIT_COSTS } from '@/lib/firebaseUserActions';
 import {
   Dialog,
   DialogContent,
@@ -29,20 +29,6 @@ import {
 } from "@/components/ui/dialog";
 
 type Tone = 'default' | 'romantic' | 'funny' | 'professional' | 'mysterious';
-
-const debounce = <F extends (...args: any[]) => any>(func: F, delay: number) => {
-  let timeoutId: ReturnType<typeof setTimeout> | null = null;
-  return (...args: Parameters<F>): Promise<ReturnType<F>> => {
-    return new Promise((resolve) => {
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
-      timeoutId = setTimeout(() => {
-        resolve(func(...args));
-      }, delay);
-    });
-  };
-};
 
 export default function VisualPostPage() {
   const { user } = useAuth();
@@ -69,6 +55,10 @@ export default function VisualPostPage() {
   const [aiEditInstruction, setAiEditInstruction] = useState('');
   const [isAiSubmitting, setIsAiSubmitting] = useState(false);
 
+  // Credit processing state
+  const [creditProcessedForCurrentImage, setCreditProcessedForCurrentImage] = useState<boolean>(false);
+  const [isProcessingCredits, setIsProcessingCredits] = useState<boolean>(false);
+
 
   useEffect(() => {
     setIsClient(true);
@@ -79,6 +69,7 @@ export default function VisualPostPage() {
       const storedImage = localStorage.getItem('sagepostai_visual_post_image');
       if (storedImage) {
         setImageDataUri(storedImage); 
+        setCreditProcessedForCurrentImage(false); // Ensure credit check for image from storage
         localStorage.removeItem('sagepostai_visual_post_image');
       }
       setInitialStorageCheckDone(true); 
@@ -86,49 +77,79 @@ export default function VisualPostPage() {
   }, [isClient, initialStorageCheckDone]);
 
 
-  const debouncedGeneratePost = useCallback(
-    debounce(async (input: GeneratePostFromImageInput) => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const result = await generatePostFromImage(input);
-        if (result.error) {
-          setError(result.error);
-          setGeneratedPost('');
-          toast({ variant: "destructive", title: "Post Generation Failed", description: result.error });
-        } else {
-          setGeneratedPost(result.generatedPost || '');
-          if (result.freePostUsed) {
-            toast({ title: "Free Image Post Used!", description: "Your first Image-to-Post generation was on us!"});
-          } else if (result.creditsSpent && result.creditsSpent > 0) {
-            toast({ title: "Credits Used", description: `${result.creditsSpent} credits were used for this Image-to-Post generation.`});
-          }
-        }
-      } catch (e: any) {
-        setError(e.message || "An unexpected error occurred.");
-        setGeneratedPost('');
-        toast({ variant: "destructive", title: "Error", description: e.message || "Failed to generate post." });
-      } finally {
-        setIsLoading(false);
-      }
-    }, 700),
-    [toast] 
-  );
-
   useEffect(() => {
-    if (imageDataUri && isClient && userIdToPass) { 
-      debouncedGeneratePost({
-        imageDataUri,
-        userContext: userText || undefined,
-        tone: selectedTone,
-        userId: userIdToPass,
-      });
-    } else if (imageDataUri && isClient && !userIdToPass) {
-      setGeneratedPost(''); 
-      setError(null);
-    }
+    const processImageAndGenerate = async () => {
+        if (!imageDataUri || !isClient ) {
+            return; // Don't proceed if no image or not client-side
+        }
+        
+        if (!userIdToPass) { // Handle guest user or user not yet loaded
+            setGeneratedPost('');
+            setError(null);
+            setIsLoading(false); // Ensure loading is off if we bail early
+            if(imageDataUri) { // Only toast if an image was actually loaded by guest
+                 toast({
+                    title: "Login Required",
+                    description: "Please log in to generate posts from images.",
+                    variant: "destructive"
+                });
+            }
+            return;
+        }
+
+        setIsLoading(true);
+        setError(null);
+
+        const generationInput: GeneratePostFromImageInput = {
+            imageDataUri,
+            userContext: userText || undefined,
+            tone: selectedTone,
+            userId: userIdToPass,
+        };
+
+        let canProceedWithGeneration = true;
+
+        if (!creditProcessedForCurrentImage) {
+            setIsProcessingCredits(true);
+            const creditCheckResult = await deductCredits(userIdToPass, 'IMAGE_TO_POST');
+            setIsProcessingCredits(false);
+
+            if (!creditCheckResult.success) {
+                toast({ variant: "destructive", title: "Credit Deduction Failed", description: creditCheckResult.error || "Could not process credits for Image-to-Post." });
+                setGeneratedPost(''); // Clear any old post
+                canProceedWithGeneration = false;
+            } else {
+                setCreditProcessedForCurrentImage(true); 
+                if (creditCheckResult.freePostUsedThisTime) {
+                    toast({ title: "Free Image Post Used!", description: "Your first Image-to-Post generation was on us!" });
+                } else if (CREDIT_COSTS.IMAGE_TO_POST > 0) {
+                    toast({ title: "Credits Used", description: `${CREDIT_COSTS.IMAGE_TO_POST} credits were used for this image generation.` });
+                }
+            }
+        }
+
+        if (canProceedWithGeneration) {
+            try {
+                const result = await generatePostFromImage(generationInput);
+                if (result.error) {
+                    setError(result.error);
+                    setGeneratedPost('');
+                    toast({ variant: "destructive", title: "Post Generation Failed", description: result.error });
+                } else {
+                    setGeneratedPost(result.generatedPost || '');
+                }
+            } catch (e: any) {
+                setError(e.message || "An unexpected error occurred during post generation.");
+                setGeneratedPost('');
+                toast({ variant: "destructive", title: "Error", description: e.message || "Failed to generate post." });
+            }
+        }
+        setIsLoading(false);
+    };
+
+    processImageAndGenerate();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [imageDataUri, userText, selectedTone, isClient, userIdToPass]); 
+  }, [imageDataUri, userText, selectedTone, isClient, userIdToPass]); // creditProcessedForCurrentImage is NOT a dependency here
 
   const handleDirectImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -145,11 +166,11 @@ export default function VisualPostPage() {
         });
         return;
       }
-      if (file.size > 10 * 1024 * 1024) { // Updated from 5MB to 10MB
+      if (file.size > 10 * 1024 * 1024) { 
          toast({
           variant: "destructive",
           title: "File Too Large",
-          description: "Please upload an image smaller than 10MB.", // Updated message
+          description: "Please upload an image smaller than 10MB.",
         });
         return;
       }
@@ -160,6 +181,7 @@ export default function VisualPostPage() {
           setGeneratedPost('');
           setError(null);
           setImageDataUri(result); 
+          setCreditProcessedForCurrentImage(false); // Key: reset for new image
         } else {
           toast({
             variant: "destructive",
@@ -200,7 +222,6 @@ export default function VisualPostPage() {
   };
 
   const handleOpenAiEditInstructionModal = () => {
-    // EditingContent should already be set from the main edit modal
     setIsAiEditModalOpen(true);
   };
 
@@ -212,20 +233,20 @@ export default function VisualPostPage() {
     setIsAiSubmitting(true);
     try {
       const result = await generateEditedPost({
-        originalPost: editingContent, // Use the content currently in the editor
+        originalPost: editingContent, 
         editInstruction: aiEditInstruction,
         topic: userText || "Post from image",
-        platform: 'twitter', // Default to 'twitter' for versatility
+        platform: 'twitter', 
         userId: userIdToPass,
       });
 
       if (result.error) {
         toast({ variant: "destructive", title: "AI Edit Error", description: result.error });
       } else if (result.editedPost) {
-        setEditingContent(result.editedPost); // Update the content in the main edit modal's textarea
+        setEditingContent(result.editedPost); 
         toast({ title: "AI Edit Applied", description: "The AI has revised the post in the editor. Review and save." });
-        setIsAiEditModalOpen(false); // Close AI instruction modal
-        setAiEditInstruction(""); // Clear instruction
+        setIsAiEditModalOpen(false); 
+        setAiEditInstruction(""); 
       } else {
         toast({ variant: "destructive", title: "AI Edit Failed", description: "AI did not return an edited post." });
       }
@@ -407,6 +428,7 @@ export default function VisualPostPage() {
                   setGeneratedPost('');
                   setUserText('');
                   setError(null);
+                  setCreditProcessedForCurrentImage(false); // Reset credit flag
                 }}
                 className="border-primary text-primary hover:bg-primary/10 hover:border-purple-400 hover:text-purple-300 rounded-lg px-5 py-2.5 text-sm"
                 title="Clear current image and start over"
@@ -446,6 +468,7 @@ export default function VisualPostPage() {
                   placeholder="e.g., 'Celebrating a special milestone!' or 'My new furry friend'"
                   rows={3}
                   className="bg-slate-700/80 border-slate-600 placeholder-slate-400 text-slate-100 focus:ring-purple-500 focus:border-purple-500 rounded-lg"
+                  disabled={isLoading || isProcessingCredits}
                 />
               </motion.div>
 
@@ -461,7 +484,7 @@ export default function VisualPostPage() {
                       key={value}
                       onClick={() => setSelectedTone(value)}
                       variant={selectedTone === value ? "default" : "outline"}
-                      disabled={!userIdToPass && value !== 'default'} 
+                      disabled={(!userIdToPass && value !== 'default') || isLoading || isProcessingCredits} 
                       className={`
                         ${selectedTone === value
                           ? 'bg-purple-600 hover:bg-purple-700 text-white border-purple-600'
@@ -484,19 +507,19 @@ export default function VisualPostPage() {
                   <Icons.wand className="mr-3 h-7 w-7" />
                   Your AI-Generated Post
                 </CardTitle>
-                {isLoading && (
+                {(isLoading || isProcessingCredits) && (
                   <div className="flex items-center justify-center p-6 rounded-lg bg-slate-700/50 min-h-[150px]">
                     <Icons.loader className="h-8 w-8 animate-spin text-primary mr-3" />
-                    <span className="text-slate-300 text-lg">Generating your post...</span>
+                    <span className="text-slate-300 text-lg">{isProcessingCredits ? "Processing credits..." : "Generating your post..."}</span>
                   </div>
                 )}
-                {!isLoading && error && (
+                {!isLoading && !isProcessingCredits && error && (
                   <div className="p-4 rounded-lg bg-red-800/30 border border-red-700 text-red-300 min-h-[100px]">
                     <p className="font-semibold">Error:</p>
                     <p className="text-sm">{error}</p>
                   </div>
                 )}
-                {!isLoading && !error && generatedPost && (
+                {!isLoading && !isProcessingCredits && !error && generatedPost && (
                   <motion.div
                     initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                     className="p-6 bg-slate-700/80 rounded-xl shadow-inner min-h-[150px]"
@@ -504,35 +527,35 @@ export default function VisualPostPage() {
                     <p className="text-slate-100 whitespace-pre-wrap text-base leading-relaxed">{generatedPost}</p>
                   </motion.div>
                 )}
-                {!isLoading && !error && !generatedPost && !userIdToPass && (
+                {!isLoading && !isProcessingCredits && !error && !generatedPost && !userIdToPass && imageDataUri && (
                    <div className="flex flex-col items-center justify-center p-6 rounded-lg bg-slate-700/50 min-h-[150px] text-slate-400 text-center">
                     <Icons.lock className="h-8 w-8 mb-3 text-primary"/>
                     <span className="text-lg">Please log in to generate and view your post.</span>
-                     <Link href="/login" className="mt-3">
+                     <Link href="/login?redirect=/visual-post" className="mt-3"> {/* Added redirect */}
                         <Button variant="link" className="text-primary hover:text-purple-400">Go to Login</Button>
                     </Link>
                   </div>
                 )}
-                 {!isLoading && !error && !generatedPost && userIdToPass && (
+                 {!isLoading && !isProcessingCredits && !error && !generatedPost && userIdToPass && imageDataUri && (
                    <div className="flex items-center justify-center p-6 rounded-lg bg-slate-700/50 min-h-[150px] text-slate-400">
                     <Icons.info className="h-8 w-8 mr-3"/>
-                    <span className="text-lg">Your generated post will appear here.</span>
+                    <span className="text-lg">Your generated post will appear here once processing is complete.</span>
                   </div>
                 )}
               </motion.div>
 
-              {!isLoading && generatedPost && (
+              {!isLoading && !isProcessingCredits && generatedPost && (
                 <motion.div className="flex flex-wrap gap-3 mt-8" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{delay: 0.4}}>
                   <Button 
                     onClick={handleOpenEditModal}
-                    disabled={!userIdToPass}
+                    disabled={!userIdToPass || isLoading || isProcessingCredits}
                     className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground py-2.5 px-6 rounded-lg shadow-md hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                      <Icons.edit className="mr-2 h-5 w-5" /> Edit Post
                   </Button>
                   <Button 
                     onClick={handleSaveDraft} 
-                    disabled={isSavingDraft || !userIdToPass}
+                    disabled={isSavingDraft || !userIdToPass || isLoading || isProcessingCredits}
                     className="w-full sm:w-auto bg-accent hover:bg-accent/90 text-white py-2.5 px-6 rounded-lg shadow-md hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                     {isSavingDraft ? <Icons.loader className="animate-pulse mr-2 h-5 w-5" /> : <Icons.save className="mr-2 h-5 w-5" />}
@@ -541,20 +564,22 @@ export default function VisualPostPage() {
                   <Button 
                     onClick={handleCopyPost} 
                     variant="outline"
-                    className="w-full sm:w-auto border-primary text-primary hover:bg-primary/10 hover:text-purple-300 py-2.5 px-6 rounded-lg shadow-md hover:shadow-lg"
+                    disabled={isLoading || isProcessingCredits}
+                    className="w-full sm:w-auto border-primary text-primary hover:bg-primary/10 hover:text-purple-300 py-2.5 px-6 rounded-lg shadow-md hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                     <Icons.copy className="mr-2 h-5 w-5" /> Copy Post
                   </Button>
                   <Button
                     onClick={handleSharePost}
                     variant="outline"
-                    className="w-full sm:w-auto border-slate-600 text-slate-300 hover:bg-slate-700 py-2.5 px-6 rounded-lg shadow-md hover:shadow-lg"
+                    disabled={isLoading || isProcessingCredits}
+                    className="w-full sm:w-auto border-slate-600 text-slate-300 hover:bg-slate-700 py-2.5 px-6 rounded-lg shadow-md hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                     <Icons.share className="mr-2 h-5 w-5" /> Share
                   </Button>
                 </motion.div>
               )}
-               {!userIdToPass && !isLoading && 
+               {!userIdToPass && !isLoading && !isProcessingCredits && imageDataUri &&
                   <p className="mt-4 text-xs text-slate-400 text-center">
                     Log in to save drafts or generate posts with all tone options.
                   </p>

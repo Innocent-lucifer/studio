@@ -10,7 +10,7 @@
 
 import {ai}from '@/ai/ai-instance';
 import {z}from 'genkit';
-import { getUserData, deductCredits, CREDIT_COSTS, CreditTransactionType } from '@/lib/firebaseUserActions'; 
+// Credit deduction logic is now handled client-side in visual-post/page.tsx
 
 const GeneratePostFromImageInputSchema = z.object({
   imageDataUri: z
@@ -27,15 +27,13 @@ const GeneratePostFromImageInputSchema = z.object({
     .optional()
     .default('default')
     .describe('The desired tone for the generated post. "default" implies a generally engaging and suitable tone based on the image.'),
-  userId: z.string().optional().describe('The ID of the user requesting the post. Optional for now.'),
+  userId: z.string().optional().describe('The ID of the user requesting the post. Optional for now, but checked client-side before calling this flow for credit purposes.'),
 });
 export type GeneratePostFromImageInput = z.infer<typeof GeneratePostFromImageInputSchema>;
 
 const GeneratePostFromImageOutputSchema = z.object({
   generatedPost: z.string().optional().describe('The AI-generated social media post based on the image and inputs.'),
   error: z.string().optional().describe('An error message if generation failed.'),
-  creditsSpent: z.number().optional().describe('Number of credits spent for this operation.'),
-  freePostUsed: z.boolean().optional().describe('Indicates if a free post was used for this operation.'),
 });
 export type GeneratePostFromImageOutput = z.infer<typeof GeneratePostFromImageOutputSchema>;
 
@@ -91,15 +89,7 @@ const generatePostFromImageFlow = ai.defineFlow({
   outputSchema: GeneratePostFromImageOutputSchema,
 }, async (input) => {
   // console.log('[generatePostFromImageFlow] User:', input.userId || 'Guest', { ...input, imageDataUri: input.imageDataUri.substring(0,50) + "..."});
-
-  if (!input.userId) {
-    return { error: "User ID is required to generate post from image." };
-  }
-
-  const creditCheckResult = await deductCredits(input.userId, 'IMAGE_TO_POST');
-  if (!creditCheckResult.success) {
-    return { error: creditCheckResult.error || "Credit deduction failed for Image-to-Post." };
-  }
+  // Credit deduction is now handled client-side before this flow is called.
 
   try {
     const { output: promptOutput, usage } = await prompt(input);
@@ -114,8 +104,6 @@ const generatePostFromImageFlow = ai.defineFlow({
     
     return { 
         generatedPost: promptOutput.post,
-        creditsSpent: creditCheckResult.freePostUsedThisTime ? 0 : CREDIT_COSTS.IMAGE_TO_POST,
-        freePostUsed: creditCheckResult.freePostUsedThisTime 
     };
 
   } catch (e: any) {
@@ -124,7 +112,7 @@ const generatePostFromImageFlow = ai.defineFlow({
     if (e.data?.error?.message) {
         detailedErrorMessage += ` (AI Provider Error: ${e.data.error.message})`;
     }
-    // Consider refunding credits if AI call fails after deduction, though this can be complex
     return { error: detailedErrorMessage };
   }
 });
+
