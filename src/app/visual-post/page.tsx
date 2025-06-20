@@ -59,6 +59,10 @@ export default function VisualPostPage() {
   const [creditProcessedForCurrentImage, setCreditProcessedForCurrentImage] = useState<boolean>(false);
   const [isProcessingCredits, setIsProcessingCredits] = useState<boolean>(false);
 
+  // States to track previous inputs for regeneration cost logic
+  const [previousUserText, setPreviousUserText] = useState<string | null>(null);
+  const [previousSelectedTone, setPreviousSelectedTone] = useState<Tone | null>(null);
+
 
   useEffect(() => {
     setIsClient(true);
@@ -69,7 +73,7 @@ export default function VisualPostPage() {
       const storedImage = localStorage.getItem('sagepostai_visual_post_image');
       if (storedImage) {
         setImageDataUri(storedImage); 
-        setCreditProcessedForCurrentImage(false); // Ensure credit check for image from storage
+        setCreditProcessedForCurrentImage(false); 
         localStorage.removeItem('sagepostai_visual_post_image');
       }
       setInitialStorageCheckDone(true); 
@@ -80,14 +84,14 @@ export default function VisualPostPage() {
   useEffect(() => {
     const processImageAndGenerate = async () => {
         if (!imageDataUri || !isClient ) {
-            return; // Don't proceed if no image or not client-side
+            return; 
         }
         
-        if (!userIdToPass) { // Handle guest user or user not yet loaded
+        if (!userIdToPass) { 
             setGeneratedPost('');
             setError(null);
-            setIsLoading(false); // Ensure loading is off if we bail early
-            if(imageDataUri) { // Only toast if an image was actually loaded by guest
+            setIsLoading(false); 
+            if(imageDataUri) { 
                  toast({
                     title: "Login Required",
                     description: "Please log in to generate posts from images.",
@@ -100,56 +104,107 @@ export default function VisualPostPage() {
         setIsLoading(true);
         setError(null);
 
-        const generationInput: GeneratePostFromImageInput = {
-            imageDataUri,
-            userContext: userText || undefined,
-            tone: selectedTone,
-            userId: userIdToPass,
-        };
+        let costKeyForThisOperation: keyof typeof CREDIT_COSTS | null = null;
+        let isRegenerationOp = false;
 
+        // Determine if this is an initial generation or a regeneration
+        if (!creditProcessedForCurrentImage) {
+            costKeyForThisOperation = 'IMAGE_TO_POST'; // Initial 60 credit charge or free use
+        } else if ( (userText !== previousUserText && previousUserText !== null) || 
+                    (selectedTone !== previousSelectedTone && previousSelectedTone !== null) ) {
+            // Only consider it a regeneration if previousUserText/Tone was set, meaning it's not the very first run after image upload
+            costKeyForThisOperation = 'IMAGE_TO_POST_REGENERATE'; // 5 credit charge
+            isRegenerationOp = true;
+        } else if (previousUserText === null && previousSelectedTone === null && !generatedPost){
+             // This handles the very first generation attempt after an image is loaded and creditProcessedForCurrentImage became true.
+             // No additional cost here, as the IMAGE_TO_POST cost (or free use) was already applied.
+             console.log("[VisualPostPage] First generation after initial credit processing. No new cost.");
+        } else {
+            // No relevant input (userText/selectedTone) changed for regeneration, and it's not initial processing.
+            // Or, it is the very first run for a new image but something went wrong before this (should be rare).
+            // If there's already a post, and no inputs changed, don't do anything.
+            if (generatedPost && userText === previousUserText && selectedTone === previousSelectedTone) {
+              setIsLoading(false);
+              return;
+            }
+            // If no post yet, but it's not the first time for *this image*, implies a state reset,
+            // no new cost as initial was handled.
+        }
+        
         let canProceedWithGeneration = true;
 
-        if (!creditProcessedForCurrentImage) {
+        if (costKeyForThisOperation) {
             setIsProcessingCredits(true);
-            const creditCheckResult = await deductCredits(userIdToPass, 'IMAGE_TO_POST');
+            const creditCheckResult = await deductCredits(userIdToPass, costKeyForThisOperation);
             setIsProcessingCredits(false);
 
             if (!creditCheckResult.success) {
-                toast({ variant: "destructive", title: "Credit Deduction Failed", description: creditCheckResult.error || "Could not process credits for Image-to-Post." });
-                setGeneratedPost(''); // Clear any old post
-                canProceedWithGeneration = false;
-            } else {
+                toast({ variant: "destructive", title: "Credit Error", description: creditCheckResult.error || `Could not process credits.` });
+                setGeneratedPost(prev => prev || ''); 
+                setIsLoading(false);
+                return; 
+            }
+            
+            if (!isRegenerationOp && costKeyForThisOperation === 'IMAGE_TO_POST') { // Initial processing
                 setCreditProcessedForCurrentImage(true); 
                 if (creditCheckResult.freePostUsedThisTime) {
                     toast({ title: "Free Image Post Used!", description: "Your first Image-to-Post generation was on us!" });
-                } else if (CREDIT_COSTS.IMAGE_TO_POST > 0) {
-                    toast({ title: "Credits Used", description: `${CREDIT_COSTS.IMAGE_TO_POST} credits were used for this image generation.` });
+                } else if (CREDIT_COSTS[costKeyForThisOperation] > 0) {
+                    toast({ title: "Credits Used", description: `${CREDIT_COSTS[costKeyForThisOperation]} credits used for image processing.` });
                 }
+            } else if (isRegenerationOp && CREDIT_COSTS[costKeyForThisOperation] > 0) { // Regeneration cost
+                toast({ title: "Credits Used", description: `${CREDIT_COSTS[costKeyForThisOperation]} credits used for post regeneration.` });
             }
         }
+        
+        // Update previous values *after* credit check for the next comparison
+        // Only update if a generation is actually happening
+        if (canProceedWithGeneration) {
+            setPreviousUserText(userText);
+            setPreviousSelectedTone(selectedTone);
+        }
+
 
         if (canProceedWithGeneration) {
+            const generationInput: GeneratePostFromImageInput = {
+                imageDataUri,
+                userContext: userText || undefined,
+                tone: selectedTone,
+                userId: userIdToPass,
+            };
             try {
                 const result = await generatePostFromImage(generationInput);
                 if (result.error) {
                     setError(result.error);
-                    setGeneratedPost('');
+                    setGeneratedPost(prev => prev || '');
                     toast({ variant: "destructive", title: "Post Generation Failed", description: result.error });
                 } else {
                     setGeneratedPost(result.generatedPost || '');
                 }
             } catch (e: any) {
                 setError(e.message || "An unexpected error occurred during post generation.");
-                setGeneratedPost('');
+                setGeneratedPost(prev => prev || '');
                 toast({ variant: "destructive", title: "Error", description: e.message || "Failed to generate post." });
             }
         }
         setIsLoading(false);
     };
+    
+    // Only run if imageDataUri is present and it's not the very first load effect (where previousUserText/Tone are null)
+    // unless no post has been generated yet (initial generation for a new image).
+    if (imageDataUri && (userText !== previousUserText || selectedTone !== previousSelectedTone || !generatedPost || (previousUserText === null && previousSelectedTone === null) )) {
+      processImageAndGenerate();
+    } else if (!imageDataUri) { // Clear post if image is removed
+        setGeneratedPost('');
+        setError(null);
+        setCreditProcessedForCurrentImage(false);
+        setPreviousUserText(null);
+        setPreviousSelectedTone(null);
+    }
 
-    processImageAndGenerate();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [imageDataUri, userText, selectedTone, isClient, userIdToPass]); // creditProcessedForCurrentImage is NOT a dependency here
+  }, [imageDataUri, userText, selectedTone, isClient, userIdToPass]); // previousUserText/Tone are *not* dependencies. creditProcessedForCurrentImage removed as it's internal logic.
+
 
   const handleDirectImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -182,6 +237,8 @@ export default function VisualPostPage() {
           setError(null);
           setImageDataUri(result); 
           setCreditProcessedForCurrentImage(false); // Key: reset for new image
+          setPreviousUserText(null); // Reset for new image
+          setPreviousSelectedTone(null); // Reset for new image
         } else {
           toast({
             variant: "destructive",
@@ -230,7 +287,20 @@ export default function VisualPostPage() {
       toast({ title: "Missing Information", description: "Please provide instructions for the AI and ensure you are logged in.", variant: "destructive" });
       return;
     }
+    
     setIsAiSubmitting(true);
+
+    const creditCheckResult = await deductCredits(userIdToPass, 'AI_EDIT');
+    if (!creditCheckResult.success) {
+        toast({ variant: "destructive", title: "Credit Error", description: creditCheckResult.error || "Could not process credits for AI Edit." });
+        setIsAiSubmitting(false);
+        return;
+    }
+    if (CREDIT_COSTS.AI_EDIT > 0 && !creditCheckResult.freePostUsedThisTime) { // Assuming AI_EDIT doesn't have a specific free use flag, but check if it was otherwise free
+       toast({ title: "Credits Used", description: `${CREDIT_COSTS.AI_EDIT} credits used for AI Edit.` });
+    }
+
+
     try {
       const result = await generateEditedPost({
         originalPost: editingContent, 
@@ -428,7 +498,9 @@ export default function VisualPostPage() {
                   setGeneratedPost('');
                   setUserText('');
                   setError(null);
-                  setCreditProcessedForCurrentImage(false); // Reset credit flag
+                  setCreditProcessedForCurrentImage(false); 
+                  setPreviousUserText(null);
+                  setPreviousSelectedTone(null);
                 }}
                 className="border-primary text-primary hover:bg-primary/10 hover:border-purple-400 hover:text-purple-300 rounded-lg px-5 py-2.5 text-sm"
                 title="Clear current image and start over"
@@ -459,7 +531,7 @@ export default function VisualPostPage() {
 
               <motion.div initial={{ opacity: 0, y:10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
                 <Label htmlFor="userContext" className="text-lg font-medium text-purple-300 mb-2 block">
-                  Want to add a few words for deeper personalization?
+                  Want to add a few words for deeper personalization? <span className="text-xs text-slate-400">(Regenerates post, costs 5 credits)</span>
                 </Label>
                 <Textarea
                   id="userContext"
@@ -474,7 +546,7 @@ export default function VisualPostPage() {
 
               <motion.div initial={{ opacity: 0, y:10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
                 <Label className="text-lg font-medium text-purple-300 mb-3 block">
-                  Generate in a different tone:
+                  Generate in a different tone: <span className="text-xs text-slate-400">(Regenerates post, costs 5 credits)</span>
                 </Label>
                 <div className="flex flex-wrap gap-3">
                   {toneOptions.map(({ label, value, icon }) => {
@@ -531,7 +603,7 @@ export default function VisualPostPage() {
                    <div className="flex flex-col items-center justify-center p-6 rounded-lg bg-slate-700/50 min-h-[150px] text-slate-400 text-center">
                     <Icons.lock className="h-8 w-8 mb-3 text-primary"/>
                     <span className="text-lg">Please log in to generate and view your post.</span>
-                     <Link href="/login?redirect=/visual-post" className="mt-3"> {/* Added redirect */}
+                     <Link href="/login?redirect=/visual-post" className="mt-3"> 
                         <Button variant="link" className="text-primary hover:text-purple-400">Go to Login</Button>
                     </Link>
                   </div>
@@ -594,7 +666,7 @@ export default function VisualPostPage() {
                 <DialogHeader>
                     <DialogTitle className="text-primary">Edit Generated Post</DialogTitle>
                     <DialogDescription className="text-slate-400">
-                        Manually refine the post or use AI to make further changes.
+                        Manually refine the post or use AI to make further changes (AI Edit costs 5 credits).
                     </DialogDescription>
                 </DialogHeader>
                 <Textarea
@@ -625,7 +697,7 @@ export default function VisualPostPage() {
                 <DialogHeader>
                     <DialogTitle className="text-primary">AI-Powered Editing</DialogTitle>
                     <DialogDescription className="text-slate-400">
-                        Tell the AI how you want to change the current post content.
+                        Tell the AI how you want to change the current post content. (Costs 5 credits)
                     </DialogDescription>
                 </DialogHeader>
                 <Textarea

@@ -38,7 +38,7 @@ export interface UserData {
   freeQuickPostUsed?: boolean;
   freeImageToPostUsed?: boolean;
   freeSmartCampaignAnglesUsed?: boolean;
-  freeSmartCampaignResearchTopicUsed?: boolean; // Added for consistency, though not yet in spec for free use
+  freeSmartCampaignResearchTopicUsed?: boolean; 
 }
 
 export interface Draft {
@@ -69,9 +69,10 @@ export const CREDIT_COSTS = {
   QUICK_POST: 20,
   QUICK_POST_REGENERATE: 5,
   IMAGE_TO_POST: 60,
+  IMAGE_TO_POST_REGENERATE: 5, // New cost for tone/context change
   SMART_CAMPAIGN_SUGGEST_ANGLE: 25,
-  SMART_CAMPAIGN_RESEARCH_TOPIC: 30, // New cost
-  AI_EDIT: 5,
+  SMART_CAMPAIGN_RESEARCH_TOPIC: 30,
+  AI_EDIT: 5, // This will be used for AI edit in visual-post as well
   TREND_EXPLORER_FETCH: 0,
 };
 
@@ -79,8 +80,9 @@ export enum CreditTransactionType {
   FEATURE_USE_QUICK_POST = 'feature_use_quick_post',
   FEATURE_USE_QUICK_POST_REGENERATE = 'feature_use_quick_post_regenerate',
   FEATURE_USE_IMAGE_TO_POST = 'feature_use_image_to_post',
+  FEATURE_USE_IMAGE_TO_POST_REGENERATE = 'feature_use_image_to_post_regenerate',
   FEATURE_USE_SMART_CAMPAIGN_SUGGEST_ANGLES = 'feature_use_smart_campaign_suggest_angles',
-  FEATURE_USE_SMART_CAMPAIGN_RESEARCH_TOPIC = 'feature_use_smart_campaign_research_topic', // New type
+  FEATURE_USE_SMART_CAMPAIGN_RESEARCH_TOPIC = 'feature_use_smart_campaign_research_topic',
   FEATURE_USE_AI_EDIT = 'feature_use_ai_edit',
   INITIAL_CREDITS = 'initial_credits_free_plan',
 }
@@ -236,10 +238,10 @@ export const getUserData = async (uid: string, userForCreation?: FirebaseAuthUse
 export const deductCredits = async (
   userId: string,
   featureKey: keyof typeof CREDIT_COSTS,
-  isRegeneration: boolean = false, // This flag is specific to Quick Post regeneration for now
+  isRegeneration: boolean = false, // Primarily for Quick Post, now potentially less needed for IMAGE_TO_POST itself
   numUnits: number = 1
 ): Promise<{ success: boolean; error?: string; newCredits?: number; freePostUsedThisTime?: boolean }> => {
-  console.log(`[deductCredits] Attempting for user: ${userId}, feature: ${featureKey}, isRegen: ${isRegeneration}, units: ${numUnits}`);
+  console.log(`[deductCredits] Attempting for user: ${userId}, feature: ${featureKey}, isRegen (context): ${isRegeneration}, units: ${numUnits}`);
   if (!userId) return { success: false, error: "User ID not provided." };
 
   let userData;
@@ -257,7 +259,7 @@ export const deductCredits = async (
 
 
   if (userData.plan === 'infinity') {
-    console.log(`[deductCredits] User ${userId} is on infinity plan. No credits deducted.`);
+    console.log(`[deductCredits] User ${userId} is on infinity plan. No credits deducted for ${featureKey}.`);
     return { success: true, newCredits: userData.credits, freePostUsedThisTime: false };
   }
 
@@ -266,23 +268,25 @@ export const deductCredits = async (
   let freePostUsedThisTime = false;
   const updates: Partial<UserData> = {};
 
-  // Check for free uses (only if not a regeneration and featureKey matches one of the free types)
-  if (!isRegeneration) {
-    if (featureKey === 'QUICK_POST' && !userData.freeQuickPostUsed) {
-      updates.freeQuickPostUsed = true;
-      freePostUsedThisTime = true;
-      console.log(`[deductCredits] Using free Quick Post for user ${userId}.`);
-    } else if (featureKey === 'IMAGE_TO_POST' && !userData.freeImageToPostUsed) {
-      updates.freeImageToPostUsed = true;
-      freePostUsedThisTime = true;
-      console.log(`[deductCredits] Using free Image to Post for user ${userId}.`);
-    } else if (featureKey === 'SMART_CAMPAIGN_SUGGEST_ANGLE' && !userData.freeSmartCampaignAnglesUsed) {
-      updates.freeSmartCampaignAnglesUsed = true;
-      freePostUsedThisTime = true;
-      console.log(`[deductCredits] Using free Smart Campaign Angles for user ${userId}.`);
-    }
-    // No free use for AI_EDIT, SMART_CAMPAIGN_RESEARCH_TOPIC, or QUICK_POST_REGENERATE by default
+  // Check for free uses (only if not a regeneration type that explicitly skips free use)
+  // The `isRegeneration` flag is less relevant for IMAGE_TO_POST here since its free use is a one-time thing.
+  // The distinction between initial IMAGE_TO_POST and IMAGE_TO_POST_REGENERATE is handled by *which* featureKey is passed.
+  if (featureKey === 'QUICK_POST' && !isRegeneration && !userData.freeQuickPostUsed) {
+    updates.freeQuickPostUsed = true;
+    freePostUsedThisTime = true;
+    console.log(`[deductCredits] Using free Quick Post for user ${userId}.`);
+  } else if (featureKey === 'IMAGE_TO_POST' && !userData.freeImageToPostUsed) { 
+    // This is for the initial 60-credit equivalent free use
+    updates.freeImageToPostUsed = true;
+    freePostUsedThisTime = true;
+    console.log(`[deductCredits] Using free Image to Post (initial) for user ${userId}.`);
+  } else if (featureKey === 'SMART_CAMPAIGN_SUGGEST_ANGLE' && !userData.freeSmartCampaignAnglesUsed) {
+    updates.freeSmartCampaignAnglesUsed = true;
+    freePostUsedThisTime = true;
+    console.log(`[deductCredits] Using free Smart Campaign Angles for user ${userId}.`);
   }
+  // IMAGE_TO_POST_REGENERATE and AI_EDIT do not have their own "free use" flags; they always cost if not on infinity plan.
+  // SMART_CAMPAIGN_RESEARCH_TOPIC and QUICK_POST_REGENERATE also don't have specific free flags.
 
 
   if (freePostUsedThisTime) {
@@ -297,7 +301,8 @@ export const deductCredits = async (
   }
 
   // Calculate cost if not a free use
-  if (featureKey === 'QUICK_POST' && isRegeneration) { // Specific cost for regeneration
+  // The isRegeneration flag is specifically for QUICK_POST to distinguish initial vs regen cost
+  if (featureKey === 'QUICK_POST' && isRegeneration) { 
     cost = CREDIT_COSTS.QUICK_POST_REGENERATE * numUnits;
   } else {
     cost = CREDIT_COSTS[featureKey] * numUnits;
