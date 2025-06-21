@@ -66,7 +66,7 @@ export interface CampaignDraft {
 }
 
 export const CREDIT_COSTS = {
-  QUICK_POST: 20,
+  QUICK_POST: 10,
   QUICK_POST_REGENERATE: 5,
   IMAGE_TO_POST: 60,
   IMAGE_TO_POST_REGENERATE: 5,

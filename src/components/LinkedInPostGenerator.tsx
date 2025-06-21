@@ -7,6 +7,7 @@ import { generateLinkedInPosts } from "@/ai/flows/generate-linkedin-posts";
 import { motion } from 'framer-motion';
 import { useToast } from "@/hooks/use-toast";
 import { Icons } from "./icons";
+import { FEATURE_DESCRIPTIONS, CREDIT_COSTS } from "@/lib/firebaseUserActions";
 
 interface LinkedInPostGeneratorProps {
   topic: string;
@@ -24,8 +25,9 @@ export const LinkedInPostGenerator: React.FC<LinkedInPostGeneratorProps> = ({
   setParentPostsEmpty
 }) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [isRegenerating, setIsRegenerating] = useState<boolean>(false); // Added for consistency
+  const [isRegenerating, setIsRegenerating] = useState<boolean>(false);
   const [generatedPostsInternal, setGeneratedPostsInternal] = useState<string[]>([]);
+  const [initialGenerationProcessedForTopic, setInitialGenerationProcessedForTopic] = useState<boolean>(false);
   const { toast } = useToast();
 
   const buttonMotionProps = {
@@ -33,21 +35,35 @@ export const LinkedInPostGenerator: React.FC<LinkedInPostGeneratorProps> = ({
     whileTap: { scale: 0.95, transition: { type: "spring", stiffness: 400, damping: 17 } },
   };
 
-  const callGenerateFlow = useCallback(async (isRegen: boolean) => { // Added isRegen similar to Twitter
+  useEffect(() => {
+    setInitialGenerationProcessedForTopic(false);
+    setGeneratedPostsInternal([]);
+    setLinkedinPosts([]);
+  }, [topic, setLinkedinPosts]);
+
+  const callGenerateFlow = useCallback(async (isRegen: boolean) => {
     if (!topic || !userId || userId === "sagepostai-guest-user") {
       setGeneratedPostsInternal([]);
       setLinkedinPosts([]);
       return;
     }
 
-    if(isRegen) setIsRegenerating(true); else setIsLoading(true);
+    if (isRegen) {
+      setIsRegenerating(true);
+    } else {
+      if (initialGenerationProcessedForTopic) return;
+      setIsLoading(true);
+    }
+
     setGeneratedPostsInternal([]);
     setLinkedinPosts([]); 
+
     try {
-      // Assuming generateLinkedInPosts also takes userId and we can adapt it for credits.
-      // For now, let's assume it's similar to Twitter for error handling.
-      // TODO: Update generateLinkedInPosts flow to handle credits and return error/success.
-      const result = await generateLinkedInPosts({ topic: topic, numPosts: 3, userId }); 
+      if (!isRegen && !initialGenerationProcessedForTopic) {
+        setInitialGenerationProcessedForTopic(true);
+      }
+
+      const result = await generateLinkedInPosts({ topic: topic, numPosts: 3, userId, isRegeneration: isRegen }); 
       if (result.error) {
          toast({ variant: "destructive", title: "Generation Error", description: result.error });
          setGeneratedPostsInternal([]);
@@ -55,7 +71,13 @@ export const LinkedInPostGenerator: React.FC<LinkedInPostGeneratorProps> = ({
       } else {
         setGeneratedPostsInternal(result.posts || []);
         setLinkedinPosts(result.posts || []);
-        // TODO: Add toast for credit usage/free post if generateLinkedInPosts returns that info
+        
+        const featureKey: keyof typeof CREDIT_COSTS = isRegen ? 'QUICK_POST_REGENERATE' : 'QUICK_POST';
+        if (result.freePostUsed) {
+          toast({ title: "Free Action Used", description: `Your free ${FEATURE_DESCRIPTIONS[featureKey].toLowerCase()} was successful!` });
+        } else if (result.creditsSpent && result.creditsSpent > 0) {
+          toast({ title: "Credits Used", description: `${result.creditsSpent} credits used for ${FEATURE_DESCRIPTIONS[featureKey]}.`});
+        }
       }
     } catch (error: any) {
       console.error("Error generating LinkedIn posts:", error);
@@ -66,25 +88,29 @@ export const LinkedInPostGenerator: React.FC<LinkedInPostGeneratorProps> = ({
       });
       setGeneratedPostsInternal([]);
       setLinkedinPosts([]);
+      if (!isRegen) {
+        setInitialGenerationProcessedForTopic(false);
+      }
     } finally {
       if(isRegen) setIsRegenerating(false); else setIsLoading(false);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [topic, userId, toast, setLinkedinPosts]);
-
+  }, [topic, userId, toast, setLinkedinPosts, initialGenerationProcessedForTopic]);
 
   useEffect(() => {
-    if (topic && userId && userId !== "sagepostai-guest-user") {
-       callGenerateFlow(false); // Initial generation
-    } else {
+    const canGenerateInitial = topic && userId && userId !== "sagepostai-guest-user";
+    
+    if (canGenerateInitial && !initialGenerationProcessedForTopic && !isLoading) {
+        callGenerateFlow(false);
+    } else if (!canGenerateInitial) {
       setGeneratedPostsInternal([]);
       setLinkedinPosts([]);
     }
-  }, [topic, userId, callGenerateFlow]);
+  }, [topic, userId, initialGenerationProcessedForTopic, isLoading, callGenerateFlow]);
+
 
   const handleRegenerate = async () => {
     setParentPostsEmpty(); 
-    callGenerateFlow(true); // Call with isRegen true
+    callGenerateFlow(true);
   };
 
   const showPostsInThisCard = displayGeneratedPostsInCard && generatedPostsInternal.length > 0;
@@ -135,7 +161,7 @@ export const LinkedInPostGenerator: React.FC<LinkedInPostGeneratorProps> = ({
             onClick={handleRegenerate} 
             disabled={isLoading || isRegenerating || !canGenerate} 
             className="w-full bg-primary/80 hover:bg-primary text-primary-foreground transition-colors duration-200 flex items-center justify-center py-2.5"
-            title={!canGenerate ? "Please log in to regenerate posts." : "Regenerate LinkedIn Posts"}
+            title={!canGenerate ? "Please log in to regenerate posts." : `Regenerate LinkedIn Posts (${CREDIT_COSTS.QUICK_POST_REGENERATE} credits)`}
           >
           <Icons.refreshCw className="mr-2 h-4 w-4" /> 
           {generatedPostsInternal.length > 0 ? "Regenerate LinkedIn Posts" : "Generate LinkedIn Posts"}

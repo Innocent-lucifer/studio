@@ -11,19 +11,22 @@
 import {ai} from '@/ai/ai-instance';
 import {z}from 'genkit';
 import {researchTopic} from "@/ai/flows/research-topic";
-// import { getUserData, deductCredits, CREDIT_COSTS, CreditTransactionType } from '@/lib/firebaseUserActions'; 
+import { deductCredits, CREDIT_COSTS } from '@/lib/firebaseUserActions'; 
 
 const GenerateLinkedInPostsInputSchema = z.object({
   topic: z.string().describe('The topic to generate LinkedIn posts about. This might be a simple topic string or a more detailed researched summary.'),
   topicDisplay: z.string().optional().describe('The original, user-facing topic string, used for display and context if the main "topic" field contains a lengthy research summary.'),
   numPosts: z.number().describe('The number of LinkedIn posts to generate.'),
   userId: z.string().optional().describe('The ID of the user requesting the posts. Optional for now, to support guest users or scenarios where credits are not deducted.'),
+  isRegeneration: z.boolean().optional().default(false).describe('Whether this is a regeneration request, which may have a different cost.'),
 });
 export type GenerateLinkedInPostsInput = z.infer<typeof GenerateLinkedInPostsInputSchema>;
 
 const GenerateLinkedInPostsOutputSchema = z.object({
   posts: z.array(z.string()).describe('The generated LinkedIn posts.').optional(),
   error: z.string().optional().describe('An error message if generation failed.'),
+  creditsSpent: z.number().optional().describe('Number of credits spent for this operation.'),
+  freePostUsed: z.boolean().optional().describe('Indicates if a free post was used for this operation.'),
 });
 export type GenerateLinkedInPostsOutput = z.infer<typeof GenerateLinkedInPostsOutputSchema>;
 
@@ -38,7 +41,6 @@ const prompt = ai.definePrompt({
       topicForAI: z.string().describe('The topic or researched information to generate LinkedIn posts about.'),
       displayTopic: z.string().describe('The original user-facing topic, for context in the prompt.'),
       numPosts: z.number().describe('The number of LinkedIn posts to generate.'),
-      // researchedInformation: z.string().describe('The researched information about the topic.'), // Now part of topicForAI
       postNumbers: z.array(z.number()).describe('The numbers of the posts to generate')
     }),
   },
@@ -74,43 +76,37 @@ const generateLinkedInPostsFlow = ai.defineFlow(
     outputSchema: GenerateLinkedInPostsOutputSchema,
   },
   async (input) => {
-    // console.log(`[generateLinkedInPostsFlow] User: ${input.userId || 'Guest'}, Topic: ${input.topicDisplay || input.topic}`);
-    // if (input.userId) { // Credit check temporarily disabled
-    //   const userData = await getUserData(input.userId);
-    //   if (!userData) {
-    //     return { error: "User data not found. Cannot generate posts." };
-    //   }
-    //   if (userData.plan !== 'infinity' && (userData.credits || 0) < CREDIT_COSTS.QUICK_POST_GENERATION) {
-    //     return { error: `Insufficient credits. Need ${CREDIT_COSTS.QUICK_POST_GENERATION}, have ${userData.credits || 0}.` };
-    //   }
-    // }
+    if (!input.userId) {
+      return { error: "User ID is required for credit deduction." };
+    }
 
-    const range = (numPosts: number) => {
-      const arr = [];
-      for (let i = 1; i <= numPosts; i++) {
-        arr.push(i);
-      }
-      return arr;
-    };
+    const costKey = input.isRegeneration ? 'QUICK_POST_REGENERATE' : 'QUICK_POST';
+    const creditCheckResult = await deductCredits(input.userId, costKey, input.isRegeneration);
+
+    if (!creditCheckResult.success) {
+      return { error: creditCheckResult.error || "Credit deduction failed." };
+    }
 
     try {
-      // The 'input.topic' might already be researched content if coming from Trend Explorer or Smart Campaign.
-      // If it's a simple topic string, research it.
       let researchedInformation = input.topic;
-      // Heuristic: if topic is short and no topicDisplay, assume it needs research.
-      // If topicDisplay is present, input.topic is likely already researched.
-      if ((!input.topicDisplay && input.topic.length < 100) || (input.topicDisplay && input.topic.length < 100 && input.topic === input.topicDisplay)) {
+      if (!input.isRegeneration && ((!input.topicDisplay && input.topic.length < 100) || (input.topicDisplay && input.topic.length < 100 && input.topic === input.topicDisplay))) {
          console.log(`[generateLinkedInPostsFlow] Short topic detected, performing research for: "${input.topic}"`);
-         const researchedInfoResult = await researchTopic({topic: input.topic, userId: input.userId}); // Pass userId for potential future use in research
+         const researchedInfoResult = await researchTopic({topic: input.topic, userId: input.userId});
          if (researchedInfoResult.error) {
-           // Proceed with the original topic if research fails, but log it
            console.warn(`[generateLinkedInPostsFlow] Research failed: ${researchedInfoResult.error}. Proceeding with basic topic.`);
-           researchedInformation = input.topic; // Fallback to original topic
+           researchedInformation = input.topic;
          } else {
            researchedInformation = researchedInfoResult.summary;
          }
       }
 
+      const range = (numPosts: number) => {
+        const arr = [];
+        for (let i = 1; i <= numPosts; i++) {
+          arr.push(i);
+        }
+        return arr;
+      };
 
       const postNumbers = range(input.numPosts);
       const {output: promptOutput} = await prompt({
@@ -124,22 +120,11 @@ const generateLinkedInPostsFlow = ai.defineFlow(
         return { error: "AI failed to generate LinkedIn posts content." };
       }
       
-      // if (input.userId) { // Credit deduction temporarily disabled
-      //   const deductionResult = await deductCredits(
-      //     input.userId,
-      //     CREDIT_COSTS.QUICK_POST_GENERATION,
-      //     `Generated LinkedIn posts for topic: ${input.topicDisplay || input.topic}`,
-      //     CreditTransactionType.FEATURE_USE_QUICK_POST,
-      //     'generateLinkedInPostsFlow'
-      //   );
-      //   if (!deductionResult.success) {
-      //     // Log error but still return posts if generated, as it's a post-operation deduction attempt
-      //     console.error(`[generateLinkedInPostsFlow] Credit deduction failed for user ${input.userId}: ${deductionResult.error}`);
-      //     // Potentially return a partial success message or specific error to user here
-      //   }
-      // }
-      
-      return { posts: promptOutput.posts };
+      return { 
+        posts: promptOutput.posts,
+        creditsSpent: creditCheckResult.freePostUsedThisTime ? 0 : CREDIT_COSTS[costKey],
+        freePostUsed: creditCheckResult.freePostUsedThisTime
+      };
 
     } catch (e: any) {
       console.error("[generateLinkedInPostsFlow] Error:", e);
@@ -147,5 +132,3 @@ const generateLinkedInPostsFlow = ai.defineFlow(
     }
   }
 );
-
-    
