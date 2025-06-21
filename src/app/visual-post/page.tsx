@@ -399,7 +399,7 @@ export default function VisualPostPage() {
   const commonFooter = (
       <footer className="text-center p-4 mt-12 text-slate-500 text-sm">
          <span className="relative group hover:text-primary transition-colors duration-300 cursor-default">
-            Built By EZ Teenagers
+            Built by EZ Teenagers
             <span className="absolute -bottom-0.5 left-0 w-full h-[1.5px] bg-primary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-out origin-left"></span>
           </span>
       </footer>
@@ -525,7 +525,7 @@ export default function VisualPostPage() {
 
               <motion.div initial={{ opacity: 0, y:10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
                 <Label htmlFor="userContext" className="text-lg font-medium text-purple-300 mb-2 block">
-                  Add a few words for deeper personalization? (Free for this image)
+                  Add a few words for deeper personalization?
                 </Label>
                 <Textarea
                   id="userContext"
@@ -721,3 +721,5 @@ export default function VisualPostPage() {
 
   return null;
 }
+
+    
