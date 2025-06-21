@@ -1,4 +1,3 @@
-
 "use client";
 
 import { TopicResearch } from "@/components/TopicResearch";
@@ -110,7 +109,7 @@ const QuickPostPageContent = () => {
         exit="out"
         variants={pageVariants}
         transition={{ duration: 0.5 }}
-        className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col items-center p-4 sm:p-8 transition-colors duration-500"
+        className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col items-center p-4 sm:p-6 md:p-8 transition-colors duration-500"
       >
         <main className="container mx-auto w-full max-w-4xl">
           <header className="flex justify-between items-center w-full mb-6 sm:mb-8 py-3 sm:py-4 px-4">
@@ -201,6 +200,7 @@ const QuickPostPageContent = () => {
                     setResearchedContent={setResearchedContent}
                     setIsLoading={setResearchIsLoading}
                     userId={userIdToPass} 
+                    isLoading={researchIsLoading}
                   />
                 </CardContent>
               </Card>

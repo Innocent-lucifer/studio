@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -11,11 +10,12 @@ import { Icons } from "./icons";
 import { deductCredits, CREDIT_COSTS, FEATURE_DESCRIPTIONS } from "@/lib/firebaseUserActions";
 
 interface TopicResearchProps {
-  initialTopic?: string; // New prop for pre-filling
+  initialTopic?: string;
   setTopic: (topic: string) => void;
   setResearchedContent: (content: string) => void;
   setIsLoading: (isLoading: boolean) => void;
   userId: string;
+  isLoading: boolean;
 }
 
 export const TopicResearch: React.FC<TopicResearchProps> = ({ 
@@ -23,13 +23,13 @@ export const TopicResearch: React.FC<TopicResearchProps> = ({
   setTopic, 
   setResearchedContent, 
   setIsLoading, 
-  userId 
+  userId,
+  isLoading,
 }) => {
   const [topicInput, setTopicInput] = useState<string>(initialTopic || "");
   const { toast } = useToast();
 
   useEffect(() => {
-    // If the initialTopic prop changes (e.g., from query params), update the input field
     if (initialTopic !== undefined) {
       setTopicInput(initialTopic);
     }
@@ -78,14 +78,13 @@ export const TopicResearch: React.FC<TopicResearchProps> = ({
     setIsLoading(true);
     setResearchedContent(""); 
     try {
-      // Use topicInput for research, which reflects the current input field value
       const result = await researchTopic({ topic: topicInput, userId: userId }); 
       if (result.error) {
         toast({ variant: "destructive", title: "Research Failed", description: result.error });
-        setTopic(topicInput); // Update parent's topic state with what was actually searched
+        setTopic(topicInput);
         setResearchedContent(`Error researching "${topicInput}": ${result.error}`);
       } else {
-        setTopic(topicInput); // Update parent's topic state
+        setTopic(topicInput);
         setResearchedContent(result.summary);
       }
     } catch (error: any) {
@@ -95,7 +94,7 @@ export const TopicResearch: React.FC<TopicResearchProps> = ({
         title: "Research Failed",
         description: error.message || "Failed to research topic. Please try again.",
       });
-      setTopic(topicInput); // Update parent's topic state
+      setTopic(topicInput);
       setResearchedContent(`Failed to research "${topicInput}". Please try again.`);
     } finally {
       setIsLoading(false);
@@ -118,15 +117,16 @@ export const TopicResearch: React.FC<TopicResearchProps> = ({
           className="w-full sm:flex-grow bg-slate-700 border-slate-600 placeholder-slate-400 text-white focus:ring-primary focus:border-primary"
           aria-label="Topic for research"
           onKeyDown={(e) => { if (e.key === 'Enter') handleResearchTopic(); }}
+          disabled={isLoading}
         />
         <motion.div {...buttonMotionProps} className="w-full sm:w-auto">
           <Button
             onClick={handleResearchTopic}
-            disabled={!topicInput.trim()}
-            className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-2 rounded-md" 
+            disabled={!topicInput.trim() || isLoading}
+            className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-2 rounded-md disabled:opacity-60" 
           >
-            <Icons.search /> 
-            Research
+            {isLoading ? <Icons.loader className="mr-2 h-4 w-4 animate-spin" /> : <Icons.search />} 
+            {isLoading ? "Researching..." : "Research"}
           </Button>
         </motion.div>
       </div>
