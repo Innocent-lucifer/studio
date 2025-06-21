@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from 'next/link';
@@ -138,7 +137,9 @@ export default function AppHomePage() {
             Welcome, {displayName}!
           </h1>
           <p className="text-lg sm:text-xl md:text-2xl text-slate-300 max-w-3xl mx-auto">
-            Turn ideas, images, and vibes into scroll-stopping social posts. Select your mode to begin.
+            Turn <span className="font-semibold text-purple-400">ideas</span>, <span className="font-semibold text-pink-500">images</span>, and <span className="font-semibold text-orange-400">vibes</span> into scroll-stopping social posts.
+            <br />
+            Select your mode to begin.
           </p>
         </motion.section>
 
