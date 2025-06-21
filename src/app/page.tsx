@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from 'next/link';
@@ -9,6 +8,7 @@ import { HamburgerMenu } from '@/components/HamburgerMenu';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 import React, { useEffect, useState } from 'react'; // Import React
+import { useRouter } from 'next/navigation';
 
 interface FeatureCardProps {
   icon: keyof typeof Icons;
