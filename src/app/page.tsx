@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -9,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 import React, { useEffect, useState } from 'react'; // Import React
 import { useRouter } from 'next/navigation';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface FeatureCardProps {
   icon: keyof typeof Icons;
@@ -16,6 +18,7 @@ interface FeatureCardProps {
   description: string;
   href: string;
   delay?: number;
+  tooltipText: string;
 }
 
 const extractNameFromEmail = (email: string | undefined | null): string => {
@@ -29,42 +32,51 @@ const extractNameFromEmail = (email: string | undefined | null): string => {
 };
 
 
-const FeatureCardComponent: React.FC<FeatureCardProps> = ({ icon, title, description, href, delay = 0 }) => {
+const FeatureCardComponent: React.FC<FeatureCardProps> = ({ icon, title, description, href, delay = 0, tooltipText }) => {
   const IconComponent = Icons[icon] || Icons.help;
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 50 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 0.2 + delay, ease: "easeOut" }}
-      whileHover={{ scale: 1.03, boxShadow: "0px 10px 30px -5px hsl(var(--primary)/0.3)" }}
-      className="group"
-    >
-      <Link href={href} passHref legacyBehavior={false}>
-        <div className="bg-slate-800/50 backdrop-blur-lg border border-slate-700/60 rounded-2xl p-6 sm:p-8 h-full flex flex-col cursor-pointer transition-all duration-300 hover:border-primary/50 hover:shadow-2xl hover:shadow-primary/20">
-          <div className="mb-4 sm:mb-6">
-            <IconComponent className="h-10 w-10 sm:h-12 sm:w-12 text-primary group-hover:text-purple-400 transition-colors duration-300" />
-          </div>
-          <h3 className="text-xl sm:text-2xl font-semibold text-slate-100 mb-2 sm:mb-3 group-hover:text-primary transition-colors duration-300">
-            {title}
-          </h3>
-          <p className="text-slate-400 text-sm sm:text-base leading-relaxed mb-4 sm:mb-6 flex-grow">
-            {description}
-          </p>
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
           <motion.div
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="mt-auto self-start w-full sm:w-auto"
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 + delay, ease: "easeOut" }}
+            whileHover={{ scale: 1.03, boxShadow: "0px 10px 30px -5px hsl(var(--primary)/0.3)" }}
+            className="group"
           >
-            <Button
-              variant="outline"
-              className="w-full bg-primary/10 border-primary/50 text-primary group-hover:bg-primary/20 group-hover:border-primary/70 group-hover:text-purple-300 transition-all duration-300 ease-in-out"
-            >
-              Launch Tool <Icons.arrowRight className="ml-2 h-4 w-4" />
-            </Button>
+            <Link href={href} passHref legacyBehavior={false}>
+              <div className="bg-slate-800/50 backdrop-blur-lg border border-slate-700/60 rounded-2xl p-6 sm:p-8 h-full flex flex-col cursor-pointer transition-all duration-300 hover:border-primary/50 hover:shadow-2xl hover:shadow-primary/20">
+                <div className="mb-4 sm:mb-6">
+                  <IconComponent className="h-10 w-10 sm:h-12 sm:w-12 text-primary group-hover:text-purple-400 transition-colors duration-300" />
+                </div>
+                <h3 className="text-xl sm:text-2xl font-semibold text-slate-100 mb-2 sm:mb-3 group-hover:text-primary transition-colors duration-300">
+                  {title}
+                </h3>
+                <p className="text-slate-400 text-sm sm:text-base leading-relaxed mb-4 sm:mb-6 flex-grow">
+                  {description}
+                </p>
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="mt-auto self-start w-full sm:w-auto"
+                >
+                  <Button
+                    variant="outline"
+                    className="w-full bg-primary/10 border-primary/50 text-primary group-hover:bg-primary/20 group-hover:border-primary/70 group-hover:text-purple-300 transition-all duration-300 ease-in-out"
+                  >
+                    Launch Tool <Icons.arrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </motion.div>
+              </div>
+            </Link>
           </motion.div>
-        </div>
-      </Link>
-    </motion.div>
+        </TooltipTrigger>
+        <TooltipContent className="bg-slate-800 text-slate-200 border-slate-700 shadow-lg">
+          <p>{tooltipText}</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 };
 const FeatureCard = React.memo(FeatureCardComponent);
@@ -150,6 +162,7 @@ export default function AppHomePage() {
             description="Research any topic and instantly generate engaging drafts for Twitter and LinkedIn. Perfect for rapid content creation."
             href="/quick-post"
             delay={0}
+            tooltipText="Best for quick, daily content ideas and inspiration."
           />
           <FeatureCard
             icon="image"
@@ -157,6 +170,7 @@ export default function AppHomePage() {
             description="Upload an image and let our AI craft a personalized, descriptive social media post based on its content and your chosen tone."
             href="/visual-post"
             delay={0.1}
+            tooltipText="Turn your photos into compelling stories."
           />
           <FeatureCard
             icon="sparkles"
@@ -164,6 +178,7 @@ export default function AppHomePage() {
             description="Create cohesive multi-post campaigns. Select content angles, generate series for different platforms, and get repurposing ideas."
             href="/smart-campaign"
             delay={0.2}
+            tooltipText="Perfect for creating strategic, multi-post marketing campaigns."
           />
           <FeatureCard
             icon="flame"
@@ -171,6 +186,7 @@ export default function AppHomePage() {
             description="Discover what's buzzing on social media. Explore trending topics across platforms and categories to inspire your next viral post."
             href="/trends"
             delay={0.3}
+            tooltipText="Stay relevant by tapping into current conversations."
           />
         </section>
       </main>
