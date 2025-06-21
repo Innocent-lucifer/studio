@@ -131,32 +131,30 @@ const QuickPostPageContent = () => {
               </Link>
             </div>
 
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="hidden sm:flex">
-                 <motion.div {...buttonMotionProps}>
-                    <Link
-                      href={{
-                        pathname: '/smart-campaign',
-                        query: { topic: topic, researchedContent: researchedContent },
-                      }}
-                      passHref
-                      legacyBehavior={false}
-                      aria-disabled={!canProceedToSmartCampaign}
-                      onClick={(e) => !canProceedToSmartCampaign && e.preventDefault()}
+            <div className="hidden sm:flex items-center gap-2 sm:gap-3">
+               <motion.div {...buttonMotionProps}>
+                  <Link
+                    href={{
+                      pathname: '/smart-campaign',
+                      query: { topic: topic, researchedContent: researchedContent },
+                    }}
+                    passHref
+                    legacyBehavior={false}
+                    aria-disabled={!canProceedToSmartCampaign}
+                    onClick={(e) => !canProceedToSmartCampaign && e.preventDefault()}
+                  >
+                    <Button
+                      variant="outline"
+                      className="border-purple-500 text-purple-400 hover:bg-purple-500/20 hover:text-purple-300 transition-all duration-200 ease-in-out shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                      size="sm"
+                      disabled={!canProceedToSmartCampaign}
+                      title={!canProceedToSmartCampaign ? "Please research a topic first" : "Go to Smart Campaign"}
                     >
-                      <Button
-                        variant="outline"
-                        className="border-purple-500 text-purple-400 hover:bg-purple-500/20 hover:text-purple-300 transition-all duration-200 ease-in-out shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                        size="sm"
-                        disabled={!canProceedToSmartCampaign}
-                        title={!canProceedToSmartCampaign ? "Please research a topic first" : "Go to Smart Campaign"}
-                      >
-                        <Icons.sparkles className="mr-1 h-4 w-4" />
-                        Smart Campaign
-                      </Button>
-                    </Link>
-                  </motion.div>
-              </div>
+                      <Icons.sparkles className="mr-1 h-4 w-4" />
+                      Smart Campaign
+                    </Button>
+                  </Link>
+                </motion.div>
             </div>
           </header>
           
@@ -175,6 +173,7 @@ const QuickPostPageContent = () => {
                 >
                   <Button
                     variant="outline"
+                    size="lg"
                     className="w-full border-purple-500 text-purple-400 hover:bg-purple-500/20 hover:text-purple-300 disabled:opacity-50 disabled:cursor-not-allowed"
                     disabled={!canProceedToSmartCampaign}
                     title={!canProceedToSmartCampaign ? "Please research a topic first" : "Go to Smart Campaign"}

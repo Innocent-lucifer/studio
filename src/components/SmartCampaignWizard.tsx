@@ -775,7 +775,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
               {isLoading && loadingMessage.includes("Brainstorming") ? (
                  renderLoadingState(loadingMessage)
               ) : angles.length > 0 ? (
-                <ScrollArea className="h-[300px] pr-3">
+                <ScrollArea className="h-[300px] md:h-[350px] pr-3">
                   <motion.div variants={listContainerVariants} initial="hidden" animate="visible">
                     <RadioGroup 
                       value={selectedAngle?.title}
@@ -895,7 +895,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
                             <CardTitle className="flex items-center text-lg text-sky-400"><Icons.twitter className="mr-2 h-5 w-5" /> Twitter Thread</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-3">
-                            <ScrollArea className="h-[300px] pr-2">
+                            <ScrollArea className="h-[300px] md:h-[400px] pr-2">
                             {twitterSeries.length > 0 ? twitterSeries.map((post, index) => (
                                 <CampaignPostItem
                                   key={`twitter-series-${index}`}
@@ -918,7 +918,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
                             <CardTitle className="flex items-center text-lg text-blue-400"><Icons.linkedin className="mr-2 h-5 w-5" /> LinkedIn Series</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-3">
-                            <ScrollArea className="h-[300px] pr-2">
+                            <ScrollArea className="h-[300px] md:h-[400px] pr-2">
                                 {linkedinSeries.length > 0 ? linkedinSeries.map((post, index) => (
                                   <CampaignPostItem
                                     key={`linkedin-series-${index}`}
@@ -1026,7 +1026,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
                             <CardTitle className="flex items-center text-lg text-sky-400"><Icons.twitter className="mr-2 h-5 w-5" /> For Your Twitter Series</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <ScrollArea className="h-[250px] pr-2">
+                            <ScrollArea className="h-[250px] md:h-[300px] pr-2">
                                 {twitterRepurposingIdeas.length > 0 ? (
                                     <ul className="list-disc list-inside space-y-2 text-slate-300">
                                         {twitterRepurposingIdeas.map((idea, index) => (
@@ -1053,7 +1053,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
                             <CardTitle className="flex items-center text-lg text-blue-400"><Icons.linkedin className="mr-2 h-5 w-5" /> For Your LinkedIn Series</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <ScrollArea className="h-[250px] pr-2">
+                            <ScrollArea className="h-[250px] md:h-[300px] pr-2">
                                 {linkedinRepurposingIdeas.length > 0 ? (
                                     <ul className="list-disc list-inside space-y-2 text-slate-300">
                                         {linkedinRepurposingIdeas.map((idea, index) => (

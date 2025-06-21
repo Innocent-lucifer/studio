@@ -478,7 +478,7 @@ export default function VisualPostPage() {
           {commonHeader}
           <Card className="bg-slate-800/60 backdrop-blur-md border border-slate-700 shadow-2xl hover:shadow-primary/20 transition-shadow duration-300 rounded-2xl p-6 sm:p-8">
             <motion.div 
-              className="mb-6 flex flex-col sm:flex-row sm:justify-between gap-3"
+              className="mb-6 flex flex-col sm:flex-row sm:justify-between gap-3 [&>button]:w-full sm:[&>button]:w-auto"
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: 0.1 }}
@@ -614,7 +614,7 @@ export default function VisualPostPage() {
               </motion.div>
 
               {!isLoading && !isProcessingCredits && generatedPost && (
-                <motion.div className="flex flex-wrap gap-3 mt-8" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{delay: 0.4}}>
+                <motion.div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:gap-3 mt-8" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{delay: 0.4}}>
                   <Button 
                     onClick={handleOpenEditModal}
                     disabled={!userIdToPass || isLoading || isProcessingCredits}

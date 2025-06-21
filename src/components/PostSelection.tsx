@@ -291,7 +291,7 @@ export const PostSelection: React.FC<PostSelectionProps> = ({
     >
       <div>
         <h3 className="text-lg font-semibold mb-3 text-primary flex items-center"><Icons.twitter className="mr-2 h-5 w-5" />Twitter Posts</h3>
-        <ScrollArea className="h-[250px] pr-3">
+        <ScrollArea className="h-[250px] md:h-[350px] pr-3">
         <div className="space-y-3">
           {twitterPosts.map((post, index) => (
             <PostDisplayItem
@@ -313,7 +313,7 @@ export const PostSelection: React.FC<PostSelectionProps> = ({
 
       <div>
         <h3 className="text-lg font-semibold mb-3 text-primary flex items-center"><Icons.linkedin className="mr-2 h-5 w-5" />LinkedIn Posts</h3>
-         <ScrollArea className="h-[250px] pr-3">
+         <ScrollArea className="h-[250px] md:h-[350px] pr-3">
         <div className="space-y-3">
           {linkedinPosts.map((post, index) => (
              <PostDisplayItem

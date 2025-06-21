@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -8,7 +9,6 @@ import { HamburgerMenu } from '@/components/HamburgerMenu';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 import React, { useEffect, useState } from 'react'; // Import React
-import { useRouter } from 'next/navigation';
 
 interface FeatureCardProps {
   icon: keyof typeof Icons;
@@ -126,7 +126,7 @@ export default function AppHomePage() {
         </div>
       </header>
 
-      <main className="container mx-auto max-w-5xl flex-grow flex flex-col items-center text-center px-2 sm:px-4">
+      <main className="container mx-auto max-w-6xl flex-grow flex flex-col items-center text-center px-2 sm:px-4">
         <motion.section
           initial={{ opacity: 0, y: -30 }}
           animate={{ opacity: 1, y: 0 }}
