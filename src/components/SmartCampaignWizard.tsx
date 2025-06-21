@@ -372,7 +372,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
         toast({ title: "Regenerating Posts", description: `Regenerating posts for '${selectedAngle.title}' (no extra cost for this research batch).` });
         proceedWithGeneration = true;
     } else if (generatedAnglesForCurrentResearch.size === 0) {
-        // Removed the specific toast "First Angle Generation: Generating posts for your first angle... (covered by research fee)"
+        // First angle is free (covered by research fee), no explicit toast needed
         proceedWithGeneration = true;
     } else {
         costForThisAngleGeneration = 'SMART_CAMPAIGN_ADDITIONAL_ANGLE';
@@ -1225,7 +1225,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
             )}
             {authLoading && <p className="text-xs text-slate-500 pt-1">Checking authentication...</p>}
           </CardHeader>
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             <AnimatePresence mode="wait">
               {authLoading ? renderLoadingState("Initializing...") : renderStepContent()}
             </AnimatePresence>
@@ -1309,4 +1309,3 @@ export const SmartCampaignWizard: React.FC = () => {
     </Suspense>
   );
 };
-

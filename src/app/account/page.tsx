@@ -84,7 +84,7 @@ export default function AccountPage() {
         <motion.div variants={cardVariants} initial="initial" animate="animate">
         <Card className="bg-slate-800/60 backdrop-blur-md border border-slate-700 shadow-xl rounded-xl">
           <CardHeader>
-            <CardTitle className="text-3xl font-semibold text-primary">Account Overview</CardTitle>
+            <CardTitle className="text-2xl sm:text-3xl font-semibold text-primary">Account Overview</CardTitle>
             <CardDescription className="text-slate-400">Manage your account details and saved content.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -109,7 +109,7 @@ export default function AccountPage() {
               <p className="text-sm text-slate-300">
                 Available Credits: <span className="font-semibold text-purple-400">{userData?.credits ?? 'Loading...'}</span>
               </p>
-              <Button variant="outline" className="mt-2 border-primary text-primary hover:bg-primary/10" disabled>
+              <Button variant="outline" className="mt-2 w-full sm:w-auto border-primary text-primary hover:bg-primary/10" disabled>
                 Manage Subscription / Buy Credits (Coming Soon)
               </Button>
             </div>
@@ -122,7 +122,7 @@ export default function AccountPage() {
                 <p className="text-slate-400 text-sm mb-4 max-w-md mx-auto">
                     Access all your saved post ideas, visual post drafts, and full smart campaigns in one organized place.
                 </p>
-                <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-lg transition-all">
+                <Button asChild size="lg" className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-lg transition-all">
                     <Link href="/saved-drafts">
                         <Icons.eye className="mr-2 h-5 w-5" /> View My Saved Content
                     </Link>

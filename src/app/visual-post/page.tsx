@@ -69,7 +69,7 @@ export default function VisualPostPage() {
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedUserText(userText);
-    }, 500); 
+    }, 1000); 
 
     return () => {
       clearTimeout(handler);

@@ -318,7 +318,7 @@ export default function SavedDraftsPage() {
         <motion.div variants={cardVariants} initial="initial" animate="animate">
           <Card className="bg-slate-800/60 backdrop-blur-md border border-slate-700 shadow-xl rounded-xl">
             <CardHeader>
-              <CardTitle className="text-3xl font-semibold text-primary flex items-center">
+              <CardTitle className="text-2xl sm:text-3xl font-semibold text-primary flex items-center">
                 {React.createElement(pageIcon, { className: "mr-3 h-8 w-8"})}
                 {pageTitle}
               </CardTitle>
@@ -458,4 +458,3 @@ export default function SavedDraftsPage() {
     </div>
   );
 }
-
