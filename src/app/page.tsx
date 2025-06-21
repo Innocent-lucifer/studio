@@ -22,12 +22,13 @@ interface FeatureCardProps {
 const extractNameFromEmail = (email: string | undefined | null): string => {
   if (!email) return "Guest";
   let namePart = email.split('@')[0];
-  namePart = namePart.replace(/[._]/g, ' ');
-  return namePart
-    .split(' ')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
+  // Replace common separators with a space
+  namePart = namePart.replace(/[._-]/g, ' ');
+  // Take the first word and capitalize it
+  const firstName = namePart.split(' ')[0];
+  return firstName.charAt(0).toUpperCase() + firstName.slice(1);
 };
+
 
 const FeatureCardComponent: React.FC<FeatureCardProps> = ({ icon, title, description, href, delay = 0 }) => {
   const IconComponent = Icons[icon] || Icons.help;
@@ -74,7 +75,6 @@ export default function AppHomePage() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const [displayName, setDisplayName] = useState<string>("Guest");
-  const [isMobileDisplay, setIsMobileDisplay] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -83,26 +83,12 @@ export default function AppHomePage() {
   }, [user, loading, router]);
   
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobileDisplay(window.innerWidth < 768); // md breakpoint
-    };
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-
-  useEffect(() => {
     if (user?.email) {
-      if (isMobileDisplay) {
-        setDisplayName(extractNameFromEmail(user.email));
-      } else {
-        setDisplayName(user.email);
-      }
+      setDisplayName(extractNameFromEmail(user.email));
     } else {
       setDisplayName("Guest");
     }
-  }, [user, isMobileDisplay]);
+  }, [user]);
 
 
   if (loading) {
@@ -127,7 +113,7 @@ export default function AppHomePage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col items-center p-4 sm:p-6 md:p-8 overflow-x-hidden">
       <header className="w-full max-w-6xl mx-auto py-4 sm:py-6 px-4 flex justify-between items-center">
         <div className="flex items-center space-x-2 sm:space-x-3">
-          <div> {/* Removed md:hidden */}
+          <div>
             <HamburgerMenu />
           </div>
           <Link href="/" passHref>
@@ -139,15 +125,6 @@ export default function AppHomePage() {
             </div>
           </Link>
         </div>
-        
-        <div className="flex items-center text-right">
-          <div className="text-xs">
-            <p className="font-semibold text-primary truncate max-w-[100px] sm:max-w-[150px] md:max-w-[200px]" title={user?.email || 'User'}>
-              {displayName}
-            </p>
-            <p className="text-slate-400">Welcome!</p>
-          </div>
-        </div>
       </header>
 
       <main className="container mx-auto max-w-5xl flex-grow flex flex-col items-center text-center px-2 sm:px-4">
@@ -158,14 +135,10 @@ export default function AppHomePage() {
           className="py-12 sm:py-16 md:py-20"
         >
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight mb-4 sm:mb-6 bg-gradient-to-r from-purple-400 via-pink-500 to-orange-400 bg-clip-text text-transparent">
-            Welcome to SagePostAI!
-            <br />
-            <span className="block pt-2 sm:pt-3">
-              Turn ideas, images, and vibes into scroll-stopping social posts.
-            </span>
+            Welcome, {displayName}!
           </h1>
-          <p className="text-lg sm:text-xl md:text-2xl text-slate-300 max-w-2xl mx-auto">
-            Select your mode to begin. All powered by AI. Styled by you.
+          <p className="text-lg sm:text-xl md:text-2xl text-slate-300 max-w-3xl mx-auto">
+            Turn ideas, images, and vibes into scroll-stopping social posts. Select your mode to begin.
           </p>
         </motion.section>
 
