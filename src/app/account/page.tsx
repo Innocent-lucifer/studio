@@ -109,7 +109,7 @@ export default function AccountPage() {
               <p className="text-sm text-slate-300">
                 Available Credits: <span className="font-semibold text-purple-400">{userData?.credits ?? 'Loading...'}</span>
               </p>
-              <Button variant="outline" className="mt-2 w-full sm:w-auto border-primary text-primary hover:bg-primary/10" disabled>
+              <Button variant="outline" className="mt-2 w-full sm:w-auto border-primary text-primary hover:bg-primary/10 whitespace-normal h-auto py-2" disabled>
                 Manage Subscription / Buy Credits (Coming Soon)
               </Button>
             </div>
