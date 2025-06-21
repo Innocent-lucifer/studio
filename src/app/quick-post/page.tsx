@@ -189,13 +189,13 @@ const QuickPostPageContent = () => {
           <motion.div variants={staggerChildren} initial="initial" animate="animate" className="px-4 sm:px-0">
             <motion.div {...cardMotionProps}>
               <Card className="mb-8 bg-slate-800/50 border-slate-700 shadow-2xl hover:shadow-primary/30 transition-shadow duration-300 rounded-xl">
-                <CardHeader>
+                <CardHeader className="p-6 sm:p-8">
                   <CardTitle className="text-2xl font-semibold text-center text-primary flex items-center justify-center">
                     <Icons.search className="mr-3 h-7 w-7" />
                     Research Your Topic
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-6 sm:p-8 pt-0">
                   <TopicResearch
                     initialTopic={topic}
                     setTopic={setTopic}
@@ -228,13 +228,13 @@ const QuickPostPageContent = () => {
                 >
                   <motion.div {...cardMotionProps}>
                     <Card className="bg-slate-800/50 border-slate-700 shadow-xl hover:shadow-primary/20 transition-shadow duration-300 rounded-xl">
-                      <CardHeader>
+                      <CardHeader className="p-6 sm:p-8">
                         <CardTitle className="text-xl font-semibold text-center text-primary flex items-center justify-center">
                           <Icons.twitter className="mr-2 h-6 w-6" />
                           Twitter Posts
                         </CardTitle>
                       </CardHeader>
-                      <CardContent>
+                      <CardContent className="p-6 sm:p-8">
                         <TwitterPostGenerator
                           topic={researchedContent || topic}
                           userId={userIdToPass}
@@ -248,13 +248,13 @@ const QuickPostPageContent = () => {
 
                   <motion.div {...cardMotionProps}>
                     <Card className="bg-slate-800/50 border-slate-700 shadow-xl hover:shadow-primary/20 transition-shadow duration-300 rounded-xl">
-                      <CardHeader>
+                      <CardHeader className="p-6 sm:p-8">
                         <CardTitle className="text-xl font-semibold text-center text-primary flex items-center justify-center">
                           <Icons.linkedin className="mr-2 h-6 w-6" />
                           LinkedIn Posts
                         </CardTitle>
                       </CardHeader>
-                      <CardContent>
+                      <CardContent className="p-6 sm:p-8">
                         <LinkedInPostGenerator
                           topic={researchedContent || topic}
                           userId={userIdToPass}
@@ -272,13 +272,13 @@ const QuickPostPageContent = () => {
             {!researchIsLoading && topic && researchedContent && showPostSelectionCard && (
               <motion.div {...cardMotionProps} className="mt-8">
                 <Card className="bg-slate-800/50 border-slate-700 shadow-2xl hover:shadow-primary/30 transition-shadow duration-300 rounded-xl">
-                  <CardHeader>
+                  <CardHeader className="p-6 sm:p-8">
                     <CardTitle className="text-2xl font-semibold text-center text-primary flex items-center justify-center">
                       <Icons.edit className="mr-3 h-7 w-7" />
                       Review & Refine Your Quick Posts
                     </CardTitle>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="p-6 sm:p-8">
                     <PostSelection
                       twitterPosts={twitterPosts}
                       linkedinPosts={linkedinPosts}

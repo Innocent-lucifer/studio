@@ -1201,7 +1201,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
         whileHover={{ scale: 1.01, boxShadow: "0px 10px 30px -5px hsl(var(--primary)/0.2)", transition: { type: "spring", stiffness: 300, damping: 10 } }}
       >
         <Card className="bg-slate-800/70 border-slate-700 shadow-2xl rounded-xl overflow-hidden transition-shadow duration-300">
-          <CardHeader className="border-b border-slate-700">
+          <CardHeader className="border-b border-slate-700 p-6 sm:p-8">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
               <div className="flex items-center space-x-3">
                 <CurrentIcon className="h-8 w-8 text-primary" />
@@ -1224,7 +1224,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
             )}
             {authLoading && <p className="text-xs text-slate-500 pt-1">Checking authentication...</p>}
           </CardHeader>
-          <CardContent className="p-4 sm:p-6">
+          <CardContent className="p-6 sm:p-8">
             <AnimatePresence mode="wait">
               {authLoading ? renderLoadingState("Initializing...") : renderStepContent()}
             </AnimatePresence>

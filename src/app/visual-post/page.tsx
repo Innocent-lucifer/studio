@@ -476,7 +476,7 @@ export default function VisualPostPage() {
       >
         <main className="container mx-auto w-full max-w-3xl">
           {commonHeader}
-          <Card className="bg-slate-800/60 backdrop-blur-md border border-slate-700 shadow-2xl hover:shadow-primary/20 transition-shadow duration-300 rounded-2xl p-4 sm:p-8">
+          <Card className="bg-slate-800/60 backdrop-blur-md border border-slate-700 shadow-2xl hover:shadow-primary/20 transition-shadow duration-300 rounded-2xl p-6 sm:p-8">
             <motion.div 
               className="mb-6 flex flex-col sm:flex-row sm:justify-between gap-3"
               initial={{ opacity: 0, y: -10 }}
