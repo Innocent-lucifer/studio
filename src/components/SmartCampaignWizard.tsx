@@ -372,7 +372,6 @@ const SmartCampaignWizardInternal: React.FC = () => {
         toast({ title: "Regenerating Posts", description: `Regenerating posts for '${selectedAngle.title}' (no extra cost for this research batch).` });
         proceedWithGeneration = true;
     } else if (generatedAnglesForCurrentResearch.size === 0) {
-        // First angle is free (covered by research fee), no explicit toast needed
         proceedWithGeneration = true;
     } else {
         costForThisAngleGeneration = 'SMART_CAMPAIGN_ADDITIONAL_ANGLE';
@@ -744,7 +743,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
                         size="lg"
                         className="bg-primary hover:bg-primary/90 text-primary-foreground sm:w-auto w-full disabled:opacity-60 h-12 text-base shadow-md"
                       >
-                        <Icons.search className="mr-2 h-5 w-5" />
+                         {isLoading && loadingMessage.includes("Researching") ? <Icons.loader className="mr-2 h-5 w-5 animate-spin" /> : <Icons.search className="mr-2 h-5 w-5" />}
                         Research Topic
                       </Button>
                     </TooltipTrigger>
@@ -820,7 +819,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
                       size="lg"
                       className="w-full bg-primary hover:bg-primary/90 text-primary-foreground mt-4 disabled:opacity-60"
                     >
-                      {isLoading && loadingMessage.includes("Crafting") ? <Icons.loader className="mr-2 h-5 w-5 animate-spin" /> : <Icons.listChecks className="mr-2 h-5 w-5" />}
+                        {isLoading && loadingMessage.includes("Crafting") ? <Icons.loader className="mr-2 h-5 w-5 animate-spin" /> : <Icons.listChecks className="mr-2 h-5 w-5" />}
                       Generate Campaign Series
                     </Button>
                   </TooltipTrigger>
@@ -838,7 +837,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
       case 'series':
           return (
             <motion.div key="series" {...cardMotionProps} className="space-y-6">
-              <div className="flex justify-between items-center">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
                 <h3 className="text-xl font-medium text-slate-200">Your Campaign Series for: <span className="text-purple-400">{selectedAngle?.title || 'Selected Angle'}</span></h3>
                 <TooltipProvider>
                   <Tooltip>
@@ -847,7 +846,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
                         onClick={handleSaveFullCampaign} 
                         variant="outline" 
                         size="sm"
-                        className="border-accent text-accent hover:bg-accent/10 disabled:opacity-60"
+                        className="border-accent text-accent hover:bg-accent/10 disabled:opacity-60 w-full sm:w-auto"
                         disabled={isSavingCampaign || !userIdToPass || !campaignTopic || !selectedAngle || !currentResearchedContent}
                       >
                         {isSavingCampaign ? <Icons.loader className="mr-2 h-4 w-4 animate-spin" /> : <Icons.archive className="mr-2 h-4 w-4" />}
