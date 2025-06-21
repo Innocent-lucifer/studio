@@ -77,14 +77,21 @@ const generateLinkedInPostsFlow = ai.defineFlow(
   },
   async (input) => {
     if (!input.userId) {
-      return { error: "User ID is required for credit deduction." };
+      return { error: "User ID is required for this operation." };
     }
+    
+    let creditsSpentForThisAction = 0;
 
-    const costKey = input.isRegeneration ? 'QUICK_POST_REGENERATE' : 'QUICK_POST';
-    const creditCheckResult = await deductCredits(input.userId, costKey, input.isRegeneration);
+    // Only deduct credits if it's a regeneration request.
+    // The initial cost is now handled upfront in the TopicResearch component.
+    if (input.isRegeneration) {
+        const costKey = 'QUICK_POST_REGENERATE';
+        const creditCheckResult = await deductCredits(input.userId, costKey, true);
 
-    if (!creditCheckResult.success) {
-      return { error: creditCheckResult.error || "Credit deduction failed." };
+        if (!creditCheckResult.success) {
+            return { error: creditCheckResult.error || "Credit deduction failed for regeneration." };
+        }
+        creditsSpentForThisAction = creditCheckResult.creditsSpent || 0;
     }
 
     try {
@@ -122,8 +129,9 @@ const generateLinkedInPostsFlow = ai.defineFlow(
       
       return { 
         posts: promptOutput.posts,
-        creditsSpent: creditCheckResult.freePostUsedThisTime ? 0 : CREDIT_COSTS[costKey],
-        freePostUsed: creditCheckResult.freePostUsedThisTime
+        creditsSpent: creditsSpentForThisAction,
+        // Free post usage is handled at the research step now
+        freePostUsed: false,
       };
 
     } catch (e: any) {

@@ -83,25 +83,32 @@ const generateTwitterPostsFlow = ai.defineFlow(
   },
   async (input) => {
     if (!input.userId) {
-      return { error: "User ID is required for credit deduction." };
+      return { error: "User ID is required for this operation." };
     }
     
-    const costKey = input.isRegeneration ? 'QUICK_POST_REGENERATE' : 'QUICK_POST';
-    const creditCheckResult = await deductCredits(input.userId, costKey, input.isRegeneration);
+    let creditsSpentForThisAction = 0;
 
-    if (!creditCheckResult.success) {
-      return { error: creditCheckResult.error || "Credit deduction failed." };
+    // Only deduct credits if it's a regeneration request.
+    // The initial cost is now handled upfront in the TopicResearch component.
+    if (input.isRegeneration) {
+        const costKey = 'QUICK_POST_REGENERATE';
+        const creditCheckResult = await deductCredits(input.userId, costKey, true);
+
+        if (!creditCheckResult.success) {
+            return { error: creditCheckResult.error || "Credit deduction failed for regeneration." };
+        }
+        creditsSpentForThisAction = creditCheckResult.creditsSpent || 0;
     }
     
     try {
       let researchedInformation = input.topic;
-      // Perform research only if it's not a regeneration and the topic seems basic
+      // The research part of the flow is now simplified, as the initial call comes from the UI
+      // which has already done the research. This is just a fallback.
       if (!input.isRegeneration && ((!input.topicDisplay && input.topic.length < 100) || (input.topicDisplay && input.topic.length < 100 && input.topic === input.topicDisplay))) {
         // console.log(`[generateTwitterPostsFlow] Short topic detected, performing research for: "${input.topic}"`);
         const researchedInfoResult = await researchTopic({ topic: input.topic, userId: input.userId });
         if (researchedInfoResult.error) {
           // console.warn(`[generateTwitterPostsFlow] Research failed: ${researchedInfoResult.error}. Proceeding with basic topic.`);
-          // Keep researchedInformation as input.topic if research fails.
         } else {
           researchedInformation = researchedInfoResult.summary;
         }
@@ -119,13 +126,13 @@ const generateTwitterPostsFlow = ai.defineFlow(
       
       return { 
         posts: promptOutput.posts, 
-        creditsSpent: creditCheckResult.freePostUsedThisTime ? 0 : CREDIT_COSTS[costKey],
-        freePostUsed: creditCheckResult.freePostUsedThisTime 
+        creditsSpent: creditsSpentForThisAction,
+        // Free post usage is handled at the research step now
+        freePostUsed: false, 
       };
 
     } catch (e: any) {
       // console.error("[generateTwitterPostsFlow] Error:", e);
-      // Consider refunding credits if AI call fails after deduction, though this can be complex
       return { error: e.message || "An unexpected error occurred during Twitter post generation." };
     }
   }

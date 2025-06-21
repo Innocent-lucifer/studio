@@ -66,7 +66,7 @@ export interface CampaignDraft {
 }
 
 export const CREDIT_COSTS = {
-  QUICK_POST: 10,
+  QUICK_POST: 20,
   QUICK_POST_REGENERATE: 5,
   IMAGE_TO_POST: 60,
   IMAGE_TO_POST_REGENERATE: 5,
@@ -77,7 +77,7 @@ export const CREDIT_COSTS = {
 };
 
 export const FEATURE_DESCRIPTIONS: Record<keyof typeof CREDIT_COSTS, string> = {
-  QUICK_POST: "Quick Post generation",
+  QUICK_POST: "Quick Post research & generation",
   QUICK_POST_REGENERATE: "Quick Post regeneration",
   IMAGE_TO_POST: "Image to Post generation",
   IMAGE_TO_POST_REGENERATE: "Image to Post regeneration (e.g., tone change)",
