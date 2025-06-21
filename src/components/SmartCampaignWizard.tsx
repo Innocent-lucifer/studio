@@ -1205,9 +1205,16 @@ const SmartCampaignWizardInternal: React.FC = () => {
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
               <div className="flex items-center space-x-3">
                 <CurrentIcon className="h-8 w-8 text-primary" />
-                <CardTitle className="text-2xl font-semibold text-primary">
-                  {stepConfig[currentStep]?.title || "Smart Campaign"}
-                </CardTitle>
+                <div>
+                  <CardTitle className="text-2xl font-semibold text-primary">
+                    {stepConfig[currentStep]?.title || "Smart Campaign"}
+                  </CardTitle>
+                   {(stepConfig[currentStep]?.description && campaignTopic) && (
+                    <CardDescription className="text-slate-400 pt-1">
+                      {stepConfig[currentStep].description}
+                    </CardDescription>
+                  )}
+                </div>
               </div>
               <Progress value={stepConfig[currentStep]?.progress || 0} className="w-full sm:w-1/3 h-2 bg-slate-700 [&>div]:bg-primary" />
             </div>
@@ -1215,11 +1222,6 @@ const SmartCampaignWizardInternal: React.FC = () => {
               <CardDescription className="text-slate-400 pt-2">
                 Campaign Topic: <span className="font-semibold text-slate-300">{campaignTopic}</span>
                 {loadedCampaignId && <span className="text-xs text-purple-400 ml-2">(Loaded Campaign)</span>}
-              </CardDescription>
-            )}
-            {(currentStep === 'initial_error') && stepConfig['initial_error']?.description && (
-              <CardDescription className="text-slate-400 pt-2">
-                  {stepConfig['initial_error']?.description}
               </CardDescription>
             )}
             {authLoading && <p className="text-xs text-slate-500 pt-1">Checking authentication...</p>}
