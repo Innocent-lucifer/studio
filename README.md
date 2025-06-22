@@ -4,6 +4,13 @@ This is a NextJS starter in Firebase Studio.
 
 To get started, take a look at src/app/page.tsx.
 
+## Typography
+
+The application uses the modern and clean Geist font family from Vercel.
+
+- **Geist Sans:** Used for all headings, paragraphs, and general UI text to ensure excellent readability.
+- **Geist Mono:** Used for any monospaced text, such as code snippets or displaying unique identifiers, providing clear character distinction.
+
 ## Color Palette
 
 The application primarily uses a dark theme. Here are the key colors used throughout the UI:
