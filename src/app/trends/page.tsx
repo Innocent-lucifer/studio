@@ -160,7 +160,7 @@ export default function TrendsPage() {
              <HamburgerMenu />
             <Link href="/" passHref>
               <div className="flex items-center space-x-2 sm:space-x-3 cursor-pointer group">
-                <AppLogo className="h-12 w-12 sm:h-14 sm:w-14 text-primary group-hover:scale-110 transition-transform" />
+                <AppLogo className="h-12 w-12 sm:h-16 sm:w-16 text-primary group-hover:scale-110 transition-transform" />
                 <div>
                   <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-primary">SagePostAI</h1>
                   <p className="text-xs sm:text-sm text-slate-400 mt-0.5">Trending Topics Explorer</p>
