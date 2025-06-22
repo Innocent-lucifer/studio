@@ -151,12 +151,6 @@ export default function VisualPostPage() {
           setIsLoading(false);
           return; 
         }
-
-        if (creditCheckResult.freePostUsedThisTime) {
-          toast({ title: "Free Action Used", description: `Your free ${FEATURE_DESCRIPTIONS[creditFeatureKey].toLowerCase()} was successful!`});
-        } else if (costForThisAction > 0) {
-          toast({ title: "Credits Used", description: `${costForThisAction} credits used for ${FEATURE_DESCRIPTIONS[creditFeatureKey]}.` });
-        }
         
         if (creditFeatureKey === 'IMAGE_TO_POST') {
           setCreditProcessedForCurrentImage(true);
@@ -294,12 +288,6 @@ export default function VisualPostPage() {
         setIsAiSubmitting(false);
         return;
     }
-     if (CREDIT_COSTS.AI_EDIT > 0 && !creditCheckResult.freePostUsedThisTime) { 
-       toast({ title: "Credits Used", description: `${CREDIT_COSTS.AI_EDIT} credits used for ${FEATURE_DESCRIPTIONS[creditFeatureKey]}.` });
-    } else if (creditCheckResult.freePostUsedThisTime) {
-        toast({ title: "Free Action Used", description: `Your free ${FEATURE_DESCRIPTIONS[creditFeatureKey].toLowerCase()} was successful!`});
-    }
-
 
     try {
       const result = await generateEditedPost({
@@ -399,9 +387,9 @@ export default function VisualPostPage() {
   const commonFooter = (
       <footer className="text-center p-4 mt-12 text-slate-500 text-sm">
          <span className="relative group hover:text-primary transition-colors duration-300 cursor-default">
-            Built by EZ Teenagers
-            <span className="absolute -bottom-0.5 left-0 w-full h-[1.5px] bg-primary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-out origin-left"></span>
-          </span>
+          Built by EZ Teenagers
+          <span className="absolute -bottom-0.5 left-0 w-full h-[1.5px] bg-primary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-out origin-left"></span>
+        </span>
       </footer>
   );
   
@@ -540,10 +528,7 @@ export default function VisualPostPage() {
 
               <motion.div initial={{ opacity: 0, y:10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
                 <Label className="text-lg font-medium text-purple-300 mb-3 block">
-                  Generate in a different tone: 
-                  <span className="text-xs text-slate-400">
-                    {creditProcessedForCurrentImage ? ` (Regenerating with tone change costs ${CREDIT_COSTS.IMAGE_TO_POST_REGENERATE} credits for this image)` : ` (Initial image processing)`}
-                  </span>
+                  Generate in a different tone:
                 </Label>
                 <div className="flex flex-wrap gap-3">
                   {toneOptions.map(({ label, value, icon }) => {
@@ -721,5 +706,3 @@ export default function VisualPostPage() {
 
   return null;
 }
-
-    

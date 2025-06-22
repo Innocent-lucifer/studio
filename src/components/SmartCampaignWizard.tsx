@@ -326,12 +326,6 @@ const SmartCampaignWizardInternal: React.FC = () => {
       setLoadingMessage('');
       return;
     }
-    if (creditDeductionResult.creditsSpent && creditDeductionResult.creditsSpent > 0) {
-      toast({ title: "Credits Used", description: `${creditDeductionResult.creditsSpent} credits used for ${FEATURE_DESCRIPTIONS[creditFeatureKey]}.`});
-    } else if (creditDeductionResult.freePostUsedThisTime) {
-      toast({ title: "Free Action Used", description: `Your free ${FEATURE_DESCRIPTIONS[creditFeatureKey].toLowerCase()} was successful!`});
-    }
-
 
     try {
       const result = await researchTopic({ topic: campaignTopic, userId: userIdToPass });
@@ -388,11 +382,6 @@ const SmartCampaignWizardInternal: React.FC = () => {
         if (!creditResult.success) {
             toast({ variant: "destructive", title: "Credit Deduction Failed", description: creditResult.error || `Could not deduct ${CREDIT_COSTS[costForThisAngleGeneration]} credits.` });
             return;
-        }
-        if (creditResult.creditsSpent && creditResult.creditsSpent > 0) {
-             toast({ title: "Credits Used", description: `${creditResult.creditsSpent} credits used for ${featureDescriptionForToast}.` });
-        } else if (creditResult.freePostUsedThisTime) {
-             toast({ title: "Free Action Used", description: `Your free ${featureDescriptionForToast.toLowerCase()} was successful!`});
         }
         proceedWithGeneration = true;
     }
@@ -525,12 +514,6 @@ const SmartCampaignWizardInternal: React.FC = () => {
           setIsAiSubmitting(false);
           return;
       }
-      if (CREDIT_COSTS.AI_EDIT > 0 && !creditCheckResult.freePostUsedThisTime) { 
-         toast({ title: "Credits Used", description: `${CREDIT_COSTS.AI_EDIT} credits used for ${FEATURE_DESCRIPTIONS[creditFeatureKey]}.` });
-      } else if (creditCheckResult.freePostUsedThisTime) {
-          toast({ title: "Free Action Used", description: `Your free ${FEATURE_DESCRIPTIONS[creditFeatureKey].toLowerCase()} was successful!`});
-      }
-
 
       const input: GenerateEditedPostInput = { originalPost: editingPost.currentText, editInstruction: aiEditInstruction, topic: campaignTopic, platform: editingPost.platform, userId: userIdToPass };
       const result = await generateEditedPost(input);
@@ -658,17 +641,13 @@ const SmartCampaignWizardInternal: React.FC = () => {
 
   const researchTopicButtonTooltip = () => {
     if (!userIdToPass) return "Please log in to research topics.";
-    if (userPlan === 'infinity') return "Research the entered topic (Free for Infinity plan).";
-    const cost = CREDIT_COSTS.SMART_CAMPAIGN_RESEARCH_TOPIC;
-    return `Research topic (${cost} credits). Your first angle's post generation will be covered by this.`;
+    return "Research the entered topic.";
   };
   
   const generateSeriesButtonTooltip = () => {
     if (!userIdToPass) return "Please log in to generate series.";
     if (!selectedAngle) return "Select a content angle first.";
-    if (generatedAnglesForCurrentResearch.has(selectedAngle.title)) return "Regenerate posts for this angle (no extra cost for this research batch).";
-    if (generatedAnglesForCurrentResearch.size === 0) return "Generate posts for your first angle (covered by research fee).";
-    return `Generate posts for new angle (${CREDIT_COSTS.SMART_CAMPAIGN_ADDITIONAL_ANGLE} credits).`;
+    return "Generate posts for the selected angle.";
   };
 
 

@@ -116,12 +116,6 @@ export function HamburgerMenu() {
               </DropdownMenuItem>
             </Link>
             <DropdownMenuGroup>
-                <DropdownMenuItem className="text-slate-400 text-xs md:text-sm md:px-3 md:py-1.5 pointer-events-none">
-                    <Icons.creditCard className="mr-2 h-4 w-4 md:h-5 md:w-5 text-slate-500" />
-                    <span>
-                      Credits: {isLoadingUserData ? <Icons.loader className="inline h-3 w-3 animate-spin ml-1" /> : (userData?.credits ?? 'N/A')}
-                    </span>
-                </DropdownMenuItem>
                  <DropdownMenuItem className="text-slate-400 text-xs md:text-sm md:px-3 md:py-1.5 pointer-events-none">
                     <Icons.shield className="mr-2 h-4 w-4 md:h-5 md:w-5 text-slate-500" />
                     <span>Plan: {isLoadingUserData ? <Icons.loader className="inline h-3 w-3 animate-spin ml-1" /> : (userData?.plan ? userData.plan.charAt(0).toUpperCase() + userData.plan.slice(1) : 'N/A')}</span>
@@ -148,4 +142,3 @@ export function HamburgerMenu() {
     </DropdownMenu>
   );
 }
-

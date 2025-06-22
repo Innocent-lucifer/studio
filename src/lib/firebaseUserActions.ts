@@ -248,93 +248,8 @@ export const deductCredits = async (
   isRegeneration: boolean = false,
   numUnits: number = 1
 ): Promise<{ success: boolean; error?: string; newCredits?: number; freePostUsedThisTime?: boolean; creditsSpent?: number }> => {
-  // console.log(`[deductCredits] Attempting for user: ${userId}, feature: ${featureKey}, isRegen (context): ${isRegeneration}, units: ${numUnits}`);
-  if (!userId) return { success: false, error: "User ID not provided." };
-
-  let userData;
-  try {
-    userData = await getUserData(userId);
-  } catch (error: any) {
-    console.error(`[deductCredits] Failed to retrieve user data for UID ${userId}:`, error);
-    return { success: false, error: `Failed to retrieve user data for credit deduction: ${error.message}` };
-  }
-
-  if (!userData) {
-    console.error(`[deductCredits] User data not found for UID ${userId}.`);
-    return { success: false, error: "User data not found for credit deduction." };
-  }
-
-
-  if (userData.plan === 'infinity') {
-    // console.log(`[deductCredits] User ${userId} is on infinity plan. No credits deducted for ${featureKey}.`);
-    return { success: true, newCredits: userData.credits, freePostUsedThisTime: false, creditsSpent: 0 };
-  }
-
-  const userRef = doc(db, 'users', userId) as DocumentReference<UserData>;
-  let cost = 0;
-  let freePostUsedThisTime = false;
-  const updates: Partial<UserData> = {};
-
-
-  if (featureKey === 'QUICK_POST' && !isRegeneration && !userData.freeQuickPostUsed) {
-    updates.freeQuickPostUsed = true;
-    freePostUsedThisTime = true;
-    // console.log(`[deductCredits] Using free Quick Post for user ${userId}.`);
-  } else if (featureKey === 'IMAGE_TO_POST' && !userData.freeImageToPostUsed) {
-    updates.freeImageToPostUsed = true;
-    freePostUsedThisTime = true;
-    // console.log(`[deductCredits] Using free Image to Post (initial) for user ${userId}.`);
-  } else if (featureKey === 'SMART_CAMPAIGN_RESEARCH_TOPIC' && !userData.freeSmartCampaignResearchTopicUsed) {
-    updates.freeSmartCampaignResearchTopicUsed = true;
-    freePostUsedThisTime = true;
-    // console.log(`[deductCredits] Using free Smart Campaign Research for user ${userId}.`);
-  }
-
-
-  if (freePostUsedThisTime) {
-    try {
-      await updateDoc(userRef, updates);
-      // console.log(`[deductCredits] Successfully updated free use flag for user ${userId}. Feature: ${featureKey}`);
-      return { success: true, newCredits: userData.credits, freePostUsedThisTime: true, creditsSpent: 0 };
-    } catch (error: any)      {
-      console.error(`[deductCredits] Error updating free post status for user ${userId}:`, error);
-      return { success: false, error: "Error updating free post status. Please try again." };
-    }
-  }
-
-  if (featureKey === 'QUICK_POST' && isRegeneration) {
-    cost = CREDIT_COSTS.QUICK_POST_REGENERATE * numUnits;
-  } else {
-    cost = CREDIT_COSTS[featureKey] * numUnits;
-  }
-
-  // console.log(`[deductCredits] Calculated cost for user ${userId}, feature ${featureKey}: ${cost}`);
-
-  if (cost === 0 && featureKey !== 'TREND_EXPLORER_FETCH') {
-    //  console.warn(`[deductCredits] Warning: Cost for feature ${featureKey} is 0. This might be unintentional unless it's a free feature like Trend Explorer.`);
-  }
-
-  if (featureKey === 'TREND_EXPLORER_FETCH') {
-    // console.log(`[deductCredits] Feature ${featureKey} is free for user ${userId}. No credits deducted.`);
-    return { success: true, newCredits: userData.credits, freePostUsedThisTime: false, creditsSpent: 0 };
-  }
-
-
-  if (userData.credits < cost) {
-    // console.log(`[deductCredits] User ${userId} has insufficient credits. Has: ${userData.credits}, Needs: ${cost}`);
-    return { success: false, error: `Insufficient credits. You need ${cost} credits, but have ${userData.credits}.` };
-  }
-
-  updates.credits = userData.credits - cost;
-
-  try {
-    await updateDoc(userRef, updates);
-    // console.log(`[deductCredits] Successfully deducted ${cost} credits from user ${userId}. New balance: ${updates.credits}`);
-    return { success: true, newCredits: updates.credits, freePostUsedThisTime: false, creditsSpent: cost };
-  } catch (error: any) {
-    console.error(`[deductCredits] Error deducting credits for user ${userId}:`, error);
-    return { success: false, error: "Error deducting credits. Please try again." };
-  }
+  // Credits system is temporarily disabled. All actions are permitted.
+  return { success: true, newCredits: 9999, freePostUsedThisTime: false, creditsSpent: 0 };
 };
 
 
@@ -509,4 +424,3 @@ export const deleteCampaignDraft = async (userId: string, campaignDraftId: strin
     return false;
   }
 };
-
