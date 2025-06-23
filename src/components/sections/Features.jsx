@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Zap, Image, ListChecks, Edit, Bot, TrendingUp } from 'lucide-react';
 
