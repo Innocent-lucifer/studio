@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from "react";
@@ -34,7 +33,8 @@ export default function BuiltWith() {
         >
           <motion.div
             variants={itemVariants}
-            className="h-12 w-12 md:h-16 md:w-16 grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-300"
+            whileHover={{ scale: 1.1 }}
+            className="h-12 w-12 md:h-16 md:w-16 transition-transform duration-300"
           >
             <Image
               src="/openai.svg"
@@ -47,7 +47,8 @@ export default function BuiltWith() {
 
           <motion.div
             variants={itemVariants}
-            className="h-12 w-12 md:h-16 md:w-16 grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-300"
+            whileHover={{ scale: 1.1 }}
+            className="h-12 w-12 md:h-16 md:w-16 transition-transform duration-300"
           >
             <Image
               src="/gemini.svg"
