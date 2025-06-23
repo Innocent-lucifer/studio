@@ -31,7 +31,7 @@ export default function Pricing({ plans }) {
                   </li>
                 ))}
               </ul>
-              <Link href="/dashboard" className="mt-8 w-full text-center px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 transition">
+              <Link href="/login" className="mt-8 w-full text-center px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 transition">
                   Get Started
               </Link>
             </div>

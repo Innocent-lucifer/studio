@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from 'next/link';
@@ -9,7 +8,7 @@ import { AppLogo } from '@/components/AppLogo';
 import { HamburgerMenu } from '@/components/HamburgerMenu';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
-import React, { useEffect, useState } from 'react'; // Import React
+import React, { useEffect, useState } from 'react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface FeatureCardProps {
@@ -82,7 +81,7 @@ const FeatureCardComponent: React.FC<FeatureCardProps> = ({ icon, title, descrip
 const FeatureCard = React.memo(FeatureCardComponent);
 
 
-export default function AppHomePage() {
+export default function DashboardPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const [displayName, setDisplayName] = useState<string>("Guest");

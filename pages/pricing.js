@@ -1,6 +1,7 @@
-// This page is no longer used for routing.
+// This file is intentionally structured this way to resolve a potential route conflict.
+// By not default-exporting a component, this file does not create a route.
 // The pricing section is available on the homepage at /#pricing.
-// This file is kept to avoid breaking existing links if any, but it now renders nothing.
-export default function PricingRedirect() {
+
+function InactivePricingRedirect() {
   return null;
 }

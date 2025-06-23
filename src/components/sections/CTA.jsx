@@ -9,7 +9,7 @@ export default function CTA() {
         <p className="max-w-xl mx-auto mt-4 text-gray-600 mb-8">
           Join hundreds of creators and marketers who are saving time and creating better content. Get started for free today.
         </p>
-        <Link href="/dashboard" className="inline-block px-8 py-4 bg-indigo-600 text-white font-semibold rounded-lg shadow-lg hover:bg-indigo-700 transition">
+        <Link href="/login" className="inline-block px-8 py-4 bg-indigo-600 text-white font-semibold rounded-lg shadow-lg hover:bg-indigo-700 transition">
             Start Your 3-Day Free Trial
         </Link>
       </div>

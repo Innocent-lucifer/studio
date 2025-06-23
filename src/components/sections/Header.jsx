@@ -22,7 +22,7 @@ export default function Header({ scrolled, menuOpen, toggleMenu, navLinks }) {
             <Link href="/login" className="hidden sm:inline-block font-medium text-gray-600 hover:text-indigo-600 transition">
                 Log In
             </Link>
-            <Link href="/dashboard" className="px-5 py-2.5 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 transition">
+            <Link href="/login" className="px-5 py-2.5 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 transition">
                 Get Started Free
             </Link>
             <button onClick={toggleMenu} className="md:hidden text-gray-700">
