@@ -1,3 +1,11 @@
-// This file is intentionally left without a default export of a React component
-// to prevent it from initializing the Pages Router, which would conflict with
-// the App Router. Global styles and providers are handled in `src/app/layout.tsx`.
+import "@/app/globals.css";
+import { SpeedInsights } from "@vercel/speed-insights/next";
+
+export default function App({ Component, pageProps }) {
+  return (
+    <>
+      <Component {...pageProps} />
+      <SpeedInsights />
+    </>
+  );
+}

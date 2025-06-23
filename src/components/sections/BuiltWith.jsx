@@ -1,31 +1,67 @@
-
-import React from 'react';
+import React from "react";
+import Image from "next/image";
+import { motion } from "framer-motion";
 
 export default function BuiltWith() {
-  const logos = [
-    { name: "Next.js", dataAiHint: "nextjs logo" },
-    { name: "Firebase", dataAiHint: "firebase logo" },
-    { name: "Tailwind CSS", dataAiHint: "tailwind css logo" },
-    { name: "Vercel", dataAiHint: "vercel logo" },
-    { name: "Stripe", dataAiHint: "stripe logo" },
-  ];
-
   return (
-    <section className="py-12">
-      <div className="container mx-auto px-4 text-center">
-        <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-6">
-          BUILT WITH MODERN, RELIABLE TECHNOLOGIES
+    <section className="py-4 sm:py-6 pb-8 sm:pb-12 px-4 sm:px-6">
+      <div className="max-w-7xl mx-auto text-center">
+        <p className="text-sm sm:text-base text-gray-700 mb-4 font-bold">
+          Built with ChatGPT and Gemini
         </p>
-        <div className="flex justify-center items-center flex-wrap gap-x-8 gap-y-4">
-          {logos.map(logo => (
-            <img 
-              key={logo.name} 
-              src={`https://placehold.co/120x40.png`} 
-              alt={logo.name} 
-              data-ai-hint={logo.dataAiHint}
-              className="h-8 opacity-60 grayscale hover:grayscale-0 hover:opacity-100 transition"
+        <div className="flex justify-center gap-6">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{
+              opacity: 1,
+              y: 0,
+              scale: [1, 1.02, 1],
+            }}
+            transition={{
+              duration: 0.8,
+              scale: { repeat: Infinity, duration: 1.5, ease: "easeInOut" },
+            }}
+            whileHover={{ scale: 1.05, y: -5 }}
+            className="h-12 w-12 sm:h-14 sm:w-14 p-2 bg-white rounded-2xl shadow-lg"
+          >
+            <Image
+              src="https://placehold.co/48x48.png"
+              alt="OpenAI Logo"
+              width={48}
+              height={48}
+              data-ai-hint="openai logo"
+              className="w-full h-full object-contain"
             />
-          ))}
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{
+              opacity: 1,
+              y: 0,
+              scale: [1, 1.02, 1],
+            }}
+            transition={{
+              duration: 0.8,
+              delay: 0.2,
+              scale: {
+                repeat: Infinity,
+                duration: 1.5,
+                ease: "easeInOut",
+              },
+            }}
+            whileHover={{ scale: 1.05, y: -5 }}
+            className="h-12 w-12 sm:h-14 sm:w-14 p-2 bg-white rounded-2xl shadow-lg"
+          >
+            <Image
+              src="https://placehold.co/48x48.png"
+              alt="Gemini Logo"
+              width={48}
+              height={48}
+              data-ai-hint="gemini logo"
+              className="w-full h-full object-contain"
+            />
+          </motion.div>
         </div>
       </div>
     </section>

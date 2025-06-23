@@ -1,32 +1,44 @@
-
-import React from 'react';
-import { Edit, Lightbulb, Send } from 'lucide-react';
-
-const steps = [
-    { icon: Edit, title: "1. Provide Your Topic", description: "Enter a topic, paste a link, or upload an image. Give the AI your starting point." },
-    { icon: Lightbulb, title: "2. Generate & Refine", description: "Instantly get post drafts. Use the AI editor to refine grammar, tone, and style." },
-    { icon: Send, title: "3. Copy & Publish", description: "Your post is ready. Copy it with one click and publish to your social media platforms." }
-];
+import React from "react";
+import { motion } from "framer-motion";
 
 export default function HowItWorks() {
+  const steps = [
+    {
+      step: "Step 1: Choose Your Input",
+      desc: "Write a topic, upload an image, or pick a category — our AI understands context and adapts to your intent.",
+    },
+    {
+      step: "Step 2: Let AI Do the Work",
+      desc: "It crafts personalized posts instantly — tone, format, and length adjusted automatically for the platform.",
+    },
+    {
+      step: "Step 3: Share or Repurpose",
+      desc: "Copy, refine, or share your post. Or turn it into a multi-post campaign in one click.",
+    },
+  ];
+
   return (
-    <section id="how-it-works" className="py-20 bg-white">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900">Get Started in 3 Simple Steps</h2>
-          <p className="max-w-2xl mx-auto mt-4 text-gray-600">
-            Creating content with SagePostAI is designed to be intuitive and fast.
-          </p>
-        </div>
-        <div className="grid md:grid-cols-3 gap-8 text-center">
-          {steps.map((step, index) => (
-            <div key={step.title} className="p-6">
-              <div className="flex items-center justify-center h-16 w-16 mx-auto bg-indigo-100 rounded-full mb-4">
-                <step.icon className="w-8 h-8 text-indigo-600" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">{step.title}</h3>
-              <p className="text-gray-600">{step.description}</p>
-            </div>
+    <section id="how-it-works" className="py-12 sm:py-16 px-4 sm:px-6">
+      <div className="max-w-7xl mx-auto text-center">
+        <h2 className="text-2xl sm:text-3xl font-bold mb-8 sm:mb-12 text-gray-800">
+          How SagePostAI Works
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+          {steps.map(({ step, desc }, index) => (
+            <motion.div
+              key={step}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: index * 0.15, duration: 0.4 }}
+              whileHover={{ scale: 1.05 }}
+              className="p-4 sm:p-6 rounded-2xl bg-gradient-to-br from-[#f5f7ff] to-[#e0e7ff] shadow-md transition-all duration-300"
+            >
+              <h3 className="text-lg sm:text-xl font-semibold mb-2 text-indigo-800">
+                {step}
+              </h3>
+              <p className="text-gray-700 text-sm sm:text-base">{desc}</p>
+            </motion.div>
           ))}
         </div>
       </div>
