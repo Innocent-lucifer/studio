@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from "react";
@@ -41,7 +40,7 @@ export default function Footer() {
           <div className="md:col-span-1 lg:col-span-2 space-y-4">
             <Link href="/" passHref>
               <div className="flex items-center space-x-3 cursor-pointer group">
-                <AppLogo className="h-10 w-10 text-primary transition-transform duration-300 group-hover:scale-110" />
+                <AppLogo className="h-8 w-8 md:h-12 md:w-12 text-primary transition-transform duration-300 group-hover:scale-110" />
                 <span className="text-xl font-bold text-foreground">
                   SagePostAI
                 </span>

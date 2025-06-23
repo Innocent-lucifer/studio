@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from "react";
@@ -43,7 +42,7 @@ export default function Header({ scrolled, menuOpen, toggleMenu, navLinks }: Hea
       <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between h-20">
         <Link href="/" passHref>
           <div className="flex items-center space-x-3 cursor-pointer group">
-            <AppLogo className="h-10 w-10 text-primary transition-transform duration-300 group-hover:scale-110" />
+            <AppLogo className="h-12 w-12 md:h-16 md:w-16 text-primary transition-transform duration-300 group-hover:scale-110" />
             <span className="text-xl font-bold text-foreground tracking-wide group-hover:text-primary transition-colors duration-300">
               SagePostAI
             </span>
