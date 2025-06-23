@@ -1,3 +1,4 @@
+
 // This file uses getServerSideProps to explicitly tell Next.js that this route
 // should not be handled by the Pages Router, resolving the conflict with src/app/page.tsx.
 
