@@ -24,7 +24,6 @@ export default function Header({
   toggleMenu,
   handleReload,
 }) {
-  const router = useRouter();
 
   return (
     <header
