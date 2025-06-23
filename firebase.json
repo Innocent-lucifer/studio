@@ -7,43 +7,8 @@
       "**/.*",
       "**/node_modules/**"
     ],
-    "headers": [
-      {
-        "source": "/_next/static/**",
-        "headers": [
-          {
-            "key": "Cache-Control",
-            "value": "public, max-age=31536000, immutable"
-          }
-        ]
-      },
-      {
-        "source": "**/*.@(js|css|jpg|jpeg|gif|png|svg|webp|ico|woff|woff2|ttf|otf|eot|json|txt)",
-        "headers": [
-          {
-            "key": "Cache-Control",
-            "value": "public, max-age=3600, s-maxage=86400"
-          }
-        ]
-      },
-      {
-        "source": "**/*.html",
-        "headers": [
-          {
-            "key": "Cache-Control",
-            "value": "public, max-age=0, must-revalidate"
-          }
-        ]
-      },
-      {
-        "source": "/",
-         "headers": [
-          {
-            "key": "Cache-Control",
-            "value": "public, max-age=0, must-revalidate"
-          }
-        ]
-      }
-    ]
+    "frameworksBackend": {
+      "region": "us-central1"
+    }
   }
 }
