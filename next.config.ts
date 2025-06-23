@@ -1,13 +1,13 @@
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
-  pageExtensions: ['api.ts', 'api.js'],
   typescript: {
     ignoreBuildErrors: true,
   },
   eslint: {
     ignoreDuringBuilds: true,
   },
+  pageExtensions: ['ts', 'tsx'],
 };
 
 export default nextConfig;
