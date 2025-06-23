@@ -7,7 +7,15 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  pageExtensions: ['ts', 'tsx'],
+  pageExtensions: ['ts', 'tsx', 'api.ts', 'api.js'],
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'placehold.co',
+      },
+    ],
+  },
 };
 
 export default nextConfig;
