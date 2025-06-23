@@ -1,18 +1,18 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import Header from "@/components/sections/Header.jsx";
-import Hero from "@/components/sections/Hero.jsx";
-import BuiltWith from "@/components/sections/BuiltWith.jsx";
-import ProblemSolution from "@/components/sections/ProblemSolution.jsx";
-import Features from "@/components/sections/Features.jsx";
-import HowItWorks from "@/components/sections/HowItWorks.jsx";
-import Comparison from "@/components/sections/Comparison.jsx";
-import Testimonials from "@/components/sections/Testimonials.jsx";
-import Pricing from "@/components/sections/Pricing.jsx";
-import FAQ from "@/components/sections/FAQ.jsx";
-import CTA from "@/components/sections/CTA.jsx";
-import Footer from "@/components/sections/Footer.jsx";
-import SEO from "@/components/SEO.jsx";
+import Header from "../components/sections/Header.jsx";
+import Hero from "../components/sections/Hero.jsx";
+import BuiltWith from "../components/sections/BuiltWith.jsx";
+import ProblemSolution from "../components/sections/ProblemSolution.jsx";
+import Features from "../components/sections/Features.jsx";
+import HowItWorks from "../components/sections/HowItWorks.jsx";
+import Comparison from "../components/sections/Comparison.jsx";
+import Testimonials from "../components/sections/Testimonials.jsx";
+import Pricing from "../components/sections/Pricing.jsx";
+import FAQ from "../components/sections/FAQ.jsx";
+import CTA from "../components/sections/CTA.jsx";
+import Footer from "../components/sections/Footer.jsx";
+import SEO from "../components/SEO.jsx";
 
 export default function Home() {
   const [scrolled, setScrolled] = useState(false);
@@ -87,6 +87,13 @@ export default function Home() {
       pricingSection.scrollIntoView({ behavior: "smooth" });
     }
     setMenuOpen(false);
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (inputText.trim()) {
+      router.push(`/quick-post?topic=${encodeURIComponent(inputText)}`);
+    }
   };
 
   const plans = [
@@ -184,7 +191,6 @@ export default function Home() {
         toggleMenu={toggleMenu}
         handleReload={handleReload}
         handleScrollToPricing={handleScrollToPricing}
-        router={router}
       />
       <main className="pt-10 sm:pt-14 flex-grow">
         <Hero
@@ -193,6 +199,7 @@ export default function Home() {
           inputText={inputText}
           setInputText={setInputText}
           displayText={displayText}
+          handleSubmit={handleSubmit}
         />
         <BuiltWith />
         <ProblemSolution />

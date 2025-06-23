@@ -2,7 +2,6 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Clock } from "lucide-react";
 import ProductHuntBadge from "../compos/ProductHuntBadge";
-import { useRouter } from 'next/router';
 
 export default function Hero({
   inputFocused,
@@ -10,15 +9,8 @@ export default function Hero({
   inputText,
   setInputText,
   displayText,
+  handleSubmit,
 }) {
-
-  const router = useRouter();
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    router.push(`/quick-post?topic=${encodeURIComponent(inputText)}`);
-  };
-  
   return (
     <section className="px-5 sm:px-6 py-12 sm:py-16 lg:py-24">
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-10 sm:items-center">
@@ -33,7 +25,10 @@ export default function Hero({
           </p>
 
           {/* Input + Button */}
-          <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 sm:ml-[-20px]">
+          <form
+            onSubmit={handleSubmit}
+            className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 sm:ml-[-20px]"
+          >
             <input
               type="text"
               className={`w-full sm:w-[72%] px-5 py-[1rem] text-sm sm:text-base rounded-2xl shadow-lg transition-all duration-300 outline-none ${
@@ -45,7 +40,10 @@ export default function Hero({
               onBlur={() => setInputFocused(false)}
               placeholder={displayText}
             />
-            <button type="submit" className="w-full sm:w-[26%] px-5 py-[1rem] bg-gradient-to-r from-[#4F46E5] to-[#4338CA] text-white font-bold rounded-2xl text-sm sm:text-base hover:scale-105 transition duration-300 shadow-md">
+            <button
+              type="submit"
+              className="w-full sm:w-[26%] px-5 py-[1rem] bg-gradient-to-r from-[#4F46E5] to-[#4338CA] text-white font-bold rounded-2xl text-sm sm:text-base hover:scale-105 transition duration-300 shadow-md"
+            >
               Generate Posts
             </button>
           </form>
