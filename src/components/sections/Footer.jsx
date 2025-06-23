@@ -3,7 +3,7 @@ import React from 'react';
 import { AppLogo } from '@/components/AppLogo';
 import Link from 'next/link';
 
-export default function Footer({ handleReload }) {
+export default function Footer() {
   const footerLinks = [
     { name: "Privacy Policy", href: "/PrivacyPolicy" },
     { name: "Terms of Service", href: "/terms-of-service" },

@@ -1,16 +1,8 @@
-
 import React from 'react';
 import Link from 'next/link';
 import { AppLogo } from '@/components/AppLogo';
 
-export default function Header({ scrolled, menuOpen, toggleMenu, handleScrollToPricing }) {
-  const navLinks = [
-    { name: "Features", href: "#features" },
-    { name: "Testimonials", href: "#testimonials" },
-    { name: "Pricing", href: "#pricing", onClick: handleScrollToPricing },
-    { name: "FAQ", href: "#faq" }
-  ];
-
+export default function Header({ scrolled, menuOpen, toggleMenu, navLinks }) {
   return (
     <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-white/80 backdrop-blur-md shadow-md' : 'bg-transparent'}`}>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -21,9 +13,9 @@ export default function Header({ scrolled, menuOpen, toggleMenu, handleScrollToP
           </Link>
           <nav className="hidden md:flex items-center space-x-8">
             {navLinks.map(link => (
-              <a key={link.name} href={link.href} onClick={link.onClick} className="font-medium text-gray-600 hover:text-indigo-600 transition">
+              <Link key={link.name} href={link.href} onClick={link.onClick} className="font-medium text-gray-600 hover:text-indigo-600 transition">
                 {link.name}
-              </a>
+              </Link>
             ))}
           </nav>
           <div className="flex items-center gap-4">
@@ -42,11 +34,11 @@ export default function Header({ scrolled, menuOpen, toggleMenu, handleScrollToP
           <div className="md:hidden py-4">
             <nav className="flex flex-col space-y-4">
               {navLinks.map(link => (
-                <a key={link.name} href={link.href} onClick={(e) => { toggleMenu(); if (link.onClick) link.onClick(e); }} className="font-medium text-gray-600 hover:text-indigo-600 transition text-center">
+                 <Link key={link.name} href={link.href} onClick={(e) => { toggleMenu(); if (link.onClick) link.onClick(e); }} className="font-medium text-gray-600 hover:text-indigo-600 transition text-center">
                   {link.name}
-                </a>
+                </Link>
               ))}
-                <Link href="/login" className="font-medium text-gray-600 hover:text-indigo-600 transition text-center">
+                <Link href="/login" onClick={toggleMenu} className="font-medium text-gray-600 hover:text-indigo-600 transition text-center">
                     Log In
                 </Link>
             </nav>

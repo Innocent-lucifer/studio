@@ -1,5 +1,4 @@
-
-"use client";
+'use client';
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -38,17 +37,6 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    // App router doesn't have asPath, we check for hash in a client component
-    if (window.location.hash) {
-      const section = window.location.hash.substring(1);
-      const element = document.getElementById(section);
-      if (element) {
-        element.scrollIntoView({ behavior: "smooth" });
-      }
-    }
-  }, []);
-
-  useEffect(() => {
     if (inputText) return;
     const timer = setTimeout(() => {
       if (!deleting) {
@@ -69,10 +57,6 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, [index, deleting, loopText, inputText]);
 
-  const handleReload = () => {
-    router.push("/");
-  };
-
   const toggleMenu = () => {
     setMenuOpen(!menuOpen);
   };
@@ -80,15 +64,22 @@ export default function Home() {
   const toggleFAQ = (index) => {
     setOpenFAQIndex(openFAQIndex === index ? null : index);
   };
-
-  const handleScrollToPricing = (e) => {
+  
+  const handleScrollToSection = (e, sectionId) => {
     e.preventDefault();
-    const pricingSection = document.getElementById("pricing");
-    if (pricingSection) {
-      pricingSection.scrollIntoView({ behavior: "smooth" });
+    const section = document.getElementById(sectionId);
+    if (section) {
+      section.scrollIntoView({ behavior: "smooth" });
     }
-    setMenuOpen(false);
+    if(menuOpen) setMenuOpen(false);
   };
+
+  const navLinks = [
+    { name: "Features", href: "#features", onClick: (e) => handleScrollToSection(e, 'features') },
+    { name: "Testimonials", href: "#testimonials", onClick: (e) => handleScrollToSection(e, 'testimonials') },
+    { name: "Pricing", href: "#pricing", onClick: (e) => handleScrollToSection(e, 'pricing') },
+    { name: "FAQ", href: "#faq", onClick: (e) => handleScrollToSection(e, 'faq') }
+  ];
 
   const plans = [
   {
@@ -183,8 +174,7 @@ export default function Home() {
         scrolled={scrolled}
         menuOpen={menuOpen}
         toggleMenu={toggleMenu}
-        handleReload={handleReload}
-        handleScrollToPricing={handleScrollToPricing}
+        navLinks={navLinks}
       />
       <main className="pt-10 sm:pt-14 flex-grow">
         <Hero
@@ -204,7 +194,7 @@ export default function Home() {
         <FAQ faqs={faqs} openFAQIndex={openFAQIndex} toggleFAQ={toggleFAQ} />
         <CTA />
       </main>
-      <Footer handleReload={handleReload} />
+      <Footer />
     </div>
   );
 }
