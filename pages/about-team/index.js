@@ -1,10 +1,3 @@
-import React from "react";
-import TeamSection from "@/components/sections/TeamSection";
-
-export default function AboutTeamPage() {
-  return (
-    <main className="min-h-screen bg-white">
-      <TeamSection />
-    </main>
-  );
-}
+// This page is disabled because the App Router at /about-team now handles this route.
+// Removing the default export prevents Next.js from treating this as a page.
+export {};

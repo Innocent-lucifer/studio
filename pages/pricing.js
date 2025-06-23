@@ -1,15 +1,3 @@
-// pages/pricing.js
-
-import HomePage from "./index"; // Adjust path if your homepage is elsewhere
-import { useEffect } from "react";
-
-export default function PricingPage() {
-  useEffect(() => {
-    const el = document.getElementById("pricing");
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth" });
-    }
-  }, []);
-
-  return <HomePage />;
-}
+// This page is disabled because the pricing section is now part of the App Router homepage.
+// Removing the default export prevents Next.js from treating this as a page.
+export {};
