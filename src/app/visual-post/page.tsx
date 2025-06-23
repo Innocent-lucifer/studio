@@ -371,7 +371,7 @@ export default function VisualPostPage() {
           <div> 
             <HamburgerMenu />
           </div>
-          <Link href="/" passHref>
+          <Link href="/dashboard" passHref>
             <div className="flex items-center space-x-2 sm:space-x-3 cursor-pointer group">
               <AppLogo className="h-12 w-12 sm:h-16 sm:w-16 text-primary group-hover:scale-110 transition-transform" />
               <div>

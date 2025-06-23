@@ -66,7 +66,7 @@ export default function AccountPage() {
       <header className="w-full max-w-5xl mx-auto py-4 sm:py-6 px-4 flex justify-between items-center">
         <div className="flex items-center space-x-2 sm:space-x-3">
           <HamburgerMenu />
-          <Link href="/" passHref>
+          <Link href="/dashboard" passHref>
             <div className="flex items-center space-x-2 sm:space-x-3 cursor-pointer group">
               <AppLogo className="h-12 w-12 sm:h-16 sm:w-16 text-primary group-hover:scale-110 transition-transform" />
                <div>

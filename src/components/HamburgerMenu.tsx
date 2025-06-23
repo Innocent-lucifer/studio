@@ -67,10 +67,10 @@ export function HamburgerMenu() {
       >
         <DropdownMenuLabel className="text-slate-400 text-sm md:text-base md:px-3 md:py-2">Navigation</DropdownMenuLabel>
         <DropdownMenuSeparator className="bg-slate-700 my-1 md:my-2" />
-        <Link href="/" passHref>
+        <Link href="/dashboard" passHref>
           <DropdownMenuItem className="hover:bg-slate-700 focus:bg-slate-700 cursor-pointer text-sm md:text-base md:px-3 md:py-2.5">
             <Icons.home className="mr-2 h-4 w-4 md:h-5 md:w-5 text-primary" />
-            <span>Home (All Tools)</span>
+            <span>Dashboard</span>
           </DropdownMenuItem>
         </Link>
         <Link href="/quick-post" passHref>
