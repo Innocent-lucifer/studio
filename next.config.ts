@@ -1,3 +1,4 @@
+
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
@@ -7,7 +8,6 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  pageExtensions: ['ts', 'tsx', 'api.ts', 'api.js'],
   images: {
     remotePatterns: [
       {
