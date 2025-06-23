@@ -1,19 +1,11 @@
+
 {
   "hosting": {
-    "public": ".next",
+    "source": ".",
     "ignore": [
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
-    ],
-    "rewrites": [
-      {
-        "source": "**",
-        "run": {
-          "serviceId": "studio",
-          "region": "us-central1"
-        }
-      }
     ],
     "headers": [
       {
