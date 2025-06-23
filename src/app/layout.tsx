@@ -10,6 +10,7 @@ const geistSans = GeistSans;
 const geistMono = GeistMono;
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://sagepostai.com'),
   title: "SagePostAI | AI Social Media Automation",
   description: "SagePostAI is the AI layer for social media — built to help creators and brands automate every post, grow faster, and scale effortlessly with intelligent workflows.",
   keywords: "SagePostAI, AI social media tool, automate posts, AI content planner, GPT social media, AI scheduler",
