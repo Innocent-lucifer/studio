@@ -41,7 +41,7 @@ export default function BuiltWith() {
               alt="OpenAI Logo"
               width={64}
               height={64}
-              className="w-full h-full object-contain"
+              className="w-full h-full object-contain invert"
             />
           </motion.div>
 
