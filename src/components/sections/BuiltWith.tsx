@@ -37,11 +37,10 @@ export default function BuiltWith() {
             className="h-12 w-12 md:h-16 md:w-16 grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-300"
           >
             <Image
-              src="https://placehold.co/64x64.png"
+              src="/openai.svg"
               alt="OpenAI Logo"
               width={64}
               height={64}
-              data-ai-hint="openai logo"
               className="w-full h-full object-contain"
             />
           </motion.div>
@@ -51,11 +50,10 @@ export default function BuiltWith() {
             className="h-12 w-12 md:h-16 md:w-16 grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-300"
           >
             <Image
-              src="https://placehold.co/64x64.png"
+              src="/gemini.svg"
               alt="Google Gemini Logo"
               width={64}
               height={64}
-              data-ai-hint="gemini logo"
               className="w-full h-full object-contain"
             />
           </motion.div>

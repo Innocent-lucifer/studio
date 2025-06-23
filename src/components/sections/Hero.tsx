@@ -58,12 +58,11 @@ export default function Hero() {
           className="w-full h-auto aspect-video relative"
         >
           <Image
-            src="https://placehold.co/1200x675.png"
+            src="/hero-preview.png"
             alt="SagePostAI application preview"
-            layout="fill"
-            objectFit="cover"
+            fill
+            style={{objectFit:"cover"}}
             className="rounded-2xl shadow-2xl border-2 border-border"
-            data-ai-hint="social media dashboard"
           />
         </motion.div>
       </div>
