@@ -1,5 +1,5 @@
 import React from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from 'next/router';
 
 export default function Hero({ inputFocused, setInputFocused, inputText, setInputText, displayText }) {
   const router = useRouter();
