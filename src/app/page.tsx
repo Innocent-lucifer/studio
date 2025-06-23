@@ -17,7 +17,7 @@ import CTA from "@/components/sections/CTA";
 import Footer from "@/components/sections/Footer";
 import SEO from "@/components/SEO";
 
-export default function MarketingHomePage() {
+export default function Home() {
   const [scrolled, setScrolled] = useState(false);
   const [inputFocused, setInputFocused] = useState(false);
   const [inputText, setInputText] = useState("");
@@ -38,6 +38,7 @@ export default function MarketingHomePage() {
   }, []);
 
   useEffect(() => {
+    // App router doesn't have asPath, we check for hash in a client component
     if (window.location.hash) {
       const section = window.location.hash.substring(1);
       const element = document.getElementById(section);
@@ -151,7 +152,7 @@ export default function MarketingHomePage() {
   },
   {
     q: "What is the Smart Campaign Builder?",
-    a: "It’s a power feature that lets you plan 3–5 AI posts around a single idea or goal. It generates themed posts for a product launch, story arc, or an educational series."
+    a: "It’s a power feature that lets you plan 3–5 AI posts around a single idea or goal. It generates themed posts for a product launch, story arc, or educational series."
   },
   {
     q: "Can I edit the generated posts?",
@@ -184,7 +185,6 @@ export default function MarketingHomePage() {
         toggleMenu={toggleMenu}
         handleReload={handleReload}
         handleScrollToPricing={handleScrollToPricing}
-        router={router}
       />
       <main className="pt-10 sm:pt-14 flex-grow">
         <Hero
