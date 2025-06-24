@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from "react";
@@ -68,7 +67,7 @@ export default function Pricing({ plans }: PricingProps) {
               whileInView="visible"
               viewport={{ once: true }}
               whileHover={{ y: -5, scale: 1.03, transition: { type: 'spring', stiffness: 300 } }}
-              className={`relative w-full flex flex-col justify-between rounded-2xl p-8 bg-background shadow-lg border ${plan.borderClass} transition-all duration-300 hover:shadow-xl hover:shadow-primary/20`}
+              className={`relative w-full flex flex-col justify-between rounded-2xl p-8 bg-background shadow-lg border ${plan.borderClass} hover:shadow-xl hover:shadow-primary/20`}
             >
               {plan.badge && (
                 <div
