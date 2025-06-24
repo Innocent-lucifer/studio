@@ -60,7 +60,7 @@ export default function ContactPage() {
             {contactPoints.map((point, index) => {
                 const Icon = point.icon;
                 return (
-                    <Card key={index} className="bg-secondary border-border">
+                    <Card key={index} className="bg-background border-border">
                         <CardHeader className="flex flex-row items-center gap-4">
                             <div className="bg-primary/10 text-primary p-3 rounded-lg">
                                 <Icon className="w-6 h-6" />

@@ -120,12 +120,12 @@ export default function Comparison() {
           viewport={{ once: true }}
           transition={{ duration: 0.6, delay: 0.2 }}
           whileHover={{ y: -5, scale: 1.03, transition: { type: 'spring', stiffness: 300 } }}
-          className="rounded-2xl overflow-hidden bg-secondary shadow-lg border border-border"
+          className="rounded-2xl overflow-hidden bg-background shadow-lg border border-border"
         >
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
-                <tr className="bg-secondary/50 border-b border-border">
+                <tr className="border-b border-border">
                   <th className="p-4 text-sm font-semibold text-foreground/80">Feature</th>
                   <th className="p-4 text-sm font-semibold text-primary">SagePostAI</th>
                   <th className="p-4 text-sm font-semibold text-foreground/50">Other Tools</th>
@@ -140,7 +140,7 @@ export default function Comparison() {
                     whileInView={{ opacity: 1 }}
                     viewport={{ once: true }}
                     transition={{ delay: index * 0.05, duration: 0.3 }}
-                    whileHover={{ backgroundColor: "hsl(var(--background))" }}
+                    whileHover={{ backgroundColor: "hsl(var(--secondary))" }}
                     className="border-b border-border last:border-b-0"
                   >
                     <td className="p-4 text-sm font-medium text-foreground">{task}</td>
@@ -157,5 +157,3 @@ export default function Comparison() {
     </section>
   );
 }
-
-    

@@ -51,7 +51,7 @@ export default function ProblemSolution() {
           <motion.div
             variants={cardVariants}
             whileHover={{ y: -5, scale: 1.03, transition: { type: 'spring', stiffness: 300 } }}
-            className="bg-secondary p-8 rounded-2xl border border-border transition-shadow duration-300 hover:shadow-lg hover:shadow-primary/20"
+            className="bg-background p-8 rounded-2xl border border-border transition-shadow duration-300 hover:shadow-lg hover:shadow-primary/20"
           >
             <Clock className="w-10 h-10 text-primary mb-4" />
             <h3 className="text-xl font-bold text-foreground mb-3">
@@ -64,7 +64,7 @@ export default function ProblemSolution() {
           <motion.div
             variants={cardVariants}
             whileHover={{ y: -5, scale: 1.03, transition: { type: 'spring', stiffness: 300 } }}
-            className="bg-secondary p-8 rounded-2xl border border-border transition-shadow duration-300 hover:shadow-lg hover:shadow-primary/20"
+            className="bg-background p-8 rounded-2xl border border-border transition-shadow duration-300 hover:shadow-lg hover:shadow-primary/20"
           >
             <Brain className="w-10 h-10 text-primary mb-4" />
             <h3 className="text-xl font-bold text-foreground mb-3">
@@ -77,7 +77,7 @@ export default function ProblemSolution() {
           <motion.div
             variants={cardVariants}
             whileHover={{ y: -5, scale: 1.03, transition: { type: 'spring', stiffness: 300 } }}
-            className="bg-secondary p-8 rounded-2xl border border-border transition-shadow duration-300 hover:shadow-lg hover:shadow-primary/20"
+            className="bg-background p-8 rounded-2xl border border-border transition-shadow duration-300 hover:shadow-lg hover:shadow-primary/20"
           >
             <CalendarClock className="w-10 h-10 text-primary mb-4" />
             <h3 className="text-xl font-bold text-foreground mb-3">
@@ -92,5 +92,3 @@ export default function ProblemSolution() {
     </section>
   );
 }
-
-    

@@ -26,7 +26,7 @@ export default function TermsOfServicePage() {
               </Button>
             </Link>
           </div>
-          <div className="bg-secondary border border-border rounded-lg p-8 sm:p-10">
+          <div className="bg-background border border-border rounded-lg p-8 sm:p-10">
             <h1 className="text-3xl font-extrabold mb-6 text-foreground">
               Terms of Service
             </h1>

@@ -48,7 +48,7 @@ export default function AboutTeamPage() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.8, ease: "easeOut" }}
             >
-                <Card className="bg-secondary border-border shadow-xl">
+                <Card className="bg-background border-border shadow-xl">
                     <CardHeader>
                         <CardTitle className="text-3xl font-bold text-primary">Our Story</CardTitle>
                     </CardHeader>
@@ -121,7 +121,7 @@ export default function AboutTeamPage() {
     </div>
 
     <Dialog open={isRishabhStoryOpen} onOpenChange={setIsRishabhStoryOpen}>
-        <DialogContent className="sm:max-w-2xl bg-secondary border-border text-foreground">
+        <DialogContent className="sm:max-w-2xl bg-background border-border text-foreground">
             <DialogHeader>
                 <DialogTitle className="text-2xl text-primary">My Story - Rishabh Nauhowar</DialogTitle>
                 <DialogDescription>Founder & Product Strategist of SagePostAI</DialogDescription>

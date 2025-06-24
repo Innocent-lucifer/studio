@@ -67,7 +67,7 @@ export default function Pricing({ plans }: PricingProps) {
               whileInView="visible"
               viewport={{ once: true }}
               whileHover={{ y: -5, scale: 1.03, transition: { type: 'spring', stiffness: 300 } }}
-              className={`relative w-full flex flex-col justify-between rounded-2xl p-8 bg-secondary shadow-lg border ${plan.borderClass} hover:shadow-xl hover:shadow-primary/20`}
+              className={`relative w-full flex flex-col justify-between rounded-2xl p-8 bg-background shadow-lg border ${plan.borderClass} hover:shadow-xl hover:shadow-primary/20`}
             >
               {plan.badge && (
                 <div
@@ -110,5 +110,3 @@ export default function Pricing({ plans }: PricingProps) {
     </section>
   );
 }
-
-    
