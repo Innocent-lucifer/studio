@@ -1,6 +1,7 @@
 
 "use client";
 
+import React from "react";
 import { motion } from "framer-motion";
 import { Image as ImageIcon, Edit, Sparkles, Flame, PenTool, Bot, Hash, Monitor, Zap } from "lucide-react";
 import type { Icon } from "lucide-react";

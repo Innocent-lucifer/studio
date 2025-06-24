@@ -1,6 +1,7 @@
 
 "use client";
 
+import React from "react";
 import { motion } from "framer-motion";
 import { Linkedin, Twitter, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -118,5 +119,3 @@ export default function TeamSection({ onReadRishabhStory }: TeamSectionProps) {
     </section>
   );
 }
-
-    

@@ -1,6 +1,7 @@
 
 "use client";
 
+import React from "react";
 import { motion } from "framer-motion";
 import { CheckCircle, Sparkles } from "lucide-react";
 import Link from "next/link";
