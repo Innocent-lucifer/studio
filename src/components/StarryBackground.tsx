@@ -19,12 +19,12 @@ const StarryBackground: React.FC = () => {
   useEffect(() => {
     const generateStars = () => {
       const newStars: Star[] = [];
-      const numClusters = 7;
-      const starsPerCluster = 30;
-      const clusterRadius = 15;
+      const numClusters = 10;
+      const starsPerCluster = 30; // Increased density
+      const clusterRadius = 20; // Slightly larger clusters
 
       for (let i = 0; i < numClusters; i++) {
-        const clusterCenterX = Math.random() * 110 - 5; // Allow stars to start slightly off-screen
+        const clusterCenterX = Math.random() * 110 - 5;
         const clusterCenterY = Math.random() * 110 - 5;
 
         for (let j = 0; j < starsPerCluster; j++) {
@@ -38,10 +38,10 @@ const StarryBackground: React.FC = () => {
             id: i * starsPerCluster + j,
             top: `${top}%`,
             left: `${left}%`,
-            twinkleDuration: `${Math.random() * 3 + 2}s`, // 2s to 5s twinkle
-            twinkleDelay: `${Math.random() * 5}s`,
-            driftDuration: `${Math.random() * 60 + 40}s`, // 40s to 100s drift, very slow
-            size: Math.random() * 2 + 1, // 1px to 3px size
+            twinkleDuration: `${Math.random() * 4 + 3}s`, // 3s to 7s twinkle
+            twinkleDelay: `${Math.random() * 7}s`,
+            driftDuration: `${Math.random() * 70 + 50}s`, // 50s to 120s drift
+            size: Math.random() * 2 + 0.5, // 0.5px to 2.5px size for more variation
           });
         }
       }
