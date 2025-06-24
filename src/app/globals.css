@@ -75,3 +75,34 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Starry Background Animation */
+.starry-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -1;
+  overflow: hidden;
+}
+
+.star {
+  position: absolute;
+  background-color: white;
+  border-radius: 50%;
+  animation: twinkle_animation infinite;
+  opacity: 0;
+  box-shadow: 0 0 6px 2px rgba(255, 255, 255, 0.3);
+}
+
+@keyframes twinkle_animation {
+  0%, 100% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

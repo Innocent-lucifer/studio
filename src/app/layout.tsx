@@ -5,6 +5,7 @@ import { GeistMono } from 'geist/font/mono';
 import './globals.css';
 import { AuthProvider } from '@/context/AuthContext';
 import { Toaster } from "@/components/ui/toaster"; 
+import StarryBackground from '@/components/StarryBackground';
 
 const geistSans = GeistSans;
 const geistMono = GeistMono;
@@ -57,6 +58,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <StarryBackground />
         <AuthProvider>
           {children}
           <Toaster />
