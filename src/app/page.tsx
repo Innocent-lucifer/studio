@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -15,12 +14,14 @@ import Pricing from "@/components/sections/Pricing";
 import FAQ from "@/components/sections/FAQ";
 import CTA from "@/components/sections/CTA";
 import Footer from "@/components/sections/Footer";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Home() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [openFAQIndex, setOpenFAQIndex] = useState<number | null>(null);
   const router = useRouter();
+  const { user } = useAuth();
 
   useEffect(() => {
     const onScroll = () => {
@@ -147,6 +148,7 @@ export default function Home() {
         menuOpen={menuOpen}
         toggleMenu={toggleMenu}
         navLinks={navLinks}
+        user={user}
       />
       <main className="flex-grow">
         <Hero />
