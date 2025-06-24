@@ -44,7 +44,7 @@ export default function TeamSection({ onReadRishabhStory }: TeamSectionProps) {
   };
 
   return (
-    <section id="team" className="px-4 sm:px-6 py-20 sm:py-28 bg-secondary">
+    <section id="team" className="px-4 sm:px-6 py-20 sm:py-28">
       <div className="max-w-4xl mx-auto text-center mb-16">
         <motion.h2
             initial={{ opacity: 0, y: 20 }}
