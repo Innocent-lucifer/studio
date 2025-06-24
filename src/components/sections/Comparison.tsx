@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from "react";
@@ -11,7 +10,7 @@ export default function Comparison() {
       task: "Post Generation Speed",
       sage: (
         <>
-          <Zap className="inline-block w-4 h-4 text-primary mr-2" />
+          <Zap className="inline-block w-4 h-4 text-accent mr-2" />
           <span className="text-primary">Instant (&lt;2s)</span>
         </>
       ),
