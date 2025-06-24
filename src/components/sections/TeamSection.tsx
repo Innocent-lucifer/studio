@@ -84,8 +84,9 @@ export default function TeamSection({ onReadRishabhStory }: TeamSectionProps) {
                 <p className="text-sm text-primary font-medium">
                   {member.title}
                 </p>
+                <p className="text-xs text-accent font-semibold mt-1">(15-year-old)</p>
               </CardHeader>
-              <CardContent className="flex-grow">
+              <CardContent className="flex-grow pt-2">
                 <p className="text-foreground/70 text-base">{member.desc}</p>
               </CardContent>
               <CardFooter className="flex-col pt-6">
