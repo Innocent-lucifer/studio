@@ -1,10 +1,10 @@
 
 "use client";
 
+import { useState } from "react";
 import TeamSection from "@/components/sections/TeamSection";
 import Footer from "@/components/sections/Footer";
 import Header from "@/components/sections/Header";
-import React, { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -18,8 +18,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function AboutTeamPage() {
   const { user } = useAuth();
-  const [scrolled, setScrolled] = React.useState(false);
-  const [menuOpen, setMenuOpen] = React.useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [isRishabhStoryOpen, setIsRishabhStoryOpen] = useState(false);
 
   const navLinks = [
