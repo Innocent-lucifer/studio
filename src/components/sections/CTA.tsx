@@ -11,7 +11,7 @@ export default function CTA() {
   return (
     <section
       id="cta"
-      className="text-center py-20 sm:py-32 px-4 sm:px-6 bg-secondary"
+      className="text-center py-20 sm:py-32 px-4 sm:px-6"
     >
       <motion.div
         initial={{ opacity: 0, y: 20 }}

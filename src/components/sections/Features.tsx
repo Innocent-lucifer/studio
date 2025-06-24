@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from "react";
@@ -84,7 +85,7 @@ const itemVariants = {
 
 export default function Features() {
   return (
-    <section id="features" className="py-20 sm:py-28 px-4 sm:px-6 bg-secondary">
+    <section id="features" className="py-20 sm:py-28 px-4 sm:px-6">
       <div className="max-w-7xl mx-auto text-center">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -111,7 +112,7 @@ export default function Features() {
               key={title}
               variants={itemVariants}
               whileHover={{ y: -5, scale: 1.03, transition: { type: 'spring', stiffness: 300 } }}
-              className="p-6 text-left rounded-2xl bg-background border border-border shadow-lg hover:shadow-xl hover:shadow-primary/20 hover:border-primary/30"
+              className="p-6 text-left rounded-2xl bg-secondary border border-border shadow-lg hover:shadow-xl hover:shadow-primary/20 hover:border-primary/30"
             >
               <div className="bg-primary/10 text-primary p-2.5 rounded-lg inline-block mb-3">
                 <Icon className="w-5 h-5" />

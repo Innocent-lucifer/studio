@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from "react";
@@ -35,7 +36,7 @@ const cardVariants = {
 
 export default function Pricing({ plans }: PricingProps) {
   return (
-    <section id="pricing" className="py-20 sm:py-28 px-4 sm:px-6 bg-secondary">
+    <section id="pricing" className="py-20 sm:py-28 px-4 sm:px-6">
       <div className="max-w-7xl mx-auto text-center">
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -66,8 +67,8 @@ export default function Pricing({ plans }: PricingProps) {
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true }}
-              whileHover={{ y: -5, scale: 1.03, transition: { type: 'spring', stiffness: 400, damping: 25 } }}
-              className={`relative w-full flex flex-col justify-between rounded-2xl p-8 bg-background shadow-lg border ${plan.borderClass} hover:shadow-xl hover:shadow-primary/20`}
+              whileHover={{ y: -5, scale: 1.03, transition: { type: 'spring', stiffness: 300 } }}
+              className={`relative w-full flex flex-col justify-between rounded-2xl p-8 bg-secondary shadow-lg border ${plan.borderClass} hover:shadow-xl hover:shadow-primary/20`}
             >
               {plan.badge && (
                 <div
