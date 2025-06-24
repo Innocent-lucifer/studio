@@ -39,7 +39,7 @@ const testimonials = [
 
 const TestimonialCard = ({ quote, name, role }: { quote: string; name: string; role: string }) => (
   <motion.div
-    className="min-w-[320px] sm:min-w-[360px] h-auto bg-background border border-border rounded-2xl p-8 flex flex-col justify-between shadow-lg transition-all duration-300 hover:border-primary/50 hover:shadow-primary/10"
+    className="min-w-[320px] sm:min-w-[360px] h-auto bg-secondary border border-border rounded-2xl p-8 flex flex-col justify-between shadow-lg transition-all duration-300 hover:border-primary/50 hover:shadow-primary/10"
   >
     <p className="text-foreground/80 text-lg italic mb-6">
       “{quote}”
