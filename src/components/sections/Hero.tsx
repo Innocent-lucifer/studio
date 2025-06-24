@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -81,8 +80,8 @@ export default function Hero() {
     if (topic.trim()) {
       router.push(`/quick-post?topic=${encodeURIComponent(topic)}`);
     } else {
-      // If input is empty, default action is to go to login/dashboard
-      router.push('/login');
+      // If input is empty, redirect to the dashboard
+      router.push('/dashboard');
     }
   };
 
