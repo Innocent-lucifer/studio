@@ -1,7 +1,6 @@
-
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Clock, Search } from "lucide-react";
 import ProductHuntBadge from "../compos/ProductHuntBadge";
@@ -9,9 +8,55 @@ import Image from "next/image";
 import Link from 'next/link';
 import { Button } from "@/components/ui/button";
 
+const placeholders = [
+  "Enter topic to see the magic",
+  "e.g., The future of renewable energy",
+  "e.g., How AI is changing marketing",
+  "e.g., The benefits of a 4-day work week",
+];
+
+// Self-contained component for the typing animation
+const TypingPlaceholder = () => {
+  const [placeholderIndex, setPlaceholderIndex] = useState(0);
+  const [currentText, setCurrentText] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [loopNum, setLoopNum] = useState(0);
+
+  useEffect(() => {
+    const handleType = () => {
+      const i = loopNum % placeholders.length;
+      const fullText = placeholders[i];
+
+      const updatedText = isDeleting
+        ? fullText.substring(0, currentText.length - 1)
+        : fullText.substring(0, currentText.length + 1);
+
+      setCurrentText(updatedText);
+
+      if (!isDeleting && updatedText === fullText) {
+        setTimeout(() => setIsDeleting(true), 2000); // Pause before deleting
+      } else if (isDeleting && updatedText === '') {
+        setIsDeleting(false);
+        setLoopNum(loopNum + 1);
+      }
+    };
+
+    const typingSpeed = isDeleting ? 75 : 150;
+    const timer = setTimeout(handleType, typingSpeed);
+
+    return () => clearTimeout(timer);
+  }, [currentText, isDeleting, loopNum]);
+
+  return (
+    <span className="text-foreground/60">
+      {currentText}
+      <span className="animate-pulse text-foreground/80">|</span>
+    </span>
+  );
+};
+
+
 export default function Hero() {
-  const [inputText, setInputText] = useState("");
-  
   return (
     <section className="px-4 sm:px-6 py-28 sm:py-32 lg:py-40">
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
@@ -31,12 +76,18 @@ export default function Hero() {
           </p>
 
           <div className="flex flex-col sm:flex-row items-center gap-4">
-            <Link href="/login" passHref legacyBehavior>
-                <Button size="lg" className="w-full sm:w-auto bg-primary text-primary-foreground hover:bg-primary/90 transition-transform duration-200 hover:scale-105 shadow-lg shadow-primary/20">
+            <div className="relative w-full sm:w-auto sm:flex-grow">
+              <div className="flex h-14 w-full items-center rounded-md border border-input bg-secondary px-5 py-2 text-base ring-offset-background">
+                <TypingPlaceholder />
+              </div>
+            </div>
+            
+            <Button asChild size="lg" className="w-full sm:w-auto h-14 bg-primary text-primary-foreground hover:bg-primary/90 transition-transform duration-200 hover:scale-105 shadow-lg shadow-primary/20">
+                <Link href="/login">
                   <Search className="mr-2 h-5 w-5" />
                   Start Generating
-                </Button>
-            </Link>
+                </Link>
+            </Button>
           </div>
 
           <motion.div
@@ -58,7 +109,7 @@ export default function Hero() {
           className="w-full h-auto aspect-video relative"
         >
           <Image
-            src="/hero-preview.png"
+            src="/product-preview.png"
             alt="SagePostAI application preview"
             fill
             style={{objectFit:"cover"}}
