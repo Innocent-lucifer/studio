@@ -360,7 +360,6 @@ const SmartCampaignWizardInternal: React.FC = () => {
     
     let proceedWithGeneration = false;
     let costForThisAngleGeneration: keyof typeof CREDIT_COSTS | null = null;
-    let featureDescriptionForToast = "";
 
     if (generatedAnglesForCurrentResearch.has(selectedAngle.title)) {
         toast({ title: "Regenerating Posts", description: `Regenerating posts for '${selectedAngle.title}' (no extra cost for this research batch).` });
@@ -369,7 +368,6 @@ const SmartCampaignWizardInternal: React.FC = () => {
         proceedWithGeneration = true;
     } else {
         costForThisAngleGeneration = 'SMART_CAMPAIGN_ADDITIONAL_ANGLE';
-        featureDescriptionForToast = FEATURE_DESCRIPTIONS[costForThisAngleGeneration];
     }
 
     if (costForThisAngleGeneration) {
@@ -566,7 +564,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
       linkedinRepurposingIdeas: linkedinRepurposingIdeas.length > 0 ? linkedinRepurposingIdeas : undefined,
     };
     try {
-      const savedCampaign = await saveCampaignDraft(userIdToPass, campaignDataToSave);
+      const savedCampaign = await saveCampaignDraft(userIdToPass, campaignDataToSave, loadedCampaignId);
       if (savedCampaign && savedCampaign.id) {
         setLoadedCampaignId(savedCampaign.id); 
         toast({ title: "Campaign Saved!", description: "Your smart campaign progress has been saved." });
@@ -579,7 +577,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
       setIsSavingCampaign(false);
       setLoadingMessage("");
     }
-  }, [userIdToPass, campaignTopic, currentResearchedContent, selectedAngle, twitterSeries, linkedinSeries, twitterRepurposingIdeas, linkedinRepurposingIdeas, toast]);
+  }, [userIdToPass, campaignTopic, currentResearchedContent, selectedAngle, twitterSeries, linkedinSeries, twitterRepurposingIdeas, linkedinRepurposingIdeas, toast, loadedCampaignId]);
 
 
   const resetWizard = useCallback(() => {

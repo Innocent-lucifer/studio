@@ -279,33 +279,35 @@ export const deleteDraft = async (userId: string, draftId: string): Promise<bool
 // --- Campaign Draft Functions ---
 export const saveCampaignDraft = async (
   userId: string,
-  campaignData: Omit<CampaignDraft, 'id' | 'userId' | 'createdAt' | 'updatedAt'>
-): Promise<CampaignDraft | null> => {
+  campaignData: Omit<CampaignDraft, 'id' | 'userId' | 'createdAt' | 'updatedAt'>,
+  existingCampaignId?: string | null
+): Promise<{ id: string } | null> => {
   if (!userId) return null;
+
+  const dataPayload = {
+    userId,
+    campaignTopic: campaignData.campaignTopic,
+    researchedContext: campaignData.researchedContext,
+    selectedAngle: campaignData.selectedAngle,
+    twitterSeries: campaignData.twitterSeries || [],
+    linkedinSeries: campaignData.linkedinSeries || [],
+    twitterRepurposingIdeas: campaignData.twitterRepurposingIdeas || [],
+    linkedinRepurposingIdeas: campaignData.linkedinRepurposingIdeas || [],
+    updatedAt: serverTimestamp(),
+  };
+
   try {
-    const campaignDraftsCollectionRef = collection(db, 'users', userId, 'campaignDrafts');
-    const newCampaignDraftData: Omit<CampaignDraft, 'id'> = {
-      userId,
-      campaignTopic: campaignData.campaignTopic,
-      researchedContext: campaignData.researchedContext,
-      selectedAngle: campaignData.selectedAngle,
-      twitterSeries: campaignData.twitterSeries || undefined,
-      linkedinSeries: campaignData.linkedinSeries || undefined,
-      twitterRepurposingIdeas: campaignData.twitterRepurposingIdeas || undefined,
-      linkedinRepurposingIdeas: campaignData.linkedinRepurposingIdeas || undefined,
-      createdAt: serverTimestamp() as Timestamp,
-      updatedAt: serverTimestamp() as Timestamp,
-    };
-    const docRef = await addDoc(campaignDraftsCollectionRef, newCampaignDraftData);
-    const savedData: CampaignDraft = {
-      id: docRef.id,
-      ...newCampaignDraftData,
-      createdAt: newCampaignDraftData.createdAt,
-      updatedAt: newCampaignDraftData.updatedAt,
-    };
-    return savedData;
+    if (existingCampaignId) {
+      const draftRef = doc(db, 'users', userId, 'campaignDrafts', existingCampaignId);
+      await updateDoc(draftRef, dataPayload);
+      return { id: existingCampaignId };
+    } else {
+      const createPayload = { ...dataPayload, createdAt: serverTimestamp() };
+      const docRef = await addDoc(collection(db, 'users', userId, 'campaignDrafts'), createPayload);
+      return { id: docRef.id };
+    }
   } catch (error) {
-    console.error('Error saving campaign draft:', error);
+    console.error('Error saving/updating campaign draft:', error);
     return null;
   }
 };

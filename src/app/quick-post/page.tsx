@@ -4,7 +4,6 @@
 import { TopicResearch } from "@/components/TopicResearch";
 import { TwitterPostGenerator } from "@/components/TwitterPostGenerator";
 import { LinkedInPostGenerator } from "@/components/LinkedInPostGenerator";
-import { PostSelection } from "@/components/PostSelection";
 import { useState, useEffect, useCallback, Suspense } from "react";
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,6 +14,18 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { useSearchParams } from 'next/navigation';
+import dynamic from 'next/dynamic';
+
+const PostSelection = dynamic(() => import('@/components/PostSelection').then(mod => mod.PostSelection), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center p-10 rounded-md bg-slate-800/50 min-h-[300px]">
+      <Icons.loader className="h-10 w-10 animate-spin text-primary mr-3" />
+      <span className="text-lg text-slate-300">Loading editor...</span>
+    </div>
+  ),
+});
+
 
 const QuickPostPageContent = () => {
   const { user } = useAuth();
