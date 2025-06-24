@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from "react";
@@ -12,7 +11,7 @@ export default function Comparison() {
       sage: (
         <>
           <Zap className="inline-block w-4 h-4 text-primary mr-2" />
-          <span>Instant (&lt;2s)</span>
+          <span className="text-primary">Instant (&lt;2s)</span>
         </>
       ),
       others: "5–10s",
@@ -97,7 +96,7 @@ export default function Comparison() {
     },
     {
       task: "Conclusion",
-      sage: "Fast. Smart. Emotionally Tuned.",
+      sage: <span className="text-primary">Fast. Smart. Emotionally Tuned.</span>,
       others: "Slow. Generic. Prompt-Heavy.",
       speed: "Real-Time",
     },
