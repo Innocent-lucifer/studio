@@ -15,14 +15,11 @@ import {
 } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useToast } from "@/hooks/use-toast";
-import { getUserData, createUserDocument, type UserData } from '@/lib/firebaseUserActions';
-import { doc, getDoc, getFirestore, DocumentReference } from 'firebase/firestore';
-import { app } from '@/lib/firebase';
-
-const db = getFirestore(app);
+import { getUserData, type UserData } from '@/lib/firebaseUserActions';
 
 interface AuthContextType {
   user: User | null;
+  userData: UserData | null;
   loading: boolean;
   signUp: (email: string, pass: string) => Promise<User | null>;
   logIn: (email: string, pass: string) => Promise<User | null>;
@@ -35,71 +32,51 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
-
-  const ensureUserDocument = async (firebaseUser: User | null): Promise<void> => {
-    if (!firebaseUser) return;
-    try {
-      // Pass the fresh firebaseUser object to getUserData
-      const userData = await getUserData(firebaseUser.uid, firebaseUser);
-      if (!userData) {
-        // This case should ideally be rare if getUserData's creation logic works and throws on failure.
-        console.error(`AuthContext: Firestore document for user ${firebaseUser.uid} could NOT be verified or created after login/signup.`);
-        // toast({
-        //   variant: "destructive",
-        //   title: "Account Sync Issue",
-        //   description: "Could not fully sync your account. Some features might be limited. Please try refreshing.",
-        //   iconType: "alertTriangle"
-        // });
-      }
-    } catch (error: any) {
-      console.error(`AuthContext: Error during ensureUserDocument for ${firebaseUser.uid} (likely from Firestore operation): `, error.message, error);
-      // toast({
-      //   variant: "destructive",
-      //   title: "Database Connection Issue",
-      //   description: "Could not connect to the database. Some account features might be unavailable. Please check your internet connection or try again later.",
-      //   iconType: "alertTriangle"
-      // });
-    }
-  };
-
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       try {
         setUser(currentUser);
         if (currentUser) {
-          await ensureUserDocument(currentUser);
+          // Fetch and set user data when auth state changes
+          const data = await getUserData(currentUser.uid, currentUser);
+          setUserData(data);
+        } else {
+          // Clear user data on logout
+          setUserData(null);
         }
       } catch (error) {
         console.error("AuthContext: Critical error during user session initialization:", error);
-        // toast({
-        //   title: "Session Error",
-        //   description: "There was an issue initializing your session. Please refresh the page.",
-        //   variant: "destructive",
-        //   iconType: "alertTriangle"
-        // });
+        setUserData(null);
+        toast({
+          title: "Session Error",
+          description: "There was an issue initializing your session. Please refresh the page.",
+          variant: "destructive",
+          iconType: "alertTriangle"
+        });
       } finally {
         setLoading(false);
       }
     });
     return () => unsubscribe();
-  }, []);
+  }, [toast]);
 
   const signUp = async (email: string, pass: string): Promise<User | null> => {
     setLoading(true);
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
-      if (userCredential.user) {
-        await ensureUserDocument(userCredential.user);
+      const firebaseUser = userCredential.user;
+      if (firebaseUser) {
+        const data = await getUserData(firebaseUser.uid, firebaseUser);
+        setUserData(data);
       }
-      // Toast for successful sign up is now handled in LoginSignUpForm
-      return userCredential.user;
+      return firebaseUser;
     } catch (error) {
-      console.error("Sign up error:", error);
       const authError = error as AuthError;
-      throw authError; // Re-throw for LoginSignUpForm to handle specific toast
+      throw authError;
     } finally {
       setLoading(false);
     }
@@ -109,15 +86,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setLoading(true);
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, pass);
-      if (userCredential.user) {
-        await ensureUserDocument(userCredential.user);
+      const firebaseUser = userCredential.user;
+       if (firebaseUser) {
+        const data = await getUserData(firebaseUser.uid, firebaseUser);
+        setUserData(data);
       }
-      // Toast for successful sign in is now handled in LoginSignUpForm
       return userCredential.user;
     } catch (error) {
-      console.error("Log in error:", error);
       const authError = error as AuthError;
-      throw authError; // Re-throw for LoginSignUpForm to handle specific toast
+      throw authError;
     } finally {
       setLoading(false);
     }
@@ -129,15 +106,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     googleProviderInstance.setCustomParameters({ prompt: 'select_account' });
     try {
       const result = await signInWithPopup(auth, googleProviderInstance);
-      if (result.user) {
-        await ensureUserDocument(result.user);
+      const firebaseUser = result.user;
+      if (firebaseUser) {
+        const data = await getUserData(firebaseUser.uid, firebaseUser);
+        setUserData(data);
       }
-      // Toast for successful Google sign-in is now handled in LoginSignUpForm
-      return result.user;
+      return firebaseUser;
     } catch (error) {
-      console.error("Google sign in error object:", error);
       const authError = error as AuthError;
-      throw authError; // Re-throw for LoginSignUpForm to handle specific toast
+      throw authError;
     } finally {
       setLoading(false);
     }
@@ -147,9 +124,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setLoading(true);
     try {
       await signOut(auth);
+      // onAuthStateChanged handles setting user and userData to null
       toast({ title: "Logged Out", description: "You have been successfully logged out.", iconType: "checkCircle" });
     } catch (error) {
-      console.error("Log out error:", error);
       const authError = error as AuthError;
       toast({ variant: "destructive", title: "Log Out Failed", description: authError.message, iconType: "alertTriangle" });
     } finally {
@@ -161,10 +138,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setLoading(true);
     try {
       await sendPasswordResetEmail(auth, email);
-      // Toast for password reset success/failure is handled in LoginSignUpForm
       return { success: true };
     } catch (error) {
-      console.error("Password reset error:", error);
       const authError = error as AuthError;
       return { success: false, error: authError };
     } finally {
@@ -173,7 +148,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signUp, logIn, signInWithGoogle, logOut, sendPasswordReset }}>
+    <AuthContext.Provider value={{ user, userData, loading, signUp, logIn, signInWithGoogle, logOut, sendPasswordReset }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useEffect, useState, useCallback } from 'react'; 
+import React, { useEffect } from 'react'; 
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { Icons } from '@/components/icons';
@@ -10,17 +10,13 @@ import { HamburgerMenu } from '@/components/HamburgerMenu';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { getUserData, UserData } from '@/lib/firebaseUserActions';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 
 
 export default function AccountPage() {
-  const { user, loading: authLoading, logOut } = useAuth();
+  const { user, userData, loading: authLoading, logOut } = useAuth();
   const router = useRouter();
-  
-  const [userData, setUserData] = useState<UserData | null>(null);
-  const [isLoadingUserDetails, setIsLoadingUserDetails] = useState(true);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -28,26 +24,13 @@ export default function AccountPage() {
     }
   }, [user, authLoading, router]);
 
-  const fetchUserDetails = useCallback(async () => {
-    if (user) {
-      setIsLoadingUserDetails(true);
-      const fetchedUserData = await getUserData(user.uid);
-      setUserData(fetchedUserData);
-      setIsLoadingUserDetails(false);
-    }
-  }, [user]);
-
-  useEffect(() => {
-    fetchUserDetails();
-  }, [fetchUserDetails]);
-
   const handleLogout = async () => {
     await logOut();
     router.push('/login');
   };
 
 
-  if (authLoading || (!user && !authLoading) || isLoadingUserDetails) {
+  if (authLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col items-center justify-center p-4">
         <Icons.loader className="h-16 w-16 animate-spin text-primary" />

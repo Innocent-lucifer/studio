@@ -12,7 +12,6 @@
 import {ai}from '@/ai/ai-instance';
 import {z}from 'genkit';
 import { searchTwitter } from '@/ai/tools/searchTwitter';
-// import { getUserData } from '@/lib/firebaseUserActions'; // No credit deduction in research phase
 
 const ResearchTopicInputSchema = z.object({
   topic: z.string().describe('The topic to research.'),
@@ -38,7 +37,7 @@ const researchTopicPrompt = ai.definePrompt({
       twitterResults: z.string().describe('The results from searching Twitter. This could include tweets, "no results found", or error messages from the Twitter API, including if search is unconfigured.'),
     }),
   },
-  output: { // Ensure this output schema matches ResearchTopicOutputSchema, minus error
+  output: {
     schema: z.object({
       summary: z.string().describe('A summary of the researched topic, incorporating insights from various sources including Twitter if available.'),
     }),
@@ -69,19 +68,7 @@ const researchTopicFlow = ai.defineFlow(
   }, 
   async (input) => {
     const { topic, userId } = input;
-    // console.log(`[researchTopicFlow] User: ${userId || 'Guest'}, Topic: ${topic}`);
-
-    // No credit check for research itself, as it's often a precursor.
-    // Credits are typically deducted when content *generation* happens based on this research.
-    // if (userId) {
-    //   const userData = await getUserData(userId);
-    //   if (!userData) {
-    //     // If user data is critical even for research (e.g., for personalization not yet implemented),
-    //     // then this error would be appropriate. For now, research can proceed for guests.
-    //     // return { summary: "", error: "User data not found. Cannot perform research." };
-    //   }
-    // }
-
+    
     try {
       const twitterSearchResults = await searchTwitter({ query: topic });
 
@@ -91,8 +78,6 @@ const researchTopicFlow = ai.defineFlow(
       });
 
       if (!promptOutput || !promptOutput.summary || promptOutput.summary.trim() === "") {
-        console.warn(`[researchTopicFlow] Research for "${topic}" returned an empty or missing summary from the LLM. Using fallback summary.`);
-        
         let fallbackSummary = `AI-generated summary for "${topic}" could not be fully formed. `;
         
         if (twitterSearchResults && 
@@ -117,5 +102,3 @@ const researchTopicFlow = ai.defineFlow(
       return { summary: "", error: e.message || "An unexpected error occurred during topic research." };
     }
 });
-
-    

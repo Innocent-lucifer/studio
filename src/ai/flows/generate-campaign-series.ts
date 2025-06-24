@@ -10,7 +10,6 @@
 
 import {ai}from '@/ai/ai-instance';
 import {z}from 'genkit';
-// import { getUserData, deductCredits, CREDIT_COSTS, CreditTransactionType } from '@/lib/firebaseUserActions'; // Auth stubbed
 
 const GenerateCampaignSeriesInputSchema = z.object({
   topic: z.string().describe('The main topic of the campaign.'),
@@ -95,66 +94,29 @@ const generateCampaignSeriesFlow = ai.defineFlow({
   inputSchema: GenerateCampaignSeriesInputSchema,
   outputSchema: GenerateCampaignSeriesOutputSchema,
 }, async (input) => {
-  // console.log(`[generateCampaignSeriesFlow] User: ${input.userId || 'Guest'}, Platform: ${input.platform}, Topic: "${input.topic}", Angle: "${input.selectedAngle}"`);
-  // if (input.userId) { // Credit check temporarily disabled
-  //   const userData = await getUserData(input.userId);
-  //   if (!userData) { 
-  //     return { error: "User data not found. Cannot generate campaign series." };
-  //   }
-  //   if (userData.plan !== 'infinity' && (userData.credits || 0) < CREDIT_COSTS.SMART_CAMPAIGN_SERIES) {
-  //     return { error: `Insufficient credits for campaign series. Need ${CREDIT_COSTS.SMART_CAMPAIGN_SERIES}, have ${userData.credits || 0}.` };
-  //   }
-  // }
-
-
   try {
-    // console.log('[generateCampaignSeriesFlow] Calling AI prompt with input:', JSON.stringify(input, null, 2));
     const { output: promptOutput, usage } = await prompt(input);
-
-    // console.log('[generateCampaignSeriesFlow] Raw AI output:', JSON.stringify(promptOutput, null, 2));
-    // console.log('[generateCampaignSeriesFlow] Usage data:', JSON.stringify(usage, null, 2));
 
     if (!promptOutput) {
       const errorMessage = `AI returned no structured output (it was null or undefined) for ${input.platform}. This may be due to a model error, a very restrictive topic/angle, or internal safety policies. Input: Topic='${input.topic}', Angle='${input.selectedAngle}'.`;
-      console.warn(`[generateCampaignSeriesFlow] Critical Error: ${errorMessage}. Prompt output was null or undefined.`);
       return { error: errorMessage };
     }
 
     if (promptOutput.series === undefined || promptOutput.series === null) {
       const errorMessage = `AI output was missing the 'series' field for ${input.platform}. Input: Topic='${input.topic}', Angle='${input.selectedAngle}'. Raw output: ${JSON.stringify(promptOutput)}.`;
-      console.warn(`[generateCampaignSeriesFlow] Critical Error: ${errorMessage}. Raw AI output:`, JSON.stringify(promptOutput, null, 2));
       return { error: errorMessage };
     }
     
     if (!Array.isArray(promptOutput.series)) {
       const errorMessage = `AI returned an invalid 'series' field (expected an array, got ${typeof promptOutput.series}) for ${input.platform}. Input: Topic='${input.topic}', Angle='${input.selectedAngle}'. Raw output: ${JSON.stringify(promptOutput)}.`;
-      console.warn(`[generateCampaignSeriesFlow] Critical Error: ${errorMessage}. Raw AI output:`, JSON.stringify(promptOutput, null, 2));
       return { error: errorMessage };
     }
     
     if (promptOutput.series.length === 0) {
       const errorMessage = `AI returned an empty 'series' array for ${input.platform}. This could be due to the extreme vagueness of the topic/angle or the AI's inability to generate specific content. Input: Topic='${input.topic}', Angle='${input.selectedAngle}'. Raw output: ${JSON.stringify(promptOutput)}. Try a more specific angle or adjust the topic.`;
-      console.warn(`[generateCampaignSeriesFlow] Warning: ${errorMessage}. Raw AI output:`, JSON.stringify(promptOutput, null, 2));
-      // Returning an empty series here is not an error if the AI genuinely couldn't make posts,
-      // but it might be perceived as one. For now, let's return the empty series.
-      // return { error: errorMessage }; 
-      return { series: [] }; // The UI can then decide how to message this (e.g. "AI couldn't generate posts for this. Try again or refine angle")
+      return { series: [] };
     }
-
-    // if (input.userId) { // Credit deduction temporarily disabled
-    //   const deductionResult = await deductCredits(
-    //     input.userId,
-    //     CREDIT_COSTS.SMART_CAMPAIGN_SERIES,
-    //     `Generated ${input.platform} campaign series for topic: ${input.topic}, angle: ${input.selectedAngle}`,
-    //     CreditTransactionType.FEATURE_USE_SMART_CAMPAIGN_SERIES,
-    //     'generateCampaignSeriesFlow'
-    //   );
-    //   if (!deductionResult.success) {
-    //      console.error(`[generateCampaignSeriesFlow] Credit deduction failed for user ${input.userId}: ${deductionResult.error}`);
-    //   }
-    // }
-
-    // console.log(`[generateCampaignSeriesFlow] Successfully generated ${promptOutput.series.length} posts for ${input.platform}.`);
+    
     return { series: promptOutput.series };
 
   } catch (e: any) {
@@ -168,5 +130,3 @@ const generateCampaignSeriesFlow = ai.defineFlow({
     return { error: detailedErrorMessage };
   }
 });
-
-    

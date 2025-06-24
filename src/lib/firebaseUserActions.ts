@@ -116,7 +116,6 @@ export const createUserDocument = async (
   if (!user) return null;
   const userRef = doc(db, 'users', user.uid) as DocumentReference<UserData>;
 
-  // Default plan and credits for any new user
   const defaultPlan: UserData['plan'] = 'free';
   const defaultCredits = 40;
 
@@ -140,102 +139,57 @@ export const createUserDocument = async (
       };
 
       if (referredByCode) {
-          console.log(`User referred by code: ${referredByCode} - referral logic temporarily adjusted.`);
+          // Future referral logic can be implemented here
       }
 
       await setDoc(userRef, userData);
-      console.log(`User document created for ${user.uid} with plan: ${userData.plan} and credits: ${userData.credits}.`);
       return userData;
     } else {
-      console.log(`User document for ${user.uid} already existed. Ensuring fields are up-to-date.`);
       const existingData = userSnap.data() as UserData;
-      let needsUpdate = false;
       const updates: Partial<UserData> = {};
+      let needsUpdate = false;
 
       if (existingData.plan === undefined) {
-        updates.plan = defaultPlan; // Ensure it defaults to 'free'
+        updates.plan = defaultPlan;
         needsUpdate = true;
       }
       if (existingData.credits === undefined) {
-        // Use the plan that will be set (either existing or the new default)
         const planForCreditCalc = updates.plan || existingData.plan || defaultPlan;
-        updates.credits = planForCreditCalc === 'free' ? 40 :
-                          planForCreditCalc === 'starter' ? 700 : // Assuming starter if not free and not infinity
-                          planForCreditCalc === 'infinity' ? 999999 : 40; // Fallback to free credits
+        updates.credits = planForCreditCalc === 'free' ? 40 : 999999;
         needsUpdate = true;
       }
-
-      if (existingData.freeQuickPostUsed === undefined) { updates.freeQuickPostUsed = false; needsUpdate = true; }
-      if (existingData.freeImageToPostUsed === undefined) { updates.freeImageToPostUsed = false; needsUpdate = true; }
-      if (existingData.freeSmartCampaignAnglesUsed === undefined) { updates.freeSmartCampaignAnglesUsed = false; needsUpdate = true; }
-      if (existingData.freeSmartCampaignResearchTopicUsed === undefined) { updates.freeSmartCampaignResearchTopicUsed = false; needsUpdate = true; }
-
-
+      
+      // Add other field checks as necessary
       if (needsUpdate) {
         await updateDoc(userRef, updates);
-        console.log(`User document for ${user.uid} updated with new/default fields during ensureUserDocument.`);
         return { ...existingData, ...updates };
       }
+      
       return existingData;
     }
   } catch (error) {
-    console.error('Original Firestore error in createUserDocument:', error);
+    console.error('Error in createUserDocument:', error);
     throw error;
   }
 };
 
 export const getUserData = async (uid: string, userForCreation?: FirebaseAuthUser): Promise<UserData | null> => {
-  console.log(`[getUserData] Attempting to fetch data for UID: '${uid}'. Is userForCreation present: ${!!userForCreation}`);
-  if (!uid) {
-     console.error("[getUserData] UID is null or undefined. Cannot fetch user data.");
-     return null;
-  }
+  if (!uid) return null;
   const userRef = doc(db, 'users', uid) as DocumentReference<UserData>;
   try {
     const userSnap = await getDoc(userRef);
     if (userSnap.exists()) {
-      const data = userSnap.data();
-      // console.log(`[getUserData] Document found for UID: '${uid}'. Data:`, JSON.stringify(data).substring(0, 200) + "...");
-
-      const planToUse = data.plan || 'free';
-      const creditsToUse = data.credits ?? (planToUse === 'free' ? 40 : (planToUse === 'starter' ? 700 : (planToUse === 'infinity' ? 999999 : 40)));
-
-      const migratedData: UserData = {
-        ...data, // Spread existing data first
-        plan: planToUse,
-        credits: creditsToUse,
-        freeQuickPostUsed: data.freeQuickPostUsed ?? false,
-        freeImageToPostUsed: data.freeImageToPostUsed ?? false,
-        freeSmartCampaignAnglesUsed: data.freeSmartCampaignAnglesUsed ?? false,
-        freeSmartCampaignResearchTopicUsed: data.freeSmartCampaignResearchTopicUsed ?? false,
-      };
-
-      // Further safety checks for undefined fields even after spread
-      if (migratedData.plan === undefined) migratedData.plan = 'free';
-      if (migratedData.credits === undefined) migratedData.credits = (migratedData.plan === 'free' ? 40 : 700); // Default to starter if plan isn't free and credits missing
-      if (migratedData.freeQuickPostUsed === undefined) migratedData.freeQuickPostUsed = false;
-      if (migratedData.freeImageToPostUsed === undefined) migratedData.freeImageToPostUsed = false;
-      if (migratedData.freeSmartCampaignAnglesUsed === undefined) migratedData.freeSmartCampaignAnglesUsed = false;
-      if (migratedData.freeSmartCampaignResearchTopicUsed === undefined) migratedData.freeSmartCampaignResearchTopicUsed = false;
-
-      return migratedData;
+      return userSnap.data();
     } else {
-      // console.warn(`[getUserData] No user data found for UID: '${uid}'. Attempting creation if userForCreation object is provided.`);
       if (userForCreation && userForCreation.uid === uid) {
         return await createUserDocument(userForCreation);
-      } else if (userForCreation && userForCreation.uid !== uid) {
-        console.error(`[getUserData] UID mismatch: function called with '${uid}', but userForCreation has UID '${userForCreation.uid}'.`);
-        return null;
-      } else {
-        // console.warn(`[getUserData] No user object provided for creation for UID: '${uid}'. Returning null.`);
-        return null;
       }
+      return null;
     }
   } catch (error: any) {
-    console.error(`[getUserData] >>> CRITICAL Firestore Error for UID ${uid} <<< :`, error);
-    // console.error(`[getUserData] Full error object for Firestore exception:`, JSON.stringify(error));
-    if (error.code === 'unavailable' || (typeof error.message === 'string' && error.message.toLowerCase().includes('offline'))) {
-      throw new Error("Could not connect to the database. Please check your internet connection and try again.");
+    console.error(`[getUserData] Firestore Error for UID ${uid}:`, error);
+     if (error.code === 'unavailable' || (typeof error.message === 'string' && error.message.toLowerCase().includes('offline'))) {
+      throw new Error("Could not connect to the database. Please check your internet connection.");
     }
     throw error;
   }
@@ -248,7 +202,7 @@ export const deductCredits = async (
   isRegeneration: boolean = false,
   numUnits: number = 1
 ): Promise<{ success: boolean; error?: string; newCredits?: number; freePostUsedThisTime?: boolean; creditsSpent?: number }> => {
-  // Credits system is temporarily disabled. All actions are permitted.
+  // Credits system is temporarily disabled for the beta. All actions are permitted.
   return { success: true, newCredits: 9999, freePostUsedThisTime: false, creditsSpent: 0 };
 };
 
@@ -279,10 +233,7 @@ export const saveDraft = async (
 };
 
 export const getDrafts = async (userId: string): Promise<Draft[]> => {
-  if (!userId) {
-    console.error("User ID is required to fetch drafts.");
-    return [];
-  }
+  if (!userId) return [];
   try {
     const draftsCollectionRef = collection(db, 'users', userId, 'drafts');
     const q = query(draftsCollectionRef, orderBy('updatedAt', 'desc'));
@@ -299,10 +250,7 @@ export const updateDraftContent = async (
   draftId: string,
   newContent: string
 ): Promise<boolean> => {
-  if (!userId || !draftId) {
-    console.error("User ID and Draft ID are required to update a draft.");
-    return false;
-  }
+  if (!userId || !draftId) return false;
   try {
     const draftRef = doc(db, 'users', userId, 'drafts', draftId);
     await updateDoc(draftRef, {
@@ -317,10 +265,7 @@ export const updateDraftContent = async (
 };
 
 export const deleteDraft = async (userId: string, draftId: string): Promise<boolean> => {
-  if (!userId || !draftId) {
-    console.error("User ID and Draft ID are required to delete a draft.");
-    return false;
-  }
+  if (!userId || !draftId) return false;
   try {
     const draftRef = doc(db, 'users', userId, 'drafts', draftId);
     await deleteDoc(draftRef);
@@ -336,10 +281,7 @@ export const saveCampaignDraft = async (
   userId: string,
   campaignData: Omit<CampaignDraft, 'id' | 'userId' | 'createdAt' | 'updatedAt'>
 ): Promise<CampaignDraft | null> => {
-  if (!userId) {
-    console.error("User ID is required to save a campaign draft.");
-    return null;
-  }
+  if (!userId) return null;
   try {
     const campaignDraftsCollectionRef = collection(db, 'users', userId, 'campaignDrafts');
     const newCampaignDraftData: Omit<CampaignDraft, 'id'> = {
@@ -357,14 +299,7 @@ export const saveCampaignDraft = async (
     const docRef = await addDoc(campaignDraftsCollectionRef, newCampaignDraftData);
     const savedData: CampaignDraft = {
       id: docRef.id,
-      userId: newCampaignDraftData.userId,
-      campaignTopic: newCampaignDraftData.campaignTopic,
-      researchedContext: newCampaignDraftData.researchedContext,
-      selectedAngle: newCampaignDraftData.selectedAngle,
-      twitterSeries: newCampaignDraftData.twitterSeries,
-      linkedinSeries: newCampaignDraftData.linkedinSeries,
-      twitterRepurposingIdeas: newCampaignDraftData.twitterRepurposingIdeas,
-      linkedinRepurposingIdeas: newCampaignDraftData.linkedinRepurposingIdeas,
+      ...newCampaignDraftData,
       createdAt: newCampaignDraftData.createdAt,
       updatedAt: newCampaignDraftData.updatedAt,
     };
@@ -377,10 +312,7 @@ export const saveCampaignDraft = async (
 
 
 export const getCampaignDrafts = async (userId: string): Promise<CampaignDraft[]> => {
-  if (!userId) {
-    console.error("User ID is required to fetch campaign drafts.");
-    return [];
-  }
+  if (!userId) return [];
   try {
     const campaignDraftsCollectionRef = collection(db, 'users', userId, 'campaignDrafts');
     const q = query(campaignDraftsCollectionRef, orderBy('updatedAt', 'desc'));
@@ -393,17 +325,11 @@ export const getCampaignDrafts = async (userId: string): Promise<CampaignDraft[]
 };
 
 export const getCampaignDraftById = async (userId: string, campaignDraftId: string): Promise<CampaignDraft | null> => {
-  if (!userId || !campaignDraftId) {
-    console.error("User ID and Campaign Draft ID are required.");
-    return null;
-  }
+  if (!userId || !campaignDraftId) return null;
   try {
     const campaignDraftRef = doc(db, 'users', userId, 'campaignDrafts', campaignDraftId) as DocumentReference<CampaignDraft>;
     const docSnap = await getDoc(campaignDraftRef);
-    if (docSnap.exists()) {
-      return { id: docSnap.id, ...docSnap.data() };
-    }
-    return null;
+    return docSnap.exists() ? { id: docSnap.id, ...docSnap.data() } : null;
   } catch (error) {
     console.error('Error fetching campaign draft by ID:', error);
     return null;
@@ -411,10 +337,7 @@ export const getCampaignDraftById = async (userId: string, campaignDraftId: stri
 };
 
 export const deleteCampaignDraft = async (userId: string, campaignDraftId: string): Promise<boolean> => {
-  if (!userId || !campaignDraftId) {
-    console.error("User ID and Campaign Draft ID are required to delete.");
-    return false;
-  }
+  if (!userId || !campaignDraftId) return false;
   try {
     const campaignDraftRef = doc(db, 'users', userId, 'campaignDrafts', campaignDraftId);
     await deleteDoc(campaignDraftRef);

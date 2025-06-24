@@ -8,10 +8,8 @@
  * - SuggestRepurposingIdeasOutput - The return type for the function.
  */
 
-import {ai} from '@/ai/ai-instance';
-import {z} from 'genkit';
-
-// import { getUserData } from '@/lib/firebaseUserActions'; 
+import {ai}from '@/ai/ai-instance';
+import {z}from 'genkit';
 
 const SuggestRepurposingIdeasInputSchema = z.object({
   topic: z.string().describe('The main topic of the campaign.'),
@@ -34,10 +32,10 @@ export async function suggestRepurposingIdeas(input: SuggestRepurposingIdeasInpu
 
 const prompt = ai.definePrompt({
   name: 'suggestRepurposingIdeasPrompt',
-  input: { // Pass full input, prompt uses relevant fields
+  input: {
     schema: SuggestRepurposingIdeasInputSchema,
   },
-  output: { // Output from LLM direct
+  output: {
     schema: z.object({
       ideas: z.array(z.string()).describe('An array of repurposing ideas as bullet points.'),
     }),
@@ -64,11 +62,6 @@ const suggestRepurposingIdeasFlow = ai.defineFlow({
   inputSchema: SuggestRepurposingIdeasInputSchema,
   outputSchema: SuggestRepurposingIdeasOutputSchema,
 }, async (input) => {
-  // Auth logic:
-  // const userData = await getUserData(input.userId);
-  // if (!userData) return { error: "User data not found." };
-  // No credit check here as this is typically a free add-on feature.
-
   try {
     const { output: promptOutput } = await prompt(input);
 

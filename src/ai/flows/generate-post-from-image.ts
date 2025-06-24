@@ -10,7 +10,6 @@
 
 import {ai}from '@/ai/ai-instance';
 import {z}from 'genkit';
-// Credit deduction logic is now handled client-side in visual-post/page.tsx
 
 const GeneratePostFromImageInputSchema = z.object({
   imageDataUri: z
@@ -88,17 +87,11 @@ const generatePostFromImageFlow = ai.defineFlow({
   inputSchema: GeneratePostFromImageInputSchema,
   outputSchema: GeneratePostFromImageOutputSchema,
 }, async (input) => {
-  // console.log('[generatePostFromImageFlow] User:', input.userId || 'Guest', { ...input, imageDataUri: input.imageDataUri.substring(0,50) + "..."});
-  // Credit deduction is now handled client-side before this flow is called.
-
   try {
     const { output: promptOutput, usage } = await prompt(input);
-    // console.log('[generatePostFromImageFlow] Raw AI output:', JSON.stringify(promptOutput, null, 2));
-    // console.log('[generatePostFromImageFlow] Usage data:', JSON.stringify(usage, null, 2));
 
     if (!promptOutput || !promptOutput.post) {
       const errorMessage = "AI failed to generate a post from the image. The model might not have returned any content or the expected 'post' field was missing.";
-      console.warn(`[generatePostFromImageFlow] Error: ${errorMessage}`);
       return { error: errorMessage };
     }
     
@@ -115,4 +108,3 @@ const generatePostFromImageFlow = ai.defineFlow({
     return { error: detailedErrorMessage };
   }
 });
-

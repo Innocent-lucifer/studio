@@ -97,10 +97,8 @@ const generateLinkedInPostsFlow = ai.defineFlow(
     try {
       let researchedInformation = input.topic;
       if (!input.isRegeneration && ((!input.topicDisplay && input.topic.length < 100) || (input.topicDisplay && input.topic.length < 100 && input.topic === input.topicDisplay))) {
-         console.log(`[generateLinkedInPostsFlow] Short topic detected, performing research for: "${input.topic}"`);
          const researchedInfoResult = await researchTopic({topic: input.topic, userId: input.userId});
          if (researchedInfoResult.error) {
-           console.warn(`[generateLinkedInPostsFlow] Research failed: ${researchedInfoResult.error}. Proceeding with basic topic.`);
            researchedInformation = input.topic;
          } else {
            researchedInformation = researchedInfoResult.summary;
@@ -130,7 +128,6 @@ const generateLinkedInPostsFlow = ai.defineFlow(
       return { 
         posts: promptOutput.posts,
         creditsSpent: creditsSpentForThisAction,
-        // Free post usage is handled at the research step now
         freePostUsed: false,
       };
 

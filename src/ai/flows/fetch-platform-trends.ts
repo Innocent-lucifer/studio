@@ -12,7 +12,6 @@
 import {ai}from '@/ai/ai-instance';
 import {z}from 'genkit';
 import { searchTwitter } from '@/ai/tools/searchTwitter';
-// import { getUserData, deductCredits, CREDIT_COSTS, CreditTransactionType } from '@/lib/firebaseUserActions'; 
 
 const TrendSchema = z.object({
   id: z.string().describe('A unique identifier for the trend.'),
@@ -102,26 +101,12 @@ const fetchPlatformTrendsFlow = ai.defineFlow({
   inputSchema: FetchPlatformTrendsInputSchema,
   outputSchema: FetchPlatformTrendsOutputSchema,
 }, async (input) => {
-  // console.log(`[fetchPlatformTrendsFlow] User: ${input.userId || 'Guest'}, Platform: ${input.platform}, Category: "${input.category}"`);
-  // if (input.userId) { // Credit check temporarily disabled
-  //   const userData = await getUserData(input.userId);
-  //   if (!userData) {
-  //      return { error: "User data not found. Cannot fetch trends." };
-  //   }
-  //   // Example: Deduct a small amount for fetching trends, or make it free.
-  //   // if (userData.plan !== 'infinity' && (userData.credits || 0) < CREDIT_COSTS.TREND_EXPLORER_FETCH) {
-  //   //   return { error: `Insufficient credits for Trend Explorer. Need ${CREDIT_COSTS.TREND_EXPLORER_FETCH}, have ${userData.credits || 0}.` };
-  //   // }
-  // }
-
   let twitterSearchResults: string | undefined = undefined;
 
   try {
     if (input.platform === 'Twitter') {
       const searchQuery = input.category === 'All' ? 'trending topics' : `trending in ${input.category}`;
-      // console.log(`[fetchPlatformTrendsFlow] Searching Twitter with query: "${searchQuery}"`);
       twitterSearchResults = await searchTwitter({ query: searchQuery });
-      // console.log(`[fetchPlatformTrendsFlow] Twitter search results for "${searchQuery}": ${twitterSearchResults.substring(0, 200)}...`);
     }
 
     const promptInput = {
@@ -131,40 +116,21 @@ const fetchPlatformTrendsFlow = ai.defineFlow({
       numTrendsToGenerate: input.numTrendsToGenerate,
     };
 
-    // console.log('[fetchPlatformTrendsFlow] Calling AI prompt with input:', JSON.stringify(promptInput, null, 2));
     const { output: promptOutput, usage } = await prompt(promptInput);
-
-    // console.log('[fetchPlatformTrendsFlow] Raw AI output:', JSON.stringify(promptOutput, null, 2));
-    // console.log('[fetchPlatformTrendsFlow] Usage data:', JSON.stringify(usage, null, 2));
 
     if (!promptOutput || !promptOutput.generatedTrends || promptOutput.generatedTrends.length === 0) {
       const errorMessage = `AI returned no trends for ${input.platform}, category "${input.category}". The model might not have found relevant topics or there was an issue with its response structure.`;
-      console.warn(`[fetchPlatformTrendsFlow] Warning: ${errorMessage}. Raw AI output:`, JSON.stringify(promptOutput, null, 2));
-      return { trends: [], error: errorMessage }; // Return empty array with error for user feedback
+      return { trends: [], error: errorMessage };
     }
 
     const trends: Trend[] = promptOutput.generatedTrends.map((t, index) => ({
       ...t,
-      id: `${input.platform}-${input.category}-${index}-${Date.now()}`, // Simple unique ID
+      id: `${input.platform}-${input.category}-${index}-${Date.now()}`,
       platform: input.platform,
-      category: input.category, // Assign the input category
-      region: 'Global', // Default to Global for now
+      category: input.category,
+      region: 'Global',
     }));
-
-    // if (input.userId) { // Credit deduction temporarily disabled
-    //   // const deductionResult = await deductCredits(
-    //   //   input.userId,
-    //   //   CREDIT_COSTS.TREND_EXPLORER_FETCH,
-    //   //   `Fetched trends for ${input.platform}, category ${input.category}`,
-    //   //   CreditTransactionType.FEATURE_USE_TREND_EXPLORER,
-    //   //   'fetchPlatformTrendsFlow'
-    //   // );
-    //   // if (!deductionResult.success) {
-    //   //    console.error(`[fetchPlatformTrendsFlow] Credit deduction failed for user ${input.userId}: ${deductionResult.error}`);
-    //   // }
-    // }
-
-    // console.log(`[fetchPlatformTrendsFlow] Successfully generated ${trends.length} trends for ${input.platform}, category "${input.category}".`);
+    
     return { trends };
 
   } catch (e: any) {
@@ -176,5 +142,3 @@ const fetchPlatformTrendsFlow = ai.defineFlow({
     return { error: detailedErrorMessage };
   }
 });
-
-    

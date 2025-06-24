@@ -105,11 +105,8 @@ const generateTwitterPostsFlow = ai.defineFlow(
       // The research part of the flow is now simplified, as the initial call comes from the UI
       // which has already done the research. This is just a fallback.
       if (!input.isRegeneration && ((!input.topicDisplay && input.topic.length < 100) || (input.topicDisplay && input.topic.length < 100 && input.topic === input.topicDisplay))) {
-        // console.log(`[generateTwitterPostsFlow] Short topic detected, performing research for: "${input.topic}"`);
         const researchedInfoResult = await researchTopic({ topic: input.topic, userId: input.userId });
-        if (researchedInfoResult.error) {
-          // console.warn(`[generateTwitterPostsFlow] Research failed: ${researchedInfoResult.error}. Proceeding with basic topic.`);
-        } else {
+        if (!researchedInfoResult.error) {
           researchedInformation = researchedInfoResult.summary;
         }
       }
@@ -127,12 +124,10 @@ const generateTwitterPostsFlow = ai.defineFlow(
       return { 
         posts: promptOutput.posts, 
         creditsSpent: creditsSpentForThisAction,
-        // Free post usage is handled at the research step now
         freePostUsed: false, 
       };
 
     } catch (e: any) {
-      // console.error("[generateTwitterPostsFlow] Error:", e);
       return { error: e.message || "An unexpected error occurred during Twitter post generation." };
     }
   }
