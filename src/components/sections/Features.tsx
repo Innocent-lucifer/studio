@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from "react";
@@ -111,7 +110,7 @@ export default function Features() {
             <motion.div
               key={title}
               variants={itemVariants}
-              whileHover={{ scale: 1.02 }}
+              whileHover={{ scale: 1.03, transition: { type: 'spring', stiffness: 400, damping: 17 } }}
               className="p-6 text-left rounded-2xl bg-background border border-border shadow-lg transition-all duration-300 hover:shadow-xl hover:shadow-primary/20 hover:border-primary/30"
             >
               <div className="bg-primary/10 text-primary p-2.5 rounded-lg inline-block mb-3">
