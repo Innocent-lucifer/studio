@@ -18,16 +18,36 @@ const StarryBackground: React.FC = () => {
   useEffect(() => {
     const generateStars = () => {
       const newStars: Star[] = [];
-      const numStars = 150;
-      for (let i = 0; i < numStars; i++) {
-        newStars.push({
-          id: i,
-          top: `${Math.random() * 100}%`,
-          left: `${Math.random() * 100}%`,
-          animationDuration: `${Math.random() * 2 + 2}s`, // Slower twinkle: 2s to 4s
-          animationDelay: `${Math.random() * 4}s`,
-          size: Math.random() * 2 + 1,
-        });
+      const numClusters = 7; // Define how many star clusters to generate
+      const starsPerCluster = 30; // Stars per cluster
+      const clusterRadius = 15; // Max radius of a cluster in viewport %
+
+      for (let i = 0; i < numClusters; i++) {
+        // Define a random center for each cluster
+        const clusterCenterX = Math.random() * 100;
+        const clusterCenterY = Math.random() * 100;
+
+        for (let j = 0; j < starsPerCluster; j++) {
+          // Position stars around the cluster center using a non-uniform distribution
+          // for a more natural look. A power function helps concentrate stars near the center.
+          const angle = Math.random() * 2 * Math.PI;
+          const radius = Math.pow(Math.random(), 2) * clusterRadius;
+          
+          const left = clusterCenterX + radius * Math.cos(angle);
+          const top = clusterCenterY + radius * Math.sin(angle);
+
+          // Ensure stars stay within the viewport
+          if (left < 0 || left > 100 || top < 0 || top > 100) continue;
+
+          newStars.push({
+            id: i * starsPerCluster + j,
+            top: `${top}%`,
+            left: `${left}%`,
+            animationDuration: `${Math.random() * 2 + 2}s`, // 2s to 4s twinkle
+            animationDelay: `${Math.random() * 4}s`,
+            size: Math.random() * 2 + 1, // 1px to 3px size
+          });
+        }
       }
       setStars(newStars);
     };
