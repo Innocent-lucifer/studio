@@ -1,7 +1,6 @@
 
 "use client";
 
-import React from "react";
 import { motion } from "framer-motion";
 
 const steps = [
@@ -69,3 +68,5 @@ export default function HowItWorks() {
     </section>
   );
 }
+
+    

@@ -1,7 +1,6 @@
 
 "use client";
 
-import React from "react";
 import { Triangle } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -31,3 +30,5 @@ export default function ProductHuntBadge() {
     </motion.a>
   );
 }
+
+    

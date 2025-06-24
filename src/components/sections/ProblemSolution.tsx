@@ -1,7 +1,6 @@
 
 "use client";
 
-import React from "react";
 import { motion } from "framer-motion";
 import { Clock, Brain, CalendarClock } from "lucide-react";
 
@@ -93,3 +92,5 @@ export default function ProblemSolution() {
     </section>
   );
 }
+
+    
