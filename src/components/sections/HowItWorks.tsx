@@ -56,7 +56,7 @@ export default function HowItWorks() {
               key={step}
               variants={itemVariants}
               whileHover={{ y: -5, scale: 1.03, transition: { type: 'spring', stiffness: 300 } }}
-              className="p-8 rounded-2xl bg-secondary border border-border shadow-md"
+              className="p-8 rounded-2xl bg-secondary border border-border shadow-md transition-shadow duration-300 hover:shadow-lg hover:shadow-primary/20"
             >
               <h3 className="text-xl font-semibold mb-3 text-primary">
                 {step}
