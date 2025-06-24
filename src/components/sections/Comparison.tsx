@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from "react";
@@ -22,7 +23,7 @@ export default function Comparison() {
       sage: (
         <>
           <CheckCircle className="inline-block w-4 h-4 text-green-500 mr-2" />
-          Text + Image Support
+          <span className="text-primary">Text + Image Support</span>
         </>
       ),
       others: "Text Only",
@@ -33,7 +34,7 @@ export default function Comparison() {
       sage: (
         <>
           <CheckCircle className="inline-block w-4 h-4 text-green-500 mr-2" />
-          Mirrors Your Style
+          <span className="text-primary">Mirrors Your Style</span>
         </>
       ),
       others: "Robotic & Flat",
@@ -44,7 +45,7 @@ export default function Comparison() {
       sage: (
         <>
           <CheckCircle className="inline-block w-4 h-4 text-green-500 mr-2" />
-          Smart & Contextual
+          <span className="text-primary">Smart & Contextual</span>
         </>
       ),
       others: "Manual & Random",
@@ -55,7 +56,7 @@ export default function Comparison() {
       sage: (
         <>
           <CheckCircle className="inline-block w-4 h-4 text-green-500 mr-2" />
-          Auto-Tailored
+          <span className="text-primary">Auto-Tailored</span>
         </>
       ),
       others: "One-Size-Fits-All",
@@ -66,7 +67,7 @@ export default function Comparison() {
       sage: (
         <>
           <CheckCircle className="inline-block w-4 h-4 text-green-500 mr-2" />
-          Built-In Feature
+          <span className="text-primary">Built-In Feature</span>
         </>
       ),
       others: "Not Available",
@@ -77,7 +78,7 @@ export default function Comparison() {
       sage: (
         <>
           <CheckCircle className="inline-block w-4 h-4 text-green-500 mr-2" />
-          Real-Time Trends
+          <span className="text-primary">Real-Time Trends</span>
         </>
       ),
       others: "No Trend Detection",
@@ -88,7 +89,7 @@ export default function Comparison() {
       sage: (
         <>
           <CheckCircle className="inline-block w-4 h-4 text-green-500 mr-2" />
-          (Sage Infinity Plan)
+          <span className="text-primary">(Sage Infinity Plan)</span>
         </>
       ),
       others: "Credit Capped",
