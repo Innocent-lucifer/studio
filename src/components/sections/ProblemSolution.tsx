@@ -51,6 +51,7 @@ export default function ProblemSolution() {
         >
           <motion.div
             variants={cardVariants}
+            whileHover={{ y: -5, scale: 1.03, transition: { type: 'spring', stiffness: 300 } }}
             className="bg-secondary p-8 rounded-2xl border border-border"
           >
             <Clock className="w-10 h-10 text-primary mb-4" />
@@ -63,6 +64,7 @@ export default function ProblemSolution() {
           </motion.div>
           <motion.div
             variants={cardVariants}
+            whileHover={{ y: -5, scale: 1.03, transition: { type: 'spring', stiffness: 300 } }}
             className="bg-secondary p-8 rounded-2xl border border-border"
           >
             <Brain className="w-10 h-10 text-primary mb-4" />
@@ -75,6 +77,7 @@ export default function ProblemSolution() {
           </motion.div>
           <motion.div
             variants={cardVariants}
+            whileHover={{ y: -5, scale: 1.03, transition: { type: 'spring', stiffness: 300 } }}
             className="bg-secondary p-8 rounded-2xl border border-border"
           >
             <CalendarClock className="w-10 h-10 text-primary mb-4" />

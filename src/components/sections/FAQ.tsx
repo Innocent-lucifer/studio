@@ -55,7 +55,7 @@ export default function FAQ({ faqs, openFAQIndex, toggleFAQ }: FAQProps) {
             <motion.div
               key={i}
               className="bg-secondary rounded-lg border border-border overflow-hidden"
-              whileHover={{ borderColor: "hsl(var(--primary))", transition: { duration: 0.2 } }}
+              whileHover={{ scale: 1.01, borderColor: "hsl(var(--primary))", transition: { type: 'spring', stiffness: 400, damping: 10 } }}
             >
               <button
                 onClick={() => toggleFAQ(i)}

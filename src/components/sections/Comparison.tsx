@@ -120,6 +120,7 @@ export default function Comparison() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6, delay: 0.2 }}
+          whileHover={{ scale: 1.01, boxShadow: "0px 10px 30px -5px hsl(var(--primary)/0.1)" }}
           className="rounded-2xl overflow-hidden bg-secondary shadow-lg border border-border"
         >
           <div className="overflow-x-auto">
@@ -140,7 +141,8 @@ export default function Comparison() {
                     whileInView={{ opacity: 1 }}
                     viewport={{ once: true }}
                     transition={{ delay: index * 0.05, duration: 0.3 }}
-                    className="border-b border-border last:border-b-0 transition duration-300 hover:bg-secondary/80"
+                    whileHover={{ backgroundColor: "hsl(var(--background))" }}
+                    className="border-b border-border last:border-b-0"
                   >
                     <td className="p-4 text-sm font-medium text-foreground">{task}</td>
                     <td className="p-4 text-sm font-semibold text-foreground">{sage}</td>

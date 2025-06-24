@@ -111,6 +111,7 @@ export default function Features() {
             <motion.div
               key={title}
               variants={itemVariants}
+              whileHover={{ y: -5, scale: 1.02, transition: { type: 'spring', stiffness: 300 } }}
               className="p-8 text-left rounded-2xl bg-background border border-border shadow-lg"
             >
               <div className="bg-primary/10 text-primary p-3 rounded-lg inline-block mb-4">
