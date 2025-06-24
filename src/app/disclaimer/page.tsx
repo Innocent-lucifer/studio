@@ -16,7 +16,7 @@ const PolicySection: React.FC<{title: string, children: React.ReactNode}> = ({ t
 
 export default function DisclaimerPage() {
   return (
-    <div className="bg-background text-foreground min-h-screen flex flex-col">
+    <div className="text-foreground min-h-screen flex flex-col">
         <main className="flex-grow py-16 sm:py-24 px-4 sm:px-6">
             <div className="max-w-3xl mx-auto">
                 <div className="mb-8">
