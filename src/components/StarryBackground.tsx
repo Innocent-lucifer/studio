@@ -7,8 +7,9 @@ interface Star {
   id: number;
   top: string;
   left: string;
-  animationDuration: string;
-  animationDelay: string;
+  twinkleDuration: string;
+  twinkleDelay: string;
+  driftDuration: string;
   size: number;
 }
 
@@ -18,33 +19,28 @@ const StarryBackground: React.FC = () => {
   useEffect(() => {
     const generateStars = () => {
       const newStars: Star[] = [];
-      const numClusters = 7; // Define how many star clusters to generate
-      const starsPerCluster = 30; // Stars per cluster
-      const clusterRadius = 15; // Max radius of a cluster in viewport %
+      const numClusters = 7;
+      const starsPerCluster = 30;
+      const clusterRadius = 15;
 
       for (let i = 0; i < numClusters; i++) {
-        // Define a random center for each cluster
-        const clusterCenterX = Math.random() * 100;
-        const clusterCenterY = Math.random() * 100;
+        const clusterCenterX = Math.random() * 110 - 5; // Allow stars to start slightly off-screen
+        const clusterCenterY = Math.random() * 110 - 5;
 
         for (let j = 0; j < starsPerCluster; j++) {
-          // Position stars around the cluster center using a non-uniform distribution
-          // for a more natural look. A power function helps concentrate stars near the center.
           const angle = Math.random() * 2 * Math.PI;
           const radius = Math.pow(Math.random(), 2) * clusterRadius;
           
           const left = clusterCenterX + radius * Math.cos(angle);
           const top = clusterCenterY + radius * Math.sin(angle);
 
-          // Ensure stars stay within the viewport
-          if (left < 0 || left > 100 || top < 0 || top > 100) continue;
-
           newStars.push({
             id: i * starsPerCluster + j,
             top: `${top}%`,
             left: `${left}%`,
-            animationDuration: `${Math.random() * 2 + 2}s`, // 2s to 4s twinkle
-            animationDelay: `${Math.random() * 4}s`,
+            twinkleDuration: `${Math.random() * 3 + 2}s`, // 2s to 5s twinkle
+            twinkleDelay: `${Math.random() * 5}s`,
+            driftDuration: `${Math.random() * 60 + 40}s`, // 40s to 100s drift, very slow
             size: Math.random() * 2 + 1, // 1px to 3px size
           });
         }
@@ -59,16 +55,23 @@ const StarryBackground: React.FC = () => {
       {stars.map((star) => (
         <div
           key={star.id}
-          className="star"
+          className="star-wrapper"
           style={{
             top: star.top,
             left: star.left,
-            width: `${star.size}px`,
-            height: `${star.size}px`,
-            animationDuration: star.animationDuration,
-            animationDelay: star.animationDelay,
+            animation: `drift_animation ${star.driftDuration} ease-in-out infinite alternate`,
           }}
-        />
+        >
+          <div
+            className="star"
+            style={{
+              width: `${star.size}px`,
+              height: `${star.size}px`,
+              animation: `twinkle_animation ${star.twinkleDuration} ease-in-out infinite`,
+              animationDelay: star.twinkleDelay,
+            }}
+          />
+        </div>
       ))}
     </div>
   );

@@ -87,12 +87,14 @@
   overflow: hidden;
 }
 
-.star {
+.star-wrapper {
   position: absolute;
+}
+
+.star {
   background-color: white;
   border-radius: 50%;
-  animation: twinkle_animation infinite;
-  opacity: 0;
+  opacity: 0; /* Initial opacity for twinkle animation */
   box-shadow: 0 0 6px 2px rgba(255, 255, 255, 0.3);
 }
 
@@ -105,4 +107,14 @@
     opacity: 1;
     transform: scale(1);
   }
+}
+
+@keyframes drift_animation {
+    from {
+        transform: translate(0px, 0px);
+    }
+    to {
+        /* Move stars across the screen over a long duration for a subtle drift */
+        transform: translate(-100px, -50px);
+    }
 }
