@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from "react";
@@ -119,7 +120,7 @@ export default function Comparison() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          whileHover={{ scale: 1.01, boxShadow: "0px 10px 30px -5px hsl(var(--primary)/0.1)" }}
+          whileHover={{ y: -5, scale: 1.03, transition: { type: 'spring', stiffness: 300 } }}
           className="rounded-2xl overflow-hidden bg-secondary shadow-lg border border-border"
         >
           <div className="overflow-x-auto">
