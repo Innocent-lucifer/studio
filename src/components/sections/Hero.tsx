@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -144,6 +145,7 @@ export default function Hero() {
             fill
             style={{objectFit:"cover"}}
             className="rounded-2xl shadow-2xl border-2 border-border"
+            priority
           />
         </motion.div>
       </div>

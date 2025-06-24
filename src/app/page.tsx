@@ -1,20 +1,30 @@
+
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, lazy, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import Header from "@/components/sections/Header";
 import Hero from "@/components/sections/Hero";
-import BuiltWith from "@/components/sections/BuiltWith";
-import ProblemSolution from "@/components/sections/ProblemSolution";
-import Features from "@/components/sections/Features";
-import HowItWorks from "@/components/sections/HowItWorks";
-import Comparison from "@/components/sections/Comparison";
-import Testimonials from "@/components/sections/Testimonials";
-import Pricing from "@/components/sections/Pricing";
-import FAQ from "@/components/sections/FAQ";
-import CTA from "@/components/sections/CTA";
 import Footer from "@/components/sections/Footer";
 import { useAuth } from "@/context/AuthContext";
+import { Icons } from "@/components/icons";
+
+// Lazy-loaded components
+const BuiltWith = lazy(() => import("@/components/sections/BuiltWith"));
+const ProblemSolution = lazy(() => import("@/components/sections/ProblemSolution"));
+const Features = lazy(() => import("@/components/sections/Features"));
+const HowItWorks = lazy(() => import("@/components/sections/HowItWorks"));
+const Comparison = lazy(() => import("@/components/sections/Comparison"));
+const Testimonials = lazy(() => import("@/components/sections/Testimonials"));
+const Pricing = lazy(() => import("@/components/sections/Pricing"));
+const FAQ = lazy(() => import("@/components/sections/FAQ"));
+const CTA = lazy(() => import("@/components/sections/CTA"));
+
+const SectionLoader = () => (
+  <div className="flex justify-center items-center py-20">
+    <Icons.loader className="h-12 w-12 animate-spin text-primary" />
+  </div>
+);
 
 export default function Home() {
   const [scrolled, setScrolled] = useState(false);
@@ -152,15 +162,17 @@ export default function Home() {
       />
       <main className="flex-grow">
         <Hero />
-        <BuiltWith />
-        <ProblemSolution />
-        <Features />
-        <HowItWorks />
-        <Comparison />
-        <Testimonials />
-        <Pricing plans={plans} />
-        <FAQ faqs={faqs} openFAQIndex={openFAQIndex} toggleFAQ={toggleFAQ} />
-        <CTA />
+        <Suspense fallback={<SectionLoader />}>
+          <BuiltWith />
+          <ProblemSolution />
+          <Features />
+          <HowItWorks />
+          <Comparison />
+          <Testimonials />
+          <Pricing plans={plans} />
+          <FAQ faqs={faqs} openFAQIndex={openFAQIndex} toggleFAQ={toggleFAQ} />
+          <CTA />
+        </Suspense>
       </main>
       <Footer />
     </div>

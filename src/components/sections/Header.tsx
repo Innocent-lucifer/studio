@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from "react";
@@ -61,17 +62,17 @@ export default function Header({ scrolled, menuOpen, toggleMenu, navLinks, user 
             </Link>
           ))}
           {user ? (
-            <Link href="/dashboard" passHref>
-              <Button className="ml-4 bg-primary text-primary-foreground hover:bg-primary/90 transition-transform duration-200 hover:scale-105">
-                Go to App
-              </Button>
-            </Link>
+             <Button asChild className="ml-4 bg-primary text-primary-foreground hover:bg-primary/90 transition-transform duration-200 hover:scale-105">
+                <Link href="/dashboard">
+                    Go to App
+                </Link>
+             </Button>
           ) : (
-            <Link href="/login" passHref>
-              <Button className="ml-4 bg-primary text-primary-foreground hover:bg-primary/90 transition-transform duration-200 hover:scale-105">
-                Try it Free
-              </Button>
-            </Link>
+            <Button asChild className="ml-4 bg-primary text-primary-foreground hover:bg-primary/90 transition-transform duration-200 hover:scale-105">
+                <Link href="/login">
+                    Try it Free
+                </Link>
+            </Button>
           )}
         </nav>
 
@@ -103,17 +104,17 @@ export default function Header({ scrolled, menuOpen, toggleMenu, navLinks, user 
             ))}
              <motion.div variants={navItemVariants} initial="hidden" animate="visible" transition={{delay: navLinks.length * 0.1}}>
                 {user ? (
-                  <Link href="/dashboard" passHref>
-                    <Button size="lg" className="mt-4 bg-primary text-primary-foreground hover:bg-primary/90">
-                      Go to App
+                    <Button asChild size="lg" className="mt-4 bg-primary text-primary-foreground hover:bg-primary/90">
+                        <Link href="/dashboard">
+                            Go to App
+                        </Link>
                     </Button>
-                  </Link>
                 ) : (
-                  <Link href="/login" passHref>
-                    <Button size="lg" className="mt-4 bg-primary text-primary-foreground hover:bg-primary/90">
-                      Try it Free
+                    <Button asChild size="lg" className="mt-4 bg-primary text-primary-foreground hover:bg-primary/90">
+                        <Link href="/login">
+                            Try it Free
+                        </Link>
                     </Button>
-                  </Link>
                 )}
             </motion.div>
           </div>

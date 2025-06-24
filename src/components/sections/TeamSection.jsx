@@ -4,7 +4,7 @@ import { FaUser, FaLinkedin, FaTwitter } from "react-icons/fa";
 
 const founders = [
   {
-    name: "Rishabh Nauhowar",
+    name: "Rishabh Nauhwar",
     title: "Founder & Product Strategist",
     desc: "Leads product vision, development, and AI systems. Focused on building experiences that scale.",
     linkedin: "https://linkedin.com/in/rishabh-kumarr/",

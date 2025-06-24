@@ -26,11 +26,11 @@ export default function CTA() {
           Join early users who are already transforming their content flow with
           SagePostAI.
         </p>
-        <Link href="/login" passHref>
-          <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 transition-transform duration-200 hover:scale-105 shadow-lg shadow-primary/20">
+        <Button asChild size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 transition-transform duration-200 hover:scale-105 shadow-lg shadow-primary/20">
+          <Link href="/login">
             Join the Beta Free <ArrowRight className="ml-2 h-5 w-5"/>
-          </Button>
-        </Link>
+          </Link>
+        </Button>
       </motion.div>
     </section>
   );

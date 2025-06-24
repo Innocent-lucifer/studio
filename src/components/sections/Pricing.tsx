@@ -91,11 +91,11 @@ export default function Pricing({ plans }: PricingProps) {
                 <p className="text-foreground/70 text-sm font-semibold mb-8">
                   {plan.subtitle}
                 </p>
-                <Link href="/login" passHref>
-                  <Button size="lg" className="w-full bg-primary text-primary-foreground hover:bg-primary/90 text-base mb-8 shadow-md">
+                <Button asChild size="lg" className="w-full bg-primary text-primary-foreground hover:bg-primary/90 text-base mb-8 shadow-md">
+                  <Link href="/login">
                     Try 3 Days Free
-                  </Button>
-                </Link>
+                  </Link>
+                </Button>
                 <ul className="text-left space-y-3">
                   {plan.features.map((feat, i) => (
                     <li
