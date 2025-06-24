@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -7,56 +8,84 @@ import ProductHuntBadge from "../compos/ProductHuntBadge";
 import Image from "next/image";
 import Link from 'next/link';
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 
 const placeholders = [
-  "Enter topic to see the magic",
+  "Enter topic to see the magic...",
   "e.g., The future of renewable energy",
   "e.g., How AI is changing marketing",
   "e.g., The benefits of a 4-day work week",
 ];
 
-// Self-contained component for the typing animation
-const TypingPlaceholder = () => {
-  const [placeholderIndex, setPlaceholderIndex] = useState(0);
-  const [currentText, setCurrentText] = useState('');
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [loopNum, setLoopNum] = useState(0);
+export default function Hero() {
+  const [topic, setTopic] = useState("");
+  const router = useRouter();
+  const [placeholder, setPlaceholder] = useState("Enter topic to see the magic...");
+  const [isUserInteracting, setIsUserInteracting] = useState(false);
 
+  // Typing animation effect
   useEffect(() => {
-    const handleType = () => {
-      const i = loopNum % placeholders.length;
-      const fullText = placeholders[i];
+    if (isUserInteracting) return; // Stop animation if user is typing
 
-      const updatedText = isDeleting
+    let currentText = "";
+    let placeholderIndex = 0;
+    let isDeleting = false;
+    let loopTimeout: NodeJS.Timeout;
+
+    const type = () => {
+      // Stop the loop if the user starts typing
+      if (isUserInteracting) {
+        clearTimeout(loopTimeout);
+        return;
+      }
+
+      const fullText = placeholders[placeholderIndex];
+      currentText = isDeleting
         ? fullText.substring(0, currentText.length - 1)
         : fullText.substring(0, currentText.length + 1);
 
-      setCurrentText(updatedText);
+      setPlaceholder(currentText + "|");
 
-      if (!isDeleting && updatedText === fullText) {
-        setTimeout(() => setIsDeleting(true), 2000); // Pause before deleting
-      } else if (isDeleting && updatedText === '') {
-        setIsDeleting(false);
-        setLoopNum(loopNum + 1);
+      let typeSpeed = 150;
+      if (isDeleting) {
+        typeSpeed /= 2;
       }
+
+      if (!isDeleting && currentText === fullText) {
+        typeSpeed = 2000; // Pause at end of word
+        isDeleting = true;
+      } else if (isDeleting && currentText === "") {
+        isDeleting = false;
+        placeholderIndex = (placeholderIndex + 1) % placeholders.length;
+        typeSpeed = 500; // Pause before typing new word
+      }
+
+      loopTimeout = setTimeout(type, typeSpeed);
     };
 
-    const typingSpeed = isDeleting ? 75 : 150;
-    const timer = setTimeout(handleType, typingSpeed);
+    loopTimeout = setTimeout(type, 1000); // Initial delay
 
-    return () => clearTimeout(timer);
-  }, [currentText, isDeleting, loopNum]);
+    return () => clearTimeout(loopTimeout); // Cleanup on unmount
+  }, [isUserInteracting]);
 
-  return (
-    <span className="text-foreground/60">
-      {currentText}
-      <span className="animate-pulse text-foreground/80">|</span>
-    </span>
-  );
-};
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!isUserInteracting) {
+      setIsUserInteracting(true);
+      setPlaceholder(""); // Clear animated placeholder
+    }
+    setTopic(e.target.value);
+  };
+  
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (topic.trim()) {
+      router.push(`/quick-post?topic=${encodeURIComponent(topic)}`);
+    } else {
+      // If input is empty, default action is to go to login/dashboard
+      router.push('/login');
+    }
+  };
 
-
-export default function Hero() {
   return (
     <section className="px-4 sm:px-6 py-28 sm:py-32 lg:py-40">
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
@@ -75,20 +104,22 @@ export default function Hero() {
             effortlessly — with zero-effort automation.
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center gap-4">
+          <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row items-center gap-4">
             <div className="relative w-full sm:w-auto sm:flex-grow">
-              <div className="flex h-14 w-full items-center rounded-md border border-input bg-secondary px-5 py-2 text-base ring-offset-background">
-                <TypingPlaceholder />
-              </div>
+              <input
+                type="text"
+                value={topic}
+                onChange={handleInputChange}
+                placeholder={isUserInteracting ? "" : placeholder}
+                className="flex h-14 w-full items-center rounded-md border border-input bg-secondary px-5 py-2 text-base text-foreground ring-offset-background placeholder:text-foreground/60"
+              />
             </div>
             
-            <Button asChild size="lg" className="w-full sm:w-auto h-14 bg-primary text-primary-foreground hover:bg-primary/90 transition-transform duration-200 hover:scale-105 shadow-lg shadow-primary/20">
-                <Link href="/login">
-                  <Search className="mr-2 h-5 w-5" />
-                  Start Generating
-                </Link>
+            <Button type="submit" size="lg" className="w-full sm:w-auto h-14 bg-primary text-primary-foreground hover:bg-primary/90 transition-transform duration-200 hover:scale-105 shadow-lg shadow-primary/20">
+              <Search className="mr-2 h-5 w-5" />
+              Start Generating
             </Button>
-          </div>
+          </form>
 
           <motion.div
             initial={{ opacity: 0 }}
