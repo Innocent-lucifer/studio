@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { Linkedin, Twitter, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 
 const founders = [
   {
@@ -25,7 +25,11 @@ const founders = [
   },
 ];
 
-export default function TeamSection() {
+interface TeamSectionProps {
+  onReadRishabhStory: () => void;
+}
+
+export default function TeamSection({ onReadRishabhStory }: TeamSectionProps) {
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -71,7 +75,7 @@ export default function TeamSection() {
       >
         {founders.map((member, i) => (
           <motion.div key={i} variants={itemVariants}>
-            <Card className="bg-background text-center h-full">
+            <Card className="bg-background text-center h-full flex flex-col">
               <CardHeader className="items-center">
                 <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mb-4">
                   <User className="text-primary h-12 w-12" />
@@ -81,25 +85,32 @@ export default function TeamSection() {
                   {member.title}
                 </p>
               </CardHeader>
-              <CardContent>
-                <p className="text-foreground/70 text-base mb-6">{member.desc}</p>
-                <div className="flex gap-4 justify-center">
-                  {member.linkedin && (
-                    <Link href={member.linkedin} target="_blank" rel="noopener noreferrer">
-                      <Button variant="ghost" size="icon">
-                        <Linkedin className="h-5 w-5 text-foreground/60 hover:text-primary" />
-                      </Button>
-                    </Link>
-                  )}
-                  {member.twitter && (
-                    <Link href={member.twitter} target="_blank" rel="noopener noreferrer">
-                      <Button variant="ghost" size="icon">
-                        <Twitter className="h-5 w-5 text-foreground/60 hover:text-primary" />
-                      </Button>
-                    </Link>
-                  )}
-                </div>
+              <CardContent className="flex-grow">
+                <p className="text-foreground/70 text-base">{member.desc}</p>
               </CardContent>
+              <CardFooter className="flex-col pt-6">
+                <div className="flex gap-4 justify-center">
+                    {member.linkedin && (
+                        <Link href={member.linkedin} target="_blank" rel="noopener noreferrer">
+                        <Button variant="ghost" size="icon">
+                            <Linkedin className="h-5 w-5 text-foreground/60 hover:text-primary" />
+                        </Button>
+                        </Link>
+                    )}
+                    {member.twitter && (
+                        <Link href={member.twitter} target="_blank" rel="noopener noreferrer">
+                        <Button variant="ghost" size="icon">
+                            <Twitter className="h-5 w-5 text-foreground/60 hover:text-primary" />
+                        </Button>
+                        </Link>
+                    )}
+                </div>
+                {member.name === "Rishabh Nauhowar" && (
+                    <Button onClick={onReadRishabhStory} variant="link" className="text-primary mt-4">
+                        Read My Story
+                    </Button>
+                )}
+              </CardFooter>
             </Card>
           </motion.div>
         ))}
