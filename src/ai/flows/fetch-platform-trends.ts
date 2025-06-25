@@ -29,7 +29,8 @@ const FetchPlatformTrendsInputSchema = z.object({
   platform: z.enum(['Twitter', 'LinkedIn']).describe('The social media platform (Twitter or LinkedIn).'),
   category: z.string().describe('The category to find trends for (e.g., Tech, Finance, AI). If "All", consider general trends for the platform.'),
   userId: z.string().optional().describe('The ID of the user requesting the trends. Optional for now.'),
-  numTrendsToGenerate: z.number().optional().default(6).describe('The desired number of trends to generate.'),
+  numTrendsToGenerate: z.number().optional().default(12).describe('The desired number of trends to generate.'),
+  region: z.enum(['Global', 'Local']).optional().default('Global').describe('The geographical region to fetch trends for.'),
 });
 export type FetchPlatformTrendsInput = z.infer<typeof FetchPlatformTrendsInputSchema>;
 
@@ -56,8 +57,9 @@ const prompt = ai.definePrompt({
       platform: z.enum(['Twitter', 'LinkedIn']),
       category: z.string(),
       twitterSearchResults: z.string().optional().describe('Relevant recent tweets or search summary if the platform is Twitter.'),
-      newsSearchResults: z.string().optional().describe('Relevant recent news articles from NewsAPI.ai.'), // Add news
+      newsSearchResults: z.string().optional().describe('Relevant recent news articles from NewsAPI.ai.'),
       numTrendsToGenerate: z.number(),
+      region: z.enum(['Global', 'Local']).optional(),
     }),
   },
   output: {
@@ -66,7 +68,9 @@ const prompt = ai.definePrompt({
     }),
   },
   prompt: `You are an expert Trend Analyst for social media. Your task is to identify and describe {{numTrendsToGenerate}} trending topics for the {{platform}} platform within the '{{category}}' category.
-If the category is "All", provide general trending topics for the {{platform}}.
+The user has requested trends for the '{{region}}' region. If the region is 'Local', assume the user's local region based on general context. If it is 'Global', provide worldwide trends.
+
+If the category is "All", provide general trending topics for the {{platform}} for the specified region.
 
 Use the following real-time data to inform your analysis. Prioritize trends that appear in both sources.
 
@@ -103,7 +107,9 @@ const fetchPlatformTrendsFlow = ai.defineFlow({
   let twitterSearchResults: string | undefined = undefined;
   let newsSearchResults: string | undefined = undefined;
   
-  const searchQuery = input.category === 'All' ? 'trending topics' : `trending in ${input.category}`;
+  const regionQueryPart = input.region === 'Local' ? 'for my local region' : 'globally';
+  const searchQuery = input.category === 'All' ? `trending topics ${regionQueryPart}` : `trending in ${input.category} ${regionQueryPart}`;
+
 
   try {
     const promises = [searchNews({ query: searchQuery })];
@@ -117,13 +123,13 @@ const fetchPlatformTrendsFlow = ai.defineFlow({
       twitterSearchResults = twitterResults;
     }
 
-
     const promptInput = {
       platform: input.platform,
       category: input.category,
       twitterSearchResults: twitterSearchResults,
       newsSearchResults: newsSearchResults,
       numTrendsToGenerate: input.numTrendsToGenerate,
+      region: input.region,
     };
 
     const { output: promptOutput, usage } = await prompt(promptInput);
@@ -138,7 +144,7 @@ const fetchPlatformTrendsFlow = ai.defineFlow({
       id: `${input.platform}-${input.category}-${index}-${Date.now()}`,
       platform: input.platform,
       category: input.category,
-      region: 'Global',
+      region: input.region || 'Global',
     }));
     
     return { trends };

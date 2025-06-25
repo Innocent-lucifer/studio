@@ -114,12 +114,12 @@ export default function TrendsPage() {
   const [selectedTrend, setSelectedTrend] = useState<Trend | null>(null);
 
   const debouncedFetchTrends = useCallback(
-    debounce(async (platform: Platform, category: string, userId: string) => {
+    debounce(async (platform: Platform, category: string, userId: string, region: 'Global' | 'Local') => {
       setIsLoading(true);
       setError(null);
       setTrends([]);
       try {
-        const result = await fetchPlatformTrends({ platform, category, userId, numTrendsToGenerate: 6 });
+        const result = await fetchPlatformTrends({ platform, category, userId, region });
         if (result.error) {
           setError(result.error);
           setTrends([]);
@@ -142,15 +142,14 @@ export default function TrendsPage() {
   );
 
   useEffect(() => {
-    debouncedFetchTrends(selectedPlatform, selectedCategory, userIdToPass);
-  }, [selectedPlatform, selectedCategory, userIdToPass, debouncedFetchTrends]);
+    debouncedFetchTrends(selectedPlatform, selectedCategory, userIdToPass, trendingRegion);
+  }, [selectedPlatform, selectedCategory, userIdToPass, trendingRegion, debouncedFetchTrends]);
 
 
   const filteredTrends = useMemo(() => {
     return trends
       .filter(trend => !filterByHype || trend.hypeScore > 75)
-      .filter(trend => trendingRegion === "Global" ? trend.region === "Global" : trend.region === "Local");
-  }, [trends, filterByHype, trendingRegion]);
+  }, [trends, filterByHype]);
   
   function debounce<F extends (...args: any[]) => any>(func: F, delay: number) {
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
@@ -246,13 +245,13 @@ export default function TrendsPage() {
                 <div className="flex items-center space-x-3">
                     <Switch
                         id="filter-region"
-                        checked={trendingRegion === "Local"}
-                        onCheckedChange={(checked) => setTrendingRegion(checked ? "Local" : "Global")}
+                        checked={trendingRegion === "Global"}
+                        onCheckedChange={(checked) => setTrendingRegion(checked ? "Global" : "Local")}
                         className="data-[state=checked]:bg-blue-500"
-                        disabled // Local trends are not fully supported by the flow yet
                     />
-                    <Label htmlFor="filter-region" className={`text-sm text-slate-200 flex items-center cursor-pointer ${true ? 'opacity-50' : ''}`}>
-                        <Icons.globe className="mr-2 h-4 w-4 text-blue-400"/>Show {trendingRegion} Trends
+                    <Label htmlFor="filter-region" className="text-sm text-slate-200 flex items-center cursor-pointer">
+                        <Icons.globe className="mr-2 h-4 w-4 text-blue-400"/>
+                        Show Global Trends
                     </Label>
                 </div>
             </div>
@@ -283,7 +282,7 @@ export default function TrendsPage() {
               <Icons.alertTriangle className="h-16 w-16 text-red-500 mb-4" />
               <p className="text-xl font-semibold">Oops! Something went wrong.</p>
               <p className="text-sm mt-1">{error}</p>
-              <Button onClick={() => debouncedFetchTrends(selectedPlatform, selectedCategory, userIdToPass)} variant="outline" className="mt-4 border-red-500 text-red-400 hover:bg-red-500/10">
+              <Button onClick={() => debouncedFetchTrends(selectedPlatform, selectedCategory, userIdToPass, trendingRegion)} variant="outline" className="mt-4 border-red-500 text-red-400 hover:bg-red-500/10">
                 <Icons.refreshCw className="mr-2 h-4 w-4" /> Try Again
               </Button>
             </motion.div>
@@ -308,7 +307,7 @@ export default function TrendsPage() {
                 We couldn't find any trending topics for <span className="font-semibold text-primary">{selectedPlatform}</span> in the <span className="font-semibold text-primary">{selectedCategory}</span> category that match your filters.
               </p>
               <p className="text-sm text-slate-500 mt-1">Try a different category, adjust the filters, or check back later!</p>
-               <Button onClick={() => debouncedFetchTrends(selectedPlatform, selectedCategory, userIdToPass)} variant="outline" className="mt-6 border-primary text-primary hover:bg-primary/10">
+               <Button onClick={() => debouncedFetchTrends(selectedPlatform, selectedCategory, userIdToPass, trendingRegion)} variant="outline" className="mt-6 border-primary text-primary hover:bg-primary/10">
                 <Icons.refreshCw className="mr-2 h-4 w-4" /> Refresh Trends
               </Button>
             </motion.div>
