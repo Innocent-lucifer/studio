@@ -151,19 +151,21 @@ export default function VisualPostPage() {
   const handleDirectImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (fileInputRefVisual.current) {
-      fileInputRefVisual.current.value = ''; 
+      fileInputRefVisual.current.value = '';
     }
 
+    const supportedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+
     if (file) {
-      if (!file.type.startsWith('image/')) {
+      if (!supportedTypes.includes(file.type)) {
         toast({
           variant: "destructive",
           title: "Invalid File Type",
-          description: "Please upload an image file (e.g., JPG, PNG, GIF).",
+          description: "Please upload a standard image file (JPG, PNG, WEBP, GIF). SVGs are not supported.",
         });
         return;
       }
-      if (file.size > 10 * 1024 * 1024) { 
+      if (file.size > 10 * 1024 * 1024) {
          toast({
           variant: "destructive",
           title: "File Too Large",
@@ -176,10 +178,10 @@ export default function VisualPostPage() {
         const result = reader.result;
         if (typeof result === 'string') {
           // Reset state for new image
-          setGeneratedPost(''); 
+          setGeneratedPost('');
           setError(null);
-          setImageDataUri(result); 
-          setUserText(''); 
+          setImageDataUri(result);
+          setUserText('');
           setSelectedTone('default');
           generationState.current = { processedImageUri: '', processedTone: '', processedText: '' };
         } else {
@@ -349,7 +351,7 @@ export default function VisualPostPage() {
       type="file"
       ref={fileInputRefVisual}
       onChange={handleDirectImageUpload}
-      accept="image/*"
+      accept="image/jpeg,image/png,image/webp,image/gif"
       className="hidden"
     />
   );
@@ -654,5 +656,3 @@ export default function VisualPostPage() {
     </motion.div>
   );
 }
-
-    

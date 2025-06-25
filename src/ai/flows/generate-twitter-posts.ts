@@ -71,7 +71,13 @@ Craft your tweets to sound like they're coming from a real person, not a corpora
 
 Posts:`,
   promptOptions: {
-    temperature: 0.8, 
+    temperature: 0.8,
+    safetySettings: [
+      { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+      { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+      { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
+      { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
+    ],
   },
 });
 
