@@ -12,6 +12,7 @@
 import {ai}from '@/ai/ai-instance';
 import {z}from 'genkit';
 import { searchTwitter } from '@/ai/tools/searchTwitter';
+import { searchNews } from '@/ai/tools/searchNews'; // Import searchNews
 
 const ResearchTopicInputSchema = z.object({
   topic: z.string().describe('The topic to research.'),
@@ -35,6 +36,7 @@ const researchTopicPrompt = ai.definePrompt({
     schema: z.object({
       topic: z.string().describe('The topic to research.'),
       twitterResults: z.string().describe('The results from searching Twitter. This could include tweets, "no results found", or error messages from the Twitter API, including if search is unconfigured.'),
+      newsResults: z.string().describe('The results from searching NewsAPI.ai. This could include article summaries, "no results found", or error messages.'), // Add newsResults
     }),
   },
   output: {
@@ -43,19 +45,21 @@ const researchTopicPrompt = ai.definePrompt({
     }),
   },
   prompt: `You are an expert researcher. Your goal is to provide a comprehensive, engaging, and informative summary about the given topic. 
-Integrate information from the provided Twitter results to add real-time context or recent discussions.
+Integrate information from the provided real-time sources to add context about recent discussions and news.
 
 Topic: {{{topic}}}
 
-Twitter Search Results:
+Recent News Articles:
+"{{{newsResults}}}"
+
+Recent Twitter Discussions:
 "{{{twitterResults}}}"
 
-Based on all available information, provide a detailed summary of the topic.
-- If the Twitter Results show actual tweets or clear trend indications, synthesize them into your summary.
-- If Twitter Results indicate "No recent tweets found", "Twitter search functionality is not configured", or an API error, state that fresh Twitter data was not available for this topic and briefly explain why (e.g., "no specific recent tweets," "Twitter search offline for this query"). Then, proceed to generate a summary based on your general knowledge.
-- Do not invent tweets if none were found. Your summary should be factual based on the information provided or your existing knowledge.
-- Make the summary useful for someone wanting to create social media posts about the topic. Highlight key points, interesting angles, or recent developments if found.
-- The summary should be a well-structured paragraph or a few paragraphs.
+Based on all available information (your general knowledge, recent news, and Twitter discussions), provide a detailed summary of the topic.
+- Synthesize the key points, interesting angles, or recent developments from both the news and Twitter results.
+- If a source indicates "No results found", "not configured", or an API error, state that fresh data from that source was not available for this topic and briefly explain why (e.g., "no specific recent tweets," "news search offline for this query"). Then, proceed to generate a summary based on the other available information and your general knowledge.
+- Do not invent tweets or news if none were found. Your summary should be factual based on the information provided or your existing knowledge.
+- Make the summary useful for someone wanting to create social media posts about the topic.
 
 Summary:`,
 });
@@ -70,28 +74,28 @@ const researchTopicFlow = ai.defineFlow(
     const { topic, userId } = input;
     
     try {
-      const twitterSearchResults = await searchTwitter({ query: topic });
+      // Run searches in parallel
+      const [twitterSearchResults, newsSearchResults] = await Promise.all([
+        searchTwitter({ query: topic }),
+        searchNews({ query: topic })
+      ]);
 
       const {output: promptOutput} = await researchTopicPrompt({
         topic: topic,
         twitterResults: twitterSearchResults,
+        newsResults: newsSearchResults, // Pass news results
       });
 
       if (!promptOutput || !promptOutput.summary || promptOutput.summary.trim() === "") {
         let fallbackSummary = `AI-generated summary for "${topic}" could not be fully formed. `;
         
-        if (twitterSearchResults && 
-            !twitterSearchResults.toLowerCase().includes("error fetching") && 
-            !twitterSearchResults.toLowerCase().includes("placeholder") &&
-            !twitterSearchResults.toLowerCase().includes("no recent tweets found") &&
-            !twitterSearchResults.toLowerCase().includes("not configured")) {
-          fallbackSummary += `However, Twitter search found: "${twitterSearchResults.substring(0, 200)}...". `;
-        } else if (twitterSearchResults && (twitterSearchResults.toLowerCase().includes("error") || twitterSearchResults.toLowerCase().includes("placeholder") || twitterSearchResults.toLowerCase().includes("not configured"))) {
-          fallbackSummary += `There was an issue fetching/accessing live Twitter data: "${twitterSearchResults}". `;
-        } else if (twitterSearchResults && twitterSearchResults.toLowerCase().includes("no recent tweets found")) {
-          fallbackSummary += `No recent tweets were found for this topic. `;
+        if (newsSearchResults && !newsSearchResults.toLowerCase().includes("error") && !newsSearchResults.toLowerCase().includes("not configured") && !newsSearchResults.toLowerCase().includes("no recent news")) {
+          fallbackSummary += `However, recent news found: "${newsSearchResults.substring(0, 150)}...". `;
         }
-        fallbackSummary += `Please use this information or your own knowledge to proceed. Content generation will use the original topic if this summary is insufficient.`;
+        if (twitterSearchResults && !twitterSearchResults.toLowerCase().includes("error") && !twitterSearchResults.toLowerCase().includes("not configured") && !twitterSearchResults.toLowerCase().includes("no recent tweets")) {
+          fallbackSummary += `However, Twitter search found: "${twitterSearchResults.substring(0, 150)}...". `;
+        }
+        fallbackSummary += `Please use this information or your own knowledge to proceed.`;
         
         return { summary: fallbackSummary }; 
       }

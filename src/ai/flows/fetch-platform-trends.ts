@@ -12,6 +12,7 @@
 import {ai}from '@/ai/ai-instance';
 import {z}from 'genkit';
 import { searchTwitter } from '@/ai/tools/searchTwitter';
+import { searchNews } from '@/ai/tools/searchNews'; // Import searchNews
 
 const TrendSchema = z.object({
   id: z.string().describe('A unique identifier for the trend.'),
@@ -54,7 +55,8 @@ const prompt = ai.definePrompt({
     schema: z.object({
       platform: z.enum(['Twitter', 'LinkedIn']),
       category: z.string(),
-      twitterSearchResults: z.string().optional().describe('Relevant recent tweets or search summary if the platform is Twitter. This may contain "No recent tweets found", API error messages, or "Twitter search not configured". Use this as primary context for Twitter trends if available and relevant. If it indicates errors, "not configured", or no useful data, rely more on general knowledge for the category.'),
+      twitterSearchResults: z.string().optional().describe('Relevant recent tweets or search summary if the platform is Twitter.'),
+      newsSearchResults: z.string().optional().describe('Relevant recent news articles from NewsAPI.ai.'), // Add news
       numTrendsToGenerate: z.number(),
     }),
   },
@@ -66,13 +68,17 @@ const prompt = ai.definePrompt({
   prompt: `You are an expert Trend Analyst for social media. Your task is to identify and describe {{numTrendsToGenerate}} trending topics for the {{platform}} platform within the '{{category}}' category.
 If the category is "All", provide general trending topics for the {{platform}}.
 
+Use the following real-time data to inform your analysis. Prioritize trends that appear in both sources.
+
+Recent News from NewsAPI.ai:
+"{{{newsSearchResults}}}"
+
 {{#if twitterSearchResults}}
-For Twitter, first consider these recent search results:
+Recent Discussions from Twitter:
 "{{{twitterSearchResults}}}"
-If these results provide strong signals of specific trends (discussions, news, events), prioritize them. If the results are generic, indicate "no specific tweets found", show an API error, or state "Twitter search not configured", then generate trends based on your general knowledge of what's currently trending in the '{{category}}' on Twitter.
 {{/if}}
 
-For LinkedIn, focus on professionally relevant topics, industry news, career discussions, or significant business events within the '{{category}}'.
+If the real-time sources provide strong signals of specific trends (discussions, news, events), prioritize them. If the results are generic, indicate errors, or state "not configured", then generate trends based on your general knowledge of what's currently trending in the '{{category}}' on the specified platform.
 
 For each trend, provide:
 1.  title: A concise, engaging title (max 10-15 words, avoid directly repeating the category name).
@@ -80,14 +86,7 @@ For each trend, provide:
 3.  hypeScore: An estimated "hype score" (0-100) reflecting current discussion volume and impact.
 
 Generate exactly {{numTrendsToGenerate}} distinct trends. Ensure the output is a valid JSON object with a single key "generatedTrends", which is an array of objects.
-Example for a single trend object:
-{
-  "title": "AI in Creative Industries",
-  "description": "Artists and designers are exploring AI tools for content creation, sparking debates about ethics and the future of creative work. New AI models are enabling novel forms of art and design.",
-  "hypeScore": 85
-}
-
-Do not mention your sources or the Twitter search results directly in the trend descriptions.
+Do not mention your sources directly in the trend descriptions.
 If {{platform}} is Twitter, make trends sound like they'd appear on Twitter (e.g., concise, hashtags sometimes implied).
 If {{platform}} is LinkedIn, make trends sound professional and business-oriented.
 `,
@@ -102,17 +101,28 @@ const fetchPlatformTrendsFlow = ai.defineFlow({
   outputSchema: FetchPlatformTrendsOutputSchema,
 }, async (input) => {
   let twitterSearchResults: string | undefined = undefined;
+  let newsSearchResults: string | undefined = undefined;
+  
+  const searchQuery = input.category === 'All' ? 'trending topics' : `trending in ${input.category}`;
 
   try {
+    const promises = [searchNews({ query: searchQuery })];
     if (input.platform === 'Twitter') {
-      const searchQuery = input.category === 'All' ? 'trending topics' : `trending in ${input.category}`;
-      twitterSearchResults = await searchTwitter({ query: searchQuery });
+      promises.push(searchTwitter({ query: searchQuery }));
     }
+
+    const [newsResults, twitterResults] = await Promise.all(promises);
+    newsSearchResults = newsResults;
+    if (input.platform === 'Twitter') {
+      twitterSearchResults = twitterResults;
+    }
+
 
     const promptInput = {
       platform: input.platform,
       category: input.category,
       twitterSearchResults: twitterSearchResults,
+      newsSearchResults: newsSearchResults,
       numTrendsToGenerate: input.numTrendsToGenerate,
     };
 

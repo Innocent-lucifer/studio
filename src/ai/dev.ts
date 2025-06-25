@@ -1,4 +1,5 @@
 
+import '@/ai/tools/searchNews.ts';
 import '@/ai/flows/research-topic.ts';
 import '@/ai/flows/generate-linkedin-posts.ts';
 import '@/ai/flows/generate-twitter-posts.ts';
