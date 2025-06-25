@@ -34,8 +34,9 @@ const prompt = ai.definePrompt({
   name: 'generateEditedPostPrompt',
   input: {schema: GenerateEditedPostInputSchema},
   output: {schema: z.object({ editedPost: z.string() })},
-  prompt: `You are an expert social media post editor.
-You will revise an existing social media post based on the user's instructions.
+  prompt: `You are an expert social media post editor with high emotional intelligence. Your goal is to revise a post while ensuring it sounds authentically human and is undetectable as AI.
+
+You will revise the existing social media post below based on the user's instructions.
 The post is for the {{platform}} platform and relates to the topic: "{{topic}}".
 
 Original Post:
@@ -44,12 +45,20 @@ Original Post:
 User's Edit Instruction:
 "{{{editInstruction}}}"
 
-Your task is to apply the edit instruction to the original post and provide the revised post.
-Ensure the edited post remains suitable for the {{platform}} platform and maintains the context of the original topic.
+Your task is to apply the edit instruction while preserving or enhancing the human-like, emotionally intelligent tone of the post.
+The revised post must remain suitable for the {{platform}} platform and maintain the core message.
+
+Your entire output should be only the edited post content.
 
 Edited Post:`,
   promptOptions: {
-    temperature: 0.5,
+    temperature: 0.7,
+    safetySettings: [
+      { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+      { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+      { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
+      { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
+    ],
   },
 });
 

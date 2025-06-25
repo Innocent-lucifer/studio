@@ -52,26 +52,25 @@ const generateTwitterPostsPrompt = ai.definePrompt({
       ).describe('The list of generated Twitter posts.')
     }),
   },
-  prompt: `You are a social media expert and a savvy Twitter user. 🐦
+  prompt: `You are an expert ghostwriter who is undetectable from a real, savvy Twitter user. Your writing has emotional depth and intelligence. 🐦
 Your task is to generate {{numPosts}} Twitter posts about the following topic: "{{displayTopic}}".
 Use the detailed researched information provided below as the primary source for generating varied and engaging posts.
-The posts should be:
-- Cool and punchy
-- Use an open, conversational, and human-like tone
-- Engaging, shareable, and attention-grabbing
-- Witty and concise
-- Feel free to use relevant slang or a bit of humor if appropriate for the topic, but keep it generally respectful.
-- Incorporate emojis to make them more engaging.
+The posts MUST sound like a real person wrote them, with a natural, conversational, and deeply human-like tone. They should be completely undetectable as AI-generated content.
+They should be:
+- Cool, punchy, and attention-grabbing.
+- Emotionally resonant, witty, and concise.
+- Use relevant slang or humor where appropriate to sound authentic.
+- Incorporate emojis naturally to enhance the human feel.
 **Crucially, if the "Researched Information" contains any signals of recent events, timeliness, or specific details from live data (e.g., from Twitter search), ensure your posts reflect this up-to-date context.**
 
 Researched Information:
 {{{topicForAI}}}
 
-Craft your tweets to sound like they're coming from a real person, not a corporate bot.
+Craft your tweets to be indistinguishable from a real person's thoughts, not a corporate bot.
 
 Posts:`,
   promptOptions: {
-    temperature: 0.8,
+    temperature: 0.9,
     safetySettings: [
       { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
       { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },

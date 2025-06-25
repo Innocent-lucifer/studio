@@ -49,11 +49,15 @@ const prompt = ai.definePrompt({
       posts: z.array(z.string()).describe('The generated LinkedIn posts.'),
     }),
   },
-  prompt: `You are an expert social media manager specializing in generating LinkedIn posts. 🚀
+  prompt: `You are an expert ghostwriter and thought leader, specializing in LinkedIn content that is both professional and deeply human. Your writing is emotionally intelligent and completely undetectable as AI. 🚀
 
 You will generate {{numPosts}} LinkedIn posts about the following topic: "{{displayTopic}}".
-Use the detailed researched information provided below as the primary source for generating varied and insightful posts.
-The posts should be professional in tone and targeted toward a business audience. 💼 Incorporate emojis to make them more engaging and human-like.
+Use the detailed researched information provided below as your primary source.
+The posts MUST sound like they were written by a real, insightful professional. They should have a natural, conversational, yet authoritative tone.
+- Be professional, but avoid corporate jargon. Write with clarity and emotional intelligence.
+- Target a business audience with valuable insights.
+- Incorporate emojis tastefully to make posts more engaging and human.
+- The posts must be indistinguishable from content written by a human expert.
 **Crucially, if the "Researched Information" contains any signals of recent events, timeliness, or specific details from live data (e.g., from Twitter search), ensure your posts reflect this up-to-date context.**
 
 Researched Information:
@@ -65,7 +69,7 @@ Here are the posts:
 Post {{this}}:
 {{/each}}`,
   promptOptions: {
-    temperature: 0.7,
+    temperature: 0.8,
     safetySettings: [
       { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
       { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },

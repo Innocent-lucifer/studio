@@ -41,8 +41,7 @@ const prompt = ai.definePrompt({
       series: z.array(z.string()).describe('An array of interconnected posts forming the series.'),
     }),
   },
-  prompt: `You are an expert social media campaign creator, skilled at crafting engaging content even from extremely general or abstract topics.
-Your entire output MUST be a valid JSON object containing a single key "series". The value of "series" must be an array of strings, where each string is a post.
+  prompt: `You are an expert campaign strategist and ghostwriter who creates content with deep emotional intelligence, making it undetectable from human writing. Your entire output MUST be a valid JSON object with a "series" key, where the value is an array of strings.
 
 Topic: {{{topic}}}
 Selected Angle: {{{selectedAngle}}}
@@ -52,22 +51,21 @@ Researched Context:
 {{{researchedContext}}}
 
 Based on the above, generate a cohesive series of {{numPostsInSeries}} interconnected posts for the {{platform}} platform.
-The posts should build on each other to explore the angle more deeply. Be extremely creative and aim for high engagement, especially if the topic or angle is very generic like "anything" or "miscellaneous".
-If the Researched Context is sparse, unhelpful (e.g., mentions API errors or lack of data), or non-existent, rely entirely on the Topic and Selected Angle to generate imaginative and relevant posts. Do not mention any API errors, configuration issues, or lack of specific data in your posts.
+The posts MUST sound like a real person wrote them, with a natural, conversational, and deeply human-like tone. They should be completely undetectable as AI-generated content.
+The posts should build on each other to explore the angle more deeply. Be extremely creative, especially if the topic is abstract.
+If the Researched Context is sparse or unhelpful, rely on your own creativity to generate imaginative, emotionally intelligent posts based on the Topic and Angle. Do not mention API errors or lack of data in your posts.
 
 If the platform is Twitter:
-Generate a Twitter thread of {{numPostsInSeries}} tweets.
-- Each tweet should be concise (under 280 characters) and impactful.
-- Use emojis and relevant hashtags to boost visibility.
-- Ensure the tweets flow logically, forming a coherent narrative or discussion.
-- Aim for a conversational and engaging tone.
+- Generate a Twitter thread of {{numPostsInSeries}} tweets.
+- Each tweet should be concise (under 280 characters), impactful, and emotionally resonant.
+- Use emojis and relevant hashtags naturally to boost visibility and convey a human feel.
+- Ensure the tweets form a coherent narrative.
 
 If the platform is LinkedIn:
-Generate a LinkedIn series of {{numPostsInSeries}} posts (or sections of a longer article-style post).
-- The content should be professional, insightful, and provide tangible value to a business-oriented audience.
-- Structure the posts logically to build a strong argument or explore the angle thoroughly.
+- Generate a LinkedIn series of {{numPostsInSeries}} posts.
+- The content should be professional and insightful, but written with an authentic, human voice. Avoid corporate jargon.
+- Structure the posts to build a strong, emotionally intelligent argument.
 - Use emojis where appropriate for a professional yet approachable tone.
-- Consider including calls to action or questions to encourage engagement.
 
 Remember to format your entire response as a JSON object with a "series" key. For example:
 {
@@ -79,8 +77,8 @@ Remember to format your entire response as a JSON object with a "series" key. Fo
 }
 `,
   promptOptions: {
-    temperature: 0.8, // Slightly higher for more creativity with generic topics
-    safetySettings: [ // Most permissive settings
+    temperature: 0.9, 
+    safetySettings: [
       { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
       { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
       { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
@@ -113,7 +111,7 @@ const generateCampaignSeriesFlow = ai.defineFlow({
     }
     
     if (promptOutput.series.length === 0) {
-      const errorMessage = `AI returned an empty 'series' array for ${input.platform}. This could be due to the extreme vagueness of the topic/angle or the AI's inability to generate specific content. Input: Topic='${input.topic}', Angle='${input.selectedAngle}'. Raw output: ${JSON.stringify(promptOutput)}. Try a more specific angle or adjust the topic.`;
+      const errorMessage = `AI returned an empty 'series' array for ${input.platform}. This could be due to the extreme vagueness of the topic/angle or the AI's inability to generate specific content. Input: Topic='${input.topic}', Angle='${input.selectedAngle}'. Try a more specific angle or adjust the topic.`;
       return { series: [] };
     }
     

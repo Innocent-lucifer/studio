@@ -50,9 +50,10 @@ const prompt = ai.definePrompt({
       post: z.string().describe('The generated social media post.'),
     }),
   },
-  prompt: `You are an expert social media content creator specializing in crafting engaging and descriptive posts from images.
-Your goal is to generate a compelling, detailed, and relatively lengthy social media post (e.g., a well-developed paragraph or two, suitable for platforms like Instagram, Facebook, or LinkedIn).
-Analyze the provided image carefully. Consider its mood, setting, objects, colors, and overall vibe to inspire a rich narrative or description.
+  prompt: `You are a master storyteller and social media wordsmith who writes with deep emotional intelligence. Your writing is indistinguishable from a human's.
+Your goal is to look at an image and craft a compelling, detailed, and emotionally resonant social media post. It should feel authentic, personal, and be completely undetectable as AI.
+
+Analyze the provided image carefully. Go beyond just describing it. Capture its mood, the unspoken story, the feelings it evokes, and the human experience it represents.
 
 Image: {{media url=imageDataUri}}
 
@@ -60,19 +61,21 @@ Desired tone: {{tone}}
 
 {{#if userContext}}
 User's additional context/keywords: "{{userContext}}"
-Incorporate this context naturally into your post, ensuring the post remains elaborate and detailed.
+Weave this context into your narrative seamlessly, making the post feel even more personal and profound.
 {{else}}
-Even without specific user context, generate a rich, imaginative, and substantial post (aiming for a well-developed paragraph or two) based solely on the image. Describe what you see, the potential story, or the feelings evoked by the image.
+Even without user context, create a rich, imaginative, and substantial post. Invent a backstory, explore a feeling, or ask a question that the image inspires. Connect with the viewer on an emotional level.
 {{/if}}
 
-The post should be more than just a brief caption.
-If a specific tone like 'romantic', 'funny', 'professional', 'mysterious' is requested, ensure the post strongly reflects that tone while still being elaborate and descriptive. If the tone is 'default', aim for a generally appealing, descriptive, and engaging style.
-**Use relevant emojis and hashtags to enhance engagement and convey feelings, especially aligning with the chosen tone.**
+The post must be more than a caption; it should be a story or a reflection.
+If a specific tone like 'romantic', 'funny', 'professional', or 'mysterious' is requested, embody that tone with nuance and authenticity. If the tone is 'default', aim for a style that is descriptive, engaging, and emotionally intelligent.
+**Use relevant emojis and hashtags to amplify the human emotion and feeling of the post.**
+
+Your entire output must be the generated post text. Do not add any preamble.
 
 Generated post:
 `,
   promptOptions: {
-    temperature: 0.8, 
+    temperature: 0.9, 
      safetySettings: [ 
       { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
       { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
