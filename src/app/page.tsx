@@ -14,6 +14,7 @@ const BuiltWith = lazy(() => import("@/components/sections/BuiltWith"));
 const ProblemSolution = lazy(() => import("@/components/sections/ProblemSolution"));
 const Features = lazy(() => import("@/components/sections/Features"));
 const HowItWorks = lazy(() => import("@/components/sections/HowItWorks"));
+const Examples = lazy(() => import("@/components/sections/Examples"));
 const Comparison = lazy(() => import("@/components/sections/Comparison"));
 const Testimonials = lazy(() => import("@/components/sections/Testimonials"));
 const Pricing = lazy(() => import("@/components/sections/Pricing"));
@@ -70,7 +71,7 @@ export default function Home() {
       title: "Monthly",
       price: "$19.99",
       subtitle: "Try 3 days free, then $19.99/month",
-      borderClass: "border-slate-700",
+      borderClass: "border-border",
       features: [
         "Unlimited Generations",
         "Image to Post Wizard",
@@ -167,6 +168,7 @@ export default function Home() {
           <ProblemSolution />
           <Features />
           <HowItWorks />
+          <Examples />
           <Comparison />
           <Testimonials />
           <Pricing plans={plans} />
