@@ -325,13 +325,15 @@ export default function TrendsPage() {
                   {getPlatformIcon(selectedTrend.platform)}
                   <span className="ml-2">{selectedTrend.title}</span>
                 </DialogTitle>
-                <DialogDescription className="text-slate-400 pt-2 flex items-center gap-4">
-                  <Badge variant="secondary" className="bg-slate-700 text-slate-300 border-slate-600 text-xs">
-                    <span className="ml-1.5">{selectedTrend.category}</span>
-                  </Badge>
-                  <Badge variant={selectedTrend.hypeScore > 75 ? "destructive" : "secondary"} className={`${selectedTrend.hypeScore > 75 ? 'bg-red-500/20 text-red-300 border-red-500/30' : 'bg-slate-600/80 text-slate-400 border-slate-500/50'} text-xs`}>
-                    <Icons.flame className="mr-1 h-3 w-3" /> Hype: {selectedTrend.hypeScore}
-                  </Badge>
+                <DialogDescription asChild>
+                  <div className="text-slate-400 pt-2 flex items-center gap-4">
+                    <Badge variant="secondary" className="bg-slate-700 text-slate-300 border-slate-600 text-xs">
+                      <span className="ml-1.5">{selectedTrend.category}</span>
+                    </Badge>
+                    <Badge variant={selectedTrend.hypeScore > 75 ? "destructive" : "secondary"} className={`${selectedTrend.hypeScore > 75 ? 'bg-red-500/20 text-red-300 border-red-500/30' : 'bg-slate-600/80 text-slate-400 border-slate-500/50'} text-xs`}>
+                      <Icons.flame className="mr-1 h-3 w-3" /> Hype: {selectedTrend.hypeScore}
+                    </Badge>
+                  </div>
                 </DialogDescription>
               </DialogHeader>
               <ScrollArea className="max-h-[50vh] pr-4 -mr-2">
