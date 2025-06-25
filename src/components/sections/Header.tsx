@@ -35,6 +35,8 @@ export default function Header({ scrolled, menuOpen, toggleMenu, navLinks, user 
     visible: { opacity: 1, y: 0 },
   };
 
+  const buttonGlowClass = "bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-300 shadow-md hover:shadow-lg hover:shadow-[hsl(var(--accent)_/_0.4)]";
+
   return (
     <motion.header
       variants={headerVariants}
@@ -62,13 +64,13 @@ export default function Header({ scrolled, menuOpen, toggleMenu, navLinks, user 
             </Link>
           ))}
           {user ? (
-             <Button asChild className="ml-4 bg-primary text-primary-foreground hover:bg-primary/90 transition-transform duration-200 hover:scale-105">
+             <Button asChild className={`ml-4 ${buttonGlowClass}`}>
                 <Link href="/dashboard">
                     Go to App
                 </Link>
              </Button>
           ) : (
-            <Button asChild className="ml-4 bg-primary text-primary-foreground hover:bg-primary/90 transition-transform duration-200 hover:scale-105">
+            <Button asChild className={`ml-4 ${buttonGlowClass}`}>
                 <Link href="/login">
                     Try it Free
                 </Link>
@@ -104,13 +106,13 @@ export default function Header({ scrolled, menuOpen, toggleMenu, navLinks, user 
             ))}
              <motion.div variants={navItemVariants} initial="hidden" animate="visible" transition={{delay: navLinks.length * 0.1}}>
                 {user ? (
-                    <Button asChild size="lg" className="mt-4 bg-primary text-primary-foreground hover:bg-primary/90">
+                    <Button asChild size="lg" className={`mt-4 ${buttonGlowClass}`}>
                         <Link href="/dashboard">
                             Go to App
                         </Link>
                     </Button>
                 ) : (
-                    <Button asChild size="lg" className="mt-4 bg-primary text-primary-foreground hover:bg-primary/90">
+                    <Button asChild size="lg" className={`mt-4 ${buttonGlowClass}`}>
                         <Link href="/login">
                             Try it Free
                         </Link>
