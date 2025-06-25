@@ -61,7 +61,7 @@ export default function Home() {
   const navLinks = [
     { name: "Why SagePostAI", href: "#comparison", onClick: (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => handleScrollToSection(e, 'comparison') },
     { name: "Pricing", href: "#pricing", onClick: (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => handleScrollToSection(e, 'pricing') },
-    { name: "About", href: "/about-team" },
+    { name: "About Team", href: "/about-team" },
     { name: "Contact", href: "/contact" }
   ];
 

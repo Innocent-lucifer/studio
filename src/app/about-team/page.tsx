@@ -18,17 +18,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function AboutTeamPage() {
   const { user } = useAuth();
-  const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [isRishabhStoryOpen, setIsRishabhStoryOpen] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   const navLinks = [
     { name: "Home", href: "/" },
@@ -40,13 +31,32 @@ export default function AboutTeamPage() {
     <>
     <div className="flex flex-col min-h-screen text-foreground">
       <Header
-        scrolled={scrolled}
+        scrolled={true}
         menuOpen={menuOpen}
         toggleMenu={() => setMenuOpen(!menuOpen)}
         navLinks={navLinks}
         user={user}
       />
       <main className="flex-grow pt-24 sm:pt-32">
+        <div className="text-center mb-16 px-4">
+            <motion.h1 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="text-4xl sm:text-5xl font-bold text-primary mb-4"
+            >
+              About Our Team
+            </motion.h1>
+            <motion.p 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+                className="text-lg text-foreground/70 max-w-2xl mx-auto"
+            >
+              We’re a team of founders passionate about building fast, solving real problems, and shipping tools that matter.
+            </motion.p>
+        </div>
+
         <TeamSection onReadRishabhStory={() => setIsRishabhStoryOpen(true)} />
 
         <div className="max-w-3xl mx-auto py-16 px-4 sm:px-6">
