@@ -13,7 +13,13 @@ export default function LoginPage() {
 
   useEffect(() => { 
     if (!loading && user) {
-      router.push('/dashboard'); 
+      const redirectUrl = sessionStorage.getItem('postLoginRedirect');
+      if (redirectUrl) {
+          sessionStorage.removeItem('postLoginRedirect');
+          router.push(redirectUrl);
+      } else {
+          router.push('/dashboard'); 
+      }
     }
   }, [user, loading, router]);
 

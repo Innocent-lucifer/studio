@@ -15,6 +15,10 @@ import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
+import { researchTopic } from "@/ai/flows/research-topic";
+import { useToast } from "@/hooks/use-toast";
+import { deductCredits, CREDIT_COSTS, FEATURE_DESCRIPTIONS } from "@/lib/firebaseUserActions";
+
 
 const PostSelection = dynamic(() => import('@/components/PostSelection').then(mod => mod.PostSelection), {
   ssr: false,
@@ -31,10 +35,12 @@ const QuickPostPageContent = () => {
   const { user } = useAuth();
   const userIdToPass = user?.uid || "sagepostai-guest-user";
   const searchParams = useSearchParams();
+  const { toast } = useToast();
 
   const [topic, setTopic] = useState<string>("");
   const [researchedContent, setResearchedContent] = useState<string>("");
   const [researchIsLoading, setResearchIsLoading] = useState(false);
+  const [hasAttemptedAutoResearch, setHasAttemptedAutoResearch] = useState(false);
 
   const [twitterPosts, setTwitterPosts] = useState<string[]>([]);
   const [linkedinPosts, setLinkedinPosts] = useState<string[]>([]);
@@ -44,15 +50,66 @@ const QuickPostPageContent = () => {
 
   useEffect(() => {
     const topicParam = searchParams.get('topic');
-    const researchedContentParam = searchParams.get('researchedContent');
-
-    if (topicParam) {
+    if (topicParam && !topic) { // Set topic only once from URL
       setTopic(topicParam);
     }
-    if (researchedContentParam) {
-      setResearchedContent(researchedContentParam);
+  }, [searchParams, topic]);
+
+  useEffect(() => {
+    const performAutoResearch = async (topicToResearch: string) => {
+        if (!userIdToPass || userIdToPass === "sagepostai-guest-user") {
+            toast({
+                title: "Login to Research",
+                description: "You've been redirected, but please log in to automatically research a topic.",
+                variant: "destructive"
+            });
+            return;
+        }
+
+        setResearchIsLoading(true);
+        const creditResult = await deductCredits(userIdToPass, 'QUICK_POST');
+        if (!creditResult.success) {
+            toast({
+                variant: "destructive",
+                title: "Credit Check Failed",
+                description: creditResult.error || "Could not process credits for this action.",
+            });
+            setResearchIsLoading(false);
+            return;
+        }
+
+        if (creditResult.freePostUsedThisTime) {
+            toast({ title: "Free Action Used", description: `Your free ${FEATURE_DESCRIPTIONS.QUICK_POST.toLowerCase()} was successful!` });
+        } else if (creditResult.creditsSpent && creditResult.creditsSpent > 0) {
+            toast({ title: "Credits Used", description: `${creditResult.creditsSpent} credits used for ${FEATURE_DESCRIPTIONS.QUICK_POST}.` });
+        }
+
+        try {
+            const result = await researchTopic({ topic: topicToResearch, userId: userIdToPass });
+            if (result.error) {
+                toast({ variant: "destructive", title: "Research Failed", description: result.error });
+                setResearchedContent(`Error researching "${topicToResearch}": ${result.error}`);
+            } else {
+                setResearchedContent(result.summary);
+            }
+        } catch (error: any) {
+            toast({
+              variant: "destructive",
+              title: "Research Failed",
+              description: error.message || "Failed to research topic. Please try again.",
+            });
+            setResearchedContent(`Failed to research "${topicToResearch}". Please try again.`);
+        } finally {
+            setResearchIsLoading(false);
+        }
+    };
+
+    if (topic && !researchIsLoading && !researchedContent && !hasAttemptedAutoResearch && user) {
+        setHasAttemptedAutoResearch(true);
+        performAutoResearch(topic);
     }
-  }, [searchParams]);
+}, [topic, researchIsLoading, researchedContent, hasAttemptedAutoResearch, user, userIdToPass, toast]);
+
 
   useEffect(() => {
     if (researchIsLoading || !researchedContent || !topic) {

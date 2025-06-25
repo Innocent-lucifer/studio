@@ -9,6 +9,7 @@ import Image from "next/image";
 import Link from 'next/link';
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 const placeholders = [
   "Enter topic to see the magic...",
@@ -20,6 +21,7 @@ const placeholders = [
 export default function Hero() {
   const [topic, setTopic] = useState("");
   const router = useRouter();
+  const { user } = useAuth();
   const [placeholder, setPlaceholder] = useState("Enter topic to see the magic...");
   const [isUserInteracting, setIsUserInteracting] = useState(false);
 
@@ -78,10 +80,17 @@ export default function Hero() {
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (topic.trim()) {
-      router.push(`/quick-post?topic=${encodeURIComponent(topic)}`);
+    const topicToSubmit = topic.trim();
+
+    if (topicToSubmit) {
+      const redirectUrl = `/quick-post?topic=${encodeURIComponent(topicToSubmit)}`;
+      if (user) {
+        router.push(redirectUrl);
+      } else {
+        sessionStorage.setItem('postLoginRedirect', redirectUrl);
+        router.push('/login');
+      }
     } else {
-      // If input is empty, redirect to the dashboard
       router.push('/dashboard');
     }
   };
