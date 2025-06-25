@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from "react";
@@ -36,6 +35,8 @@ export default function Header({ scrolled, menuOpen, toggleMenu, navLinks, user 
   };
 
   const buttonGlowClass = "bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-300 shadow-md hover:shadow-lg hover:shadow-[hsl(var(--accent)_/_0.4)]";
+  const linkGlowClass = "text-foreground/80 hover:text-primary hover:bg-transparent transition-all duration-300 hover:shadow-md hover:shadow-[hsl(var(--accent)_/_0.3)]";
+
 
   return (
     <motion.header
@@ -58,7 +59,7 @@ export default function Header({ scrolled, menuOpen, toggleMenu, navLinks, user 
         <nav className="hidden md:flex items-center space-x-2">
           {navLinks.map((link) => (
             <Link key={link.name} href={link.href} passHref>
-              <Button variant="ghost" onClick={link.onClick as any} className="text-foreground/80 hover:text-foreground hover:bg-secondary">
+              <Button variant="ghost" onClick={link.onClick as any} className={linkGlowClass}>
                   {link.name}
               </Button>
             </Link>
