@@ -18,8 +18,17 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function AboutTeamPage() {
   const { user } = useAuth();
+  const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [isRishabhStoryOpen, setIsRishabhStoryOpen] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   const navLinks = [
     { name: "Home", href: "/" },
@@ -31,7 +40,7 @@ export default function AboutTeamPage() {
     <>
     <div className="flex flex-col min-h-screen text-foreground">
       <Header
-        scrolled={true}
+        scrolled={scrolled}
         menuOpen={menuOpen}
         toggleMenu={() => setMenuOpen(!menuOpen)}
         navLinks={navLinks}
