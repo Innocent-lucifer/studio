@@ -17,6 +17,15 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { useAuth } from "@/context/AuthContext";
 import { fetchPlatformTrends, type Trend } from '@/ai/flows/fetch-platform-trends';
 import { useToast } from "@/hooks/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
 
 type Platform = "Twitter" | "LinkedIn";
 const platforms: Platform[] = ["Twitter", "LinkedIn"];
@@ -33,9 +42,10 @@ const getPlatformIcon = (platform: Platform) => {
 
 interface TrendCardItemProps {
   trend: Trend;
+  onViewTrend: (trend: Trend) => void;
 }
 
-const TrendCardItemComponent: React.FC<TrendCardItemProps> = ({ trend }) => {
+const TrendCardItemComponent: React.FC<TrendCardItemProps> = ({ trend, onViewTrend }) => {
   const cardVariants = {
     initial: { opacity: 0, scale: 0.95, y: 20 },
     animate: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
@@ -44,7 +54,10 @@ const TrendCardItemComponent: React.FC<TrendCardItemProps> = ({ trend }) => {
 
   return (
     <motion.div layout initial="initial" animate="animate" exit="exit" variants={cardVariants}>
-      <Card className="h-full flex flex-col bg-slate-800/60 backdrop-blur-md border border-slate-700 shadow-lg hover:shadow-primary/25 hover:border-primary/40 transition-all duration-300 rounded-xl overflow-hidden group">
+      <Card
+        onClick={() => onViewTrend(trend)}
+        className="h-full flex flex-col bg-slate-800/60 backdrop-blur-md border border-slate-700 shadow-lg hover:shadow-primary/25 hover:border-primary/40 transition-all duration-300 rounded-xl overflow-hidden group cursor-pointer"
+      >
         <CardHeader className="pb-3">
           <div className="flex justify-between items-start">
             <CardTitle className="text-lg font-semibold text-primary group-hover:text-purple-400 transition-colors">{trend.title}</CardTitle>
@@ -65,7 +78,11 @@ const TrendCardItemComponent: React.FC<TrendCardItemProps> = ({ trend }) => {
           </CardDescription>
         </CardContent>
         <div className="p-4 pt-0 mt-auto">
-            <Link href={`/quick-post?topic=${encodeURIComponent(trend.title)}&researchedContent=${encodeURIComponent(trend.description)}`} passHref>
+            <Link 
+                href={`/quick-post?topic=${encodeURIComponent(trend.title)}&researchedContent=${encodeURIComponent(trend.description)}`} 
+                passHref
+                onClick={(e) => e.stopPropagation()}
+            >
                 <Button
                     variant="outline"
                     className="w-full bg-primary/10 border-primary/50 text-primary hover:bg-primary/20 hover:text-purple-300 hover:border-primary/70 transition-all duration-200 ease-in-out transform group-hover:scale-105 shadow-md group-hover:shadow-purple-500/20"
@@ -94,6 +111,7 @@ export default function TrendsPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [filterByHype, setFilterByHype] = useState<boolean>(false);
   const [trendingRegion, setTrendingRegion] = useState<"Global" | "Local">("Global");
+  const [selectedTrend, setSelectedTrend] = useState<Trend | null>(null);
 
   const debouncedFetchTrends = useCallback(
     debounce(async (platform: Platform, category: string, userId: string) => {
@@ -275,7 +293,7 @@ export default function TrendsPage() {
               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
             >
               {filteredTrends.map(trend => (
-                <TrendCardItem key={trend.id} trend={trend} />
+                <TrendCardItem key={trend.id} trend={trend} onViewTrend={setSelectedTrend} />
               ))}
             </motion.div>
           ) : (
@@ -297,6 +315,50 @@ export default function TrendsPage() {
           )}
         </AnimatePresence>
       </main>
+
+      <Dialog open={!!selectedTrend} onOpenChange={(isOpen) => !isOpen && setSelectedTrend(null)}>
+        <DialogContent className="sm:max-w-2xl bg-slate-800/80 backdrop-blur-md border-slate-700 text-slate-100">
+          {selectedTrend && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-2xl text-primary flex items-center">
+                  {getPlatformIcon(selectedTrend.platform)}
+                  <span className="ml-2">{selectedTrend.title}</span>
+                </DialogTitle>
+                <DialogDescription className="text-slate-400 pt-2 flex items-center gap-4">
+                  <Badge variant="secondary" className="bg-slate-700 text-slate-300 border-slate-600 text-xs">
+                    <span className="ml-1.5">{selectedTrend.category}</span>
+                  </Badge>
+                  <Badge variant={selectedTrend.hypeScore > 75 ? "destructive" : "secondary"} className={`${selectedTrend.hypeScore > 75 ? 'bg-red-500/20 text-red-300 border-red-500/30' : 'bg-slate-600/80 text-slate-400 border-slate-500/50'} text-xs`}>
+                    <Icons.flame className="mr-1 h-3 w-3" /> Hype: {selectedTrend.hypeScore}
+                  </Badge>
+                </DialogDescription>
+              </DialogHeader>
+              <ScrollArea className="max-h-[50vh] pr-4 -mr-2">
+                <div className="py-4 text-slate-300 leading-relaxed whitespace-pre-wrap">
+                  {selectedTrend.description}
+                </div>
+              </ScrollArea>
+              <DialogFooter className="sm:justify-between gap-2">
+                <DialogClose asChild>
+                    <Button type="button" variant="secondary" className="border-slate-600 text-slate-300 hover:bg-slate-700">
+                        Close
+                    </Button>
+                </DialogClose>
+                <Link href={`/quick-post?topic=${encodeURIComponent(selectedTrend.title)}&researchedContent=${encodeURIComponent(selectedTrend.description)}`} passHref>
+                    <Button
+                        className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground shadow-md"
+                    >
+                        <Icons.edit className="mr-2 h-4 w-4" /> Generate Post from this Trend
+                    </Button>
+                </Link>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+
       <footer className="text-center p-4 mt-12 text-slate-500 text-sm">
         <span className="relative group hover:text-primary transition-colors duration-300 cursor-default">
             Built By EZ Teenagers
