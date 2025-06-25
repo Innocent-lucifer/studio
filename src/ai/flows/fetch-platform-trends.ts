@@ -110,6 +110,7 @@ const fetchPlatformTrendsFlow = ai.defineFlow({
   const regionQueryPart = input.region === 'Local' ? 'for my local region' : 'globally';
   const searchQuery = input.category === 'All' ? `trending topics ${regionQueryPart}` : `trending in ${input.category} ${regionQueryPart}`;
 
+  const numToGenerate = input.category === 'All' ? 18 : input.numTrendsToGenerate;
 
   try {
     const promises = [searchNews({ query: searchQuery })];
@@ -128,7 +129,7 @@ const fetchPlatformTrendsFlow = ai.defineFlow({
       category: input.category,
       twitterSearchResults: twitterSearchResults,
       newsSearchResults: newsSearchResults,
-      numTrendsToGenerate: input.numTrendsToGenerate,
+      numTrendsToGenerate: numToGenerate,
       region: input.region,
     };
 
