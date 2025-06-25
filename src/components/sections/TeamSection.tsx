@@ -106,7 +106,7 @@ export default function TeamSection({ onReadRishabhStory }: TeamSectionProps) {
                         </Link>
                     )}
                 </div>
-                {member.name === "Rishabh Nauhowar" && (
+                {member.name === "Rishabh Nauhwar" && (
                     <Button onClick={onReadRishabhStory} variant="link" className="text-primary mt-4">
                         Read My Story
                     </Button>
