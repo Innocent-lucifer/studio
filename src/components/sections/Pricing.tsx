@@ -79,7 +79,7 @@ export default function Pricing({ plans }: PricingProps) {
                 </div>
               )}
               {plan.discountBadge && (
-                <div className="absolute -top-4 left-6 px-4 py-1.5 text-xs font-bold text-green-950 bg-green-400 rounded-full shadow-md">
+                <div className="absolute -top-4 left-6 px-4 py-1.5 text-xs font-bold text-accent-foreground bg-accent rounded-full shadow-md shadow-accent/40">
                   {plan.discountBadge}
                 </div>
               )}
