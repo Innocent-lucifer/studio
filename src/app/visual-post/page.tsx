@@ -148,7 +148,7 @@ export default function VisualPostPage() {
   }, [imageDataUri, userText, selectedTone, isClient, handleGeneration]);
 
 
-  const handleDirectImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleDirectImageUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (fileInputRefVisual.current) {
       fileInputRefVisual.current.value = '';
@@ -201,9 +201,9 @@ export default function VisualPostPage() {
       };
       reader.readAsDataURL(file);
     }
-  };
+  }, [toast]);
 
-  const handleOpenEditModal = () => {
+  const handleOpenEditModal = useCallback(() => {
     if (!userIdToPass) {
       toast({ variant: "destructive", title: "Login Required", description: "Please log in to edit posts." });
       return;
@@ -215,19 +215,19 @@ export default function VisualPostPage() {
     setOriginalContentBeforeEdit(generatedPost);
     setEditingContent(generatedPost);
     setIsEditModalOpen(true);
-  };
+  }, [userIdToPass, generatedPost, toast]);
 
-  const handleSaveManualEdit = () => {
+  const handleSaveManualEdit = useCallback(() => {
     setGeneratedPost(editingContent);
     setIsEditModalOpen(false);
     toast({ title: "Post Updated", description: "Your changes have been applied." });
-  };
+  }, [editingContent, toast]);
 
-  const handleOpenAiEditInstructionModal = () => {
+  const handleOpenAiEditInstructionModal = useCallback(() => {
     setIsAiEditModalOpen(true);
-  };
+  }, []);
 
-  const handleAiEditSubmit = async () => {
+  const handleAiEditSubmit = useCallback(async () => {
     if (!aiEditInstruction.trim() || !userIdToPass) {
       toast({ title: "Missing Information", description: "Please provide instructions for the AI and ensure you are logged in.", variant: "destructive" });
       return;
@@ -266,21 +266,21 @@ export default function VisualPostPage() {
     } finally {
       setIsAiSubmitting(false);
     }
-  };
+  }, [aiEditInstruction, userIdToPass, editingContent, userText, toast]);
 
 
-  const handleCopyPost = () => {
+  const handleCopyPost = useCallback(() => {
     if (generatedPost) {
       navigator.clipboard.writeText(generatedPost);
       toast({ title: "Post Copied!", description: "The generated post has been copied to your clipboard." });
     }
-  };
+  }, [generatedPost, toast]);
 
-  const handleSharePost = () => {
+  const handleSharePost = useCallback(() => {
      toast({ title: "Feature Coming Soon", description: "Direct sharing will be available in a future update." });
-  };
+  }, [toast]);
   
-  const handleSaveDraft = async () => {
+  const handleSaveDraft = useCallback(async () => {
     if (!userIdToPass) {
       toast({ variant: "destructive", title: "Login Required", description: "Please log in to save drafts." });
       return;
@@ -307,7 +307,7 @@ export default function VisualPostPage() {
     } finally {
       setIsSavingDraft(false);
     }
-  };
+  }, [userIdToPass, generatedPost, userText, toast]);
 
 
   const toneOptions: { label: string; value: Tone, icon?: keyof typeof Icons }[] = [

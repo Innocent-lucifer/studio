@@ -1,6 +1,7 @@
+
 "use client";
 
-import React, { useEffect, useState, lazy, Suspense } from "react";
+import React, { useEffect, useState, lazy, Suspense, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Header from "@/components/sections/Header";
 import Hero from "@/components/sections/Hero";
@@ -41,22 +42,25 @@ export default function Home() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const toggleMenu = () => {
-    setMenuOpen(!menuOpen);
-  };
+  const toggleMenu = useCallback(() => {
+    setMenuOpen((prev) => !prev);
+  }, []);
 
-  const toggleFAQ = (index: number) => {
-    setOpenFAQIndex(openFAQIndex === index ? null : index);
-  };
+  const toggleFAQ = useCallback((index: number) => {
+    setOpenFAQIndex((prevIndex) => (prevIndex === index ? null : index));
+  }, []);
   
-  const handleScrollToSection = (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>, sectionId: string) => {
+  const handleScrollToSection = useCallback((e: React.MouseEvent<HTMLAnchorElement, MouseEvent>, sectionId: string) => {
     e.preventDefault();
     const section = document.getElementById(sectionId);
     if (section) {
       section.scrollIntoView({ behavior: "smooth" });
     }
-    if (menuOpen) setMenuOpen(false);
-  };
+    setMenuOpen((prev) => {
+      if(prev) return false;
+      return prev;
+    });
+  }, []);
 
   const navLinks = [
     { name: "Why SagePostAI", href: "#comparison", onClick: (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => handleScrollToSection(e, 'comparison') },

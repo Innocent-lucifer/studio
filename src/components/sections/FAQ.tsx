@@ -31,7 +31,7 @@ const answerVariants = {
   },
 };
 
-export default function FAQ({ faqs, openFAQIndex, toggleFAQ }: FAQProps) {
+const FAQComponent: React.FC<FAQProps> = ({ faqs, openFAQIndex, toggleFAQ }) => {
   return (
     <motion.section
       id="faq"
@@ -98,3 +98,5 @@ export default function FAQ({ faqs, openFAQIndex, toggleFAQ }: FAQProps) {
     </motion.section>
   );
 }
+
+export default React.memo(FAQComponent);

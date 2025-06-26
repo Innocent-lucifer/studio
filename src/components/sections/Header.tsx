@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from "react";
@@ -22,7 +23,7 @@ interface HeaderProps {
   user: User | null;
 }
 
-export default function Header({ scrolled, menuOpen, toggleMenu, navLinks, user }: HeaderProps) {
+const HeaderComponent: React.FC<HeaderProps> = ({ scrolled, menuOpen, toggleMenu, navLinks, user }) => {
 
   const headerVariants = {
     initial: { y: -100, opacity: 0 },
@@ -126,3 +127,5 @@ export default function Header({ scrolled, menuOpen, toggleMenu, navLinks, user 
     </motion.header>
   );
 }
+
+export default React.memo(HeaderComponent);
