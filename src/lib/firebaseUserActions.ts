@@ -19,6 +19,7 @@ import {
 } from 'firebase/firestore';
 import type { User as FirebaseAuthUser } from 'firebase/auth';
 import type { ContentAngle } from '@/ai/flows/suggest-content-angles';
+import type { RepurposingIdea } from '@/ai/flows/suggest-repurposing-ideas';
 
 
 const db = getFirestore(app);
@@ -52,8 +53,8 @@ export interface CampaignDraft {
   selectedAngle: ContentAngle;
   twitterSeries?: string[];
   linkedinSeries?: string[];
-  twitterRepurposingIdeas?: string[];
-  linkedinRepurposingIdeas?: string[];
+  twitterRepurposingIdeas?: RepurposingIdea[];
+  linkedinRepurposingIdeas?: RepurposingIdea[];
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }

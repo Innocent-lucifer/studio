@@ -5,7 +5,7 @@ import React, { useState, useEffect, Suspense, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -18,13 +18,14 @@ import Link from 'next/link';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/context/AuthContext";
 import { researchTopic } from '@/ai/flows/research-topic';
 import type { SuggestContentAnglesInput, ContentAngle } from '@/ai/flows/suggest-content-angles';
 import { suggestContentAngles } from '@/ai/flows/suggest-content-angles';
 import type { GenerateCampaignSeriesInput } from '@/ai/flows/generate-campaign-series';
 import { generateCampaignSeries } from '@/ai/flows/generate-campaign-series';
-import type { SuggestRepurposingIdeasInput } from '@/ai/flows/suggest-repurposing-ideas';
+import type { SuggestRepurposingIdeasInput, RepurposingIdea } from '@/ai/flows/suggest-repurposing-ideas';
 import { suggestRepurposingIdeas } from '@/ai/flows/suggest-repurposing-ideas';
 import { generateEditedPost, type GenerateEditedPostInput } from '@/ai/flows/generateEditedPost';
 import { saveDraft, saveCampaignDraft, getCampaignDraftById, type CampaignDraft, getUserData } from '@/lib/firebaseUserActions';
@@ -179,8 +180,8 @@ const SmartCampaignWizardInternal: React.FC = () => {
   const [aiEditInstruction, setAiEditInstruction] = useState("");
   const [isAiSubmitting, setIsAiSubmitting] = useState(false);
   
-  const [twitterRepurposingIdeas, setTwitterRepurposingIdeas] = useState<string[]>([]);
-  const [linkedinRepurposingIdeas, setLinkedinRepurposingIdeas] = useState<string[]>([]);
+  const [twitterRepurposingIdeas, setTwitterRepurposingIdeas] = useState<RepurposingIdea[]>([]);
+  const [linkedinRepurposingIdeas, setLinkedinRepurposingIdeas] = useState<RepurposingIdea[]>([]);
   const [loadedCampaignId, setLoadedCampaignId] = useState<string | null>(null);
   
   const [generatedAnglesForCurrentResearch, setGeneratedAnglesForCurrentResearch] = useState<Set<string>>(new Set());
@@ -558,26 +559,39 @@ const SmartCampaignWizardInternal: React.FC = () => {
   
   const handleCopyCampaign = useCallback(() => {
     let contentToCopy = `Smart Campaign for Topic: ${campaignTopic}\nSelected Angle: ${selectedAngle?.title || 'N/A'}\n\n`;
+    
     if (twitterSeries.length > 0) {
       contentToCopy += `=== Twitter Series ===\n`;
       contentToCopy += twitterSeries.map((post, i) => `Tweet ${i+1}:\n${post}`).join('\n\n---\n\n');
       contentToCopy += `\n\n`;
-    } else contentToCopy += `=== Twitter Series ===\nNo Twitter posts generated.\n\n`;
+    }
     if (twitterRepurposingIdeas.length > 0) {
-        contentToCopy += `--- Repurposing Ideas for Twitter ---\n`;
-        contentToCopy += twitterRepurposingIdeas.map(idea => `- ${idea}`).join('\n');
+        contentToCopy += `--- Twitter Repurposing Strategies ---\n`;
+        twitterRepurposingIdeas.forEach(idea => {
+            contentToCopy += `\nPlatform/Format: ${idea.platformAndFormat}\n`;
+            contentToCopy += `Hook: "${idea.hook}"\n`;
+            contentToCopy += `Rationale: ${idea.rationale}\n`;
+            contentToCopy += `Virality Score: ${idea.viralityScore}/100\n`;
+        });
         contentToCopy += `\n\n`;
     }
+
     if (linkedinSeries.length > 0) {
       contentToCopy += `=== LinkedIn Series ===\n`;
       contentToCopy += linkedinSeries.map((post, i) => `LinkedIn Post ${i+1}:\n${post}`).join('\n\n---\n\n');
       contentToCopy += `\n\n`;
-    } else contentToCopy += `=== LinkedIn Series ===\nNo LinkedIn posts generated.\n\n`;
+    }
     if (linkedinRepurposingIdeas.length > 0) {
-        contentToCopy += `--- Repurposing Ideas for LinkedIn ---\n`;
-        contentToCopy += linkedinRepurposingIdeas.map(idea => `- ${idea}`).join('\n');
+        contentToCopy += `--- LinkedIn Repurposing Strategies ---\n`;
+        linkedinRepurposingIdeas.forEach(idea => {
+            contentToCopy += `\nPlatform/Format: ${idea.platformAndFormat}\n`;
+            contentToCopy += `Hook: "${idea.hook}"\n`;
+            contentToCopy += `Rationale: ${idea.rationale}\n`;
+            contentToCopy += `Virality Score: ${idea.viralityScore}/100\n`;
+        });
         contentToCopy += `\n\n`;
     }
+
     navigator.clipboard.writeText(contentToCopy.trim());
     toast({ title: "Campaign Copied!", description: "Full campaign content copied to clipboard." });
   }, [campaignTopic, selectedAngle, twitterSeries, linkedinSeries, twitterRepurposingIdeas, linkedinRepurposingIdeas, toast]);
@@ -901,114 +915,119 @@ const SmartCampaignWizardInternal: React.FC = () => {
       case 'repurpose':
           return (
             <motion.div key="repurpose" {...cardMotionProps} className="space-y-6">
-              <div className="flex justify-between items-center">
-                <h3 className="text-xl font-medium text-slate-200 mb-1">Repurposing Ideas for: <span className="text-purple-400">{selectedAngle?.title || 'Selected Angle'}</span></h3>
-                 <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button 
-                        onClick={handleSaveFullCampaign} 
-                        variant="outline" 
-                        size="sm"
-                        className="border-accent text-accent hover:bg-accent/10 disabled:opacity-60"
-                        disabled={isSavingCampaign || !userIdToPass || !campaignTopic || !selectedAngle || !currentResearchedContent}
-                      >
-                        {isSavingCampaign ? <Icons.loader className="mr-2 h-4 w-4 animate-spin" /> : <Icons.archive className="mr-2 h-4 w-4" />}
-                        Save Campaign
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent className="bg-slate-800 text-slate-200 border-slate-700">
-                      <p>Save the current campaign progress (topic, angle, series, ideas).</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-              {isSavingCampaign && <p className="text-sm text-slate-400 text-center">{loadingMessage}</p>}
-               {isLoading && loadingMessage.includes("Generating repurposing") ? (
-                 renderLoadingState(loadingMessage)
-              ) : (
-              <>
-              {(twitterRepurposingIdeas.length === 0 && linkedinRepurposingIdeas.length === 0 && (twitterSeries.length > 0 || linkedinSeries.length > 0) && !isLoading) && (
-                  <div className="flex flex-col items-center justify-center text-center p-6 bg-slate-700/30 rounded-lg border border-slate-600/50 min-h-[200px]">
-                      <Icons.info className="w-10 h-10 text-slate-500 mb-3" />
-                      <p className="text-slate-300 text-md font-medium">No Repurposing Ideas Found</p>
-                      <p className="text-slate-400 text-sm mt-1">The AI couldn't find specific repurposing ideas for the generated content.</p>
-                      <Button 
-                          variant="outline" 
-                          onClick={handleSuggestRepurposing} 
-                          className="mt-4 border-primary text-primary hover:bg-primary/10"
-                          disabled={isLoading || !userIdToPass}
-                      >
-                          <Icons.refreshCw className="mr-2 h-4 w-4" /> Try Generating Ideas Again
-                      </Button>
-                  </div>
-              )}
-              <motion.div 
-                className="grid md:grid-cols-2 gap-6"
-                variants={listContainerVariants}
-                initial="hidden"
-                animate="visible"
-              >
-                {(twitterRepurposingIdeas.length > 0 || linkedinRepurposingIdeas.length > 0) && (
-                  <>
-                  <motion.div variants={listItemVariants}>
-                    <Card className="bg-slate-700/50 border-slate-600 h-full hover:shadow-primary/10 transition-shadow duration-300">
-                        <CardHeader>
-                            <CardTitle className="flex items-center text-lg text-sky-400"><Icons.twitter className="mr-2 h-5 w-5" /> For Your Twitter Series</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <ScrollArea className="h-[250px] md:h-[300px] pr-2">
-                                {twitterRepurposingIdeas.length > 0 ? (
-                                    <ul className="list-disc list-inside space-y-2 text-slate-300">
-                                        {twitterRepurposingIdeas.map((idea, index) => (
-                                            <motion.li 
-                                              key={`twitter-repurpose-${index}`} 
-                                              custom={index}
-                                              variants={listItemVariants}
-                                              className="p-2 bg-slate-600/50 rounded-md"
-                                            >{idea}</motion.li>
-                                        ))}
-                                    </ul>
-                                ) : (
-                                    <p className="text-slate-400 text-center py-4">
-                                      {twitterSeries.length > 0 ? "No repurposing ideas generated for Twitter this time." : "No Twitter series was generated to create ideas from."}
-                                    </p>
-                                )}
-                            </ScrollArea>
-                        </CardContent>
-                    </Card>
-                  </motion.div>
-                  <motion.div variants={listItemVariants}>
-                    <Card className="bg-slate-700/50 border-slate-600 h-full hover:shadow-primary/10 transition-shadow duration-300">
-                        <CardHeader>
-                            <CardTitle className="flex items-center text-lg text-blue-400"><Icons.linkedin className="mr-2 h-5 w-5" /> For Your LinkedIn Series</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <ScrollArea className="h-[250px] md:h-[300px] pr-2">
-                                {linkedinRepurposingIdeas.length > 0 ? (
-                                    <ul className="list-disc list-inside space-y-2 text-slate-300">
-                                        {linkedinRepurposingIdeas.map((idea, index) => (
-                                            <motion.li 
-                                              key={`linkedin-repurpose-${index}`} 
-                                              custom={index}
-                                              variants={listItemVariants}
-                                              className="p-2 bg-slate-600/50 rounded-md"
-                                            >{idea}</motion.li>
-                                        ))}
-                                    </ul>
-                                ) : (
-                                      <p className="text-slate-400 text-center py-4">
-                                      {linkedinSeries.length > 0 ? "No repurposing ideas generated for LinkedIn this time." : "No LinkedIn series was generated to create ideas from."}
-                                    </p>
-                                )}
-                            </ScrollArea>
-                        </CardContent>
-                    </Card>
-                  </motion.div>
-                  </>
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+                    <h3 className="text-xl font-medium text-slate-200">Viral Marketing Strategies for: <br/><span className="text-purple-400">{selectedAngle?.title || 'Selected Angle'}</span></h3>
+                    <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                        <Button 
+                            onClick={handleSaveFullCampaign} 
+                            variant="outline" 
+                            size="sm"
+                            className="border-accent text-accent hover:bg-accent/10 disabled:opacity-60 w-full sm:w-auto"
+                            disabled={isSavingCampaign || !userIdToPass || !campaignTopic || !selectedAngle || !currentResearchedContent}
+                        >
+                            {isSavingCampaign ? <Icons.loader className="mr-2 h-4 w-4 animate-spin" /> : <Icons.archive className="mr-2 h-4 w-4" />}
+                            Save Campaign
+                        </Button>
+                        </TooltipTrigger>
+                        <TooltipContent className="bg-slate-800 text-slate-200 border-slate-700">
+                        <p>Save the current campaign progress.</p>
+                        </TooltipContent>
+                    </Tooltip>
+                    </TooltipProvider>
+                </div>
+                {isSavingCampaign && <p className="text-sm text-slate-400 text-center">{loadingMessage}</p>}
+                
+                {isLoading && loadingMessage.includes("Generating repurposing") ? renderLoadingState(loadingMessage) : (
+                <>
+                {(twitterRepurposingIdeas.length === 0 && linkedinRepurposingIdeas.length === 0) && (
+                    <div className="flex flex-col items-center justify-center text-center p-6 bg-slate-700/30 rounded-lg border border-slate-600/50 min-h-[200px]">
+                        <Icons.info className="w-10 h-10 text-slate-500 mb-3" />
+                        <p className="text-slate-300 text-md font-medium">No Repurposing Ideas Found</p>
+                        <p className="text-slate-400 text-sm mt-1">The AI couldn't find strategies. Try again or proceed.</p>
+                    </div>
                 )}
-              </motion.div>
-              </>
+
+                <motion.div 
+                    className="grid md:grid-cols-1 lg:grid-cols-2 gap-6"
+                    variants={listContainerVariants}
+                    initial="hidden"
+                    animate="visible"
+                >
+                    {twitterRepurposingIdeas.length > 0 && (
+                    <motion.div variants={listItemVariants}>
+                        <Card className="bg-slate-700/50 border-slate-600 h-full">
+                        <CardHeader><CardTitle className="flex items-center text-lg text-sky-400"><Icons.twitter className="mr-2 h-5 w-5" /> Twitter Strategies</CardTitle></CardHeader>
+                        <CardContent className="space-y-4">
+                            <ScrollArea className="h-[350px] md:h-[450px] pr-3">
+                                <div className="space-y-4">
+                                {twitterRepurposingIdeas.map((idea, index) => (
+                                    <Card key={`twitter-idea-${index}`} className="bg-slate-800/60 border-slate-700">
+                                        <CardHeader className="pb-2">
+                                            <CardTitle className="flex items-center text-base text-amber-300"><Icons.lightbulb className="mr-2 h-4 w-4" /> {idea.platformAndFormat}</CardTitle>
+                                        </CardHeader>
+                                        <CardContent className="space-y-3 text-xs">
+                                            <div>
+                                                <h4 className="font-semibold text-slate-300 mb-1">The Hook:</h4>
+                                                <p className="text-slate-200 italic">"{idea.hook}"</p>
+                                            </div>
+                                            <div>
+                                                <h4 className="font-semibold text-slate-300 mb-1">Rationale:</h4>
+                                                <p className="text-slate-400">{idea.rationale}</p>
+                                            </div>
+                                        </CardContent>
+                                        <CardFooter>
+                                            <Badge variant={idea.viralityScore > 75 ? "destructive" : "secondary"} className={`${idea.viralityScore > 75 ? 'bg-red-500/20 text-red-300 border-red-500/30' : 'bg-slate-600/80 text-slate-400 border-slate-500/50'}`}>
+                                                <Icons.flame className="mr-1 h-3 w-3" /> Virality Score: {idea.viralityScore}/100
+                                            </Badge>
+                                        </CardFooter>
+                                    </Card>
+                                ))}
+                                </div>
+                            </ScrollArea>
+                        </CardContent>
+                        </Card>
+                    </motion.div>
+                    )}
+
+                    {linkedinRepurposingIdeas.length > 0 && (
+                    <motion.div variants={listItemVariants}>
+                        <Card className="bg-slate-700/50 border-slate-600 h-full">
+                        <CardHeader><CardTitle className="flex items-center text-lg text-blue-400"><Icons.linkedin className="mr-2 h-5 w-5" /> LinkedIn Strategies</CardTitle></CardHeader>
+                        <CardContent className="space-y-4">
+                           <ScrollArea className="h-[350px] md:h-[450px] pr-3">
+                                <div className="space-y-4">
+                                {linkedinRepurposingIdeas.map((idea, index) => (
+                                    <Card key={`linkedin-idea-${index}`} className="bg-slate-800/60 border-slate-700">
+                                         <CardHeader className="pb-2">
+                                            <CardTitle className="flex items-center text-base text-amber-300"><Icons.lightbulb className="mr-2 h-4 w-4" /> {idea.platformAndFormat}</CardTitle>
+                                        </CardHeader>
+                                        <CardContent className="space-y-3 text-xs">
+                                            <div>
+                                                <h4 className="font-semibold text-slate-300 mb-1">The Hook:</h4>
+                                                <p className="text-slate-200 italic">"{idea.hook}"</p>
+                                            </div>
+                                            <div>
+                                                <h4 className="font-semibold text-slate-300 mb-1">Rationale:</h4>
+                                                <p className="text-slate-400">{idea.rationale}</p>
+                                            </div>
+                                        </CardContent>
+                                        <CardFooter>
+                                            <Badge variant={idea.viralityScore > 75 ? "destructive" : "secondary"} className={`${idea.viralityScore > 75 ? 'bg-red-500/20 text-red-300 border-red-500/30' : 'bg-slate-600/80 text-slate-400 border-slate-500/50'}`}>
+                                                <Icons.flame className="mr-1 h-3 w-3" /> Virality Score: {idea.viralityScore}/100
+                                            </Badge>
+                                        </CardFooter>
+                                    </Card>
+                                ))}
+                                </div>
+                            </ScrollArea>
+                        </CardContent>
+                        </Card>
+                    </motion.div>
+                    )}
+                </motion.div>
+                </>
               )}
               
               <Separator className="my-6 bg-slate-700" />
