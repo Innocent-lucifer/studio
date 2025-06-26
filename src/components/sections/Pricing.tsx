@@ -45,7 +45,7 @@ export default function Pricing({ plans }: PricingProps) {
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
         >
-            <div className="inline-flex items-center justify-center gap-2 text-primary font-semibold text-sm mb-3 bg-primary/10 px-4 py-1.5 rounded-full">
+            <div className="inline-flex items-center justify-center gap-2 text-primary-foreground font-semibold text-sm mb-3 bg-primary px-4 py-1.5 rounded-full shadow-md shadow-primary/30">
                 <Sparkles className="w-5 h-5" />
                 <span>Launching-only Pricing</span>
             </div>
@@ -79,7 +79,7 @@ export default function Pricing({ plans }: PricingProps) {
                 </div>
               )}
               {plan.discountBadge && (
-                <div className="absolute -top-4 left-6 px-4 py-1.5 text-xs font-bold text-accent-foreground bg-accent rounded-full shadow-md shadow-accent/40">
+                <div className="absolute -top-4 left-6 px-4 py-1.5 text-xs font-bold text-background bg-foreground rounded-full shadow-lg shadow-primary/30">
                   {plan.discountBadge}
                 </div>
               )}
