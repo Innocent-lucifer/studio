@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from "react";
@@ -79,7 +78,7 @@ export default function Pricing({ plans }: PricingProps) {
                 </div>
               )}
               {plan.discountBadge && (
-                <div className="absolute -top-4 left-6 px-4 py-1.5 text-xs font-bold text-background bg-foreground rounded-full shadow-lg shadow-primary/30">
+                <div className="absolute -top-4 left-6 px-4 py-1.5 text-xs font-bold text-accent-foreground bg-accent rounded-full shadow-lg shadow-accent/40">
                   {plan.discountBadge}
                 </div>
               )}
