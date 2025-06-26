@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from "react";
@@ -9,12 +10,12 @@ import { AppLogo } from "@/components/AppLogo";
 export default function Footer() {
   const footerLinks = {
     Product: [
-      { name: "Problem & Solution", href: "#problem-solution" },
-      { name: "Features", href: "#features" },
+      { name: "Problem & Solution", href: "/#problem-solution" },
+      { name: "Features", href: "/#features" },
       { name: "Get Started", href: "/login" },
     ],
     Support: [
-      { name: "FAQ", href: "#faq" },
+      { name: "FAQ", href: "/#faq" },
       { name: "Contact", href: "/contact" },
       { name: "Help Center", href: "/contact" },
     ],
