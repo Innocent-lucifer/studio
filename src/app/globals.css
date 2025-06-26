@@ -14,7 +14,7 @@
     --popover: 217 33% 17%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 262 82% 57%;
+    --primary: 262 70% 50%;
     --primary-foreground: 0 0% 98%;
 
     --secondary: 217 33% 17%;
@@ -31,7 +31,7 @@
 
     --border: 217 33% 22%;
     --input: 217 33% 22%;
-    --ring: 262 82% 57%;
+    --ring: 262 70% 50%;
     
     --radius: 0.75rem;
   }
@@ -46,7 +46,7 @@
     --popover: 217 33% 17%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 262 82% 57%;
+    --primary: 262 70% 50%;
     --primary-foreground: 0 0% 98%;
 
     --secondary: 217 33% 17%;
@@ -63,7 +63,7 @@
 
     --border: 217 33% 22%;
     --input: 217 33% 22%;
-    --ring: 262 82% 57%;
+    --ring: 262 70% 50%;
   }
 }
 
