@@ -91,7 +91,7 @@ export default function Footer() {
           </p>
           <div className="flex items-center space-x-4 mt-4 sm:mt-0">
             <Link href="#" passHref><Twitter className="h-5 w-5 text-secondary-foreground/60 hover:text-primary transition-colors" /></Link>
-            <Link href="#" passHref><Linkedin className="h-5 w-5 text-secondary-foreground/60 hover:text-primary transition-colors" /></Link>
+            <Link href="https://linkedin.com/company/sagepostai" passHref target="_blank" rel="noopener noreferrer"><Linkedin className="h-5 w-5 text-secondary-foreground/60 hover:text-primary transition-colors" /></Link>
           </div>
         </div>
       </div>
