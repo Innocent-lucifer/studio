@@ -12,17 +12,17 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 
 const placeholders = [
-  "Enter topic to see the magic...",
-  "e.g., The future of renewable energy",
-  "e.g., How AI is changing marketing",
-  "e.g., The benefits of a 4-day work week",
+  "Enter a topic to see the magic...",
+  "For Founders: 'Go-to-market strategy for a new SaaS'",
+  "For Creators: 'My journey building a personal brand'",
+  "For Marketers: 'Latest trends in content marketing'",
 ];
 
 export default function Hero() {
   const [topic, setTopic] = useState("");
   const router = useRouter();
   const { user } = useAuth();
-  const [placeholder, setPlaceholder] = useState("Enter topic to see the magic...");
+  const [placeholder, setPlaceholder] = useState("Enter a topic to see the magic...");
   const [isUserInteracting, setIsUserInteracting] = useState(false);
 
   // Typing animation effect
