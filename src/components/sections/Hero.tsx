@@ -1,15 +1,16 @@
 
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, lazy, Suspense } from "react";
 import { motion } from "framer-motion";
 import { Clock, Search } from "lucide-react";
-import ProductHuntBadge from "../compos/ProductHuntBadge";
 import Image from "next/image";
 import Link from 'next/link';
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+
+const ProductHuntBadge = lazy(() => import("../compos/ProductHuntBadge"));
 
 const placeholders = [
   "Enter a topic to see the magic...",
@@ -103,7 +104,9 @@ export default function Hero() {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, ease: "easeOut" }}
         >
-          <ProductHuntBadge />
+          <Suspense fallback={<div className="h-[52px] w-[230px] bg-secondary rounded-xl animate-pulse"></div>}>
+            <ProductHuntBadge />
+          </Suspense>
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold mt-6 mb-6 leading-tight tracking-tighter">
             Automate Social Media <br />
             <span className="text-primary">Dominate with AI</span>
