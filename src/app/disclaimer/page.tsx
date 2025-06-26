@@ -58,6 +58,12 @@ export default function DisclaimerPage() {
                             consequences.
                         </p>
                     </PolicySection>
+
+                    <PolicySection title="3-Day Free Trial Clarification">
+                        <p>
+                            The "3-day free trial" provides limited access to our platform's features to allow for evaluation. This trial permits you to use each feature up to three (3) times per day for a total of three (3) days. It is not an unlimited access trial. Usage is monitored, and any attempt to bypass these limitations may result in immediate account termination.
+                        </p>
+                    </PolicySection>
                     
                     <PolicySection title="No Professional Advice">
                         <p>
