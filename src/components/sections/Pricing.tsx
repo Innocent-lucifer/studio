@@ -14,6 +14,7 @@ interface Plan {
     borderClass: string;
     badge?: string;
     badgeClass?: string;
+    discountBadge?: string;
     features: string[];
 }
 
@@ -75,6 +76,11 @@ export default function Pricing({ plans }: PricingProps) {
                   className={`absolute -top-4 right-6 px-4 py-1 text-xs font-bold text-white rounded-full shadow-md bg-gradient-to-r ${plan.badgeClass}`}
                 >
                   {plan.badge}
+                </div>
+              )}
+              {plan.discountBadge && (
+                <div className="absolute -top-4 left-6 px-4 py-1.5 text-xs font-bold text-green-950 bg-green-400 rounded-full shadow-md">
+                  {plan.discountBadge}
                 </div>
               )}
               <div className="flex-grow">

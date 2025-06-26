@@ -86,7 +86,6 @@ export default function Home() {
         "AI Post Editor (Auto cleans grammar & flow instantly)",
         "Copy & export posts anytime",
         "Post history access",
-        "Private Creator Community"
       ]
     },
     {
@@ -95,6 +94,7 @@ export default function Home() {
       subtitle: "Try 3 days free, then $197/year (~$16/mo)",
       badge: "BEST VALUE",
       badgeClass: "from-primary to-accent",
+      discountBadge: "SAVE 18%",
       borderClass: "border-primary ring-2 ring-primary/50",
       features: [
         "Unlimited Generations",
@@ -107,7 +107,6 @@ export default function Home() {
         "AI Post Editor (Auto cleans grammar & flow instantly)",
         "Copy & export posts anytime",
         "Post history access",
-        "Private Creator Community"
       ]
     }
   ];
