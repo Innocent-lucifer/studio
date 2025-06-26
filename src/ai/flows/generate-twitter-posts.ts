@@ -11,14 +11,12 @@
 import {ai}from '@/ai/ai-instance';
 import {z}from 'genkit';
 import {researchTopic} from "@/ai/flows/research-topic";
-import { deductCredits, CREDIT_COSTS, CreditTransactionType, getUserData } from '@/lib/firebaseUserActions';
 
 const GenerateTwitterPostsInputSchema = z.object({
   topic: z.string().describe('The topic to generate Twitter posts about. This might be a simple topic string or a more detailed researched summary.'),
   topicDisplay: z.string().optional().describe('The original, user-facing topic string, used for display and context if the main "topic" field contains a lengthy research summary.'),
   numPosts: z.number().describe('The number of Twitter posts to generate.'),
   userId: z.string().optional().describe('The ID of the user requesting the posts. Required for credit deduction.'),
-  isRegeneration: z.boolean().optional().default(false).describe('Whether this is a regeneration request, which may have a different cost.'),
 });
 export type GenerateTwitterPostsInput = z.infer<typeof GenerateTwitterPostsInputSchema>;
 
@@ -27,8 +25,6 @@ const GenerateTwitterPostsOutputSchema = z.object({
     z.string().describe('A generated Twitter post.')
   ).describe('The list of generated Twitter posts.').optional(),
   error: z.string().optional().describe('An error message if generation failed.'),
-  creditsSpent: z.number().optional().describe('Number of credits spent for this operation.'),
-  freePostUsed: z.boolean().optional().describe('Indicates if a free post was used for this operation.'),
 });
 export type GenerateTwitterPostsOutput = z.infer<typeof GenerateTwitterPostsOutputSchema>;
 
@@ -91,25 +87,11 @@ const generateTwitterPostsFlow = ai.defineFlow(
       return { error: "User ID is required for this operation." };
     }
     
-    let creditsSpentForThisAction = 0;
-
-    // Only deduct credits if it's a regeneration request.
-    // The initial cost is now handled upfront in the TopicResearch component.
-    if (input.isRegeneration) {
-        const costKey = 'QUICK_POST_REGENERATE';
-        const creditCheckResult = await deductCredits(input.userId, costKey, true);
-
-        if (!creditCheckResult.success) {
-            return { error: creditCheckResult.error || "Credit deduction failed for regeneration." };
-        }
-        creditsSpentForThisAction = creditCheckResult.creditsSpent || 0;
-    }
-    
     try {
       let researchedInformation = input.topic;
       // The research part of the flow is now simplified, as the initial call comes from the UI
       // which has already done the research. This is just a fallback.
-      if (!input.isRegeneration && ((!input.topicDisplay && input.topic.length < 100) || (input.topicDisplay && input.topic.length < 100 && input.topic === input.topicDisplay))) {
+      if (((!input.topicDisplay && input.topic.length < 100) || (input.topicDisplay && input.topic.length < 100 && input.topic === input.topicDisplay))) {
         const researchedInfoResult = await researchTopic({ topic: input.topic, userId: input.userId });
         if (!researchedInfoResult.error) {
           researchedInformation = researchedInfoResult.summary;
@@ -128,8 +110,6 @@ const generateTwitterPostsFlow = ai.defineFlow(
       
       return { 
         posts: promptOutput.posts, 
-        creditsSpent: creditsSpentForThisAction,
-        freePostUsed: false, 
       };
 
     } catch (e: any) {

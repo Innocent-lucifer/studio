@@ -27,7 +27,7 @@ import { generateCampaignSeries } from '@/ai/flows/generate-campaign-series';
 import type { SuggestRepurposingIdeasInput } from '@/ai/flows/suggest-repurposing-ideas';
 import { suggestRepurposingIdeas } from '@/ai/flows/suggest-repurposing-ideas';
 import { generateEditedPost, type GenerateEditedPostInput } from '@/ai/flows/generateEditedPost';
-import { saveDraft, saveCampaignDraft, getCampaignDraftById, type CampaignDraft, deductCredits, getUserData, CREDIT_COSTS, FEATURE_DESCRIPTIONS } from '@/lib/firebaseUserActions';
+import { saveDraft, saveCampaignDraft, getCampaignDraftById, type CampaignDraft, getUserData } from '@/lib/firebaseUserActions';
 
 type WizardStep = 'topic_research' | 'angles' | 'series' | 'repurpose' | 'complete' | 'initial_error';
 
@@ -318,15 +318,6 @@ const SmartCampaignWizardInternal: React.FC = () => {
     setLoadedCampaignId(null); 
     router.replace('/smart-campaign', undefined); 
 
-    const creditFeatureKey: keyof typeof CREDIT_COSTS = 'SMART_CAMPAIGN_RESEARCH_TOPIC';
-    const creditDeductionResult = await deductCredits(userIdToPass, creditFeatureKey);
-    if (!creditDeductionResult.success) {
-      toast({ variant: "destructive", title: "Credit Deduction Failed", description: creditDeductionResult.error || "Could not deduct credits for research." });
-      setIsLoading(false);
-      setLoadingMessage('');
-      return;
-    }
-
     try {
       const result = await researchTopic({ topic: campaignTopic, userId: userIdToPass });
       if (result.error || !result.summary) {
@@ -357,35 +348,6 @@ const SmartCampaignWizardInternal: React.FC = () => {
       toast({ variant: "destructive", title: "Login Required", description: "Please log in to generate series." });
       return;
     }
-    
-    let proceedWithGeneration = false;
-    let costForThisAngleGeneration: keyof typeof CREDIT_COSTS | null = null;
-
-    if (generatedAnglesForCurrentResearch.has(selectedAngle.title)) {
-        toast({ title: "Regenerating Posts", description: `Regenerating posts for '${selectedAngle.title}' (no extra cost for this research batch).` });
-        proceedWithGeneration = true;
-    } else if (generatedAnglesForCurrentResearch.size === 0) {
-        proceedWithGeneration = true;
-    } else {
-        costForThisAngleGeneration = 'SMART_CAMPAIGN_ADDITIONAL_ANGLE';
-    }
-
-    if (costForThisAngleGeneration) {
-        setIsLoading(true); 
-        setLoadingMessage(`Processing credits for new angle: "${selectedAngle.title}"...`);
-        const creditResult = await deductCredits(userIdToPass, costForThisAngleGeneration);
-        setIsLoading(false);
-        setLoadingMessage('');
-
-        if (!creditResult.success) {
-            toast({ variant: "destructive", title: "Credit Deduction Failed", description: creditResult.error || `Could not deduct ${CREDIT_COSTS[costForThisAngleGeneration]} credits.` });
-            return;
-        }
-        proceedWithGeneration = true;
-    }
-
-    if (!proceedWithGeneration) return;
-
 
     setIsLoading(true);
     setLoadingMessage(`Crafting campaign series for "${selectedAngle.title}"... This might take a few moments.`);
@@ -423,7 +385,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
       setIsLoading(false);
       setLoadingMessage('');
     }
-  }, [selectedAngle, campaignTopic, currentResearchedContent, userIdToPass, toast, generatedAnglesForCurrentResearch]);
+  }, [selectedAngle, campaignTopic, currentResearchedContent, userIdToPass, toast]);
   
  const handleSuggestRepurposing = useCallback(async () => {
     if (!campaignTopic || !selectedAngle || (twitterSeries.length === 0 && linkedinSeries.length === 0) ) {
@@ -505,14 +467,6 @@ const SmartCampaignWizardInternal: React.FC = () => {
     }
     setIsAiSubmitting(true);
     try {
-      const creditFeatureKey: keyof typeof CREDIT_COSTS = 'AI_EDIT';
-      const creditCheckResult = await deductCredits(userIdToPass, creditFeatureKey);
-      if (!creditCheckResult.success) {
-          toast({ variant: "destructive", title: "Credit Error", description: creditCheckResult.error || `Could not process credits for AI Edit.` });
-          setIsAiSubmitting(false);
-          return;
-      }
-
       const input: GenerateEditedPostInput = { originalPost: editingPost.currentText, editInstruction: aiEditInstruction, topic: campaignTopic, platform: editingPost.platform, userId: userIdToPass };
       const result = await generateEditedPost(input);
       if (result.error) toast({ variant: "destructive", title: "AI Edit Error", description: result.error });

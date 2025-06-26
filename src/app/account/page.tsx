@@ -85,12 +85,12 @@ export default function AccountPage() {
             </div>
 
             <div className="space-y-2 p-4 bg-slate-700/50 rounded-lg border border-slate-600">
-              <h3 className="text-lg font-medium text-slate-200">Plan & Credits</h3>
+              <h3 className="text-lg font-medium text-slate-200">Plan & Subscription</h3>
               <p className="text-sm text-slate-300">
                 Current Plan: <span className="font-semibold text-purple-400">{userData?.plan ? userData.plan.charAt(0).toUpperCase() + userData.plan.slice(1) : 'Loading...'}</span>
               </p>
               <Button variant="outline" className="mt-2 w-full sm:w-auto border-primary text-primary hover:bg-primary/10 whitespace-normal h-auto py-2" disabled>
-                Manage Subscription / Buy Credits (Coming Soon)
+                Manage Subscription (Coming Soon)
               </Button>
             </div>
             

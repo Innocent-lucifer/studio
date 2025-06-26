@@ -17,7 +17,7 @@ import { generateEditedPost, GenerateEditedPostInput } from '@/ai/flows/generate
 import { Separator } from '@/components/ui/separator';
 import { Label } from '@/components/ui/label';
 import { useAuth } from "@/context/AuthContext";
-import { saveDraft, deductCredits, CREDIT_COSTS, FEATURE_DESCRIPTIONS } from '@/lib/firebaseUserActions';
+import { saveDraft } from '@/lib/firebaseUserActions';
 import {
   Dialog,
   DialogContent,
@@ -89,22 +89,6 @@ export default function VisualPostPage() {
     
     setIsLoading(true);
     setError(null);
-
-    let creditFeatureKey: keyof typeof CREDIT_COSTS | null = null;
-    if (isNewImage) {
-      creditFeatureKey = 'IMAGE_TO_POST';
-    } else if (isNewTone) {
-      creditFeatureKey = 'IMAGE_TO_POST_REGENERATE';
-    }
-
-    if (creditFeatureKey) {
-      const creditCheckResult = await deductCredits(userIdToPass, creditFeatureKey, creditFeatureKey !== 'IMAGE_TO_POST');
-      if (!creditCheckResult.success) {
-        toast({ variant: "destructive", title: "Credit Error", description: creditCheckResult.error || `Could not process credits.` });
-        setIsLoading(false);
-        return;
-      }
-    }
 
     try {
       const result = await generatePostFromImage({
@@ -234,14 +218,6 @@ export default function VisualPostPage() {
     }
     
     setIsAiSubmitting(true);
-    const creditFeatureKey: keyof typeof CREDIT_COSTS = 'AI_EDIT';
-    const creditCheckResult = await deductCredits(userIdToPass, creditFeatureKey); 
-    if (!creditCheckResult.success) {
-        toast({ variant: "destructive", title: "Credit Error", description: creditCheckResult.error || `Could not process credits for ${FEATURE_DESCRIPTIONS[creditFeatureKey]}.` });
-        setIsAiSubmitting(false);
-        return;
-    }
-
     try {
       const result = await generateEditedPost({
         originalPost: editingContent, 

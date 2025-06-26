@@ -8,25 +8,21 @@
  * - GenerateLinkedInPostsOutput - The return type for the generateLinkedInPosts function.
  */
 
-import {ai} from '@/ai/ai-instance';
+import {ai}from '@/ai/ai-instance';
 import {z}from 'genkit';
 import {researchTopic} from "@/ai/flows/research-topic";
-import { deductCredits, CREDIT_COSTS } from '@/lib/firebaseUserActions'; 
 
 const GenerateLinkedInPostsInputSchema = z.object({
   topic: z.string().describe('The topic to generate LinkedIn posts about. This might be a simple topic string or a more detailed researched summary.'),
   topicDisplay: z.string().optional().describe('The original, user-facing topic string, used for display and context if the main "topic" field contains a lengthy research summary.'),
   numPosts: z.number().describe('The number of LinkedIn posts to generate.'),
   userId: z.string().optional().describe('The ID of the user requesting the posts. Optional for now, to support guest users or scenarios where credits are not deducted.'),
-  isRegeneration: z.boolean().optional().default(false).describe('Whether this is a regeneration request, which may have a different cost.'),
 });
 export type GenerateLinkedInPostsInput = z.infer<typeof GenerateLinkedInPostsInputSchema>;
 
 const GenerateLinkedInPostsOutputSchema = z.object({
   posts: z.array(z.string()).describe('The generated LinkedIn posts.').optional(),
   error: z.string().optional().describe('An error message if generation failed.'),
-  creditsSpent: z.number().optional().describe('Number of credits spent for this operation.'),
-  freePostUsed: z.boolean().optional().describe('Indicates if a free post was used for this operation.'),
 });
 export type GenerateLinkedInPostsOutput = z.infer<typeof GenerateLinkedInPostsOutputSchema>;
 
@@ -69,7 +65,7 @@ Here are the posts:
 Post {{this}}:
 {{/each}}`,
   promptOptions: {
-    temperature: 0.8,
+    temperature: 0.9,
     safetySettings: [
       { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
       { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
@@ -89,24 +85,10 @@ const generateLinkedInPostsFlow = ai.defineFlow(
     if (!input.userId) {
       return { error: "User ID is required for this operation." };
     }
-    
-    let creditsSpentForThisAction = 0;
-
-    // Only deduct credits if it's a regeneration request.
-    // The initial cost is now handled upfront in the TopicResearch component.
-    if (input.isRegeneration) {
-        const costKey = 'QUICK_POST_REGENERATE';
-        const creditCheckResult = await deductCredits(input.userId, costKey, true);
-
-        if (!creditCheckResult.success) {
-            return { error: creditCheckResult.error || "Credit deduction failed for regeneration." };
-        }
-        creditsSpentForThisAction = creditCheckResult.creditsSpent || 0;
-    }
 
     try {
       let researchedInformation = input.topic;
-      if (!input.isRegeneration && ((!input.topicDisplay && input.topic.length < 100) || (input.topicDisplay && input.topic.length < 100 && input.topic === input.topicDisplay))) {
+      if (((!input.topicDisplay && input.topic.length < 100) || (input.topicDisplay && input.topic.length < 100 && input.topic === input.topicDisplay))) {
          const researchedInfoResult = await researchTopic({topic: input.topic, userId: input.userId});
          if (researchedInfoResult.error) {
            researchedInformation = input.topic;
@@ -137,8 +119,6 @@ const generateLinkedInPostsFlow = ai.defineFlow(
       
       return { 
         posts: promptOutput.posts,
-        creditsSpent: creditsSpentForThisAction,
-        freePostUsed: false,
       };
 
     } catch (e: any) {

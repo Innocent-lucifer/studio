@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from "@/hooks/use-toast";
 import { generateEditedPost } from "@/ai/flows/generateEditedPost";
-import { saveDraft, deductCredits, CREDIT_COSTS, FEATURE_DESCRIPTIONS } from "@/lib/firebaseUserActions"; // Added deductCredits, CREDIT_COSTS, FEATURE_DESCRIPTIONS
+import { saveDraft } from "@/lib/firebaseUserActions";
 import {
   Dialog,
   DialogContent,
@@ -204,20 +204,6 @@ export const PostSelection: React.FC<PostSelectionProps> = ({
     }
     setIsAiSubmitting(true);
     
-    const creditFeatureKey: keyof typeof CREDIT_COSTS = 'AI_EDIT';
-    const creditCheckResult = await deductCredits(userId, creditFeatureKey);
-
-    if (!creditCheckResult.success) {
-        toast({ variant: "destructive", title: "Credit Error", description: creditCheckResult.error || `Could not process credits for AI Edit.` });
-        setIsAiSubmitting(false);
-        return;
-    }
-     if (CREDIT_COSTS.AI_EDIT > 0 && !creditCheckResult.freePostUsedThisTime) { 
-       toast({ title: "Credits Used", description: `${CREDIT_COSTS.AI_EDIT} credits used for ${FEATURE_DESCRIPTIONS[creditFeatureKey]}.` });
-    } else if (creditCheckResult.freePostUsedThisTime) {
-        toast({ title: "Free Action Used", description: `Your free ${FEATURE_DESCRIPTIONS[creditFeatureKey].toLowerCase()} was successful!`});
-    }
-
     try {
       const result = await generateEditedPost({
         originalPost: editingPost.currentText, 

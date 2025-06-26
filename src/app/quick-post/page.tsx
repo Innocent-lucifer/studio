@@ -17,8 +17,6 @@ import { useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { researchTopic } from "@/ai/flows/research-topic";
 import { useToast } from "@/hooks/use-toast";
-import { deductCredits, CREDIT_COSTS, FEATURE_DESCRIPTIONS } from "@/lib/firebaseUserActions";
-
 
 const PostSelection = dynamic(() => import('@/components/PostSelection').then(mod => mod.PostSelection), {
   ssr: false,
@@ -67,23 +65,6 @@ const QuickPostPageContent = () => {
         }
 
         setResearchIsLoading(true);
-        const creditResult = await deductCredits(userIdToPass, 'QUICK_POST');
-        if (!creditResult.success) {
-            toast({
-                variant: "destructive",
-                title: "Credit Check Failed",
-                description: creditResult.error || "Could not process credits for this action.",
-            });
-            setResearchIsLoading(false);
-            return;
-        }
-
-        if (creditResult.freePostUsedThisTime) {
-            toast({ title: "Free Action Used", description: `Your free ${FEATURE_DESCRIPTIONS.QUICK_POST.toLowerCase()} was successful!` });
-        } else if (creditResult.creditsSpent && creditResult.creditsSpent > 0) {
-            toast({ title: "Credits Used", description: `${creditResult.creditsSpent} credits used for ${FEATURE_DESCRIPTIONS.QUICK_POST}.` });
-        }
-
         try {
             const result = await researchTopic({ topic: topicToResearch, userId: userIdToPass });
             if (result.error) {

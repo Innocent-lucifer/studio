@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -7,7 +8,6 @@ import { researchTopic } from "@/ai/flows/research-topic";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from 'framer-motion';
 import { Icons } from "./icons";
-import { deductCredits, CREDIT_COSTS, FEATURE_DESCRIPTIONS } from "@/lib/firebaseUserActions";
 
 interface TopicResearchProps {
   initialTopic?: string;
@@ -57,22 +57,6 @@ export const TopicResearch: React.FC<TopicResearchProps> = ({
         description: "Please log in to use the Quick Post Generator.",
         });
         return;
-    }
-
-    const creditResult = await deductCredits(userId, 'QUICK_POST');
-    if (!creditResult.success) {
-        toast({
-            variant: "destructive",
-            title: "Credit Check Failed",
-            description: creditResult.error || "Could not process credits for this action.",
-        });
-        return;
-    }
-
-    if (creditResult.freePostUsedThisTime) {
-        toast({ title: "Free Action Used", description: `Your free ${FEATURE_DESCRIPTIONS.QUICK_POST.toLowerCase()} was successful!` });
-    } else if (creditResult.creditsSpent && creditResult.creditsSpent > 0) {
-        toast({ title: "Credits Used", description: `${creditResult.creditsSpent} credits used for ${FEATURE_DESCRIPTIONS.QUICK_POST}.` });
     }
 
     setIsLoading(true);

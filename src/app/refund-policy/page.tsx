@@ -32,25 +32,23 @@ export default function RefundPolicyPage() {
             </h1>
 
             <p className="mb-5 text-foreground/80">
-              At <span className="font-semibold text-foreground">SagePostAI</span>, we operate on a transparent, credit-based system.
-              Once credits are purchased and used to generate content, they are consumed instantly by the AI system.
-              Due to this nature of immediate digital delivery,{" "}
+              At <span className="font-semibold text-foreground">SagePostAI</span>, we are transitioning to a subscription-based model.
+              Due to the nature of immediate digital delivery and access to our AI tools upon subscription,{" "}
               <span className="font-semibold text-destructive">
-                we do not offer refunds
+                we generally do not offer refunds
               </span>{" "}
-              after a successful purchase.
+              for subscription payments.
             </p>
             <p className="mb-5 text-foreground/80">
-              This policy ensures fairness and protects our platform from misuse — such as users consuming all available
-              credits and then requesting a full refund. Our focus is on providing consistent value to serious users of the platform.
+              This policy ensures fairness and protects our platform from misuse. Our focus is on providing consistent value to our subscribers.
             </p>
             <p className="mb-5 text-foreground/80">
-              If you experience a genuine technical issue or an error with your account, please contact our team within{" "}
-              <span className="font-semibold text-foreground">3 days</span> of the transaction. In such cases, we’ll review the issue and,
-              if appropriate, offer bonus credits or assistance.
+              If you experience a genuine technical issue that prevents you from using the service, please contact our team within{" "}
+              <span className="font-semibold text-foreground">3 days</span> of your payment. In such cases, we’ll review the issue and,
+              if appropriate, offer a partial or full refund at our discretion.
             </p>
             <p className="mb-5 text-foreground/80">
-              You may cancel any active subscription at any time. Your plan will remain active until the end of the current
+              You may cancel your subscription at any time. Your plan will remain active until the end of the current
               billing cycle, after which no further charges will occur.
             </p>
             <p className="text-foreground/80">

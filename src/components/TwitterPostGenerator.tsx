@@ -7,7 +7,6 @@ import { generateTwitterPosts } from "@/ai/flows/generate-twitter-posts";
 import { motion } from 'framer-motion';
 import { useToast } from "@/hooks/use-toast";
 import { Icons } from "./icons";
-import { FEATURE_DESCRIPTIONS, CREDIT_COSTS } from "@/lib/firebaseUserActions";
 
 interface TwitterPostGeneratorProps {
   topic: string;
@@ -25,7 +24,6 @@ export const TwitterPostGenerator: React.FC<TwitterPostGeneratorProps> = ({
   setParentPostsEmpty 
 }) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [isRegenerating, setIsRegenerating] = useState<boolean>(false);
   const [generatedPostsInternal, setGeneratedPostsInternal] = useState<string[]>([]);
   const [initialGenerationProcessedForTopic, setInitialGenerationProcessedForTopic] = useState<boolean>(false);
   const { toast } = useToast();
@@ -42,39 +40,23 @@ export const TwitterPostGenerator: React.FC<TwitterPostGeneratorProps> = ({
     setTwitterPosts([]);
   }, [topic, setTwitterPosts]);
 
-  const callGenerateFlow = useCallback(async (isRegen: boolean) => {
+  const callGenerateFlow = useCallback(async () => {
     if (!topic || !userId || userId === "sagepostai-guest-user") {
       setGeneratedPostsInternal([]);
       setTwitterPosts([]); 
       return;
     }
-
-    const featureKey: keyof typeof CREDIT_COSTS = isRegen ? 'QUICK_POST_REGENERATE' : 'QUICK_POST';
     
-    if (isRegen) {
-      setIsRegenerating(true);
-    } else {
-      if (initialGenerationProcessedForTopic) {
-        setIsLoading(false); // Prevent multiple initial loads if already processed
-        return;
-      }
-      setIsLoading(true);
-    }
-    
+    setIsLoading(true);
     setGeneratedPostsInternal([]); 
     setTwitterPosts([]); 
 
     try {
-      if (!isRegen && !initialGenerationProcessedForTopic) {
-        setInitialGenerationProcessedForTopic(true); 
-      }
-
       const result = await generateTwitterPosts({ 
         topic: topic, 
         topicDisplay: topic, 
         numPosts: 3, 
         userId,
-        isRegeneration: isRegen 
       });
 
       if (result.error) {
@@ -84,11 +66,6 @@ export const TwitterPostGenerator: React.FC<TwitterPostGeneratorProps> = ({
       } else {
         setGeneratedPostsInternal(result.posts || []);
         setTwitterPosts(result.posts || []);
-        if (result.freePostUsedThisTime) {
-          toast({ title: "Free Action Used", description: `Your free ${FEATURE_DESCRIPTIONS[featureKey].toLowerCase()} was successful!` });
-        } else if (result.creditsSpent && result.creditsSpent > 0) {
-          toast({ title: "Credits Used", description: `${result.creditsSpent} credits used for ${FEATURE_DESCRIPTIONS[featureKey]}.`});
-        }
       }
     } catch (error: any) {
       console.error("Error generating Twitter posts:", error);
@@ -99,35 +76,30 @@ export const TwitterPostGenerator: React.FC<TwitterPostGeneratorProps> = ({
       });
       setGeneratedPostsInternal([]);
       setTwitterPosts([]); 
-      if (!isRegen) {
-        setInitialGenerationProcessedForTopic(false); 
-      }
     } finally {
-      if(isRegen) setIsRegenerating(false); else setIsLoading(false);
+      setIsLoading(false);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [topic, userId, toast, setTwitterPosts, initialGenerationProcessedForTopic]);
+  }, [topic, userId, toast, setTwitterPosts]);
 
   useEffect(() => {
     const canGenerateInitial = topic && userId && userId !== "sagepostai-guest-user";
     
     if (canGenerateInitial && !initialGenerationProcessedForTopic && !isLoading) {
-        // console.log(`[TwitterPostGenerator] TEMPORARY 1s delay ended. Calling callGenerateFlow.`);
-        callGenerateFlow(false);
+        setInitialGenerationProcessedForTopic(true); 
+        callGenerateFlow();
     } else if (!canGenerateInitial) {
       setGeneratedPostsInternal([]);
       setTwitterPosts([]);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [topic, userId, initialGenerationProcessedForTopic, isLoading]); // callGenerateFlow is memoized
+  }, [topic, userId, initialGenerationProcessedForTopic, isLoading, callGenerateFlow]);
 
   const handleRegenerate = () => {
      setParentPostsEmpty(); 
-     callGenerateFlow(true); 
+     callGenerateFlow(); 
   };
   
   const showPostsInThisCard = displayGeneratedPostsInCard && generatedPostsInternal.length > 0;
-  const showConfirmationMessage = !displayGeneratedPostsInCard && generatedPostsInternal.length > 0 && !isLoading && !isRegenerating;
+  const showConfirmationMessage = !displayGeneratedPostsInCard && generatedPostsInternal.length > 0 && !isLoading;
   const canGenerateOrRegenerate = userId && userId !== "sagepostai-guest-user";
 
   return (
@@ -137,14 +109,14 @@ export const TwitterPostGenerator: React.FC<TwitterPostGeneratorProps> = ({
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.5, delay: 0.2 }}
     >
-      {(isLoading || isRegenerating) && (
+      {isLoading && (
          <div className="flex items-center justify-center p-4 rounded-md bg-slate-700/50">
           <Icons.loader className="h-5 w-5 animate-spin text-primary mr-2" />
-          <span className="text-slate-300">{isRegenerating ? "Regenerating..." : "Generating Twitter Posts..."}</span>
+          <span className="text-slate-300">Generating Twitter Posts...</span>
         </div>
       )}
 
-      {!isLoading && !isRegenerating && showPostsInThisCard && (
+      {!isLoading && showPostsInThisCard && (
         <div className="space-y-3">
           {generatedPostsInternal.map((post, index) => (
             <motion.div 
@@ -160,7 +132,7 @@ export const TwitterPostGenerator: React.FC<TwitterPostGeneratorProps> = ({
         </div>
       )}
       
-      {!isLoading && !isRegenerating && showConfirmationMessage && (
+      {!isLoading && showConfirmationMessage && (
         <div className="flex items-center justify-center p-3 rounded-md bg-slate-700/50 text-slate-300 text-sm">
           <Icons.checkCircle className="h-5 w-5 text-green-400 mr-2" />
           Twitter posts generated. Review below.
@@ -171,9 +143,9 @@ export const TwitterPostGenerator: React.FC<TwitterPostGeneratorProps> = ({
         <motion.div {...buttonMotionProps} className="w-full">
           <Button 
               onClick={handleRegenerate} 
-              disabled={isRegenerating || isLoading || !canGenerateOrRegenerate} 
+              disabled={isLoading || !canGenerateOrRegenerate} 
               className="w-full bg-primary/80 hover:bg-primary text-primary-foreground transition-colors duration-200 flex items-center justify-center py-2.5"
-              title={!canGenerateOrRegenerate ? "Please log in to regenerate posts." : `Regenerate Twitter Posts (${CREDIT_COSTS.QUICK_POST_REGENERATE} credits)`}
+              title={!canGenerateOrRegenerate ? "Please log in to regenerate posts." : "Regenerate Twitter Posts"}
             >
             <Icons.refreshCw className="mr-2 h-4 w-4" /> 
             Regenerate Twitter Posts
@@ -181,10 +153,10 @@ export const TwitterPostGenerator: React.FC<TwitterPostGeneratorProps> = ({
         </motion.div>
       )}
 
-      {!isLoading && !isRegenerating && !topic && (
+      {!isLoading && !topic && (
         <p className="text-sm text-slate-400 text-center py-4">Research a topic to generate Twitter posts.</p>
       )}
-      {!canGenerateOrRegenerate && topic && !isLoading && !isRegenerating && (
+      {!canGenerateOrRegenerate && topic && !isLoading && (
          <p className="text-xs text-slate-400 text-center py-2">Log in to generate or regenerate posts.</p>
       )}
     </motion.div>

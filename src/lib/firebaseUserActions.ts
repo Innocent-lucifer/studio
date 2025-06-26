@@ -31,14 +31,7 @@ export interface UserData {
   referralCode?: string;
   referredBy?: string;
   referralsMade?: number;
-  // Credit system fields
   plan: 'free' | 'starter' | 'infinity';
-  credits: number;
-  lastCreditReset?: Timestamp; // For future use with scheduled functions
-  freeQuickPostUsed?: boolean;
-  freeImageToPostUsed?: boolean;
-  freeSmartCampaignAnglesUsed?: boolean;
-  freeSmartCampaignResearchTopicUsed?: boolean;
 }
 
 export interface Draft {
@@ -65,41 +58,6 @@ export interface CampaignDraft {
   updatedAt: Timestamp;
 }
 
-export const CREDIT_COSTS = {
-  QUICK_POST: 20,
-  QUICK_POST_REGENERATE: 5,
-  IMAGE_TO_POST: 60,
-  IMAGE_TO_POST_REGENERATE: 5,
-  SMART_CAMPAIGN_RESEARCH_TOPIC: 30,
-  SMART_CAMPAIGN_ADDITIONAL_ANGLE: 10,
-  AI_EDIT: 5,
-  TREND_EXPLORER_FETCH: 0,
-};
-
-export const FEATURE_DESCRIPTIONS: Record<keyof typeof CREDIT_COSTS, string> = {
-  QUICK_POST: "Quick Post research & generation",
-  QUICK_POST_REGENERATE: "Quick Post regeneration",
-  IMAGE_TO_POST: "Image to Post generation",
-  IMAGE_TO_POST_REGENERATE: "Image to Post regeneration (e.g., tone change)",
-  SMART_CAMPAIGN_RESEARCH_TOPIC: "Smart Campaign topic research",
-  SMART_CAMPAIGN_ADDITIONAL_ANGLE: "Smart Campaign (new angle post generation)",
-  AI_EDIT: "AI-powered post editing",
-  TREND_EXPLORER_FETCH: "exploring trends",
-};
-
-
-export enum CreditTransactionType {
-  FEATURE_USE_QUICK_POST = 'feature_use_quick_post',
-  FEATURE_USE_QUICK_POST_REGENERATE = 'feature_use_quick_post_regenerate',
-  FEATURE_USE_IMAGE_TO_POST = 'feature_use_image_to_post',
-  FEATURE_USE_IMAGE_TO_POST_REGENERATE = 'feature_use_image_to_post_regenerate',
-  FEATURE_USE_SMART_CAMPAIGN_RESEARCH_TOPIC = 'feature_use_smart_campaign_research_topic',
-  FEATURE_USE_SMART_CAMPAIGN_ADDITIONAL_ANGLE = 'feature_use_smart_campaign_additional_angle',
-  FEATURE_USE_AI_EDIT = 'feature_use_ai_edit',
-  INITIAL_CREDITS = 'initial_credits_free_plan',
-}
-
-
 const generateReferralCode = (length = 8): string => {
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   let result = '';
@@ -117,7 +75,6 @@ export const createUserDocument = async (
   const userRef = doc(db, 'users', user.uid) as DocumentReference<UserData>;
 
   const defaultPlan: UserData['plan'] = 'free';
-  const defaultCredits = 40;
 
   try {
     const userSnap = await getDoc(userRef);
@@ -131,11 +88,6 @@ export const createUserDocument = async (
         referralCode: generateReferralCode(),
         referralsMade: 0,
         plan: defaultPlan,
-        credits: defaultCredits,
-        freeQuickPostUsed: false,
-        freeImageToPostUsed: false,
-        freeSmartCampaignAnglesUsed: false,
-        freeSmartCampaignResearchTopicUsed: false,
       };
 
       if (referredByCode) {
@@ -151,11 +103,6 @@ export const createUserDocument = async (
 
       if (existingData.plan === undefined) {
         updates.plan = defaultPlan;
-        needsUpdate = true;
-      }
-      if (existingData.credits === undefined) {
-        const planForCreditCalc = updates.plan || existingData.plan || defaultPlan;
-        updates.credits = planForCreditCalc === 'free' ? 40 : 999999;
         needsUpdate = true;
       }
       
@@ -193,17 +140,6 @@ export const getUserData = async (uid: string, userForCreation?: FirebaseAuthUse
     }
     throw error;
   }
-};
-
-
-export const deductCredits = async (
-  userId: string,
-  featureKey: keyof typeof CREDIT_COSTS,
-  isRegeneration: boolean = false,
-  numUnits: number = 1
-): Promise<{ success: boolean; error?: string; newCredits?: number; freePostUsedThisTime?: boolean; creditsSpent?: number }> => {
-  // Credits system is temporarily disabled for the beta. All actions are permitted.
-  return { success: true, newCredits: 9999, freePostUsedThisTime: false, creditsSpent: 0 };
 };
 
 
