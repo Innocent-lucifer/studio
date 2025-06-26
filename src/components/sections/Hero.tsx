@@ -120,7 +120,7 @@ export default function Hero() {
                 value={topic}
                 onChange={handleInputChange}
                 placeholder={isUserInteracting ? "" : placeholder}
-                className="flex h-14 w-full items-center rounded-md border border-input bg-secondary px-5 py-2 text-base text-foreground ring-offset-background placeholder:text-foreground/60"
+                className="flex h-14 w-full items-center rounded-md bg-secondary px-5 py-2 text-base text-foreground ring-offset-background placeholder:text-foreground/60 transition-shadow duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:shadow-lg focus-visible:shadow-primary/30"
               />
             </div>
             

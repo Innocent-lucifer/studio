@@ -14,7 +14,7 @@ const BuiltWith = lazy(() => import("@/components/sections/BuiltWith"));
 const ProblemSolution = lazy(() => import("@/components/sections/ProblemSolution"));
 const Features = lazy(() => import("@/components/sections/Features"));
 const HowItWorks = lazy(() => import("@/components/sections/HowItWorks"));
-const Examples = lazy(() => import("@/components/sections/Examples"));
+// const Examples = lazy(() => import("@/components/sections/Examples"));
 const Comparison = lazy(() => import("@/components/sections/Comparison"));
 const Testimonials = lazy(() => import("@/components/sections/Testimonials"));
 const Pricing = lazy(() => import("@/components/sections/Pricing"));
@@ -94,7 +94,7 @@ export default function Home() {
       subtitle: "Try 3 days free, then $197/year (~$16/mo)",
       badge: "BEST VALUE",
       badgeClass: "from-primary to-accent",
-      discountBadge: "SAVE 18%",
+      discountBadge: "18% OFF",
       borderClass: "border-primary ring-2 ring-primary/50",
       features: [
         "Unlimited Generations",
@@ -170,7 +170,7 @@ export default function Home() {
           <ProblemSolution />
           <Features />
           <HowItWorks />
-          <Examples />
+          {/* <Examples /> */}
           <Comparison />
           <Testimonials />
           <Pricing plans={plans} />
