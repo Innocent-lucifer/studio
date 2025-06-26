@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from "react";
@@ -6,8 +5,26 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { Twitter, Linkedin } from "lucide-react";
 import { AppLogo } from "@/components/AppLogo";
+import { usePathname } from "next/navigation";
 
 export default function Footer() {
+  const pathname = usePathname();
+
+  const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (href.startsWith('/#')) {
+      const sectionId = href.substring(2);
+      if (pathname === '/') {
+        e.preventDefault();
+        const section = document.getElementById(sectionId);
+        if (section) {
+          section.scrollIntoView({ behavior: 'smooth' });
+        }
+      }
+      // If not on the homepage, the default Link behavior will navigate
+      // to the homepage and jump to the hash, which is the correct fallback.
+    }
+  };
+
   const footerLinks = {
     Product: [
       { name: "Problem & Solution", href: "/#problem-solution" },
@@ -58,7 +75,7 @@ export default function Footer() {
               <ul className="space-y-2">
                 {links.map((link) => (
                   <li key={link.name}>
-                    <Link href={link.href}>
+                    <Link href={link.href} onClick={(e) => handleLinkClick(e, link.href)}>
                       <span className="text-secondary-foreground/70 hover:text-primary transition-colors cursor-pointer">{link.name}</span>
                     </Link>
                   </li>
