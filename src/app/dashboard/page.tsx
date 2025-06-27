@@ -41,7 +41,7 @@ const FeatureCardComponent: React.FC<FeatureCardProps> = ({ icon, title, descrip
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 + delay, ease: "easeOut" }}
-            whileHover={{ scale: 1.03, boxShadow: "0px 10px 30px -5px hsl(var(--primary)/0.3)" }}
+            whileHover={{ scale: 1.02, boxShadow: "0px 8px 20px -5px hsl(var(--primary)/0.2)" }}
             className="group"
           >
             <Link href={href} passHref legacyBehavior={false}>
@@ -56,7 +56,7 @@ const FeatureCardComponent: React.FC<FeatureCardProps> = ({ icon, title, descrip
                   {description}
                 </p>
                 <motion.div
-                  whileHover={{ scale: 1.05 }}
+                  whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.95 }}
                   className="mt-auto self-start w-full sm:w-auto"
                 >
