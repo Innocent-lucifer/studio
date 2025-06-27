@@ -7,6 +7,7 @@ import { generateLinkedInPosts } from "@/ai/flows/generate-linkedin-posts";
 import { motion } from 'framer-motion';
 import { useToast } from "@/hooks/use-toast";
 import { Icons } from "./icons";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface LinkedInPostGeneratorProps {
   topic: string;
@@ -26,6 +27,7 @@ export const LinkedInPostGenerator: React.FC<LinkedInPostGeneratorProps> = ({
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [generatedPostsInternal, setGeneratedPostsInternal] = useState<string[]>([]);
   const [initialGenerationProcessedForTopic, setInitialGenerationProcessedForTopic] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
   const buttonMotionProps = {
@@ -37,6 +39,7 @@ export const LinkedInPostGenerator: React.FC<LinkedInPostGeneratorProps> = ({
     setInitialGenerationProcessedForTopic(false);
     setGeneratedPostsInternal([]);
     setLinkedinPosts([]);
+    setError(null);
   }, [topic, setLinkedinPosts]);
 
   const callGenerateFlow = useCallback(async () => {
@@ -48,12 +51,14 @@ export const LinkedInPostGenerator: React.FC<LinkedInPostGeneratorProps> = ({
 
     setIsLoading(true);
     setGeneratedPostsInternal([]);
+    setError(null);
     setLinkedinPosts([]); 
 
     try {
       const result = await generateLinkedInPosts({ topic: topic, numPosts: 3, userId }); 
       if (result.error) {
-         toast({ variant: "destructive", title: "Generation Error", description: result.error });
+         setError(result.error);
+         toast({ variant: "destructive", title: "Generation Error", description: result.error, iconType: 'alertTriangle' });
          setGeneratedPostsInternal([]);
          setLinkedinPosts([]);
       } else {
@@ -62,10 +67,13 @@ export const LinkedInPostGenerator: React.FC<LinkedInPostGeneratorProps> = ({
       }
     } catch (error: any) {
       console.error("Error generating LinkedIn posts:", error);
+      const errorMessage = error.message || "Failed to generate LinkedIn posts. Please try again.";
+      setError(errorMessage);
       toast({
         variant: "destructive",
         title: "LinkedIn Post Generation Failed",
-        description: error.message || "Failed to generate LinkedIn posts. Please try again.",
+        description: errorMessage,
+        iconType: 'alertTriangle'
       });
       setGeneratedPostsInternal([]);
       setLinkedinPosts([]);
@@ -111,7 +119,17 @@ export const LinkedInPostGenerator: React.FC<LinkedInPostGeneratorProps> = ({
         </div>
       )}
 
-      {!isLoading && showPostsInThisCard && (
+      {!isLoading && error && (
+        <Alert variant="destructive" className="mt-4">
+            <Icons.alertTriangle className="h-4 w-4" />
+            <AlertTitle>Generation Failed</AlertTitle>
+            <AlertDescription>
+                {error}
+            </AlertDescription>
+        </Alert>
+      )}
+
+      {!isLoading && !error && showPostsInThisCard && (
         <div className="space-y-3">
           {generatedPostsInternal.map((post, index) => (
             <motion.div 
@@ -127,7 +145,7 @@ export const LinkedInPostGenerator: React.FC<LinkedInPostGeneratorProps> = ({
         </div>
       )}
 
-      {!isLoading && showConfirmationMessage && (
+      {!isLoading && !error && showConfirmationMessage && (
         <div className="flex items-center justify-center p-3 rounded-md bg-slate-700/50 text-slate-300 text-sm">
           <Icons.checkCircle className="h-5 w-5 text-green-400 mr-2" />
           LinkedIn posts generated. Review below.

@@ -202,7 +202,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
 
   const loadCampaignData = useCallback(async (campaignId: string) => {
     if (!userIdToPass) {
-      toast({ variant: "destructive", title: "Login Required", description: "Please log in to load campaigns." });
+      toast({ variant: "destructive", title: "Login Required", description: "Please log in to load campaigns.", iconType: 'lock' });
       return;
     }
     setIsLoading(true);
@@ -234,13 +234,13 @@ const SmartCampaignWizardInternal: React.FC = () => {
         } else {
           setCurrentStep('topic_research');
         }
-        toast({ title: "Campaign Loaded", description: `Successfully loaded "${campaign.campaignTopic}".` });
+        toast({ title: "Campaign Loaded", description: `Successfully loaded "${campaign.campaignTopic}".`, iconType: 'checkCircle' });
       } else {
-        toast({ variant: "destructive", title: "Load Failed", description: "Could not find the campaign draft." });
+        toast({ variant: "destructive", title: "Load Failed", description: "Could not find the campaign draft.", iconType: 'alertTriangle' });
         router.replace('/smart-campaign', undefined); 
       }
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Load Error", description: error.message || "Failed to load campaign." });
+      toast({ variant: "destructive", title: "Load Error", description: error.message || "Failed to load campaign.", iconType: 'alertTriangle' });
       router.replace('/smart-campaign', undefined); 
     } finally {
       setIsLoading(false);
@@ -268,11 +268,11 @@ const SmartCampaignWizardInternal: React.FC = () => {
 
   const handleSuggestAngles = useCallback(async (currentTopic: string, currentResearch: string) => {
     if (!currentTopic || !currentResearch) {
-      toast({ variant: "destructive", title: "Missing Data", description: "Topic or research content is missing for angle suggestion." });
+      toast({ variant: "destructive", title: "Missing Data", description: "Topic or research content is missing for angle suggestion.", iconType: 'alertTriangle' });
       return;
     }
      if (!userIdToPass) {
-      toast({ variant: "destructive", title: "Login Required", description: "Please log in to suggest angles." });
+      toast({ variant: "destructive", title: "Login Required", description: "Please log in to suggest angles.", iconType: 'lock' });
       return;
     }
     setIsLoading(true);
@@ -281,13 +281,13 @@ const SmartCampaignWizardInternal: React.FC = () => {
       const input: SuggestContentAnglesInput = { topic: currentTopic, researchedContext: currentResearch, userId: userIdToPass, numAngles: 4 };
       const result = await suggestContentAngles(input);
       if (result.error) {
-        toast({ variant: "destructive", title: "Angle Suggestion Failed", description: result.error });
+        toast({ variant: "destructive", title: "Angle Suggestion Failed", description: result.error, iconType: 'alertTriangle' });
         setAngles([]);
       } else {
         setAngles(result.angles || []);
       }
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Error Suggesting Angles", description: error.message || "Failed to suggest angles." });
+      toast({ variant: "destructive", title: "Error Suggesting Angles", description: error.message || "Failed to suggest angles.", iconType: 'alertTriangle' });
       setAngles([]);
     } finally {
       setIsLoading(false);
@@ -304,11 +304,11 @@ const SmartCampaignWizardInternal: React.FC = () => {
 
   const handleInternalTopicResearch = useCallback(async () => {
     if (!campaignTopic.trim()) {
-      toast({ variant: "destructive", title: "Topic Required", description: "Please enter a topic to research." });
+      toast({ variant: "destructive", title: "Topic Required", description: "Please enter a topic to research.", iconType: 'alertTriangle' });
       return;
     }
     if (!userIdToPass) {
-      toast({ variant: "destructive", title: "Login Required", description: "Please log in to research topics." });
+      toast({ variant: "destructive", title: "Login Required", description: "Please log in to research topics.", iconType: 'lock' });
       return;
     }
     setIsLoading(true);
@@ -322,16 +322,16 @@ const SmartCampaignWizardInternal: React.FC = () => {
     try {
       const result = await researchTopic({ topic: campaignTopic, userId: userIdToPass });
       if (result.error || !result.summary) {
-        toast({ variant: "destructive", title: "Research Failed", description: result.error || "Could not retrieve research summary." });
+        toast({ variant: "destructive", title: "Research Failed", description: result.error || "Could not retrieve research summary.", iconType: 'alertTriangle' });
         setCurrentResearchedContent(''); 
       } else {
         setCurrentResearchedContent(result.summary);
         setGeneratedAnglesForCurrentResearch(new Set()); 
-        toast({ title: "Research Complete!", description: `Now select a content angle for "${campaignTopic}".` });
+        toast({ title: "Research Complete!", description: `Now select a content angle for "${campaignTopic}".`, iconType: 'checkCircle' });
         setCurrentStep('angles'); 
       }
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Research Error", description: error.message || "An unexpected error occurred." });
+      toast({ variant: "destructive", title: "Research Error", description: error.message || "An unexpected error occurred.", iconType: 'alertTriangle' });
       setCurrentResearchedContent('');
     } finally {
       setIsLoading(false);
@@ -342,11 +342,11 @@ const SmartCampaignWizardInternal: React.FC = () => {
 
   const handleGenerateSeries = useCallback(async () => {
     if (!selectedAngle || !campaignTopic || !currentResearchedContent) {
-        toast({ variant: "destructive", title: "Missing Information", description: "Please select an angle and ensure topic research is complete." });
+        toast({ variant: "destructive", title: "Missing Information", description: "Please select an angle and ensure topic research is complete.", iconType: 'alertTriangle' });
         return;
     }
     if (!userIdToPass) {
-      toast({ variant: "destructive", title: "Login Required", description: "Please log in to generate series." });
+      toast({ variant: "destructive", title: "Login Required", description: "Please log in to generate series.", iconType: 'lock' });
       return;
     }
 
@@ -365,13 +365,13 @@ const SmartCampaignWizardInternal: React.FC = () => {
       ]);
 
       if (twitterResult.error) {
-        toast({ variant: "destructive", title: "Twitter Series Failed", description: twitterResult.error });
+        toast({ variant: "destructive", title: "Twitter Series Failed", description: twitterResult.error, iconType: 'alertTriangle' });
       } else {
         setTwitterSeries(twitterResult.series || []);
       }
       
       if (linkedinResult.error) {
-        toast({ variant: "destructive", title: "LinkedIn Series Failed", description: linkedinResult.error });
+        toast({ variant: "destructive", title: "LinkedIn Series Failed", description: linkedinResult.error, iconType: 'alertTriangle' });
       } else {
         setLinkedinSeries(linkedinResult.series || []);
       }
@@ -381,7 +381,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
       }
       setCurrentStep('series'); 
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Error Generating Series", description: error.message || "Failed to generate series." });
+      toast({ variant: "destructive", title: "Error Generating Series", description: error.message || "Failed to generate series.", iconType: 'alertTriangle' });
     } finally {
       setIsLoading(false);
       setLoadingMessage('');
@@ -390,11 +390,11 @@ const SmartCampaignWizardInternal: React.FC = () => {
   
  const handleSuggestRepurposing = useCallback(async () => {
     if (!campaignTopic || !selectedAngle || (twitterSeries.length === 0 && linkedinSeries.length === 0) ) {
-      toast({ variant: "destructive", title: "Missing Information", description: "Campaign series must be generated first." });
+      toast({ variant: "destructive", title: "Missing Information", description: "Campaign series must be generated first.", iconType: 'alertTriangle' });
       return;
     }
      if (!userIdToPass) {
-      toast({ variant: "destructive", title: "Login Required", description: "Please log in to suggest repurposing ideas." });
+      toast({ variant: "destructive", title: "Login Required", description: "Please log in to suggest repurposing ideas.", iconType: 'lock' });
       return;
     }
     setIsLoading(true);
@@ -421,16 +421,16 @@ const SmartCampaignWizardInternal: React.FC = () => {
     try {
       const [twitterResult, linkedinResult] = await Promise.all(promises);
       if (twitterSeries.length > 0 && twitterResult) {
-        if (twitterResult.error) toast({ variant: "destructive", title: "Twitter Repurposing Ideas Failed", description: twitterResult.error });
+        if (twitterResult.error) toast({ variant: "destructive", title: "Twitter Repurposing Ideas Failed", description: twitterResult.error, iconType: 'alertTriangle' });
         else setTwitterRepurposingIdeas(twitterResult.ideas || []);
       }
       if (linkedinSeries.length > 0 && linkedinResult) {
-        if (linkedinResult.error) toast({ variant: "destructive", title: "LinkedIn Repurposing Ideas Failed", description: linkedinResult.error });
+        if (linkedinResult.error) toast({ variant: "destructive", title: "LinkedIn Repurposing Ideas Failed", description: linkedinResult.error, iconType: 'alertTriangle' });
         else setLinkedinRepurposingIdeas(linkedinResult.ideas || []);
       }
       setCurrentStep('repurpose'); 
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Error Suggesting Repurposing", description: error.message || "Failed to suggest repurposing ideas." });
+      toast({ variant: "destructive", title: "Error Suggesting Repurposing", description: error.message || "Failed to suggest repurposing ideas.", iconType: 'alertTriangle' });
     } finally {
       setIsLoading(false);
       setLoadingMessage('');
@@ -439,7 +439,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
 
   const handleOpenEditModal = useCallback((platform: 'twitter' | 'linkedin', index: number, text: string) => {
     if (!userIdToPass) {
-      toast({ variant: "destructive", title: "Login Required", description: "Please log in to edit posts." });
+      toast({ variant: "destructive", title: "Login Required", description: "Please log in to edit posts.", iconType: 'lock' });
       return;
     }
     setEditingPost({ platform, index, originalText: text, currentText: text });
@@ -454,31 +454,31 @@ const SmartCampaignWizardInternal: React.FC = () => {
       setLinkedinSeries(prev => prev.map((item, i) => (i === index ? currentText : item)));
     }
     setEditingPost(null);
-    toast({ title: "Post Updated", description: "Your changes have been saved to this campaign." });
+    toast({ title: "Post Updated", description: "Your changes have been saved to this campaign.", iconType: 'checkCircle' });
   }, [editingPost, toast]);
   
   const handleAiEditForSeriesPost = useCallback(async () => {
     if (!editingPost || !aiEditInstruction.trim() || !campaignTopic) {
-      toast({ title: "Missing Information", description: "Post context or AI instruction is missing.", variant: "destructive" });
+      toast({ title: "Missing Information", description: "Post context or AI instruction is missing.", variant: "destructive", iconType: 'alertTriangle' });
       return;
     }
      if (!userIdToPass) {
-      toast({ variant: "destructive", title: "Login Required", description: "Please log in for AI editing." });
+      toast({ variant: "destructive", title: "Login Required", description: "Please log in for AI editing.", iconType: 'lock' });
       return;
     }
     setIsAiSubmitting(true);
     try {
       const input: GenerateEditedPostInput = { originalPost: editingPost.currentText, editInstruction: aiEditInstruction, topic: campaignTopic, platform: editingPost.platform, userId: userIdToPass };
       const result = await generateEditedPost(input);
-      if (result.error) toast({ variant: "destructive", title: "AI Edit Error", description: result.error });
+      if (result.error) toast({ variant: "destructive", title: "AI Edit Error", description: result.error, iconType: 'alertTriangle' });
       else if (result.editedPost) {
         setEditingPost(prev => prev ? { ...prev, currentText: result.editedPost! } : null); 
-        toast({ title: "AI Edit Applied", description: "The AI has revised the post in the editor. Review and save." });
+        toast({ title: "AI Edit Applied", description: "The AI has revised the post in the editor. Review and save.", iconType: 'wand' });
         setIsAiEditModalOpen(false); 
         setAiEditInstruction("");
-      } else toast({ variant: "destructive", title: "AI Edit Failed", description: "AI did not return an edited post." });
+      } else toast({ variant: "destructive", title: "AI Edit Failed", description: "AI did not return an edited post.", iconType: 'alertTriangle' });
     } catch (error: any) {
-      toast({ title: "AI Edit Exception", description: error.message || "Could not apply AI changes.", variant: "destructive" });
+      toast({ title: "AI Edit Exception", description: error.message || "Could not apply AI changes.", variant: "destructive", iconType: 'alertTriangle' });
     } finally {
       setIsAiSubmitting(false);
     }
@@ -486,17 +486,17 @@ const SmartCampaignWizardInternal: React.FC = () => {
 
   const handleSaveIndividualCampaignPostAsDraft = useCallback(async (platform: 'twitter' | 'linkedin', index: number, content: string) => {
     if (!userIdToPass) {
-      toast({ variant: "destructive", title: "Login Required", description: "Please log in to save drafts." });
+      toast({ variant: "destructive", title: "Login Required", description: "Please log in to save drafts.", iconType: 'lock' });
       return;
     }
     setIsSavingIndividualDraft({ platform, index });
     const draftData = { content, platform, topic: `${campaignTopic} (${selectedAngle?.title || 'General Angle'})` };
     try {
       const savedDraft = await saveDraft(userIdToPass, draftData);
-      if (savedDraft) toast({ title: "Draft Saved!", description: `${platform.charAt(0).toUpperCase() + platform.slice(1)} post from campaign saved.` });
-      else toast({ variant: "destructive", title: "Save Failed", description: "Could not save the draft." });
+      if (savedDraft) toast({ title: "Draft Saved!", description: `${platform.charAt(0).toUpperCase() + platform.slice(1)} post from campaign saved.`, iconType: 'save' });
+      else toast({ variant: "destructive", title: "Save Failed", description: "Could not save the draft.", iconType: 'alertTriangle' });
     } catch(e) {
-      toast({ variant: "destructive", title: "Save Error", description: "An error occurred saving the draft."});
+      toast({ variant: "destructive", title: "Save Error", description: "An error occurred saving the draft.", iconType: 'alertTriangle'});
     } finally {
       setIsSavingIndividualDraft(null);
     }
@@ -504,7 +504,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
 
   const handleSaveFullCampaign = useCallback(async () => {
     if (!userIdToPass || !campaignTopic || !currentResearchedContent || !selectedAngle) {
-      toast({ variant: "destructive", title: "Missing Data", description: "Cannot save campaign: core information missing." });
+      toast({ variant: "destructive", title: "Missing Data", description: "Cannot save campaign: core information missing.", iconType: 'alertTriangle' });
       return;
     }
     setIsSavingCampaign(true);
@@ -522,12 +522,12 @@ const SmartCampaignWizardInternal: React.FC = () => {
       const savedCampaign = await saveCampaignDraft(userIdToPass, campaignDataToSave, loadedCampaignId);
       if (savedCampaign && savedCampaign.id) {
         setLoadedCampaignId(savedCampaign.id); 
-        toast({ title: "Campaign Saved!", description: "Your smart campaign progress has been saved." });
+        toast({ title: "Campaign Saved!", description: "Your smart campaign progress has been saved.", iconType: 'save' });
       } else {
-        toast({ variant: "destructive", title: "Save Failed", description: "Could not save the campaign draft." });
+        toast({ variant: "destructive", title: "Save Failed", description: "Could not save the campaign draft.", iconType: 'alertTriangle' });
       }
     } catch (error) {
-      toast({ variant: "destructive", title: "Save Error", description: "An unexpected error occurred while saving the campaign." });
+      toast({ variant: "destructive", title: "Save Error", description: "An unexpected error occurred while saving the campaign.", iconType: 'alertTriangle' });
     } finally {
       setIsSavingCampaign(false);
       setLoadingMessage("");
@@ -593,7 +593,7 @@ const SmartCampaignWizardInternal: React.FC = () => {
     }
 
     navigator.clipboard.writeText(contentToCopy.trim());
-    toast({ title: "Campaign Copied!", description: "Full campaign content copied to clipboard." });
+    toast({ title: "Campaign Copied!", description: "Full campaign content copied to clipboard.", iconType: 'copy' });
   }, [campaignTopic, selectedAngle, twitterSeries, linkedinSeries, twitterRepurposingIdeas, linkedinRepurposingIdeas, toast]);
 
   const renderLoadingState = (message?: string) => (

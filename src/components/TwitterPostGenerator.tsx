@@ -7,6 +7,7 @@ import { generateTwitterPosts } from "@/ai/flows/generate-twitter-posts";
 import { motion } from 'framer-motion';
 import { useToast } from "@/hooks/use-toast";
 import { Icons } from "./icons";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface TwitterPostGeneratorProps {
   topic: string;
@@ -26,6 +27,7 @@ export const TwitterPostGenerator: React.FC<TwitterPostGeneratorProps> = ({
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [generatedPostsInternal, setGeneratedPostsInternal] = useState<string[]>([]);
   const [initialGenerationProcessedForTopic, setInitialGenerationProcessedForTopic] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
   const buttonMotionProps = {
@@ -33,11 +35,11 @@ export const TwitterPostGenerator: React.FC<TwitterPostGeneratorProps> = ({
     whileTap: { scale: 0.95, transition: { type: "spring", stiffness: 400, damping: 17 } },
   };
 
-  // Reset flag when topic changes
   useEffect(() => {
     setInitialGenerationProcessedForTopic(false);
     setGeneratedPostsInternal([]);
     setTwitterPosts([]);
+    setError(null);
   }, [topic, setTwitterPosts]);
 
   const callGenerateFlow = useCallback(async () => {
@@ -48,8 +50,9 @@ export const TwitterPostGenerator: React.FC<TwitterPostGeneratorProps> = ({
     }
     
     setIsLoading(true);
-    setGeneratedPostsInternal([]); 
-    setTwitterPosts([]); 
+    setGeneratedPostsInternal([]);
+    setError(null);
+    setTwitterPosts([]);
 
     try {
       const result = await generateTwitterPosts({ 
@@ -60,7 +63,8 @@ export const TwitterPostGenerator: React.FC<TwitterPostGeneratorProps> = ({
       });
 
       if (result.error) {
-         toast({ variant: "destructive", title: "Generation Error", description: result.error });
+         setError(result.error);
+         toast({ variant: "destructive", title: "Generation Error", description: result.error, iconType: 'alertTriangle' });
          setGeneratedPostsInternal([]);
          setTwitterPosts([]);
       } else {
@@ -69,10 +73,13 @@ export const TwitterPostGenerator: React.FC<TwitterPostGeneratorProps> = ({
       }
     } catch (error: any) {
       console.error("Error generating Twitter posts:", error);
+      const errorMessage = error.message || "Failed to generate Twitter posts. Please try again.";
+      setError(errorMessage);
       toast({
         variant: "destructive",
         title: "Twitter Post Generation Failed",
-        description: error.message || "Failed to generate Twitter posts. Please try again.",
+        description: errorMessage,
+        iconType: 'alertTriangle'
       });
       setGeneratedPostsInternal([]);
       setTwitterPosts([]); 
@@ -116,7 +123,17 @@ export const TwitterPostGenerator: React.FC<TwitterPostGeneratorProps> = ({
         </div>
       )}
 
-      {!isLoading && showPostsInThisCard && (
+      {!isLoading && error && (
+        <Alert variant="destructive" className="mt-4">
+            <Icons.alertTriangle className="h-4 w-4" />
+            <AlertTitle>Generation Failed</AlertTitle>
+            <AlertDescription>
+                {error}
+            </AlertDescription>
+        </Alert>
+      )}
+
+      {!isLoading && !error && showPostsInThisCard && (
         <div className="space-y-3">
           {generatedPostsInternal.map((post, index) => (
             <motion.div 
@@ -132,7 +149,7 @@ export const TwitterPostGenerator: React.FC<TwitterPostGeneratorProps> = ({
         </div>
       )}
       
-      {!isLoading && showConfirmationMessage && (
+      {!isLoading && !error && showConfirmationMessage && (
         <div className="flex items-center justify-center p-3 rounded-md bg-slate-700/50 text-slate-300 text-sm">
           <Icons.checkCircle className="h-5 w-5 text-green-400 mr-2" />
           Twitter posts generated. Review below.

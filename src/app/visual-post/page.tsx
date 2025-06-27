@@ -26,6 +26,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { Skeleton } from '@/components/ui/skeleton';
 
 type Tone = 'default' | 'romantic' | 'funny' | 'professional' | 'mysterious';
 
@@ -73,7 +74,8 @@ export default function VisualPostPage() {
       toast({
         title: "Login Required",
         description: "Please log in to generate posts from images.",
-        variant: "destructive"
+        variant: "destructive",
+        iconType: 'lock'
       });
       return;
     }
@@ -82,7 +84,6 @@ export default function VisualPostPage() {
     const isNewTone = tone !== generationState.current.processedTone;
     const isNewText = contextText !== generationState.current.processedText;
 
-    // Only proceed if there's a meaningful change
     if (!isNewImage && !isNewTone && !isNewText) {
       return;
     }
@@ -100,10 +101,9 @@ export default function VisualPostPage() {
 
       if (result.error) {
         setError(result.error);
-        toast({ variant: "destructive", title: "Post Generation Failed", description: result.error });
+        toast({ variant: "destructive", title: "Post Generation Failed", description: result.error, iconType: 'alertTriangle' });
       } else {
         setGeneratedPost(result.generatedPost || '');
-        // Mark this combination as processed
         generationState.current = {
           processedImageUri: imageUri,
           processedTone: tone,
@@ -112,19 +112,18 @@ export default function VisualPostPage() {
       }
     } catch (e: any) {
       setError(e.message || "An unexpected error occurred during post generation.");
-      toast({ variant: "destructive", title: "Error", description: e.message || "Failed to generate post." });
+      toast({ variant: "destructive", title: "Error", description: e.message || "Failed to generate post.", iconType: 'alertTriangle' });
     } finally {
       setIsLoading(false);
     }
   }, [userIdToPass, generatedPost, toast]);
 
-  // Debounced useEffect to trigger generation
   useEffect(() => {
     if (!imageDataUri || !isClient) return;
 
     const handler = setTimeout(() => {
       handleGeneration(imageDataUri, userText, selectedTone);
-    }, 800); // Debounce for 800ms
+    }, 800);
 
     return () => {
       clearTimeout(handler);
@@ -146,6 +145,7 @@ export default function VisualPostPage() {
           variant: "destructive",
           title: "Invalid File Type",
           description: "Please upload a standard image file (JPG, PNG, WEBP, GIF). SVGs are not supported.",
+          iconType: 'alertTriangle'
         });
         return;
       }
@@ -154,6 +154,7 @@ export default function VisualPostPage() {
           variant: "destructive",
           title: "File Too Large",
           description: "Please upload an image smaller than 10MB.",
+          iconType: 'alertTriangle'
         });
         return;
       }
@@ -161,7 +162,6 @@ export default function VisualPostPage() {
       reader.onloadend = () => {
         const result = reader.result;
         if (typeof result === 'string') {
-          // Reset state for new image
           setGeneratedPost('');
           setError(null);
           setImageDataUri(result);
@@ -173,6 +173,7 @@ export default function VisualPostPage() {
             variant: "destructive",
             title: "Image Read Error",
             description: "Could not read image data as a string.",
+            iconType: 'alertTriangle'
           });
         }
       };
@@ -181,6 +182,7 @@ export default function VisualPostPage() {
           variant: "destructive",
           title: "Image Read Error",
           description: "Could not read the selected image file.",
+          iconType: 'alertTriangle'
         });
       };
       reader.readAsDataURL(file);
@@ -189,11 +191,11 @@ export default function VisualPostPage() {
 
   const handleOpenEditModal = useCallback(() => {
     if (!userIdToPass) {
-      toast({ variant: "destructive", title: "Login Required", description: "Please log in to edit posts." });
+      toast({ variant: "destructive", title: "Login Required", description: "Please log in to edit posts.", iconType: 'lock' });
       return;
     }
     if (!generatedPost) {
-      toast({ variant: "destructive", title: "No Post", description: "No post content to edit." });
+      toast({ variant: "destructive", title: "No Post", description: "No post content to edit.", iconType: 'info' });
       return;
     }
     setOriginalContentBeforeEdit(generatedPost);
@@ -204,7 +206,7 @@ export default function VisualPostPage() {
   const handleSaveManualEdit = useCallback(() => {
     setGeneratedPost(editingContent);
     setIsEditModalOpen(false);
-    toast({ title: "Post Updated", description: "Your changes have been applied." });
+    toast({ title: "Post Updated", description: "Your changes have been applied.", iconType: 'checkCircle' });
   }, [editingContent, toast]);
 
   const handleOpenAiEditInstructionModal = useCallback(() => {
@@ -213,7 +215,7 @@ export default function VisualPostPage() {
 
   const handleAiEditSubmit = useCallback(async () => {
     if (!aiEditInstruction.trim() || !userIdToPass) {
-      toast({ title: "Missing Information", description: "Please provide instructions for the AI and ensure you are logged in.", variant: "destructive" });
+      toast({ title: "Missing Information", description: "Please provide instructions for the AI and ensure you are logged in.", variant: "destructive", iconType: 'alertTriangle' });
       return;
     }
     
@@ -228,17 +230,17 @@ export default function VisualPostPage() {
       });
 
       if (result.error) {
-        toast({ variant: "destructive", title: "AI Edit Error", description: result.error });
+        toast({ variant: "destructive", title: "AI Edit Error", description: result.error, iconType: 'alertTriangle' });
       } else if (result.editedPost) {
         setEditingContent(result.editedPost); 
-        toast({ title: "AI Edit Applied", description: "The AI has revised the post in the editor. Review and save." });
+        toast({ title: "AI Edit Applied", description: "The AI has revised the post in the editor. Review and save.", iconType: 'wand' });
         setIsAiEditModalOpen(false); 
         setAiEditInstruction(""); 
       } else {
-        toast({ variant: "destructive", title: "AI Edit Failed", description: "AI did not return an edited post." });
+        toast({ variant: "destructive", title: "AI Edit Failed", description: "AI did not return an edited post.", iconType: 'alertTriangle' });
       }
     } catch (error: any) {
-      toast({ title: "AI Edit Exception", description: error.message || "Could not apply AI changes.", variant: "destructive" });
+      toast({ title: "AI Edit Exception", description: error.message || "Could not apply AI changes.", variant: "destructive", iconType: 'alertTriangle' });
     } finally {
       setIsAiSubmitting(false);
     }
@@ -248,21 +250,21 @@ export default function VisualPostPage() {
   const handleCopyPost = useCallback(() => {
     if (generatedPost) {
       navigator.clipboard.writeText(generatedPost);
-      toast({ title: "Post Copied!", description: "The generated post has been copied to your clipboard." });
+      toast({ title: "Post Copied!", description: "The generated post has been copied to your clipboard.", iconType: 'copy' });
     }
   }, [generatedPost, toast]);
 
   const handleSharePost = useCallback(() => {
-     toast({ title: "Feature Coming Soon", description: "Direct sharing will be available in a future update." });
+     toast({ title: "Feature Coming Soon", description: "Direct sharing will be available in a future update.", iconType: 'info' });
   }, [toast]);
   
   const handleSaveDraft = useCallback(async () => {
     if (!userIdToPass) {
-      toast({ variant: "destructive", title: "Login Required", description: "Please log in to save drafts." });
+      toast({ variant: "destructive", title: "Login Required", description: "Please log in to save drafts.", iconType: 'lock' });
       return;
     }
     if (!generatedPost.trim()) {
-      toast({ variant: "destructive", title: "No Content", description: "Cannot save an empty post as a draft." });
+      toast({ variant: "destructive", title: "No Content", description: "Cannot save an empty post as a draft.", iconType: 'alertTriangle' });
       return;
     }
     setIsSavingDraft(true);
@@ -274,12 +276,12 @@ export default function VisualPostPage() {
       };
       const savedDraft = await saveDraft(userIdToPass, draftData);
       if (savedDraft) {
-        toast({ title: "Draft Saved!", description: "Your image-inspired post has been saved." });
+        toast({ title: "Draft Saved!", description: "Your image-inspired post has been saved.", iconType: 'save' });
       } else {
-        toast({ variant: "destructive", title: "Save Failed", description: "Could not save the draft. Please try again." });
+        toast({ variant: "destructive", title: "Save Failed", description: "Could not save the draft. Please try again.", iconType: 'alertTriangle' });
       }
     } catch (error) {
-       toast({ variant: "destructive", title: "Save Error", description: "An unexpected error occurred while saving." });
+       toast({ variant: "destructive", title: "Save Error", description: "An unexpected error occurred while saving.", iconType: 'alertTriangle' });
     } finally {
       setIsSavingDraft(false);
     }
@@ -488,9 +490,11 @@ export default function VisualPostPage() {
                 Your AI-Generated Post
               </CardTitle>
               {isLoading && (
-                <div className="flex items-center justify-center p-6 rounded-lg bg-slate-700/50 min-h-[150px]">
-                  <Icons.loader className="h-8 w-8 animate-spin text-primary mr-3" />
-                  <span className="text-slate-300 text-lg">Generating your post...</span>
+                <div className="p-6 bg-slate-700/50 rounded-xl min-h-[150px] space-y-3">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-[90%]" />
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-[75%]" />
                 </div>
               )}
               {!isLoading && error && (

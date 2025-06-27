@@ -46,6 +46,7 @@ export const TopicResearch: React.FC<TopicResearchProps> = ({
         variant: "destructive",
         title: "Empty Topic",
         description: "Please enter a topic to research.",
+        iconType: "alertTriangle"
       });
       return;
     }
@@ -55,6 +56,7 @@ export const TopicResearch: React.FC<TopicResearchProps> = ({
         variant: "destructive",
         title: "Login Required",
         description: "Please log in to use the Quick Post Generator.",
+        iconType: "lock"
         });
         return;
     }
@@ -64,7 +66,7 @@ export const TopicResearch: React.FC<TopicResearchProps> = ({
     try {
       const result = await researchTopic({ topic: topicInput, userId: userId }); 
       if (result.error) {
-        toast({ variant: "destructive", title: "Research Failed", description: result.error });
+        toast({ variant: "destructive", title: "Research Failed", description: result.error, iconType: "alertTriangle" });
         setTopic(topicInput);
         setResearchedContent(`Error researching "${topicInput}": ${result.error}`);
       } else {
@@ -77,6 +79,7 @@ export const TopicResearch: React.FC<TopicResearchProps> = ({
         variant: "destructive",
         title: "Research Failed",
         description: error.message || "Failed to research topic. Please try again.",
+        iconType: "alertTriangle"
       });
       setTopic(topicInput);
       setResearchedContent(`Failed to research "${topicInput}". Please try again.`);

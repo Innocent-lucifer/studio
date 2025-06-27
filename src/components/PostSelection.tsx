@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useCallback } from "react"; // Import React
+import React, { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -142,7 +142,7 @@ export const PostSelection: React.FC<PostSelectionProps> = ({
 
   const handleEditPost = useCallback((postText: string, index: number, type: 'twitter' | 'linkedin') => {
     if (!userId) {
-      toast({ variant: "destructive", title: "Login Required", description: "You need to be logged in to edit posts." });
+      toast({ variant: "destructive", title: "Login Required", description: "You need to be logged in to edit posts.", iconType: 'lock' });
       return;
     }
     setEditingPost({ type, index, originalTextWhileEditing: postText, currentText: postText });
@@ -155,6 +155,7 @@ export const PostSelection: React.FC<PostSelectionProps> = ({
       toast({
         title: "Post Updated",
         description: "Your changes have been saved to the main list.",
+        iconType: 'checkCircle'
       });
       setEditingPost(null);
     }
@@ -171,6 +172,7 @@ export const PostSelection: React.FC<PostSelectionProps> = ({
         variant: "destructive",
         title: "No Posts Selected",
         description: "Please select at least one post to copy.",
+        iconType: 'alertTriangle'
       });
       return;
     }
@@ -178,6 +180,7 @@ export const PostSelection: React.FC<PostSelectionProps> = ({
     toast({
       title: "Posts Copied!",
       description: "Selected posts have been copied to your clipboard.",
+      iconType: 'copy'
     });
   }, [selectedTwitterPosts, selectedLinkedInPosts, toast]);
 
@@ -187,6 +190,7 @@ export const PostSelection: React.FC<PostSelectionProps> = ({
         variant: "destructive",
         title: "No Post Selected for AI Edit",
         description: "Please first select a post and click 'Edit' to enable AI changes.",
+        iconType: 'alertTriangle'
       });
       return;
     }
@@ -199,6 +203,7 @@ export const PostSelection: React.FC<PostSelectionProps> = ({
         title: "Missing Information",
         description: "Please ensure a post is being edited, you are logged in, and provide instructions for the AI.",
         variant: "destructive",
+        iconType: 'alertTriangle'
       });
       return;
     }
@@ -214,17 +219,18 @@ export const PostSelection: React.FC<PostSelectionProps> = ({
       });
 
       if (result.error) {
-        toast({ variant: "destructive", title: "AI Edit Error", description: result.error});
+        toast({ variant: "destructive", title: "AI Edit Error", description: result.error, iconType: 'alertTriangle'});
       } else if (result.editedPost){
         setEditingPost(prev => prev ? { ...prev, currentText: result.editedPost! } : null);
         toast({
           title: "AI Edit Applied",
           description: "The AI has revised the post. Click 'Save Changes' to update the main list.",
+          iconType: 'wand'
         });
         setIsAiEditingModalOpen(false);
         setAiEditInstruction("");
       } else {
-        toast({ variant: "destructive", title: "AI Edit Failed", description: "AI did not return an edited post."});
+        toast({ variant: "destructive", title: "AI Edit Failed", description: "AI did not return an edited post.", iconType: 'alertTriangle'});
       }
     } catch (error: any) {
       console.error("Error applying AI edit:", error);
@@ -232,6 +238,7 @@ export const PostSelection: React.FC<PostSelectionProps> = ({
         title: "AI Edit Failed",
         description: error.message || "Could not apply AI changes. Please try again.",
         variant: "destructive",
+        iconType: 'alertTriangle'
       });
     } finally {
       setIsAiSubmitting(false);
@@ -240,7 +247,7 @@ export const PostSelection: React.FC<PostSelectionProps> = ({
 
   const handleSaveDraft = useCallback(async (postContent: string, postTopic: string, platform: 'twitter' | 'linkedin', index: number) => {
     if (!userId) {
-      toast({ variant: "destructive", title: "Login Required", description: "You need to be logged in to save drafts." });
+      toast({ variant: "destructive", title: "Login Required", description: "You need to be logged in to save drafts.", iconType: 'lock' });
       return;
     }
     setIsSavingDraft({ type: platform, index });
@@ -252,12 +259,12 @@ export const PostSelection: React.FC<PostSelectionProps> = ({
     try {
       const savedDraft = await saveDraft(userId, draftData);
       if (savedDraft) {
-        toast({ title: "Draft Saved!", description: `${platform.charAt(0).toUpperCase() + platform.slice(1)} post draft has been saved.` });
+        toast({ title: "Draft Saved!", description: `${platform.charAt(0).toUpperCase() + platform.slice(1)} post draft has been saved.`, iconType: 'save' });
       } else {
-        toast({ variant: "destructive", title: "Save Failed", description: "Could not save the draft. Please try again." });
+        toast({ variant: "destructive", title: "Save Failed", description: "Could not save the draft. Please try again.", iconType: 'alertTriangle' });
       }
     } catch (e) {
-      toast({ variant: "destructive", title: "Save Error", description: "An error occurred while saving." });
+      toast({ variant: "destructive", title: "Save Error", description: "An error occurred while saving.", iconType: 'alertTriangle' });
     } finally {
       setIsSavingDraft(null);
     }
@@ -397,7 +404,7 @@ export const PostSelection: React.FC<PostSelectionProps> = ({
         <motion.div {...buttonMotionProps} className="w-full sm:w-auto">
           <Button 
             onClick={() => { 
-              toast({ title: "Feature Coming Soon", description: "Post scheduling will be available in a future update."});
+              toast({ title: "Feature Coming Soon", description: "Post scheduling will be available in a future update.", iconType: 'info'});
             }} 
             variant="outline" 
             className="w-full sm:w-auto border-primary text-primary hover:bg-primary/10 py-2.5 px-6"
@@ -409,7 +416,7 @@ export const PostSelection: React.FC<PostSelectionProps> = ({
         <motion.div {...buttonMotionProps} className="w-full sm:w-auto">
            <Button 
             onClick={() => { 
-               toast({ title: "Feature Coming Soon", description: "Instant posting will be available after account integration."});
+               toast({ title: "Feature Coming Soon", description: "Instant posting will be available after account integration.", iconType: 'info'});
             }} 
             variant="outline" 
             className="w-full sm:w-auto border-blue-500 text-blue-400 hover:bg-blue-500/10 py-2.5 px-6"

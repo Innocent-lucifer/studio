@@ -4,11 +4,10 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Eye, EyeOff } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
-// import toast from "react-hot-toast"; // Replaced with custom useToast
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
 import { AuthError } from "firebase/auth";
-import { Button as ShadButton } from "@/components/ui/button"; // Renamed to avoid conflict
+import { Button as ShadButton } from "@/components/ui/button";
 import { AppLogo } from "@/components/AppLogo";
 
 export function LoginSignUpForm() {
@@ -21,7 +20,7 @@ export function LoginSignUpForm() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [googleLoading, setGoogleLoading] = useState(false);
   
-  const { toast } = useToast(); // Using custom hook
+  const { toast } = useToast();
   const { signUp, logIn, signInWithGoogle, sendPasswordReset, loading } = useAuth();
 
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
@@ -38,7 +37,6 @@ export function LoginSignUpForm() {
       }
       try {
         await signUp(email, password);
-        // Successful signup, AuthContext's onAuthStateChanged will handle redirect
         toast({ title: "Account Created!", description: "Welcome! You've successfully signed up.", iconType: "checkCircle" });
       } catch (error) {
         const authError = error as AuthError;
@@ -48,7 +46,6 @@ export function LoginSignUpForm() {
     } else {
       try {
         await logIn(email, password);
-        // Successful login, AuthContext's onAuthStateChanged will handle redirect
         toast({ title: "Signed In!", description: "Welcome back! You're now signed in.", iconType: "checkCircle" });
       } catch (error) {
         const authError = error as AuthError;
@@ -69,7 +66,7 @@ export function LoginSignUpForm() {
       console.error("Google Sign-In Error (from component):", authError);
       toast({ title: "Google Sign-In Failed", description: authError.message || "Could not sign in with Google. Please try again.", variant: "destructive", iconType: "alertTriangle" });
     } finally {
-      setGoogleLoading(false); // Ensure loading state is reset
+      setGoogleLoading(false);
     }
   };
 
@@ -128,7 +125,6 @@ export function LoginSignUpForm() {
       {...cardAnimation}
       className="max-w-md mx-auto bg-[#0f172a] text-white rounded-3xl shadow-2xl px-8 py-10 space-y-6 border border-indigo-600/30"
     >
-      {/* Toaster component is now globally in layout.tsx */}
       
       <motion.div 
         className="flex flex-col items-center"

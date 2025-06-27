@@ -15,6 +15,7 @@ import { getDrafts, deleteDraft, type Draft, getCampaignDrafts, deleteCampaignDr
 import { formatDistanceToNow } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
+import { cn } from '@/lib/utils';
 import {
   Dialog,
   DialogContent,
@@ -62,7 +63,10 @@ const DraftListItemComponent: React.FC<DraftListItemProps> = ({ draft, onViewDra
       initial="initial"
       animate="animate"
       exit="exit"
-      className="p-4 bg-slate-700/70 rounded-lg border border-slate-600 shadow-md hover:border-primary/50 transition-colors"
+      className={cn(
+        "p-4 bg-slate-700/70 rounded-lg border border-slate-600 shadow-md hover:border-primary/50 transition-all duration-300",
+        isDeleting && "opacity-50 pointer-events-none"
+      )}
     >
       <div className="flex justify-between items-start">
         <div>
@@ -119,7 +123,10 @@ const CampaignDraftListItemComponent: React.FC<CampaignDraftListItemProps> = ({ 
       initial="initial"
       animate="animate"
       exit="exit"
-      className="p-4 bg-slate-700/70 rounded-lg border border-slate-600 shadow-md hover:border-primary/50 transition-colors"
+      className={cn(
+        "p-4 bg-slate-700/70 rounded-lg border border-slate-600 shadow-md hover:border-primary/50 transition-all duration-300",
+        isDeleting && "opacity-50 pointer-events-none"
+      )}
     >
       <div className="flex justify-between items-start">
         <div>
@@ -245,7 +252,7 @@ export default function SavedDraftsPage() {
     if (mainFilter === "visual") {
       return allPostDrafts.filter(draft => draft.platform === 'visual');
     }
-    return allPostDrafts; // For "all" or "campaigns" main filter (campaigns handled separately)
+    return allPostDrafts;
   }, [allPostDrafts, mainFilter, quickPostSubFilter]);
 
   const filteredCampaignDrafts = useMemo(() => {
@@ -262,7 +269,6 @@ export default function SavedDraftsPage() {
     } else {
       items = [...filteredPostDrafts];
     }
-    // Sort by updatedAt descending
     return items.sort((a, b) => (b.updatedAt?.toDate()?.getTime() || 0) - (a.updatedAt?.toDate()?.getTime() || 0));
   }, [filteredPostDrafts, filteredCampaignDrafts, mainFilter]);
 
@@ -373,10 +379,10 @@ export default function SavedDraftsPage() {
                   <span className="text-lg text-slate-300">Loading your drafts...</span>
                 </div>
               ) : displayItems.length > 0 ? (
-                <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2 -mr-2"> {/* Increased max-h here */}
+                <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2 -mr-2">
                   <AnimatePresence>
                     {displayItems.map((item) => 
-                      'content' in item ? ( // It's a Draft
+                      'content' in item ? (
                         <DraftListItem
                           key={item.id}
                           draft={item as Draft}
@@ -384,7 +390,7 @@ export default function SavedDraftsPage() {
                           onDeleteDraft={handleDeleteDraft}
                           isDeleting={deletingDraftId === item.id}
                         />
-                      ) : ( // It's a CampaignDraft
+                      ) : (
                         <CampaignDraftListItem
                           key={item.id}
                           campaignDraft={item as CampaignDraft}
