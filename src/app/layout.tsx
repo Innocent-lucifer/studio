@@ -2,6 +2,7 @@
 import type {Metadata} from 'next';
 import { GeistSans } from 'geist/font/sans';
 import { GeistMono } from 'geist/font/mono';
+import Script from 'next/script';
 import './globals.css';
 import { AuthProvider } from '@/context/AuthContext';
 import { Toaster } from "@/components/ui/toaster"; 
@@ -63,6 +64,19 @@ export default function RootLayout({
           {children}
           <Toaster />
         </AuthProvider>
+        <Script
+          async
+          src="https://www.googletagmanager.com/gtag/js?id=G-R35KLPZN1G"
+        />
+        <Script id="google-analytics">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+
+            gtag('config', 'G-R35KLPZN1G');
+          `}
+        </Script>
       </body>
     </html>
   );
