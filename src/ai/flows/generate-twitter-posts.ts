@@ -66,7 +66,7 @@ Craft your tweets to be indistinguishable from a real person's thoughts, not a c
 
 Posts:`,
   promptOptions: {
-    temperature: 0.9,
+    temperature: 1.0,
     safetySettings: [
       { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
       { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },

@@ -75,7 +75,7 @@ Your entire output must be the generated post text. Do not add any preamble.
 Generated post:
 `,
   promptOptions: {
-    temperature: 0.9, 
+    temperature: 1.0, 
      safetySettings: [ 
       { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
       { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
