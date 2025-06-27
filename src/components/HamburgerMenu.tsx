@@ -1,4 +1,3 @@
-
 "use client";
 
 import * as React from "react";
@@ -37,7 +36,7 @@ export function HamburgerMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon">
+        <Button variant="ghost" size="icon" className="focus-visible:ring-0 focus-visible:ring-offset-0">
           <Icons.menu className="h-6 w-6" />
           <span className="sr-only">Open menu</span>
         </Button>
