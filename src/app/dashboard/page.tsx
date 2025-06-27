@@ -41,11 +41,15 @@ const FeatureCardComponent: React.FC<FeatureCardProps> = ({ icon, title, descrip
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 + delay, ease: "easeOut" }}
-            whileHover={{ scale: 1.02, boxShadow: "0px 8px 20px -5px hsl(var(--primary)/0.2)" }}
+            whileHover={{ 
+              scale: 1.02, 
+              boxShadow: "0px 8px 20px -5px hsl(var(--primary)/0.15)",
+              transition: { duration: 0.4, ease: "easeOut" }
+            }}
             className="group"
           >
             <Link href={href} passHref legacyBehavior={false}>
-              <div className="bg-slate-800/50 backdrop-blur-lg border border-slate-700/60 rounded-2xl p-6 sm:p-8 h-full flex flex-col cursor-pointer transition-all duration-300 hover:border-primary/50 hover:shadow-2xl hover:shadow-primary/20">
+              <div className="bg-slate-800/50 backdrop-blur-lg border border-slate-700/60 rounded-2xl p-6 sm:p-8 h-full flex flex-col cursor-pointer transition-all duration-300 hover:border-primary/50">
                 <div className="mb-4 sm:mb-6">
                   <IconComponent className="h-10 w-10 sm:h-12 sm:w-12 text-primary group-hover:text-purple-400 transition-colors duration-300" />
                 </div>
