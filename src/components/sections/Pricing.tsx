@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from "react";
@@ -44,23 +43,34 @@ export default function Pricing({ plans }: PricingProps) {
   const { toast } = useToast();
 
   const handleCheckout = (priceId: string) => {
-    if (window.Paddle) {
-      window.Paddle.Checkout.open({
-        items: [{ priceId, quantity: 1 }],
-        customer: {
-          email: user?.email ?? undefined,
-        },
-        settings: {
-          successUrl: `${window.location.origin}/login?from=purchase`
-        }
-      });
+    if (user) {
+      // If user is logged in, proceed to checkout
+      if (window.Paddle) {
+        window.Paddle.Checkout.open({
+          items: [{ priceId, quantity: 1 }],
+          customer: {
+            email: user.email ?? undefined,
+          },
+          settings: {
+            successUrl: `${window.location.origin}/dashboard` // Redirect to dashboard on success
+          }
+        });
+      } else {
+        console.error("Paddle.js is not loaded or initialized.");
+        toast({
+          title: "Checkout Error",
+          description: "Payment system is not available. Please try again.",
+          variant: "destructive",
+        });
+      }
     } else {
-      console.error("Paddle.js is not loaded or initialized.");
+      // If user is not logged in, redirect to login page
       toast({
-        title: "Checkout Error",
-        description: "Payment system is not available. Please try again in a moment.",
-        variant: "destructive",
+        title: "Login Required",
+        description: "Please log in or create an account to subscribe.",
+        iconType: 'lock'
       });
+      router.push('/login');
     }
   };
 
