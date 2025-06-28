@@ -139,10 +139,13 @@ export default function AccountPage() {
     if (userData.plan === 'monthly') {
       return (
         <div className="pt-2 text-center">
-          <h4 className="text-md font-semibold text-slate-100 mb-2">Upgrade to Yearly & Save</h4>
-          <p className="text-sm text-slate-400 mb-4">You are currently on the Monthly plan. Save 18% by switching to Yearly!</p>
+          <h4 className="text-md font-semibold text-slate-100 mb-2">You're on the Monthly Plan</h4>
+          <p className="text-sm text-slate-400 mb-4">You can upgrade to our Yearly plan and save 18%.</p>
           <Button size="lg" className="bg-primary hover:bg-primary/90" onClick={() => setIsYearlyUpgradeModalOpen(true)}>
               <Icons.sparkles className="mr-2 h-5 w-5" /> View Yearly Plan
+          </Button>
+          <Button onClick={() => setIsRefundModalOpen(true)} variant="link" className="text-slate-400 hover:text-red-400 text-xs mt-2 block">
+              Need a refund?
           </Button>
         </div>
       );
@@ -152,7 +155,7 @@ export default function AccountPage() {
          <div className="pt-2 text-center">
             <h4 className="text-md font-semibold text-slate-100 mb-2">You're on the best plan!</h4>
             <p className="text-sm text-slate-400 mb-4">You have full access to all features with the Sage Infinity Yearly plan.</p>
-             <Button onClick={() => setIsRefundModalOpen(true)} variant="link" className="text-slate-400 hover:text-red-400 text-xs">
+             <Button onClick={() => setIsRefundModalOpen(true)} variant="link" className="text-slate-400 hover:text-red-400 text-xs mt-2 block">
                 Need a refund?
              </Button>
         </div>
@@ -249,7 +252,7 @@ export default function AccountPage() {
             <DialogHeader>
                 <DialogTitle className="text-2xl text-primary text-center">Upgrade Your Plan</DialogTitle>
                 <DialogDescription className="text-center text-slate-400">
-                    Choose the plan that's right for you. Get lifetime access at early-bird value.
+                    Choose the plan that's right for you.
                 </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
@@ -337,7 +340,7 @@ export default function AccountPage() {
         </DialogContent>
     </Dialog>
 
-    {/* Yearly plan -> Refund Modal */}
+    {/* Refund Modal */}
     <Dialog open={isRefundModalOpen} onOpenChange={setIsRefundModalOpen}>
       <DialogContent className="bg-slate-800 border-slate-700 text-white sm:max-w-md">
         <DialogHeader>
