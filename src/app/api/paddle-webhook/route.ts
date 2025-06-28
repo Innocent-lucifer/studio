@@ -9,9 +9,10 @@ import { findOrCreateUserForPurchase } from '@/lib/firebaseAdminActions';
 // See Paddle Docs: https://developer.paddle.com/webhooks/signature-verification
 
 // Map your Paddle Price IDs to your app's plan names
+// These fallbacks MUST match the ones on the frontend (e.g., in Pricing.tsx)
 const PADDLE_PRICE_IDS = {
-  monthly: process.env.NEXT_PUBLIC_PADDLE_SANDBOX_MONTHLY_PRICE_ID,
-  yearly: process.env.NEXT_PUBLIC_PADDLE_SANDBOX_YEARLY_PRICE_ID,
+  monthly: process.env.NEXT_PUBLIC_PADDLE_SANDBOX_MONTHLY_PRICE_ID || "pri_01jytrrggq73bfpd9bce3resb0",
+  yearly: process.env.NEXT_PUBLIC_PADDLE_SANDBOX_YEARLY_PRICE_ID || "pri_01jytrs4wqac0a8pnyttzz34w1",
 };
 
 export async function POST(req: NextRequest) {
@@ -49,7 +50,7 @@ export async function POST(req: NextRequest) {
           return NextResponse.json({ message: `Webhook processing failed: ${message}` }, { status: 500 });
         }
       } else {
-         console.warn(`Webhook received for an unknown or unhandled priceId: ${priceId}`);
+         console.warn(`Webhook received for an unknown or unhandled priceId: ${priceId}. Ensure your .env variables match your Paddle Price IDs.`);
       }
     }
     
