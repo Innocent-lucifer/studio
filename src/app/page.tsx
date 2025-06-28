@@ -86,7 +86,7 @@ export default function Home() {
         "Copy & export posts anytime",
         "Post history access",
       ],
-      priceId: process.env.NEXT_PUBLIC_PADDLE_SANDBOX_MONTHLY_PRICE_ID || "pri_01jyp11r1dqn1gyvk3ybmrsctv"
+      priceId: process.env.NEXT_PUBLIC_PADDLE_SANDBOX_MONTHLY_PRICE_ID || "pri_01jytrrgqq73bfpd9bce3resb0"
     },
     {
       title: "Yearly",
@@ -108,7 +108,7 @@ export default function Home() {
         "Copy & export posts anytime",
         "Post history access",
       ],
-      priceId: process.env.NEXT_PUBLIC_PADDLE_SANDBOX_YEARLY_PRICE_ID || "pri_01jyp1dzgerhxbdx8rbz8psts"
+      priceId: process.env.NEXT_PUBLIC_PADDLE_SANDBOX_YEARLY_PRICE_ID || "pri_01jytrs4wqac0a8pnyttzz34w1"
     }
   ];
 
