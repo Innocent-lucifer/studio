@@ -244,15 +244,15 @@ export default function AccountPage() {
 
     {/* Free plan -> Upgrade Modal */}
     <Dialog open={isPricingModalOpen} onOpenChange={setIsPricingModalOpen}>
-        <DialogContent className="bg-slate-800/80 backdrop-blur-md border-slate-700 text-white sm:max-w-xl md:max-w-4xl">
-            <DialogHeader>
+        <DialogContent className="bg-slate-800/80 backdrop-blur-md border-slate-700 text-white sm:max-w-xl md:max-w-4xl flex flex-col max-h-[90vh]">
+            <DialogHeader className="flex-shrink-0">
                 <DialogTitle className="text-2xl text-primary text-center">Upgrade Your Plan</DialogTitle>
                 <DialogDescription className="text-center text-slate-400">
                     Choose the plan that's right for you. Get lifetime access at early-bird value.
                 </DialogDescription>
             </DialogHeader>
-            <ScrollArea className="max-h-[70vh] p-1">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-6 pr-4">
+            <ScrollArea className="flex-grow pr-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-6">
                   {plans.map(plan => (
                       <Card key={plan.priceId} className={`relative bg-slate-700/60 border-slate-600 text-left flex flex-col ${plan.badge ? 'border-primary/80' : ''}`}>
                           {plan.badge && (
@@ -282,7 +282,7 @@ export default function AccountPage() {
                   ))}
               </div>
             </ScrollArea>
-             <DialogFooter className="sm:justify-start pt-4">
+             <DialogFooter className="sm:justify-start pt-4 flex-shrink-0">
               <DialogClose asChild>
                 <Button type="button" variant="secondary">
                   Close
@@ -294,16 +294,16 @@ export default function AccountPage() {
     
     {/* Monthly plan -> Yearly Upgrade Modal */}
     <Dialog open={isYearlyUpgradeModalOpen} onOpenChange={setIsYearlyUpgradeModalOpen}>
-        <DialogContent className="bg-slate-800/80 backdrop-blur-md border-slate-700 text-white sm:max-w-md">
-            <DialogHeader>
+        <DialogContent className="bg-slate-800/80 backdrop-blur-md border-slate-700 text-white sm:max-w-md flex flex-col max-h-[90vh]">
+            <DialogHeader className="flex-shrink-0">
                 <DialogTitle className="text-2xl text-primary text-center">Upgrade to Yearly & Save!</DialogTitle>
                 <DialogDescription className="text-center text-slate-400">
                     Get all the same great features and save 18% by switching to our yearly plan.
                 </DialogDescription>
             </DialogHeader>
-            <ScrollArea className="max-h-[70vh] p-1">
+            <ScrollArea className="flex-grow pr-4">
               {yearlyPlan && (
-                  <div className="py-6 pr-4">
+                  <div className="py-6">
                       <Card key={yearlyPlan.priceId} className="relative bg-slate-700/60 border-slate-600 text-left flex flex-col border-primary/80">
                           <Badge className="absolute -top-3 right-4 bg-primary text-primary-foreground">{yearlyPlan.badge}</Badge>
                           <CardHeader className="p-6 pb-4 text-center">
@@ -330,7 +330,7 @@ export default function AccountPage() {
                   </div>
               )}
             </ScrollArea>
-            <DialogFooter className="sm:justify-start pt-4">
+            <DialogFooter className="sm:justify-start pt-4 flex-shrink-0">
               <DialogClose asChild>
                 <Button type="button" variant="secondary">
                   Close
