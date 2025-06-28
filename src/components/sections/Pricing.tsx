@@ -137,7 +137,9 @@ export default function Pricing({ plans }: PricingProps) {
                 >
                   Try 3 Days Free
                 </Button>
-                <p className="text-xs text-foreground/60 mb-8">No card required for trial.</p>
+                <p className="text-xs text-accent mb-8 font-semibold drop-shadow-[0_0_6px_hsl(var(--accent)/0.7)]">
+                  No card required for trial.
+                </p>
                 <ul className="text-left space-y-3">
                   {plan.features.map((feat, i) => (
                     <li
