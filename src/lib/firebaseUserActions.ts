@@ -16,6 +16,7 @@ import {
   deleteDoc,
   addDoc,
   orderBy,
+  where,
 } from 'firebase/firestore';
 import type { User as FirebaseAuthUser } from 'firebase/auth';
 import type { ContentAngle } from '@/ai/flows/suggest-content-angles';
@@ -29,6 +30,7 @@ export interface UserData {
   email: string | null;
   displayName: string | null;
   createdAt: Timestamp;
+  updatedAt: Timestamp;
   referralCode?: string;
   referredBy?: string;
   referralsMade?: number;
@@ -86,6 +88,7 @@ export const createUserDocument = async (
         email: user.email,
         displayName: user.displayName || user.email?.split('@')[0] || 'SageUser',
         createdAt: serverTimestamp() as Timestamp,
+        updatedAt: serverTimestamp() as Timestamp,
         referralCode: generateReferralCode(),
         referralsMade: 0,
         plan: defaultPlan,
@@ -104,6 +107,7 @@ export const createUserDocument = async (
 
       if (existingData.plan === undefined) {
         updates.plan = defaultPlan;
+        updates.updatedAt = serverTimestamp() as Timestamp,
         needsUpdate = true;
       }
       
@@ -140,6 +144,37 @@ export const getUserData = async (uid: string, userForCreation?: FirebaseAuthUse
       throw new Error("Could not connect to the database. Please check your internet connection.");
     }
     throw error;
+  }
+};
+
+export const updateUserPlanByEmail = async (email: string, newPlan: 'monthly' | 'yearly'): Promise<boolean> => {
+  if (!email) {
+    console.error("Email is required to update a user's plan.");
+    return false;
+  }
+  try {
+    const usersRef = collection(db, 'users');
+    const q = query(usersRef, where("email", "==", email));
+    const querySnapshot = await getDocs(q);
+
+    if (querySnapshot.empty) {
+      console.warn(`No user found with email: ${email}`);
+      return false;
+    }
+
+    // Assuming email is unique, update the first user found.
+    const userDoc = querySnapshot.docs[0];
+    const userRef = doc(db, 'users', userDoc.id);
+
+    await updateDoc(userRef, {
+      plan: newPlan,
+      updatedAt: serverTimestamp() as Timestamp,
+    });
+    console.log(`Successfully updated plan for ${email} to ${newPlan}`);
+    return true;
+  } catch (error) {
+    console.error(`Error updating plan for user with email ${email}:`, error);
+    return false;
   }
 };
 
