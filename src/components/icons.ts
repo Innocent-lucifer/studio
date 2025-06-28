@@ -1,17 +1,16 @@
 
 import {
-  Archive, ArchiveRestore, ArrowLeft, ArrowRight, BarChartBig, Check, ChevronsUpDown, Circle, Copy, CreditCard, Edit, ExternalLink,
-  File, FileText, HelpCircle, Home, Lightbulb, ListChecks, Loader2, LogIn, LogOut, Mail, Menu, MessageSquare, Moon,
-  Plus, PlusCircle, RefreshCw, Repeat, Save, Search, Server, Settings, Share2, Shield, Sun, Trash, User,
-  UserPlus, Wand2, Workflow, Twitter, Linkedin, Sparkles, CalendarDays, Send, Feather,
-  CheckCircle, Lock, X, AlertTriangle, Info, Image as ImageIconLucide, Layers as LayersIcon, Tag, Filter as FilterIcon, Globe2, Flame,
-  Briefcase, Heart, Smile, UploadCloud, Eye
+  Archive, ArchiveRestore, ArrowLeft, ArrowRight, Check, ChevronsUpDown, Copy, CreditCard, Edit, Eye,
+  File, HelpCircle, Home, Lightbulb, ListChecks, Loader2, LogIn, LogOut, Mail, Menu, Moon,
+  Plus, RefreshCw, Repeat, Save, Search, Share2, Shield, Sun, Trash, User, Wand2, Workflow,
+  Twitter, Linkedin, Sparkles, CalendarDays, Send, Feather, CheckCircle, Lock, X, AlertTriangle, Info,
+  Image as ImageIconLucide, Layers as LayersIcon, Tag, Filter as FilterIcon, Globe2, Flame,
+  Briefcase, Heart, Smile, UploadCloud
 } from 'lucide-react';
 import type { SVGProps } from 'react';
 
 // Define a general type for icon components that might take className
 type IconComponent = (props: SVGProps<SVGSVGElement> & { className?: string }) => JSX.Element;
-
 
 const Icons = {
   alertTriangle: AlertTriangle,
@@ -19,22 +18,18 @@ const Icons = {
   archiveRestore: ArchiveRestore,
   arrowLeft: ArrowLeft,
   arrowRight: ArrowRight,
-  barChartBig: BarChartBig,
   briefcase: Briefcase,
   calendar: CalendarDays,
   check: Check,
   checkCircle: CheckCircle,
-  chevronDown: ChevronsUpDown, 
-  circle: Circle,
+  chevronDown: ChevronsUpDown,
   close: X,
   copy: Copy,
   creditCard: CreditCard,
   edit: Edit,
   eye: Eye,
-  externalLink: ExternalLink,
   feather: Feather,
   file: File,
-  fileText: FileText, 
   filter: FilterIcon,
   flame: Flame,
   globe: Globe2,
@@ -43,8 +38,8 @@ const Icons = {
   home: Home,
   image: ImageIconLucide,
   info: Info,
-  layers: LayersIcon, // Changed from Layers3 to Layers to match typical usage
-  light: Sun, 
+  layers: LayersIcon,
+  light: Sun,
   lightbulb: Lightbulb,
   linkedin: Linkedin,
   listChecks: ListChecks,
@@ -54,32 +49,26 @@ const Icons = {
   logOut: LogOut,
   mail: Mail,
   menu: Menu,
-  messageSquare: MessageSquare,
-  moon: Moon, 
+  moon: Moon,
   plus: Plus,
-  plusCircle: PlusCircle,
   refreshCw: RefreshCw,
   repeat: Repeat,
   save: Save,
   search: Search,
   send: Send,
-  server: Server,
-  settings: Settings,
   share: Share2,
   shield: Shield,
   smile: Smile,
   sparkles: Sparkles,
-  spinner: Loader2, 
+  spinner: Loader2,
   tag: Tag,
   trash: Trash,
   twitter: Twitter,
   upload: UploadCloud,
   user: User,
-  userPlus: UserPlus,
   wand: Wand2,
   workflow: Workflow,
 };
 
 export { Icons };
 export type { IconComponent };
-

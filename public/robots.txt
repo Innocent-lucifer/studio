@@ -1,5 +1,6 @@
 # See https://www.robotstxt.org/robotstxt.html for documentation
+
 User-agent: *
-Allow: /
+Disallow:
 
 Sitemap: https://sagepostai.com/sitemap.xml

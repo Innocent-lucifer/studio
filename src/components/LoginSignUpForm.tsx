@@ -9,12 +9,14 @@ import { useAuth } from "@/context/AuthContext";
 import { AuthError } from "firebase/auth";
 import { Button as ShadButton } from "@/components/ui/button";
 import { AppLogo } from "@/components/AppLogo";
+import { Icons } from "@/components/icons";
+
+type FormMode = "login" | "register" | "forgotPassword";
 
 export function LoginSignUpForm() {
-  const [isRegistering, setIsRegistering] = useState(false);
+  const [formMode, setFormMode] = useState<FormMode>("login");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [forgotPassword, setForgotPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -26,11 +28,21 @@ export function LoginSignUpForm() {
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
   const toggleConfirmPasswordVisibility = () => setShowConfirmPassword(!showConfirmPassword);
 
+  const resetFields = () => {
+    setPassword("");
+    setConfirmPassword("");
+  };
+
+  const handleModeChange = (newMode: FormMode) => {
+    setFormMode(newMode);
+    resetFields();
+  };
+
   const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (loading) return;
 
-    if (isRegistering) {
+    if (formMode === 'register') {
       if (password !== confirmPassword) {
         toast({ title: "Password Mismatch", description: "The passwords you entered do not match.", variant: "destructive", iconType: "alertTriangle" });
         return;
@@ -43,7 +55,7 @@ export function LoginSignUpForm() {
         console.error("Sign Up Error (from component):", authError);
         toast({ title: "Sign Up Failed", description: authError.message || "Please check your details and try again.", variant: "destructive", iconType: "alertTriangle" });
       }
-    } else {
+    } else if (formMode === 'login') {
       try {
         await logIn(email, password);
         toast({ title: "Signed In!", description: "Welcome back! You're now signed in.", iconType: "checkCircle" });
@@ -51,6 +63,18 @@ export function LoginSignUpForm() {
         const authError = error as AuthError;
         console.error("Sign In Error (from component):", authError);
         toast({ title: "Sign In Failed", description: authError.message || "Invalid email or password. Please try again.", variant: "destructive", iconType: "alertTriangle" });
+      }
+    } else if (formMode === 'forgotPassword') {
+       if (!email) {
+        toast({ title: "Email Required", description: "Please enter your email address to reset the password.", variant: "destructive", iconType: "alertTriangle" });
+        return;
+      }
+      const result = await sendPasswordReset(email);
+      if (result.success) {
+        toast({ title: "Password Reset Email Sent", description: "Please check your inbox (and spam folder) for the reset link.", iconType: "checkCircle" });
+        handleModeChange('login');
+      } else if (result.error) {
+        toast({ title: "Password Reset Failed", description: result.error.message, variant: "destructive", iconType: "alertTriangle" });
       }
     }
   };
@@ -60,7 +84,7 @@ export function LoginSignUpForm() {
     setGoogleLoading(true);
     try {
       await signInWithGoogle();
-      toast({ title: "Google Sign-In Successful!", description: isRegistering ? "Welcome! Your account is created." : "You're now signed in with Google.", iconType: "checkCircle" });
+      toast({ title: "Google Sign-In Successful!", description: formMode === 'register' ? "Welcome! Your account is created." : "You're now signed in with Google.", iconType: "checkCircle" });
     } catch (error) {
       const authError = error as AuthError;
       console.error("Google Sign-In Error (from component):", authError);
@@ -70,31 +94,10 @@ export function LoginSignUpForm() {
     }
   };
 
-
-  const handlePasswordResetSubmit = async () => {
-    if (loading) return;
-    if (!email) {
-      toast({ title: "Email Required", description: "Please enter your email address to reset the password.", variant: "destructive", iconType: "alertTriangle" });
-      return;
-    }
-    const result = await sendPasswordReset(email);
-    if (result.success) {
-      toast({ title: "Password Reset Email Sent", description: "Please check your inbox (and spam folder) for the reset link.", iconType: "checkCircle" });
-      setForgotPassword(false); 
-    } else if (result.error) {
-      toast({ title: "Password Reset Failed", description: result.error.message, variant: "destructive", iconType: "alertTriangle" });
-    }
-  };
-
   const cardAnimation = {
     initial: { opacity: 0, y: 20 },
     animate: { opacity: 1, y: 0 },
     transition: { duration: 0.35, ease: "easeOut" },
-  };
-
-  const headerContentAnimation = {
-    initial: { opacity: 0, y: 15 },
-    animate: { opacity: 1, y: 0 },
   };
   
   const formElementsContainerAnimation = {
@@ -113,45 +116,41 @@ export function LoginSignUpForm() {
     },
   };
   
-  const bottomToggleAnimation = {
-    initial: { opacity: 0, y:10 },
-    animate: { opacity: 1, y:0 },
-    transition: { duration: 0.3, delay: (isRegistering && !forgotPassword ? 7 : (forgotPassword ? 6 : 5)) * 0.07 + 0.25 + 0.1, ease: "easeOut" },
-  }
-
+  const getTitle = () => {
+    switch (formMode) {
+      case 'login': return "Welcome Back";
+      case 'register': return "Create Account";
+      case 'forgotPassword': return "Reset Password";
+    }
+  };
+  
+  const getButtonText = () => {
+    if (loading) return "Processing...";
+    switch (formMode) {
+      case 'login': return "Sign In";
+      case 'register': return "Sign Up";
+      case 'forgotPassword': return "Send Reset Link";
+    }
+  };
 
   return (
     <motion.div
+      key={formMode}
       {...cardAnimation}
       className="max-w-md mx-auto bg-[#0f172a] text-white rounded-3xl shadow-2xl px-8 py-10 space-y-6 border border-indigo-600/30"
     >
-      
       <motion.div 
         className="flex flex-col items-center"
-        initial="initial"
-        animate="animate"
-        variants={{
-            initial: {},
-            animate: {transition: {staggerChildren: 0.1, delayChildren: 0.1}}
-        }}
       >
-        <motion.div variants={headerContentAnimation} transition={{duration: 0.3, ease: "easeOut"}}>
-            <AppLogo className="h-16 w-16 text-primary mb-4" />
-        </motion.div>
-        <motion.h2
-            variants={headerContentAnimation}
-            transition={{duration: 0.3, ease: "easeOut"}}
-            className="text-3xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-500"
-        >
-            {forgotPassword ? "Reset Password" : isRegistering ? "Create Account" : "Welcome Back"}
-        </motion.h2>
+        <AppLogo className="h-16 w-16 text-primary mb-4" />
+        <h2 className="text-3xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-500">
+            {getTitle()}
+        </h2>
       </motion.div>
 
-
-      <motion.form
-        onSubmit={forgotPassword ? (e) => { e.preventDefault(); handlePasswordResetSubmit(); } : handleAuthSubmit}
+      <form
+        onSubmit={handleAuthSubmit}
         className="space-y-4"
-        {...formElementsContainerAnimation}
       >
         <motion.div {...formElementAnimation}>
           <label htmlFor="email-auth" className="block text-sm font-medium mb-1 text-slate-300">Email</label>
@@ -166,7 +165,7 @@ export function LoginSignUpForm() {
           />
         </motion.div>
 
-        {!forgotPassword && (
+        {formMode !== 'forgotPassword' && (
           <motion.div {...formElementAnimation}>
             <label htmlFor="password-auth" className="block text-sm font-medium mb-1 text-slate-300">Password</label>
             <div className="relative">
@@ -176,7 +175,7 @@ export function LoginSignUpForm() {
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                required={!forgotPassword}
+                required
                 minLength={6}
                 className="w-full px-4 py-3 rounded-xl bg-[#1e293b] text-white placeholder-gray-400/70 border border-indigo-600/20 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
@@ -192,7 +191,7 @@ export function LoginSignUpForm() {
           </motion.div>
         )}
 
-        {isRegistering && !forgotPassword && (
+        {formMode === 'register' && (
           <motion.div {...formElementAnimation}>
             <label htmlFor="confirm-password-auth" className="block text-sm font-medium mb-1 text-slate-300">Confirm Password</label>
             <div className="relative">
@@ -202,7 +201,7 @@ export function LoginSignUpForm() {
                 placeholder="Re-enter your password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                required={isRegistering && !forgotPassword}
+                required
                 minLength={6}
                 className="w-full px-4 py-3 rounded-xl bg-[#1e293b] text-white placeholder-gray-400/70 border border-indigo-600/20 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
@@ -218,42 +217,11 @@ export function LoginSignUpForm() {
           </motion.div>
         )}
         
-        {forgotPassword && (
-          <>
-            <motion.p 
-                className="text-xs text-center text-slate-400/80 -mt-2 mb-3"
-                {...formElementAnimation}
-              >
-                Enter your email above. A link to reset your password will be sent.
-              </motion.p>
-            <motion.div {...formElementAnimation} className="opacity-50 cursor-not-allowed hidden">
-              <label htmlFor="verification-code" className="block text-sm font-medium mb-1 text-slate-300">Verification Code (Not Used)</label>
-              <input
-                type="text"
-                id="verification-code"
-                placeholder="Enter verification code"
-                disabled
-                className="w-full px-4 py-3 rounded-xl bg-[#1e293b] text-white placeholder-gray-400/70 border border-indigo-600/20 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-            </motion.div>
-            <motion.div {...formElementAnimation} className="opacity-50 cursor-not-allowed hidden">
-              <label htmlFor="new-password" className="block text-sm font-medium mb-1 text-slate-300">New Password (Not Used)</label>
-              <input
-                type="password"
-                id="new-password"
-                disabled
-                placeholder="Create a new password"
-                className="w-full px-4 py-3 rounded-xl bg-[#1e293b] text-white placeholder-gray-400/70 border border-indigo-600/20 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-            </motion.div>
-          </>
-        )}
-
-        {!isRegistering && !forgotPassword && (
+        {formMode === 'login' && (
           <motion.div
             {...formElementAnimation}
             className="text-sm text-right text-indigo-400 hover:text-purple-400 cursor-pointer"
-            onClick={() => { setForgotPassword(true); setPassword(""); setConfirmPassword("");}}
+            onClick={() => handleModeChange('forgotPassword')}
           >
             Forgot password?
           </motion.div>
@@ -265,18 +233,12 @@ export function LoginSignUpForm() {
             disabled={loading}
             className={`w-full py-3 mt-1 font-semibold rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 transition text-white shadow-md flex items-center justify-center ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
           >
-            {loading && <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>}
-            {loading
-              ? "Processing..."
-              : forgotPassword
-              ? "Send Reset Link"
-              : isRegistering
-              ? "Sign Up"
-              : "Sign In"}
+            {loading && <Icons.loader className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" />}
+            {getButtonText()}
           </ShadButton>
         </motion.div>
 
-        {!forgotPassword && (
+        {formMode !== 'forgotPassword' && (
           <>
             <motion.div {...formElementAnimation} className="my-3 relative !mt-6 !mb-5">
               <div className="absolute inset-0 flex items-center">
@@ -297,33 +259,29 @@ export function LoginSignUpForm() {
                 className={`w-full flex items-center justify-center gap-2 py-3 font-semibold rounded-xl border border-gray-600/40 bg-[#1e293b] text-white hover:bg-[#2a3448] transition ${loading || googleLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
               >
                 {googleLoading ? 
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                  <Icons.loader className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" />
                 : <FcGoogle size={20} />}
-                {isRegistering ? "Sign up with Google" : "Sign in with Google"}
+                {formMode === 'register' ? "Sign up with Google" : "Sign in with Google"}
               </ShadButton>
             </motion.div>
           </>
         )}
-      </motion.form>
+      </form>
 
       <motion.p 
-        {...bottomToggleAnimation}
+        {...cardAnimation}
         className="text-center text-sm text-gray-400 pt-2"
       >
-        {forgotPassword ? (
-          <span onClick={() => {setForgotPassword(false); setEmail(""); setPassword("");}} className="text-indigo-400 hover:text-purple-400 cursor-pointer">
-            Back to Sign In
-          </span>
-        ) : isRegistering ? (
-          <>Already have an account?{" "}
-            <span onClick={() => {setIsRegistering(false); setPassword(""); setConfirmPassword(""); setEmail(email);}} className="text-indigo-400 hover:text-purple-400 cursor-pointer">
-              Sign In
+        {formMode === 'login' ? (
+          <>Don't have an account?{" "}
+            <span onClick={() => handleModeChange('register')} className="text-indigo-400 hover:text-purple-400 cursor-pointer">
+              Register now
             </span>
           </>
         ) : (
-          <>Don't have an account?{" "}
-            <span onClick={() => {setIsRegistering(true); setPassword(""); setConfirmPassword(""); setEmail(email);}} className="text-indigo-400 hover:text-purple-400 cursor-pointer">
-              Register now
+          <>Already have an account?{" "}
+            <span onClick={() => handleModeChange('login')} className="text-indigo-400 hover:text-purple-400 cursor-pointer">
+              Sign In
             </span>
           </>
         )}
