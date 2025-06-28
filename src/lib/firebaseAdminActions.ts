@@ -15,10 +15,44 @@ const generateReferralCode = (length = 8): string => {
 };
 
 /**
+ * Updates a user's plan in Firestore using their Firebase UID.
+ * This is the primary and most reliable method for updating user data after a purchase.
+ * @param uid The user's Firebase UID.
+ * @param newPlan The plan they purchased.
+ * @returns { success: boolean, message: string }
+ */
+export async function updateUserPlanByUID(
+  uid: string,
+  newPlan: 'monthly' | 'yearly'
+): Promise<{ success: boolean; message: string }> {
+  if (!adminDb) {
+    const errorMessage = 'Firebase Admin SDK is not initialized. Cannot process purchase.';
+    console.error(errorMessage);
+    return { success: false, message: errorMessage };
+  }
+  if (!uid) {
+    return { success: false, message: 'UID is required.' };
+  }
+
+  try {
+    const userRef = adminDb.collection('users').doc(uid);
+    await userRef.update({
+      plan: newPlan,
+      updatedAt: Timestamp.now(),
+    });
+    console.log(`Updated plan for user UID: ${uid} to ${newPlan}`);
+    return { success: true, message: `Updated plan for user ${uid}.` };
+  } catch (error: any) {
+    console.error(`Error updating plan for user UID ${uid}:`, error);
+    return { success: false, message: `Failed to update plan for user ${uid}: ${error.message}` };
+  }
+}
+
+/**
  * Finds a user by email. If they exist, updates their plan.
  * If they don't exist, creates a new Firebase Auth user and a corresponding
  * Firestore document with the purchased plan.
- * THIS MUST ONLY BE CALLED FROM A SECURE SERVER ENVIRONMENT (e.g., a webhook).
+ * This is a FALLBACK method for when a UID is not available in the webhook.
  * @param email The customer's email from Paddle.
  * @param newPlan The plan they purchased.
  * @returns { success: boolean, message: string }

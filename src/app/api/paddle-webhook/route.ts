@@ -1,37 +1,19 @@
 
 import { NextRequest, NextResponse } from 'next/server';
-import { findOrCreateUserForPurchase } from '@/lib/firebaseAdminActions';
+import { findOrCreateUserForPurchase, updateUserPlanByUID } from '@/lib/firebaseAdminActions';
 
-// IMPORTANT: This is a simplified webhook handler for demonstration.
-// In a production environment, you MUST verify the webhook signature from Paddle.
-// Use the exact same price IDs here as on the frontend to ensure sync.
 const PADDLE_PRICE_IDS = {
   monthly: process.env.NEXT_PUBLIC_PADDLE_SANDBOX_MONTHLY_PRICE_ID || "pri_01jytrrggq73bfpd9bce3resb0",
   yearly: process.env.NEXT_PUBLIC_PADDLE_SANDBOX_YEARLY_PRICE_ID || "pri_01jytrs4wqac0a8pnyttzz34w1",
 };
 
-
-/**
- * This function processes a Paddle webhook event to update a user's plan.
- * It's designed to be called from the main POST handler.
- */
 async function handlePurchaseEvent(eventData: any, eventType: string) {
-  // For new checkouts, Paddle includes a `customer` object with an email.
-  // For other events, it might only be a `customer_id`. We need the email to proceed.
-  const userEmail = eventData.customer?.email;
+  // 1. Get identifiers from the webhook payload. Paddle sends `custom_data`.
+  const userId = eventData.custom_data?.userId;
+  const userEmail = eventData.customer?.email; // Fallback
   const priceId = eventData.items?.[0]?.price?.id;
 
-  // If we don't have an email or a price ID, we can't process this purchase.
-  if (!userEmail || !priceId) {
-    console.warn(`Webhook event "${eventType}" is missing customer email or price ID. Skipping.`, {
-      eventId: eventData.id,
-      emailExists: !!userEmail,
-      priceIdExists: !!priceId,
-    });
-    // We return a 200 OK to tell Paddle not to retry sending this webhook.
-    return NextResponse.json({ message: 'Webhook acknowledged, but no action taken due to missing data.' }, { status: 200 });
-  }
-
+  // 2. Determine the plan from the price ID
   let newPlan: 'monthly' | 'yearly' | undefined;
   if (priceId === PADDLE_PRICE_IDS.monthly) {
     newPlan = 'monthly';
@@ -39,36 +21,57 @@ async function handlePurchaseEvent(eventData: any, eventType: string) {
     newPlan = 'yearly';
   }
 
-  if (newPlan) {
-    console.log(`Processing purchase for ${userEmail} with plan ${newPlan}. Event ID: ${eventData.id}`);
-    const { success, message } = await findOrCreateUserForPurchase(userEmail, newPlan);
+  if (!newPlan) {
+    console.warn(`Webhook received for an unhandled priceId: ${priceId}.`);
+    return NextResponse.json({ message: 'Webhook acknowledged, but price ID is not handled.' }, { status: 200 });
+  }
+
+  // 3. Update user data - PRIORITIZE UID for reliability
+  if (userId) {
+    console.log(`Processing purchase for UID: ${userId} with plan ${newPlan}.`);
+    const { success, message } = await updateUserPlanByUID(userId, newPlan);
     if (success) {
       console.log(`Webhook processed successfully: ${message}`);
       return NextResponse.json({ message: 'Webhook processed successfully.' }, { status: 200 });
     } else {
-      console.error(`Webhook processing failed: ${message}`);
-      // Return a 500 error to signal a server-side failure.
+      console.error(`Webhook processing failed for UID ${userId}: ${message}`);
       return NextResponse.json({ message: `Webhook processing failed: ${message}` }, { status: 500 });
     }
-  } else {
-    // This happens if the price ID from Paddle doesn't match our known plans.
-    console.warn(`Webhook received for an unhandled priceId: ${priceId}.`);
-    return NextResponse.json({ message: 'Webhook acknowledged, but price ID is not handled.' }, { status: 200 });
   }
+
+  // 4. Fallback to email if UID is not present (e.g., for older checkouts or different flows)
+  if (userEmail) {
+    console.log(`Processing purchase for Email: ${userEmail} with plan ${newPlan}. (Fallback)`);
+    const { success, message } = await findOrCreateUserForPurchase(userEmail, newPlan);
+     if (success) {
+      console.log(`Webhook processed successfully via email fallback: ${message}`);
+      return NextResponse.json({ message: 'Webhook processed successfully.' }, { status: 200 });
+    } else {
+      console.error(`Webhook processing failed for email ${userEmail}: ${message}`);
+      return NextResponse.json({ message: `Webhook processing failed: ${message}` }, { status: 500 });
+    }
+  }
+
+  // 5. If neither UID nor email is available, we cannot process the event.
+  console.warn(`Webhook event "${eventType}" is missing both custom userId and customer email. Skipping.`, {
+      eventId: eventData.id,
+  });
+  return NextResponse.json({ message: 'Webhook acknowledged, but no user identifier found.' }, { status: 200 });
 }
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const eventType = body.event_type;
+    console.log(`Received Paddle webhook: ${eventType}`);
 
-    // Handle both transaction and subscription creation events as potential triggers for user plan updates.
-    // The `transaction.completed` event is the most reliable for new sign-ups.
     if (eventType === 'transaction.completed' || eventType === 'subscription.created') {
+      if(body.data?.custom_data) {
+        console.log("Webhook contains custom_data:", body.data.custom_data);
+      }
       return await handlePurchaseEvent(body.data, eventType);
     }
-
-    // Acknowledge all other events from Paddle without taking action
+    
     console.log(`Acknowledging unhandled event type: ${eventType}`);
     return NextResponse.json({ message: 'Webhook received and acknowledged.' }, { status: 200 });
 

@@ -51,8 +51,11 @@ export default function Pricing({ plans }: PricingProps) {
           customer: {
             email: user.email ?? undefined,
           },
+          customData: {
+            userId: user.uid,
+          },
           settings: {
-            successUrl: `${window.location.origin}/dashboard` // Redirect to dashboard on success
+            successUrl: `${window.location.origin}/dashboard` 
           }
         });
       } else {

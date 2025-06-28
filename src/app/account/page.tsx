@@ -51,6 +51,9 @@ export default function AccountPage() {
         customer: {
           email: user.email ?? undefined,
         },
+        customData: {
+          userId: user.uid,
+        },
         settings: {
           successUrl: `${window.location.origin}/dashboard`
         }
@@ -242,36 +245,36 @@ export default function AccountPage() {
 
     {/* Free plan -> Upgrade Modal */}
     <Dialog open={isPricingModalOpen} onOpenChange={setIsPricingModalOpen}>
-        <DialogContent className="bg-slate-800/80 backdrop-blur-md border-slate-700 text-white sm:max-w-lg md:max-w-3xl">
+        <DialogContent className="bg-slate-800/80 backdrop-blur-md border-slate-700 text-white sm:max-w-md">
             <DialogHeader>
                 <DialogTitle className="text-2xl text-primary text-center">Upgrade Your Plan</DialogTitle>
                 <DialogDescription className="text-center text-slate-400">
                     Choose the plan that's right for you. Get lifetime access at early-bird value.
                 </DialogDescription>
             </DialogHeader>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
+            <div className="space-y-4 py-4">
                 {plans.map(plan => (
-                    <Card key={plan.priceId} className={`relative bg-slate-700/60 border-slate-600 text-left flex flex-col ${plan.badge ? 'border-primary/80' : ''}`}>
+                    <Card key={plan.priceId} className={`relative bg-slate-700/60 border-slate-600 text-center flex flex-col p-4 ${plan.badge ? 'border-primary/80' : ''}`}>
                         {plan.badge && (
                             <Badge className="absolute -top-3 right-4 bg-primary text-primary-foreground">{plan.badge}</Badge>
                         )}
-                        <CardHeader className="p-6 pb-2 text-center">
-                            <CardTitle className="text-xl text-primary">{plan.title}</CardTitle>
-                            <p className="text-3xl font-bold text-slate-100 pt-1">{plan.price}</p>
-                            <p className="text-sm text-slate-400">{plan.subtitle}</p>
+                        <CardHeader className="p-2">
+                            <CardTitle className="text-lg text-primary">{plan.title}</CardTitle>
+                            <p className="text-2xl font-bold text-slate-100 pt-1">{plan.price}</p>
+                            <p className="text-xs text-slate-400">{plan.subtitle}</p>
                         </CardHeader>
-                        <CardContent className="p-6 pt-4 flex-grow">
-                            <ul className="space-y-2 text-sm">
+                        <CardContent className="p-2 flex-grow text-left">
+                            <ul className="space-y-1.5 text-xs">
                                 {plan.features.map(feature => (
                                     <li key={feature} className="flex items-start">
-                                        <Icons.checkCircle className="h-4 w-4 text-green-400 mr-2.5 mt-0.5 shrink-0" />
+                                        <Icons.checkCircle className="h-3.5 w-3.5 text-green-400 mr-2 mt-0.5 shrink-0" />
                                         <span className="text-slate-300">{feature}</span>
                                     </li>
                                 ))}
                             </ul>
                         </CardContent>
-                        <CardFooter className="p-6 pt-4 mt-auto">
-                            <Button onClick={() => { handleCheckout(plan.priceId); setIsPricingModalOpen(false); }} className="w-full bg-primary hover:bg-primary/90 text-md py-3">
+                        <CardFooter className="p-2 pt-4 mt-auto">
+                            <Button onClick={() => { handleCheckout(plan.priceId); setIsPricingModalOpen(false); }} className="w-full bg-primary hover:bg-primary/90 text-md py-2.5">
                                 Choose Plan
                             </Button>
                         </CardFooter>
@@ -299,25 +302,25 @@ export default function AccountPage() {
             </DialogHeader>
             {yearlyPlan && (
                 <div className="py-4">
-                    <Card key={yearlyPlan.priceId} className="relative bg-slate-700/60 border-slate-600 text-left flex flex-col border-primary/80">
+                    <Card key={yearlyPlan.priceId} className="relative bg-slate-700/60 border-slate-600 text-center flex flex-col p-4 border-primary/80">
                         <Badge className="absolute -top-3 right-4 bg-primary text-primary-foreground">{yearlyPlan.badge}</Badge>
-                        <CardHeader className="p-6 pb-2 text-center">
-                            <CardTitle className="text-xl text-primary">{yearlyPlan.title}</CardTitle>
-                            <p className="text-3xl font-bold text-slate-100 pt-1">{yearlyPlan.price}</p>
-                            <p className="text-sm text-slate-400">{yearlyPlan.subtitle}</p>
+                        <CardHeader className="p-2">
+                            <CardTitle className="text-lg text-primary">{yearlyPlan.title}</CardTitle>
+                            <p className="text-2xl font-bold text-slate-100 pt-1">{yearlyPlan.price}</p>
+                            <p className="text-xs text-slate-400">{yearlyPlan.subtitle}</p>
                         </CardHeader>
-                        <CardContent className="p-6 pt-4 flex-grow">
-                            <ul className="space-y-2 text-sm">
+                        <CardContent className="p-2 flex-grow text-left">
+                            <ul className="space-y-1.5 text-xs">
                                 {yearlyPlan.features.map(feature => (
                                     <li key={feature} className="flex items-start">
-                                        <Icons.checkCircle className="h-4 w-4 text-green-400 mr-2.5 mt-0.5 shrink-0" />
+                                        <Icons.checkCircle className="h-3.5 w-3.5 text-green-400 mr-2 mt-0.5 shrink-0" />
                                         <span className="text-slate-300">{feature}</span>
                                     </li>
                                 ))}
                             </ul>
                         </CardContent>
-                        <CardFooter className="p-6 pt-4 mt-auto">
-                            <Button onClick={() => { handleCheckout(yearlyPlan.priceId); setIsYearlyUpgradeModalOpen(false); }} className="w-full bg-primary hover:bg-primary/90 text-md py-3">
+                        <CardFooter className="p-2 pt-4 mt-auto">
+                            <Button onClick={() => { handleCheckout(yearlyPlan.priceId); setIsYearlyUpgradeModalOpen(false); }} className="w-full bg-primary hover:bg-primary/90 text-md py-2.5">
                                 Upgrade to Yearly
                             </Button>
                         </CardFooter>
