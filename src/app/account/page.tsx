@@ -98,7 +98,7 @@ export default function AccountPage() {
         "Copy & export posts anytime",
         "Post history access",
       ],
-      priceId: process.env.NEXT_PUBLIC_PADDLE_SANDBOX_MONTHLY_PRICE_ID || "pri_01jytrrggq73bfpd9bce3resb0"
+      priceId: process.env.NEXT_PUBLIC_PADDLE_SANDBOX_MONTHLY_PRICE_ID || "pri_01gsz8x8sawmvhz1pv30nge1ke"
     },
     {
       title: "Sage Infinity Yearly",
@@ -118,7 +118,7 @@ export default function AccountPage() {
         "Copy & export posts anytime",
         "Post history access",
       ],
-      priceId: process.env.NEXT_PUBLIC_PADDLE_SANDBOX_YEARLY_PRICE_ID || "pri_01jytrs4wqac0a8pnyttzz34w1"
+      priceId: process.env.NEXT_PUBLIC_PADDLE_SANDBOX_YEARLY_PRICE_ID || "pri_01gsz8yfnagwshz2qw41nge2qf"
     }
   ];
 
@@ -250,8 +250,8 @@ export default function AccountPage() {
     <Dialog open={isPricingModalOpen} onOpenChange={setIsPricingModalOpen}>
         <DialogContent className="bg-slate-800/80 backdrop-blur-md border-slate-700 text-white sm:max-w-md">
             <DialogHeader>
-                <DialogTitle className="text-2xl text-primary text-center">Upgrade Your Plan</DialogTitle>
-                <DialogDescription className="text-center text-slate-400">
+                <DialogTitle className="text-xl text-primary text-center">Upgrade Your Plan</DialogTitle>
+                <DialogDescription className="text-center text-slate-400 text-sm">
                     Choose the plan that's right for you.
                 </DialogDescription>
             </DialogHeader>
@@ -264,13 +264,13 @@ export default function AccountPage() {
                         <CardHeader className="p-2">
                             <CardTitle className="text-lg text-primary">{plan.title}</CardTitle>
                             <p className="text-2xl font-bold text-slate-100 pt-1">{plan.price}</p>
-                            <p className="text-xs text-slate-400">{plan.subtitle}</p>
+                            <p className="text-sm text-slate-400">{plan.subtitle}</p>
                         </CardHeader>
                         <CardContent className="p-2 flex-grow text-left">
-                            <ul className="space-y-1.5 text-xs">
+                            <ul className="space-y-2 text-sm">
                                 {plan.features.map(feature => (
                                     <li key={feature} className="flex items-start">
-                                        <Icons.checkCircle className="h-3.5 w-3.5 text-green-400 mr-2 mt-0.5 shrink-0" />
+                                        <Icons.checkCircle className="h-4 w-4 text-green-400 mr-2 mt-0.5 shrink-0" />
                                         <span className="text-slate-300">{feature}</span>
                                     </li>
                                 ))}
@@ -310,13 +310,13 @@ export default function AccountPage() {
                         <CardHeader className="p-2">
                             <CardTitle className="text-lg text-primary">{yearlyPlan.title}</CardTitle>
                             <p className="text-2xl font-bold text-slate-100 pt-1">{yearlyPlan.price}</p>
-                            <p className="text-xs text-slate-400">{yearlyPlan.subtitle}</p>
+                            <p className="text-sm text-slate-400">{yearlyPlan.subtitle}</p>
                         </CardHeader>
                         <CardContent className="p-2 flex-grow text-left">
-                            <ul className="space-y-1.5 text-xs">
+                            <ul className="space-y-2 text-sm">
                                 {yearlyPlan.features.map(feature => (
                                     <li key={feature} className="flex items-start">
-                                        <Icons.checkCircle className="h-3.5 w-3.5 text-green-400 mr-2 mt-0.5 shrink-0" />
+                                        <Icons.checkCircle className="h-4 w-4 text-green-400 mr-2 mt-0.5 shrink-0" />
                                         <span className="text-slate-300">{feature}</span>
                                     </li>
                                 ))}
