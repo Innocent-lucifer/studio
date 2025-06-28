@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -86,7 +87,7 @@ const FeatureCard = React.memo(FeatureCardComponent);
 
 
 export default function DashboardPage() {
-  const { user, loading } = useAuth();
+  const { user, userData, loading } = useAuth();
   const router = useRouter();
   const [displayName, setDisplayName] = useState<string>("Guest");
 
@@ -97,12 +98,16 @@ export default function DashboardPage() {
   }, [user, loading, router]);
   
   useEffect(() => {
-    if (user?.email) {
-      setDisplayName(extractNameFromEmail(user.email));
-    } else {
-      setDisplayName("Guest");
+    if (userData?.displayName) {
+        setDisplayName(userData.displayName);
+    } else if (user?.displayName) {
+        setDisplayName(user.displayName);
+    } else if (user?.email) {
+        setDisplayName(extractNameFromEmail(user.email));
+    } else if (!loading) {
+        setDisplayName("Guest");
     }
-  }, [user]);
+}, [user, userData, loading]);
 
 
   if (loading) {

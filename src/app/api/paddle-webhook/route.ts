@@ -4,10 +4,12 @@ import { findOrCreateUserForPurchase } from '@/lib/firebaseAdminActions';
 
 // IMPORTANT: This is a simplified webhook handler for demonstration.
 // In a production environment, you MUST verify the webhook signature from Paddle.
+// Use the exact same price IDs here as on the frontend to ensure sync.
 const PADDLE_PRICE_IDS = {
   monthly: process.env.NEXT_PUBLIC_PADDLE_SANDBOX_MONTHLY_PRICE_ID || "pri_01jytrrggq73bfpd9bce3resb0",
   yearly: process.env.NEXT_PUBLIC_PADDLE_SANDBOX_YEARLY_PRICE_ID || "pri_01jytrs4wqac0a8pnyttzz34w1",
 };
+
 
 /**
  * This function processes a Paddle webhook event to update a user's plan.
