@@ -4,10 +4,10 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { CheckCircle, Sparkles } from "lucide-react";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/hooks/use-toast";
 
 interface Plan {
     title: string;
@@ -41,6 +41,7 @@ const cardVariants = {
 export default function Pricing({ plans }: PricingProps) {
   const { user } = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
 
   const handleCheckout = (priceId: string) => {
     if (window.Paddle) {
@@ -55,7 +56,11 @@ export default function Pricing({ plans }: PricingProps) {
       });
     } else {
       console.error("Paddle.js is not loaded or initialized.");
-      alert("Payment system is not available at the moment. Please try again later.");
+      toast({
+        title: "Checkout Error",
+        description: "Payment system is not available. Please try again in a moment.",
+        variant: "destructive",
+      });
     }
   };
 
