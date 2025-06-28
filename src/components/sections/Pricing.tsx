@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from "react";
@@ -50,7 +51,7 @@ export default function Pricing({ plans }: PricingProps) {
           email: user?.email ?? undefined,
         },
         settings: {
-          successUrl: `${window.location.origin}/dashboard`
+          successUrl: `${window.location.origin}/login?from=purchase`
         }
       });
     } else {
