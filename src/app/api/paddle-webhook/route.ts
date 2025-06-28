@@ -3,8 +3,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { findOrCreateUserForPurchase, updateUserPlanByUID } from '@/lib/firebaseAdminActions';
 
 const PADDLE_PRICE_IDS = {
-  monthly: process.env.NEXT_PUBLIC_PADDLE_SANDBOX_MONTHLY_PRICE_ID || "pri_01gsz8x8sawmvhz1pv30nge1ke",
-  yearly: process.env.NEXT_PUBLIC_PADDLE_SANDBOX_YEARLY_PRICE_ID || "pri_01gsz8yfnagwshz2qw41nge2qf",
+  monthly: process.env.NEXT_PUBLIC_PADDLE_SANDBOX_MONTHLY_PRICE_ID || "pri_01jytrrggq73bfpd9bce3resb0",
+  yearly: process.env.NEXT_PUBLIC_PADDLE_SANDBOX_YEARLY_PRICE_ID || "pri_01jytrs4wqac0a8pnyttzz34w1",
 };
 
 async function handlePurchaseEvent(eventData: any, eventType: string) {

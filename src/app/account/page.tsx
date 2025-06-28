@@ -98,7 +98,7 @@ export default function AccountPage() {
         "Copy & export posts anytime",
         "Post history access",
       ],
-      priceId: process.env.NEXT_PUBLIC_PADDLE_SANDBOX_MONTHLY_PRICE_ID || "pri_01gsz8x8sawmvhz1pv30nge1ke"
+      priceId: process.env.NEXT_PUBLIC_PADDLE_SANDBOX_MONTHLY_PRICE_ID || "pri_01jytrrggq73bfpd9bce3resb0"
     },
     {
       title: "Sage Infinity Yearly",
@@ -118,7 +118,7 @@ export default function AccountPage() {
         "Copy & export posts anytime",
         "Post history access",
       ],
-      priceId: process.env.NEXT_PUBLIC_PADDLE_SANDBOX_YEARLY_PRICE_ID || "pri_01gsz8yfnagwshz2qw41nge2qf"
+      priceId: process.env.NEXT_PUBLIC_PADDLE_SANDBOX_YEARLY_PRICE_ID || "pri_01jytrs4wqac0a8pnyttzz34w1"
     }
   ];
 
@@ -257,7 +257,7 @@ export default function AccountPage() {
             </DialogHeader>
             <div className="space-y-4 py-4">
                 {plans.map(plan => (
-                    <Card key={plan.priceId} className={`relative bg-slate-700/60 border-slate-600 text-center flex flex-col p-4 ${plan.badge ? 'border-primary/80' : ''}`}>
+                    <Card key={plan.priceId} className={`relative bg-slate-700/60 border-slate-600 text-center flex flex-col p-6 ${plan.badge ? 'border-primary/80' : ''}`}>
                         {plan.badge && (
                             <Badge className="absolute -top-3 right-4 bg-primary text-primary-foreground">{plan.badge}</Badge>
                         )}
@@ -267,13 +267,14 @@ export default function AccountPage() {
                             <p className="text-sm text-slate-400">{plan.subtitle}</p>
                         </CardHeader>
                         <CardContent className="p-2 flex-grow text-left">
-                            <ul className="space-y-2 text-sm">
-                                {plan.features.map(feature => (
+                           <ul className="space-y-2.5 text-sm my-4">
+                                {plan.features.slice(0, 4).map(feature => (
                                     <li key={feature} className="flex items-start">
                                         <Icons.checkCircle className="h-4 w-4 text-green-400 mr-2 mt-0.5 shrink-0" />
                                         <span className="text-slate-300">{feature}</span>
                                     </li>
                                 ))}
+                                <li className="text-center text-slate-400 text-xs">(and {plan.features.length - 4} more...)</li>
                             </ul>
                         </CardContent>
                         <CardFooter className="p-2 pt-4 mt-auto">
@@ -305,7 +306,7 @@ export default function AccountPage() {
             </DialogHeader>
             {yearlyPlan && (
                 <div className="py-4">
-                    <Card key={yearlyPlan.priceId} className="relative bg-slate-700/60 border-slate-600 text-center flex flex-col p-4 border-primary/80">
+                    <Card key={yearlyPlan.priceId} className="relative bg-slate-700/60 border-slate-600 text-center flex flex-col p-6 border-primary/80">
                         <Badge className="absolute -top-3 right-4 bg-primary text-primary-foreground">{yearlyPlan.badge}</Badge>
                         <CardHeader className="p-2">
                             <CardTitle className="text-lg text-primary">{yearlyPlan.title}</CardTitle>
@@ -313,13 +314,14 @@ export default function AccountPage() {
                             <p className="text-sm text-slate-400">{yearlyPlan.subtitle}</p>
                         </CardHeader>
                         <CardContent className="p-2 flex-grow text-left">
-                            <ul className="space-y-2 text-sm">
-                                {yearlyPlan.features.map(feature => (
+                            <ul className="space-y-2.5 text-sm my-4">
+                                {yearlyPlan.features.slice(0, 4).map(feature => (
                                     <li key={feature} className="flex items-start">
                                         <Icons.checkCircle className="h-4 w-4 text-green-400 mr-2 mt-0.5 shrink-0" />
                                         <span className="text-slate-300">{feature}</span>
                                     </li>
                                 ))}
+                                 <li className="text-center text-slate-400 text-xs">(and {yearlyPlan.features.length - 4} more...)</li>
                             </ul>
                         </CardContent>
                         <CardFooter className="p-2 pt-4 mt-auto">
