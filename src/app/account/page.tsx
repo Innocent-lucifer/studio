@@ -13,7 +13,7 @@ import { Separator } from '@/components/ui/separator';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { useToast } from "@/hooks/use-toast";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogClose, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose, DialogFooter } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 
 
@@ -186,19 +186,11 @@ export default function AccountPage() {
               {userData?.plan === 'yearly' && (
                 <div className="pt-2 text-center">
                     <h4 className="text-md font-semibold text-slate-100 mb-2">You're on the best plan!</h4>
-                    <p className="text-sm text-slate-400 mb-4">You have full access to all features. For account management, see below.</p>
+                    <p className="text-sm text-slate-400 mb-4">You have full access to all features.</p>
                      <Button onClick={() => setIsRefundModalOpen(true)} variant="link" className="text-slate-400 hover:text-red-400 text-xs">
                         Need a refund?
                      </Button>
                 </div>
-              )}
-
-              {userData?.plan !== 'free' && (
-                 <div className="mt-4 flex justify-center">
-                     <Button onClick={() => window.Paddle?.Checkout.open({ settings: { theme: 'dark' } })} variant="outline" className="w-full sm:w-auto border-primary text-primary hover:bg-primary/10">
-                        Manage Billing & Subscription
-                     </Button>
-                 </div>
               )}
             </div>
             
