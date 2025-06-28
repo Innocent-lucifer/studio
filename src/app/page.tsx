@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useEffect, useState, lazy, Suspense, useCallback } from "react";
@@ -87,7 +86,7 @@ export default function Home() {
         "Copy & export posts anytime",
         "Post history access",
       ],
-      priceId: process.env.NEXT_PUBLIC_PADDLE_SANDBOX_MONTHLY_PRICE_ID || "pri_test_abc123"
+      priceId: process.env.NEXT_PUBLIC_PADDLE_SANDBOX_MONTHLY_PRICE_ID || "pri_01jyp11r1dqn1gyvk3ybmrsctv"
     },
     {
       title: "Yearly",
@@ -109,7 +108,7 @@ export default function Home() {
         "Copy & export posts anytime",
         "Post history access",
       ],
-      priceId: process.env.NEXT_PUBLIC_PADDLE_SANDBOX_YEARLY_PRICE_ID || "pri_test_def456"
+      priceId: process.env.NEXT_PUBLIC_PADDLE_SANDBOX_YEARLY_PRICE_ID || "pri_01jyp1dzgerhxbdx8rbz8psts"
     }
   ];
 
@@ -144,7 +143,7 @@ export default function Home() {
     },
     {
       q: "Do I need experience with social media to use SagePostAI?",
-      a: "Not at all. If you can type a topic, you're ready. We built this tool for founders, creators, marketers, and even students — no prior expertise needed."
+      a: "Not at all. If you can type a topic, you're ready. We built this for founders, creators, marketers, and even students — no prior expertise needed."
     },
     {
       q: "Is there a free trial?",
