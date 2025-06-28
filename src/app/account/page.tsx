@@ -15,6 +15,7 @@ import Link from 'next/link';
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose, DialogFooter } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 export default function AccountPage() {
   const { user, userData, loading: authLoading, logOut } = useAuth();
@@ -67,7 +68,7 @@ export default function AccountPage() {
     }
   };
 
-  if (authLoading || !userData) { // Also wait for userData to be loaded
+  if (authLoading || !userData) { 
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col items-center justify-center p-4">
         <Icons.loader className="h-16 w-16 animate-spin text-primary" />
@@ -98,7 +99,7 @@ export default function AccountPage() {
         "Copy & export posts",
         "Post history access",
       ],
-      priceId: process.env.NEXT_PUBLIC_PADDLE_SANDBOX_MONTHLY_PRICE_ID || "pri_01jytrrggq73bfpd9bce3resb0"
+      priceId: "pri_01jytrrggq73bfpd9bce3resb0"
     },
     {
       title: "Sage Infinity Yearly",
@@ -118,7 +119,7 @@ export default function AccountPage() {
         "Copy & export posts",
         "Post history access",
       ],
-      priceId: process.env.NEXT_PUBLIC_PADDLE_SANDBOX_YEARLY_PRICE_ID || "pri_01jytrs4wqac0a8pnyttzz34w1"
+      priceId: "pri_01jytrs4wqac0a8pnyttzz34w1"
     }
   ];
 
@@ -161,7 +162,7 @@ export default function AccountPage() {
         </div>
       );
     }
-    return null; // Fallback for loading or other states
+    return null;
   };
 
   return (
@@ -255,36 +256,37 @@ export default function AccountPage() {
               Choose the plan that's right for you.
           </DialogDescription>
         </DialogHeader>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
-          {plans.map(plan => (
-            <Card key={plan.priceId} className={`relative bg-slate-700/60 border-slate-600 text-center flex flex-col p-6 ${plan.badge ? 'border-primary/80' : ''}`}>
-              {plan.badge && (
-                  <Badge className="absolute -top-3 right-4 bg-primary text-primary-foreground">{plan.badge}</Badge>
-              )}
-              <CardHeader className="p-2">
-                  <CardTitle className="text-xl text-primary">{plan.title}</CardTitle>
-                  <p className="text-3xl font-bold text-slate-100 pt-1">{plan.price}</p>
-                  <p className="text-sm text-slate-400">{plan.subtitle}</p>
-              </CardHeader>
-              <CardContent className="p-2 flex-grow">
-                  <ul className="space-y-3 text-sm my-4 text-left">
-                      {plan.features.slice(0, 4).map(feature => (
-                          <li key={feature} className="flex items-start">
-                              <Icons.checkCircle className="h-5 w-5 text-green-400 mr-2 mt-0.5 shrink-0" />
-                              <span className="text-slate-300">{feature}</span>
-                          </li>
-                      ))}
-                      <li className="text-center text-slate-400 text-xs">(and {plan.features.length - 4} more...)</li>
-                  </ul>
-              </CardContent>
-              <CardFooter className="p-2 pt-4 mt-auto">
-                  <Button onClick={() => { handleCheckout(plan.priceId); setIsPricingModalOpen(false); }} className="w-full bg-primary hover:bg-primary/90 text-lg py-3">
-                      Choose Plan
-                  </Button>
-              </CardFooter>
-            </Card>
-          ))}
-        </div>
+        <ScrollArea className="max-h-[70vh]">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4 px-2">
+            {plans.map(plan => (
+              <Card key={plan.priceId} className={`relative bg-slate-700/60 border-slate-600 text-center flex flex-col p-6 ${plan.badge ? 'border-primary/80' : ''}`}>
+                {plan.badge && (
+                    <Badge className="absolute -top-3 right-4 bg-primary text-primary-foreground">{plan.badge}</Badge>
+                )}
+                <CardHeader className="p-2">
+                    <CardTitle className="text-xl text-primary">{plan.title}</CardTitle>
+                    <p className="text-3xl font-bold text-slate-100 pt-1">{plan.price}</p>
+                    <p className="text-sm text-slate-400">{plan.subtitle}</p>
+                </CardHeader>
+                <CardContent className="p-2 flex-grow">
+                    <ul className="space-y-3 text-sm my-4 text-left">
+                        {plan.features.map(feature => (
+                            <li key={feature} className="flex items-start">
+                                <Icons.checkCircle className="h-5 w-5 text-green-400 mr-2 mt-0.5 shrink-0" />
+                                <span className="text-slate-300">{feature}</span>
+                            </li>
+                        ))}
+                    </ul>
+                </CardContent>
+                <CardFooter className="p-2 pt-4 mt-auto">
+                    <Button onClick={() => { handleCheckout(plan.priceId); setIsPricingModalOpen(false); }} className="w-full bg-primary hover:bg-primary/90 text-lg py-3">
+                        Choose Plan
+                    </Button>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+        </ScrollArea>
         <DialogFooter className="sm:justify-start pt-2">
             <DialogClose asChild>
               <Button type="button" variant="secondary">
@@ -305,32 +307,33 @@ export default function AccountPage() {
           </DialogDescription>
         </DialogHeader>
         {yearlyPlan && (
-          <div className="py-4">
-            <Card key={yearlyPlan.priceId} className="relative bg-slate-700/60 border-slate-600 text-center flex flex-col p-6 border-primary/80">
-              <Badge className="absolute -top-3 right-4 bg-primary text-primary-foreground">{yearlyPlan.badge}</Badge>
-              <CardHeader className="p-2">
-                  <CardTitle className="text-xl text-primary">{yearlyPlan.title}</CardTitle>
-                  <p className="text-3xl font-bold text-slate-100 pt-1">{yearlyPlan.price}</p>
-                  <p className="text-sm text-slate-400">{yearlyPlan.subtitle}</p>
-              </CardHeader>
-              <CardContent className="p-2 flex-grow">
-                  <ul className="space-y-3 text-sm my-4 text-left">
-                      {yearlyPlan.features.slice(0, 4).map(feature => (
-                          <li key={feature} className="flex items-start">
-                              <Icons.checkCircle className="h-5 w-5 text-green-400 mr-2 mt-0.5 shrink-0" />
-                              <span className="text-slate-300">{feature}</span>
-                          </li>
-                      ))}
-                      <li className="text-center text-slate-400 text-xs">(and {yearlyPlan.features.length - 4} more...)</li>
-                  </ul>
-              </CardContent>
-              <CardFooter className="p-2 pt-4 mt-auto">
-                  <Button onClick={() => { handleCheckout(yearlyPlan.priceId); setIsYearlyUpgradeModalOpen(false); }} className="w-full bg-primary hover:bg-primary/90 text-lg py-3">
-                      Upgrade to Yearly
-                  </Button>
-              </CardFooter>
-            </Card>
-          </div>
+          <ScrollArea className="max-h-[70vh]">
+            <div className="py-4 px-2">
+              <Card key={yearlyPlan.priceId} className="relative bg-slate-700/60 border-slate-600 text-center flex flex-col p-6 border-primary/80">
+                <Badge className="absolute -top-3 right-4 bg-primary text-primary-foreground">{yearlyPlan.badge}</Badge>
+                <CardHeader className="p-2">
+                    <CardTitle className="text-xl text-primary">{yearlyPlan.title}</CardTitle>
+                    <p className="text-3xl font-bold text-slate-100 pt-1">{yearlyPlan.price}</p>
+                    <p className="text-sm text-slate-400">{yearlyPlan.subtitle}</p>
+                </CardHeader>
+                <CardContent className="p-2 flex-grow">
+                    <ul className="space-y-3 text-sm my-4 text-left">
+                        {yearlyPlan.features.map(feature => (
+                            <li key={feature} className="flex items-start">
+                                <Icons.checkCircle className="h-5 w-5 text-green-400 mr-2 mt-0.5 shrink-0" />
+                                <span className="text-slate-300">{feature}</span>
+                            </li>
+                        ))}
+                    </ul>
+                </CardContent>
+                <CardFooter className="p-2 pt-4 mt-auto">
+                    <Button onClick={() => { handleCheckout(yearlyPlan.priceId); setIsYearlyUpgradeModalOpen(false); }} className="w-full bg-primary hover:bg-primary/90 text-lg py-3">
+                        Upgrade to Yearly
+                    </Button>
+                </CardFooter>
+              </Card>
+            </div>
+          </ScrollArea>
         )}
         <DialogFooter className="sm:justify-start pt-2">
             <DialogClose asChild>
@@ -365,5 +368,3 @@ export default function AccountPage() {
     </>
   );
 }
-
-    

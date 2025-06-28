@@ -2,9 +2,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { findOrCreateUserForPurchase, updateUserPlanByUID } from '@/lib/firebaseAdminActions';
 
+// Hardcode the correct sandbox Price IDs to ensure a match.
 const PADDLE_PRICE_IDS = {
-  monthly: process.env.NEXT_PUBLIC_PADDLE_SANDBOX_MONTHLY_PRICE_ID || "pri_01jytrrggq73bfpd9bce3resb0",
-  yearly: process.env.NEXT_PUBLIC_PADDLE_SANDBOX_YEARLY_PRICE_ID || "pri_01jytrs4wqac0a8pnyttzz34w1",
+  monthly: "pri_01jytrrggq73bfpd9bce3resb0",
+  yearly: "pri_01jytrs4wqac0a8pnyttzz34w1",
 };
 
 async function handlePurchaseEvent(eventData: any, eventType: string) {
