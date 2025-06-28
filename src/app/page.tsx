@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useEffect, useState, lazy, Suspense, useCallback } from "react";
@@ -87,7 +86,7 @@ export default function Home() {
         "Copy & export posts anytime",
         "Post history access",
       ],
-      priceId: process.env.NEXT_PUBLIC_PADDLE_SANDBOX_MONTHLY_PRICE_ID || "pri_01k1g7321q598yv9f6q685v91r"
+      priceId: process.env.NEXT_PUBLIC_PADDLE_SANDBOX_MONTHLY_PRICE_ID || "pri_01jytrrggq73bfpd9bce3resb0"
     },
     {
       title: "Yearly",
@@ -109,7 +108,7 @@ export default function Home() {
         "Copy & export posts anytime",
         "Post history access",
       ],
-      priceId: process.env.NEXT_PUBLIC_PADDLE_SANDBOX_YEARLY_PRICE_ID || "pri_01k1g6w8vj2z371z14f9v3k5f0"
+      priceId: process.env.NEXT_PUBLIC_PADDLE_SANDBOX_YEARLY_PRICE_ID || "pri_01jytrs4wqac0a8pnyttzz34w1"
     }
   ];
 
