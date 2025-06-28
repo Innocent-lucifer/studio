@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from "react";
@@ -44,7 +45,6 @@ export default function Pricing({ plans }: PricingProps) {
 
   const handleCheckout = (priceId: string) => {
     if (user) {
-      // If user is logged in, proceed to checkout
       if (window.Paddle) {
         window.Paddle.Checkout.open({
           items: [{ priceId, quantity: 1 }],
@@ -64,7 +64,6 @@ export default function Pricing({ plans }: PricingProps) {
         });
       }
     } else {
-      // If user is not logged in, redirect to login page
       toast({
         title: "Login Required",
         description: "Please log in or create an account to subscribe.",
@@ -134,10 +133,11 @@ export default function Pricing({ plans }: PricingProps) {
                 <Button 
                   onClick={() => handleCheckout(plan.priceId)}
                   size="lg" 
-                  className="w-full bg-primary text-primary-foreground hover:bg-primary/90 text-base mb-8 shadow-md"
+                  className="w-full bg-primary text-primary-foreground hover:bg-primary/90 text-base mb-2 shadow-md"
                 >
                   Try 3 Days Free
                 </Button>
+                <p className="text-xs text-foreground/60 mb-8">No credit card required for trial.</p>
                 <ul className="text-left space-y-3">
                   {plan.features.map((feat, i) => (
                     <li
