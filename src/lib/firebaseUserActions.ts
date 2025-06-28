@@ -32,7 +32,7 @@ export interface UserData {
   referralCode?: string;
   referredBy?: string;
   referralsMade?: number;
-  plan: 'free' | 'starter' | 'infinity';
+  plan: 'free' | 'monthly' | 'yearly';
 }
 
 export interface Draft {

@@ -1,6 +1,6 @@
 
 import Link from "next/link";
-import { Mail, ArrowLeft, UserRound, Briefcase, MessageSquare } from "lucide-react";
+import { Mail, ArrowLeft, UserRound, Briefcase, MessageSquare, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import Footer from "@/components/sections/Footer";
@@ -22,14 +22,14 @@ export default function ContactPage() {
     {
       icon: Mail,
       title: "Product Support",
-      description: "Questions, bugs, billing issues, or anything stopping your flow?",
+      description: "Questions, bugs, feature requests, or anything stopping your flow?",
       email: "support@sagepostai.com"
     },
     {
-      icon: MessageSquare,
-      title: "Product Feedback",
-      description: "Got ideas to improve SagePostAI? We’re listening.",
-      email: "feedback@sagepostai.com"
+      icon: CreditCard,
+      title: "Refunds & Billing",
+      description: "For questions about refunds, charges, or your subscription.",
+      email: "refund@sagepostai.com"
     }
   ];
 
