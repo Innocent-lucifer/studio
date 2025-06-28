@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from "react";
@@ -5,6 +6,8 @@ import { motion } from "framer-motion";
 import { CheckCircle, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
 
 interface Plan {
     title: string;
@@ -15,6 +18,7 @@ interface Plan {
     badgeClass?: string;
     discountBadge?: string;
     features: string[];
+    priceId: string;
 }
 
 interface PricingProps {
@@ -35,6 +39,27 @@ const cardVariants = {
 };
 
 export default function Pricing({ plans }: PricingProps) {
+  const { user } = useAuth();
+  const router = useRouter();
+
+  const handleCheckout = (priceId: string) => {
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+    if (window.Paddle) {
+      window.Paddle.Checkout.open({
+        items: [{ priceId, quantity: 1 }],
+        customer: {
+          email: user.email,
+        }
+      });
+    } else {
+      console.error("Paddle.js is not loaded or initialized.");
+      alert("Payment system is not available at the moment. Please try again later.");
+    }
+  };
+
   return (
     <section id="pricing" className="py-20 sm:py-28 px-4 sm:px-6">
       <div className="max-w-7xl mx-auto text-center">
@@ -92,10 +117,12 @@ export default function Pricing({ plans }: PricingProps) {
                 <p className="text-foreground/70 text-sm font-semibold mb-8">
                   {plan.subtitle}
                 </p>
-                <Button asChild size="lg" className="w-full bg-primary text-primary-foreground hover:bg-primary/90 text-base mb-8 shadow-md">
-                  <Link href="/login">
-                    Try 3 Days Free
-                  </Link>
+                <Button 
+                  onClick={() => handleCheckout(plan.priceId)}
+                  size="lg" 
+                  className="w-full bg-primary text-primary-foreground hover:bg-primary/90 text-base mb-8 shadow-md"
+                >
+                  Try 3 Days Free
                 </Button>
                 <ul className="text-left space-y-3">
                   {plan.features.map((feat, i) => (

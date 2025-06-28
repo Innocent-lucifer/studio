@@ -86,7 +86,8 @@ export default function Home() {
         "AI Post Editor (Auto cleans grammar & flow instantly)",
         "Copy & export posts anytime",
         "Post history access",
-      ]
+      ],
+      priceId: process.env.NEXT_PUBLIC_PADDLE_SANDBOX_MONTHLY_PRICE_ID || "pri_test_abc123"
     },
     {
       title: "Yearly",
@@ -107,7 +108,8 @@ export default function Home() {
         "AI Post Editor (Auto cleans grammar & flow instantly)",
         "Copy & export posts anytime",
         "Post history access",
-      ]
+      ],
+      priceId: process.env.NEXT_PUBLIC_PADDLE_SANDBOX_YEARLY_PRICE_ID || "pri_test_def456"
     }
   ];
 

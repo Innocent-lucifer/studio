@@ -7,6 +7,7 @@ import './globals.css';
 import { AuthProvider } from '@/context/AuthContext';
 import { Toaster } from "@/components/ui/toaster"; 
 import StarryBackground from '@/components/StarryBackground';
+import { PaddleLoader } from '@/components/PaddleLoader';
 
 const geistSans = GeistSans;
 const geistMono = GeistMono;
@@ -51,6 +52,12 @@ export const metadata: Metadata = {
   
 };
 
+declare global {
+  interface Window {
+    Paddle: any;
+  }
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -77,6 +84,7 @@ export default function RootLayout({
             gtag('config', 'G-R35KLPZN1G');
           `}
         </Script>
+        <PaddleLoader />
       </body>
     </html>
   );
