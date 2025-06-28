@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useEffect, useState, lazy, Suspense, useCallback } from "react";
@@ -70,9 +71,9 @@ export default function Home() {
 
   const plans = [
     {
-      title: "Monthly",
+      title: "Sage Infinity Monthly",
       price: "$19.99",
-      subtitle: "Try 3 days free, then $19.99/month",
+      subtitle: "Billed monthly. 3-day free trial.",
       borderClass: "border-border",
       features: [
         "Unlimited Generations",
@@ -89,9 +90,9 @@ export default function Home() {
       priceId: process.env.NEXT_PUBLIC_PADDLE_SANDBOX_MONTHLY_PRICE_ID || "pri_01jytrrggq73bfpd9bce3resb0"
     },
     {
-      title: "Yearly",
+      title: "Sage Infinity Yearly",
       price: "$197",
-      subtitle: "Try 3 days free, then $197/year (~$16/mo)",
+      subtitle: "Billed annually. 3-day free trial.",
       badge: "BEST VALUE",
       badgeClass: "from-primary to-accent",
       discountBadge: "18% OFF",

@@ -82,9 +82,9 @@ export default function AccountPage() {
 
   const plans = [
     {
-      title: "Monthly",
+      title: "Sage Infinity Monthly",
       price: "$19.99",
-      subtitle: "Try 3 days free, then $19.99/month",
+      subtitle: "Billed monthly. 3-day free trial.",
       features: [
         "Unlimited Generations",
         "Image to Post Wizard",
@@ -100,9 +100,9 @@ export default function AccountPage() {
       priceId: process.env.NEXT_PUBLIC_PADDLE_SANDBOX_MONTHLY_PRICE_ID || "pri_01jytrrggq73bfpd9bce3resb0"
     },
     {
-      title: "Yearly",
+      title: "Sage Infinity Yearly",
       price: "$197",
-      subtitle: "Try 3 days free, then $197/year (~$16/mo)",
+      subtitle: "Billed annually. 3-day free trial.",
       badge: "BEST VALUE",
       discountBadge: "18% OFF",
       features: [
@@ -121,7 +121,7 @@ export default function AccountPage() {
     }
   ];
 
-  const yearlyPlan = plans.find(p => p.title === "Yearly");
+  const yearlyPlan = plans.find(p => p.title.includes("Yearly"));
 
   const renderPlanContent = () => {
     if (userData.plan === 'free') {
@@ -150,7 +150,7 @@ export default function AccountPage() {
       return (
          <div className="pt-2 text-center">
             <h4 className="text-md font-semibold text-slate-100 mb-2">You're on the best plan!</h4>
-            <p className="text-sm text-slate-400 mb-4">You have full access to all features.</p>
+            <p className="text-sm text-slate-400 mb-4">You have full access to all features with the Sage Infinity Yearly plan.</p>
              <Button onClick={() => setIsRefundModalOpen(true)} variant="link" className="text-slate-400 hover:text-red-400 text-xs">
                 Need a refund?
              </Button>
