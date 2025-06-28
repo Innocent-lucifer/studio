@@ -82,7 +82,7 @@ export default function AccountPage() {
     {
       title: "Sage Infinity Monthly",
       price: "$19.99",
-      subtitle: "Billed monthly. 3-day free trial.",
+      subtitle: "Billed monthly.",
       features: [
         "Unlimited Generations",
         "Image to Post Wizard",
@@ -100,7 +100,7 @@ export default function AccountPage() {
     {
       title: "Sage Infinity Yearly",
       price: "$197",
-      subtitle: "Billed annually. 3-day free trial.",
+      subtitle: "Billed annually.",
       badge: "BEST VALUE",
       discountBadge: "18% OFF",
       features: [
@@ -249,29 +249,29 @@ export default function AccountPage() {
                     Choose the plan that's right for you. Get lifetime access at early-bird value.
                 </DialogDescription>
             </DialogHeader>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
                 {plans.map(plan => (
                     <Card key={plan.priceId} className={`relative bg-slate-700/60 border-slate-600 text-left flex flex-col ${plan.badge ? 'border-primary/80' : ''}`}>
                         {plan.badge && (
                             <Badge className="absolute -top-3 right-4 bg-primary text-primary-foreground">{plan.badge}</Badge>
                         )}
-                        <CardHeader className="p-4 pb-2 text-center">
+                        <CardHeader className="p-6 pb-2 text-center">
                             <CardTitle className="text-xl text-primary">{plan.title}</CardTitle>
-                            <p className="text-2xl font-bold text-slate-100 pt-1">{plan.price}</p>
-                            <p className="text-xs text-slate-400">{plan.subtitle}</p>
+                            <p className="text-3xl font-bold text-slate-100 pt-1">{plan.price}</p>
+                            <p className="text-sm text-slate-400">{plan.subtitle}</p>
                         </CardHeader>
-                        <CardContent className="p-4 pt-2 flex-grow">
-                            <ul className="space-y-1.5 text-xs">
+                        <CardContent className="p-6 pt-4 flex-grow">
+                            <ul className="space-y-2 text-sm">
                                 {plan.features.map(feature => (
                                     <li key={feature} className="flex items-start">
-                                        <Icons.checkCircle className="h-3.5 w-3.5 text-green-400 mr-2 mt-0.5 shrink-0" />
+                                        <Icons.checkCircle className="h-4 w-4 text-green-400 mr-2.5 mt-0.5 shrink-0" />
                                         <span className="text-slate-300">{feature}</span>
                                     </li>
                                 ))}
                             </ul>
                         </CardContent>
-                        <CardFooter className="p-4 mt-auto">
-                            <Button onClick={() => { handleCheckout(plan.priceId); setIsPricingModalOpen(false); }} className="w-full bg-primary hover:bg-primary/90 text-md py-2.5">
+                        <CardFooter className="p-6 pt-4 mt-auto">
+                            <Button onClick={() => { handleCheckout(plan.priceId); setIsPricingModalOpen(false); }} className="w-full bg-primary hover:bg-primary/90 text-md py-3">
                                 Choose Plan
                             </Button>
                         </CardFooter>
@@ -290,7 +290,7 @@ export default function AccountPage() {
     
     {/* Monthly plan -> Yearly Upgrade Modal */}
     <Dialog open={isYearlyUpgradeModalOpen} onOpenChange={setIsYearlyUpgradeModalOpen}>
-        <DialogContent className="bg-slate-800/80 backdrop-blur-md border-slate-700 text-white sm:max-w-sm">
+        <DialogContent className="bg-slate-800/80 backdrop-blur-md border-slate-700 text-white sm:max-w-md">
             <DialogHeader>
                 <DialogTitle className="text-xl text-primary text-center">Upgrade to Yearly & Save!</DialogTitle>
                 <DialogDescription className="text-center text-slate-400 text-sm">
@@ -301,23 +301,23 @@ export default function AccountPage() {
                 <div className="py-4">
                     <Card key={yearlyPlan.priceId} className="relative bg-slate-700/60 border-slate-600 text-left flex flex-col border-primary/80">
                         <Badge className="absolute -top-3 right-4 bg-primary text-primary-foreground">{yearlyPlan.badge}</Badge>
-                        <CardHeader className="p-4 pb-2 text-center">
+                        <CardHeader className="p-6 pb-2 text-center">
                             <CardTitle className="text-xl text-primary">{yearlyPlan.title}</CardTitle>
-                            <p className="text-2xl font-bold text-slate-100 pt-1">{yearlyPlan.price}</p>
-                            <p className="text-xs text-slate-400">{yearlyPlan.subtitle}</p>
+                            <p className="text-3xl font-bold text-slate-100 pt-1">{yearlyPlan.price}</p>
+                            <p className="text-sm text-slate-400">{yearlyPlan.subtitle}</p>
                         </CardHeader>
-                        <CardContent className="p-4 pt-2 flex-grow">
-                            <ul className="space-y-1.5 text-xs">
+                        <CardContent className="p-6 pt-4 flex-grow">
+                            <ul className="space-y-2 text-sm">
                                 {yearlyPlan.features.map(feature => (
                                     <li key={feature} className="flex items-start">
-                                        <Icons.checkCircle className="h-3.5 w-3.5 text-green-400 mr-2 mt-0.5 shrink-0" />
+                                        <Icons.checkCircle className="h-4 w-4 text-green-400 mr-2.5 mt-0.5 shrink-0" />
                                         <span className="text-slate-300">{feature}</span>
                                     </li>
                                 ))}
                             </ul>
                         </CardContent>
-                        <CardFooter className="p-4 mt-auto">
-                            <Button onClick={() => { handleCheckout(yearlyPlan.priceId); setIsYearlyUpgradeModalOpen(false); }} className="w-full bg-primary hover:bg-primary/90 text-md py-2.5">
+                        <CardFooter className="p-6 pt-4 mt-auto">
+                            <Button onClick={() => { handleCheckout(yearlyPlan.priceId); setIsYearlyUpgradeModalOpen(false); }} className="w-full bg-primary hover:bg-primary/90 text-md py-3">
                                 Upgrade to Yearly
                             </Button>
                         </CardFooter>
