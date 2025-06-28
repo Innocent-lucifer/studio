@@ -51,6 +51,9 @@ export default function AccountPage() {
         items: [{ priceId, quantity: 1 }],
         customer: {
           email: user.email ?? undefined,
+        },
+        settings: {
+          successUrl: `${window.location.origin}/dashboard`
         }
       });
     } else {

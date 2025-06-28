@@ -52,6 +52,9 @@ export default function Pricing({ plans }: PricingProps) {
         items: [{ priceId, quantity: 1 }],
         customer: {
           email: user.email,
+        },
+        settings: {
+          successUrl: `${window.location.origin}/dashboard`
         }
       });
     } else {
