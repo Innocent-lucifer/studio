@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { Icons } from '@/components/icons';
@@ -13,12 +13,15 @@ import { Separator } from '@/components/ui/separator';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
 
 
 export default function AccountPage() {
   const { user, userData, loading: authLoading, logOut } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
+  const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -75,15 +78,41 @@ export default function AccountPage() {
     {
       title: "Monthly",
       price: "$19.99",
-      subtitle: "/month",
-      priceId: "pri_01jytrrggq73bfpd9bce3resb0",
+      subtitle: "Try 3 days free, then $19.99/month",
+      features: [
+        "Unlimited Generations",
+        "Image to Post Wizard",
+        "Quick Post Generator",
+        "Smart Campaign Builder",
+        "Upload image & get content ideas",
+        "Tone Styler (auto-matches human, casual, or pro)",
+        "Visibility Booster (adds optimal emojis & hashtags)",
+        "AI Post Editor (Auto cleans grammar & flow instantly)",
+        "Copy & export posts anytime",
+        "Post history access",
+      ],
+      priceId: process.env.NEXT_PUBLIC_PADDLE_SANDBOX_MONTHLY_PRICE_ID || "pri_01jytrrggq73bfpd9bce3resb0"
     },
     {
       title: "Yearly",
       price: "$197",
-      subtitle: "/year (18% Off)",
-      priceId: "pri_01jytrs4wqac0a8pnyttzz34w1",
-    },
+      subtitle: "Try 3 days free, then $197/year (~$16/mo)",
+      badge: "BEST VALUE",
+      discountBadge: "18% OFF",
+      features: [
+        "Unlimited Generations",
+        "Image to Post Wizard",
+        "Quick Post Generator",
+        "Smart Campaign Builder",
+        "Upload image & get content ideas",
+        "Tone Styler (auto-matches human, casual, or pro)",
+        "Visibility Booster (adds optimal emojis & hashtags)",
+        "AI Post Editor (Auto cleans grammar & flow instantly)",
+        "Copy & export posts anytime",
+        "Post history access",
+      ],
+      priceId: process.env.NEXT_PUBLIC_PADDLE_SANDBOX_YEARLY_PRICE_ID || "pri_01jytrs4wqac0a8pnyttzz34w1"
+    }
   ];
 
   return (
@@ -130,26 +159,53 @@ export default function AccountPage() {
               </p>
               
               {userData?.plan === 'free' && (
-                <div className="pt-2">
-                  <h4 className="text-md font-semibold text-slate-100 mb-3">Upgrade Your Plan</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {plans.map(plan => (
-                       <Card key={plan.priceId} className="bg-slate-600/50 border-slate-500 text-center">
-                         <CardHeader className="p-4">
-                           <CardTitle className="text-lg text-primary">{plan.title}</CardTitle>
-                         </CardHeader>
-                         <CardContent className="p-4 pt-0">
-                           <p className="text-2xl font-bold text-slate-100">{plan.price}</p>
-                           <p className="text-xs text-slate-400">{plan.subtitle}</p>
-                         </CardContent>
-                         <CardFooter className="p-4">
-                           <Button onClick={() => handleCheckout(plan.priceId)} className="w-full bg-primary hover:bg-primary/90">
-                              Choose Plan
-                           </Button>
-                         </CardFooter>
-                       </Card>
-                    ))}
-                  </div>
+                <div className="pt-2 text-center">
+                    <h4 className="text-md font-semibold text-slate-100 mb-2">Upgrade to Unlock More Power</h4>
+                    <p className="text-sm text-slate-400 mb-4">You are currently on the Free plan. Upgrade to get unlimited generations and more.</p>
+                     <Dialog open={isPricingModalOpen} onOpenChange={setIsPricingModalOpen}>
+                        <DialogTrigger asChild>
+                            <Button size="lg" className="bg-primary hover:bg-primary/90">
+                                <Icons.sparkles className="mr-2 h-5 w-5" /> View Upgrade Options
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent className="bg-slate-800/80 backdrop-blur-md border-slate-700 sm:max-w-4xl text-white">
+                            <DialogHeader>
+                                <DialogTitle className="text-2xl text-primary text-center">Upgrade Your Plan</DialogTitle>
+                                <DialogDescription className="text-center text-slate-400">
+                                    Choose the plan that's right for you. Get lifetime access at early-bird value.
+                                </DialogDescription>
+                            </DialogHeader>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-6">
+                                {plans.map(plan => (
+                                    <Card key={plan.priceId} className={`relative bg-slate-700/60 border-slate-600 text-left flex flex-col ${plan.badge ? 'border-primary/80' : ''}`}>
+                                        {plan.badge && (
+                                            <Badge className="absolute -top-3 right-4 bg-primary text-primary-foreground">{plan.badge}</Badge>
+                                        )}
+                                        <CardHeader className="p-6 pb-4 text-center">
+                                            <CardTitle className="text-2xl text-primary">{plan.title}</CardTitle>
+                                            <p className="text-3xl font-bold text-slate-100 pt-2">{plan.price}</p>
+                                            <p className="text-sm text-slate-400">{plan.subtitle}</p>
+                                        </CardHeader>
+                                        <CardContent className="p-6 pt-2 flex-grow">
+                                            <ul className="space-y-3 text-sm">
+                                                {plan.features.map(feature => (
+                                                    <li key={feature} className="flex items-start">
+                                                        <Icons.checkCircle className="h-4 w-4 text-green-400 mr-3 mt-1 shrink-0" />
+                                                        <span className="text-slate-300">{feature}</span>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </CardContent>
+                                        <CardFooter className="p-6 mt-auto">
+                                            <Button onClick={() => { handleCheckout(plan.priceId); setIsPricingModalOpen(false); }} className="w-full bg-primary hover:bg-primary/90 text-lg py-3">
+                                                Choose Plan
+                                            </Button>
+                                        </CardFooter>
+                                    </Card>
+                                ))}
+                            </div>
+                        </DialogContent>
+                    </Dialog>
                 </div>
               )}
 
