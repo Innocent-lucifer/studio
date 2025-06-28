@@ -66,7 +66,7 @@ export default function AccountPage() {
     }
   };
 
-  if (authLoading) {
+  if (authLoading || !userData) { // Also wait for userData to be loaded
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col items-center justify-center p-4">
         <Icons.loader className="h-16 w-16 animate-spin text-primary" />
@@ -123,6 +123,43 @@ export default function AccountPage() {
 
   const yearlyPlan = plans.find(p => p.title === "Yearly");
 
+  const renderPlanContent = () => {
+    if (userData.plan === 'free') {
+      return (
+        <div className="pt-2 text-center">
+            <h4 className="text-md font-semibold text-slate-100 mb-2">Upgrade to Unlock More Power</h4>
+            <p className="text-sm text-slate-400 mb-4">You are currently on the Free plan. Upgrade to get unlimited generations and more.</p>
+            <Button size="lg" className="bg-primary hover:bg-primary/90" onClick={() => setIsPricingModalOpen(true)}>
+                <Icons.sparkles className="mr-2 h-5 w-5" /> View Upgrade Options
+            </Button>
+        </div>
+      );
+    }
+    if (userData.plan === 'monthly') {
+      return (
+        <div className="pt-2 text-center">
+          <h4 className="text-md font-semibold text-slate-100 mb-2">Upgrade to Yearly & Save</h4>
+          <p className="text-sm text-slate-400 mb-4">You are currently on the Monthly plan. Save 18% by switching to Yearly!</p>
+          <Button size="lg" className="bg-primary hover:bg-primary/90" onClick={() => setIsYearlyUpgradeModalOpen(true)}>
+              <Icons.sparkles className="mr-2 h-5 w-5" /> View Yearly Plan
+          </Button>
+        </div>
+      );
+    }
+     if (userData.plan === 'yearly') {
+      return (
+         <div className="pt-2 text-center">
+            <h4 className="text-md font-semibold text-slate-100 mb-2">You're on the best plan!</h4>
+            <p className="text-sm text-slate-400 mb-4">You have full access to all features.</p>
+             <Button onClick={() => setIsRefundModalOpen(true)} variant="link" className="text-slate-400 hover:text-red-400 text-xs">
+                Need a refund?
+             </Button>
+        </div>
+      );
+    }
+    return null; // Fallback for loading or other states
+  };
+
   return (
     <>
     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col items-center p-4 sm:p-6 md:p-8">
@@ -164,38 +201,11 @@ export default function AccountPage() {
             <div className="space-y-4 p-4 bg-slate-700/50 rounded-lg border border-slate-600">
               <h3 className="text-lg font-medium text-slate-200">Plan & Subscription</h3>
               <p className="text-sm text-slate-300">
-                Current Plan: <span className="font-semibold text-purple-400">{userData?.plan ? userData.plan.charAt(0).toUpperCase() + userData.plan.slice(1) : 'Loading...'}</span>
+                Current Plan: <span className="font-semibold text-purple-400">{userData.plan.charAt(0).toUpperCase() + userData.plan.slice(1)}</span>
               </p>
               
-              {userData?.plan === 'free' && (
-                <div className="pt-2 text-center">
-                    <h4 className="text-md font-semibold text-slate-100 mb-2">Upgrade to Unlock More Power</h4>
-                    <p className="text-sm text-slate-400 mb-4">You are currently on the Free plan. Upgrade to get unlimited generations and more.</p>
-                    <Button size="lg" className="bg-primary hover:bg-primary/90" onClick={() => setIsPricingModalOpen(true)}>
-                        <Icons.sparkles className="mr-2 h-5 w-5" /> View Upgrade Options
-                    </Button>
-                </div>
-              )}
+              {renderPlanContent()}
 
-              {userData?.plan === 'monthly' && (
-                <div className="pt-2 text-center">
-                  <h4 className="text-md font-semibold text-slate-100 mb-2">Upgrade to Yearly & Save</h4>
-                  <p className="text-sm text-slate-400 mb-4">You are currently on the Monthly plan. Save 18% by switching to Yearly!</p>
-                  <Button size="lg" className="bg-primary hover:bg-primary/90" onClick={() => setIsYearlyUpgradeModalOpen(true)}>
-                      <Icons.sparkles className="mr-2 h-5 w-5" /> View Yearly Plan
-                  </Button>
-                </div>
-              )}
-
-              {userData?.plan === 'yearly' && (
-                <div className="pt-2 text-center">
-                    <h4 className="text-md font-semibold text-slate-100 mb-2">You're on the best plan!</h4>
-                    <p className="text-sm text-slate-400 mb-4">You have full access to all features.</p>
-                     <Button onClick={() => setIsRefundModalOpen(true)} variant="link" className="text-slate-400 hover:text-red-400 text-xs">
-                        Need a refund?
-                     </Button>
-                </div>
-              )}
             </div>
             
             <Separator className="bg-slate-700" />
@@ -234,7 +244,7 @@ export default function AccountPage() {
 
     {/* Free plan -> Upgrade Modal */}
     <Dialog open={isPricingModalOpen} onOpenChange={setIsPricingModalOpen}>
-        <DialogContent className="bg-slate-800/80 backdrop-blur-md border-slate-700 sm:max-w-4xl text-white">
+        <DialogContent className="bg-slate-800/80 backdrop-blur-md border-slate-700 text-white sm:max-w-xl md:max-w-4xl">
             <DialogHeader>
                 <DialogTitle className="text-2xl text-primary text-center">Upgrade Your Plan</DialogTitle>
                 <DialogDescription className="text-center text-slate-400">
@@ -284,7 +294,7 @@ export default function AccountPage() {
     
     {/* Monthly plan -> Yearly Upgrade Modal */}
     <Dialog open={isYearlyUpgradeModalOpen} onOpenChange={setIsYearlyUpgradeModalOpen}>
-        <DialogContent className="bg-slate-800/80 backdrop-blur-md border-slate-700 sm:max-w-md text-white">
+        <DialogContent className="bg-slate-800/80 backdrop-blur-md border-slate-700 text-white sm:max-w-md">
             <DialogHeader>
                 <DialogTitle className="text-2xl text-primary text-center">Upgrade to Yearly & Save!</DialogTitle>
                 <DialogDescription className="text-center text-slate-400">

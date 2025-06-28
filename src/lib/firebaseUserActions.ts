@@ -114,21 +114,16 @@ export const createUserDocument = async (
       return userData;
     } else {
       const existingData = userSnap.data() as UserData;
-      const updates: Partial<UserData> = {};
-      let needsUpdate = false;
-
-      if (existingData.plan === undefined) {
-        updates.plan = defaultPlan;
-        updates.updatedAt = serverTimestamp() as Timestamp,
-        needsUpdate = true;
-      }
-      
-      // Add other field checks as necessary
-      if (needsUpdate) {
+      // This is a crucial check for backward compatibility.
+      // If an old user logs in who doesn't have a `plan` field, set it to 'free'.
+      if (!existingData.plan) {
+        const updates: Partial<UserData> = {
+          plan: 'free',
+          updatedAt: serverTimestamp() as Timestamp
+        };
         await updateDoc(userRef, updates);
-        return { ...existingData, ...updates };
+        return { ...existingData, ...updates } as UserData;
       }
-      
       return existingData;
     }
   } catch (error) {
@@ -136,6 +131,7 @@ export const createUserDocument = async (
     throw error;
   }
 };
+
 
 export const getUserData = async (uid: string, userForCreation?: FirebaseAuthUser): Promise<UserData | null> => {
   if (!db) {
@@ -147,8 +143,15 @@ export const getUserData = async (uid: string, userForCreation?: FirebaseAuthUse
   try {
     const userSnap = await getDoc(userRef);
     if (userSnap.exists()) {
-      return userSnap.data();
+       const existingData = userSnap.data();
+       // Backward compatibility: if a user exists but has no plan, set them to free
+       if (!existingData.plan) {
+         await updateDoc(userRef, { plan: 'free', updatedAt: serverTimestamp() });
+         return { ...existingData, plan: 'free' } as UserData;
+       }
+      return existingData;
     } else {
+      // If the user doesn't exist, create them with a default 'free' plan.
       if (userForCreation && userForCreation.uid === uid) {
         return await createUserDocument(userForCreation);
       }
@@ -163,6 +166,8 @@ export const getUserData = async (uid: string, userForCreation?: FirebaseAuthUse
   }
 };
 
+
+// This function is no longer needed as the admin SDK handles it, but we keep it for reference.
 export const updateUserPlanByEmail = async (email: string, newPlan: 'monthly' | 'yearly'): Promise<boolean> => {
   if (!db) {
     console.error("Firestore is not configured. Cannot update user plan.");
@@ -182,7 +187,6 @@ export const updateUserPlanByEmail = async (email: string, newPlan: 'monthly' | 
       return false;
     }
 
-    // Assuming email is unique, update the first user found.
     const userDoc = querySnapshot.docs[0];
     const userRef = doc(db, 'users', userDoc.id);
 
