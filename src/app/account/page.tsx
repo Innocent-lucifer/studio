@@ -1,22 +1,24 @@
 
 "use client";
 
-import React, { useEffect } from 'react'; 
+import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { Icons } from '@/components/icons';
 import { AppLogo } from '@/components/AppLogo';
 import { HamburgerMenu } from '@/components/HamburgerMenu';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { useToast } from "@/hooks/use-toast";
 
 
 export default function AccountPage() {
   const { user, userData, loading: authLoading, logOut } = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -29,6 +31,31 @@ export default function AccountPage() {
     router.push('/login');
   };
 
+  const handleCheckout = (priceId: string) => {
+    if (!user) {
+      toast({
+        title: "Login Required",
+        description: "Please log in to choose a plan.",
+        variant: "destructive",
+      });
+      router.push('/login');
+      return;
+    }
+    if (window.Paddle) {
+      window.Paddle.Checkout.open({
+        items: [{ priceId, quantity: 1 }],
+        customer: {
+          email: user.email ?? undefined,
+        }
+      });
+    } else {
+      toast({
+        title: "Checkout Error",
+        description: "Payment system is not available. Please try again later.",
+        variant: "destructive",
+      });
+    }
+  };
 
   if (authLoading) {
     return (
@@ -38,11 +65,26 @@ export default function AccountPage() {
       </div>
     );
   }
-  
+
   const cardVariants = {
     initial: { opacity: 0, y: 20 },
     animate: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
   };
+
+  const plans = [
+    {
+      title: "Monthly",
+      price: "$19.99",
+      subtitle: "/month",
+      priceId: "pri_01jytrrggq73bfpd9bce3resb0",
+    },
+    {
+      title: "Yearly",
+      price: "$197",
+      subtitle: "/year (18% Off)",
+      priceId: "pri_01jytrs4wqac0a8pnyttzz34w1",
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col items-center p-4 sm:p-6 md:p-8">
@@ -68,7 +110,7 @@ export default function AccountPage() {
         <Card className="bg-slate-800/60 backdrop-blur-md border border-slate-700 shadow-xl rounded-xl">
           <CardHeader>
             <CardTitle className="text-2xl sm:text-3xl font-semibold text-primary">Account Overview</CardTitle>
-            <CardDescription className="text-slate-400">Manage your account details and saved content.</CardDescription>
+            <CardDescription className="text-slate-400">Manage your account details and subscription.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-2 p-4 bg-slate-700/50 rounded-lg border border-slate-600">
@@ -77,21 +119,45 @@ export default function AccountPage() {
                 <span className="font-semibold text-slate-100">Email:</span> {userData?.email || user?.email}
               </p>
               <p className="text-sm text-slate-300">
-                <span className="font-semibold text-slate-100">Phone:</span> <span className="text-slate-400 italic">N/A (Add phone number - Coming soon)</span>
-              </p>
-              <p className="text-sm text-slate-300">
                 <span className="font-semibold text-slate-100">UID:</span> <span className="text-xs">{user?.uid}</span>
               </p>
             </div>
 
-            <div className="space-y-2 p-4 bg-slate-700/50 rounded-lg border border-slate-600">
+            <div className="space-y-4 p-4 bg-slate-700/50 rounded-lg border border-slate-600">
               <h3 className="text-lg font-medium text-slate-200">Plan & Subscription</h3>
               <p className="text-sm text-slate-300">
                 Current Plan: <span className="font-semibold text-purple-400">{userData?.plan ? userData.plan.charAt(0).toUpperCase() + userData.plan.slice(1) : 'Loading...'}</span>
               </p>
-              <Button variant="outline" className="mt-2 w-full sm:w-auto border-primary text-primary hover:bg-primary/10 whitespace-normal h-auto py-2" disabled>
-                Manage Subscription (Coming Soon)
-              </Button>
+              
+              {userData?.plan === 'free' && (
+                <div className="pt-2">
+                  <h4 className="text-md font-semibold text-slate-100 mb-3">Upgrade Your Plan</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {plans.map(plan => (
+                       <Card key={plan.priceId} className="bg-slate-600/50 border-slate-500 text-center">
+                         <CardHeader className="p-4">
+                           <CardTitle className="text-lg text-primary">{plan.title}</CardTitle>
+                         </CardHeader>
+                         <CardContent className="p-4 pt-0">
+                           <p className="text-2xl font-bold text-slate-100">{plan.price}</p>
+                           <p className="text-xs text-slate-400">{plan.subtitle}</p>
+                         </CardContent>
+                         <CardFooter className="p-4">
+                           <Button onClick={() => handleCheckout(plan.priceId)} className="w-full bg-primary hover:bg-primary/90">
+                              Choose Plan
+                           </Button>
+                         </CardFooter>
+                       </Card>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {userData?.plan !== 'free' && (
+                 <Button onClick={() => window.Paddle?.Checkout.open({ settings: { theme: 'dark' } })} variant="outline" className="mt-2 w-full sm:w-auto border-primary text-primary hover:bg-primary/10">
+                    Manage Subscription
+                 </Button>
+              )}
             </div>
             
             <Separator className="bg-slate-700" />
@@ -111,6 +177,7 @@ export default function AccountPage() {
 
 
             <Separator className="bg-slate-700" />
+            
             <Button onClick={handleLogout} variant="destructive" className="w-full sm:w-auto">
               <Icons.logOut className="mr-2 h-5 w-5" /> Log Out
             </Button>
