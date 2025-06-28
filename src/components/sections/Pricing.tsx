@@ -133,11 +133,11 @@ export default function Pricing({ plans }: PricingProps) {
                 <Button 
                   onClick={() => handleCheckout(plan.priceId)}
                   size="lg" 
-                  className="w-full bg-primary text-primary-foreground hover:bg-primary/90 text-base mb-2 shadow-md"
+                  className="w-full bg-primary text-primary-foreground hover:bg-primary/90 text-base mb-2 shadow-lg shadow-primary/30"
                 >
                   Try 3 Days Free
                 </Button>
-                <p className="text-xs text-foreground/60 mb-8">No credit card required for trial.</p>
+                <p className="text-xs text-foreground/60 mb-8">No card required for trial.</p>
                 <ul className="text-left space-y-3">
                   {plan.features.map((feat, i) => (
                     <li
