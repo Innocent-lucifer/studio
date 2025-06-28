@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { findOrCreateUserForPurchase, updateUserPlanByUID } from '@/lib/firebaseAdminActions';
 
-// Hardcode the correct sandbox Price IDs to ensure a match.
+// These are the correct sandbox Price IDs you provided.
 const PADDLE_PRICE_IDS = {
   monthly: "pri_01jytrrggq73bfpd9bce3resb0",
   yearly: "pri_01jytrs4wqac0a8pnyttzz34w1",
@@ -61,10 +61,21 @@ async function handlePurchaseEvent(eventData: any, eventType: string) {
 }
 
 export async function POST(req: NextRequest) {
+  // --- Start of New Logging ---
+  console.log('--- PADDLE WEBHOOK ENDPOINT HIT ---');
+  let body;
   try {
-    const body = await req.json();
+    body = await req.json();
+    console.log('Received Paddle webhook with event_type:', body.event_type);
+    console.log('Webhook payload:', JSON.stringify(body, null, 2));
+  } catch (error: any) {
+    console.error('Error parsing Paddle webhook request body:', error.message);
+    return NextResponse.json({ message: 'Error parsing request body.' }, { status: 400 });
+  }
+  // --- End of New Logging ---
+  
+  try {
     const eventType = body.event_type;
-    console.log(`Received Paddle webhook: ${eventType}`);
 
     if (eventType === 'transaction.completed' || eventType === 'subscription.created') {
       if(body.data?.custom_data) {
