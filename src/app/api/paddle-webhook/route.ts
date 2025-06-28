@@ -1,6 +1,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
-import { updateUserPlanByEmail } from '@/lib/firebaseUserActions';
+import { findOrCreateUserForPurchase } from '@/lib/firebaseAdminActions';
+
 
 // IMPORTANT: This is a simplified webhook handler for demonstration.
 // In a production environment, you MUST verify the webhook signature from Paddle
@@ -37,14 +38,15 @@ export async function POST(req: NextRequest) {
       }
 
       if (newPlan) {
-        console.log(`Attempting to update plan for ${userEmail} to ${newPlan}`);
-        const success = await updateUserPlanByEmail(userEmail, newPlan);
+        console.log(`Attempting to find or create user for ${userEmail} with plan ${newPlan}`);
+        const { success, message } = await findOrCreateUserForPurchase(userEmail, newPlan);
         if (success) {
-          console.log(`Successfully updated plan for ${userEmail}.`);
-          return NextResponse.json({ message: 'User plan updated successfully.' }, { status: 200 });
+          console.log(`Webhook processed successfully: ${message}`);
+          return NextResponse.json({ message: 'Webhook processed successfully.' }, { status: 200 });
         } else {
-          console.error(`Failed to update plan for user: ${userEmail}`);
-          return NextResponse.json({ message: 'User not found or failed to update.' }, { status: 404 });
+          console.error(`Webhook processing failed: ${message}`);
+          // Return a 500 error because the server failed to process a valid request
+          return NextResponse.json({ message: `Webhook processing failed: ${message}` }, { status: 500 });
         }
       } else {
          console.warn(`Webhook received for an unknown or unhandled priceId: ${priceId}`);

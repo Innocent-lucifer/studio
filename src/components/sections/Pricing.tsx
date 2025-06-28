@@ -43,15 +43,11 @@ export default function Pricing({ plans }: PricingProps) {
   const router = useRouter();
 
   const handleCheckout = (priceId: string) => {
-    if (!user) {
-      router.push('/login');
-      return;
-    }
     if (window.Paddle) {
       window.Paddle.Checkout.open({
         items: [{ priceId, quantity: 1 }],
         customer: {
-          email: user.email,
+          email: user?.email ?? undefined,
         },
         settings: {
           successUrl: `${window.location.origin}/dashboard`
