@@ -92,10 +92,10 @@ export default function AccountPage() {
         "Quick Post Generator",
         "Smart Campaign Builder",
         "Upload image & get content ideas",
-        "Tone Styler (auto-matches human, casual, or pro)",
-        "Visibility Booster (adds optimal emojis & hashtags)",
-        "AI Post Editor (Auto cleans grammar & flow instantly)",
-        "Copy & export posts anytime",
+        "Tone Styler",
+        "Visibility Booster",
+        "AI Post Editor",
+        "Copy & export posts",
         "Post history access",
       ],
       priceId: process.env.NEXT_PUBLIC_PADDLE_SANDBOX_MONTHLY_PRICE_ID || "pri_01jytrrggq73bfpd9bce3resb0"
@@ -112,10 +112,10 @@ export default function AccountPage() {
         "Quick Post Generator",
         "Smart Campaign Builder",
         "Upload image & get content ideas",
-        "Tone Styler (auto-matches human, casual, or pro)",
-        "Visibility Booster (adds optimal emojis & hashtags)",
-        "AI Post Editor (Auto cleans grammar & flow instantly)",
-        "Copy & export posts anytime",
+        "Tone Styler",
+        "Visibility Booster",
+        "AI Post Editor",
+        "Copy & export posts",
         "Post history access",
       ],
       priceId: process.env.NEXT_PUBLIC_PADDLE_SANDBOX_YEARLY_PRICE_ID || "pri_01jytrs4wqac0a8pnyttzz34w1"
@@ -248,98 +248,98 @@ export default function AccountPage() {
 
     {/* Free plan -> Upgrade Modal */}
     <Dialog open={isPricingModalOpen} onOpenChange={setIsPricingModalOpen}>
-        <DialogContent className="bg-slate-800/80 backdrop-blur-md border-slate-700 text-white sm:max-w-md">
-            <DialogHeader>
-                <DialogTitle className="text-xl text-primary text-center">Upgrade Your Plan</DialogTitle>
-                <DialogDescription className="text-center text-slate-400 text-sm">
-                    Choose the plan that's right for you.
-                </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-                {plans.map(plan => (
-                    <Card key={plan.priceId} className={`relative bg-slate-700/60 border-slate-600 text-center flex flex-col p-6 ${plan.badge ? 'border-primary/80' : ''}`}>
-                        {plan.badge && (
-                            <Badge className="absolute -top-3 right-4 bg-primary text-primary-foreground">{plan.badge}</Badge>
-                        )}
-                        <CardHeader className="p-2">
-                            <CardTitle className="text-lg text-primary">{plan.title}</CardTitle>
-                            <p className="text-2xl font-bold text-slate-100 pt-1">{plan.price}</p>
-                            <p className="text-sm text-slate-400">{plan.subtitle}</p>
-                        </CardHeader>
-                        <CardContent className="p-2 flex-grow text-left">
-                           <ul className="space-y-2.5 text-sm my-4">
-                                {plan.features.slice(0, 4).map(feature => (
-                                    <li key={feature} className="flex items-start">
-                                        <Icons.checkCircle className="h-4 w-4 text-green-400 mr-2 mt-0.5 shrink-0" />
-                                        <span className="text-slate-300">{feature}</span>
-                                    </li>
-                                ))}
-                                <li className="text-center text-slate-400 text-xs">(and {plan.features.length - 4} more...)</li>
-                            </ul>
-                        </CardContent>
-                        <CardFooter className="p-2 pt-4 mt-auto">
-                            <Button onClick={() => { handleCheckout(plan.priceId); setIsPricingModalOpen(false); }} className="w-full bg-primary hover:bg-primary/90 text-md py-2.5">
-                                Choose Plan
-                            </Button>
-                        </CardFooter>
-                    </Card>
-                ))}
-            </div>
-             <DialogFooter className="sm:justify-start pt-2">
-              <DialogClose asChild>
-                <Button type="button" variant="secondary">
-                  Close
-                </Button>
-              </DialogClose>
-            </DialogFooter>
-        </DialogContent>
+      <DialogContent className="bg-slate-800/80 backdrop-blur-md border-slate-700 text-white sm:max-w-4xl">
+        <DialogHeader>
+          <DialogTitle className="text-2xl text-primary text-center">Upgrade Your Plan</DialogTitle>
+          <DialogDescription className="text-center text-slate-400 text-md">
+              Choose the plan that's right for you.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
+          {plans.map(plan => (
+            <Card key={plan.priceId} className={`relative bg-slate-700/60 border-slate-600 text-center flex flex-col p-6 ${plan.badge ? 'border-primary/80' : ''}`}>
+              {plan.badge && (
+                  <Badge className="absolute -top-3 right-4 bg-primary text-primary-foreground">{plan.badge}</Badge>
+              )}
+              <CardHeader className="p-2">
+                  <CardTitle className="text-xl text-primary">{plan.title}</CardTitle>
+                  <p className="text-3xl font-bold text-slate-100 pt-1">{plan.price}</p>
+                  <p className="text-sm text-slate-400">{plan.subtitle}</p>
+              </CardHeader>
+              <CardContent className="p-2 flex-grow">
+                  <ul className="space-y-3 text-sm my-4 text-left">
+                      {plan.features.slice(0, 4).map(feature => (
+                          <li key={feature} className="flex items-start">
+                              <Icons.checkCircle className="h-5 w-5 text-green-400 mr-2 mt-0.5 shrink-0" />
+                              <span className="text-slate-300">{feature}</span>
+                          </li>
+                      ))}
+                      <li className="text-center text-slate-400 text-xs">(and {plan.features.length - 4} more...)</li>
+                  </ul>
+              </CardContent>
+              <CardFooter className="p-2 pt-4 mt-auto">
+                  <Button onClick={() => { handleCheckout(plan.priceId); setIsPricingModalOpen(false); }} className="w-full bg-primary hover:bg-primary/90 text-lg py-3">
+                      Choose Plan
+                  </Button>
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
+        <DialogFooter className="sm:justify-start pt-2">
+            <DialogClose asChild>
+              <Button type="button" variant="secondary">
+                Close
+              </Button>
+            </DialogClose>
+        </DialogFooter>
+      </DialogContent>
     </Dialog>
     
     {/* Monthly plan -> Yearly Upgrade Modal */}
     <Dialog open={isYearlyUpgradeModalOpen} onOpenChange={setIsYearlyUpgradeModalOpen}>
-        <DialogContent className="bg-slate-800/80 backdrop-blur-md border-slate-700 text-white sm:max-w-md">
-            <DialogHeader>
-                <DialogTitle className="text-xl text-primary text-center">Upgrade to Yearly & Save!</DialogTitle>
-                <DialogDescription className="text-center text-slate-400 text-sm">
-                    Get all the same great features and save 18% by switching to our yearly plan.
-                </DialogDescription>
-            </DialogHeader>
-            {yearlyPlan && (
-                <div className="py-4">
-                    <Card key={yearlyPlan.priceId} className="relative bg-slate-700/60 border-slate-600 text-center flex flex-col p-6 border-primary/80">
-                        <Badge className="absolute -top-3 right-4 bg-primary text-primary-foreground">{yearlyPlan.badge}</Badge>
-                        <CardHeader className="p-2">
-                            <CardTitle className="text-lg text-primary">{yearlyPlan.title}</CardTitle>
-                            <p className="text-2xl font-bold text-slate-100 pt-1">{yearlyPlan.price}</p>
-                            <p className="text-sm text-slate-400">{yearlyPlan.subtitle}</p>
-                        </CardHeader>
-                        <CardContent className="p-2 flex-grow text-left">
-                            <ul className="space-y-2.5 text-sm my-4">
-                                {yearlyPlan.features.slice(0, 4).map(feature => (
-                                    <li key={feature} className="flex items-start">
-                                        <Icons.checkCircle className="h-4 w-4 text-green-400 mr-2 mt-0.5 shrink-0" />
-                                        <span className="text-slate-300">{feature}</span>
-                                    </li>
-                                ))}
-                                 <li className="text-center text-slate-400 text-xs">(and {yearlyPlan.features.length - 4} more...)</li>
-                            </ul>
-                        </CardContent>
-                        <CardFooter className="p-2 pt-4 mt-auto">
-                            <Button onClick={() => { handleCheckout(yearlyPlan.priceId); setIsYearlyUpgradeModalOpen(false); }} className="w-full bg-primary hover:bg-primary/90 text-md py-2.5">
-                                Upgrade to Yearly
-                            </Button>
-                        </CardFooter>
-                    </Card>
-                </div>
-            )}
-            <DialogFooter className="sm:justify-start pt-2">
-              <DialogClose asChild>
-                <Button type="button" variant="secondary">
-                  Close
-                </Button>
-              </DialogClose>
-            </DialogFooter>
-        </DialogContent>
+      <DialogContent className="bg-slate-800/80 backdrop-blur-md border-slate-700 text-white sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="text-2xl text-primary text-center">Upgrade to Yearly & Save!</DialogTitle>
+          <DialogDescription className="text-center text-slate-400 text-md">
+              Get all the same great features and save 18% by switching to our yearly plan.
+          </DialogDescription>
+        </DialogHeader>
+        {yearlyPlan && (
+          <div className="py-4">
+            <Card key={yearlyPlan.priceId} className="relative bg-slate-700/60 border-slate-600 text-center flex flex-col p-6 border-primary/80">
+              <Badge className="absolute -top-3 right-4 bg-primary text-primary-foreground">{yearlyPlan.badge}</Badge>
+              <CardHeader className="p-2">
+                  <CardTitle className="text-xl text-primary">{yearlyPlan.title}</CardTitle>
+                  <p className="text-3xl font-bold text-slate-100 pt-1">{yearlyPlan.price}</p>
+                  <p className="text-sm text-slate-400">{yearlyPlan.subtitle}</p>
+              </CardHeader>
+              <CardContent className="p-2 flex-grow">
+                  <ul className="space-y-3 text-sm my-4 text-left">
+                      {yearlyPlan.features.slice(0, 4).map(feature => (
+                          <li key={feature} className="flex items-start">
+                              <Icons.checkCircle className="h-5 w-5 text-green-400 mr-2 mt-0.5 shrink-0" />
+                              <span className="text-slate-300">{feature}</span>
+                          </li>
+                      ))}
+                      <li className="text-center text-slate-400 text-xs">(and {yearlyPlan.features.length - 4} more...)</li>
+                  </ul>
+              </CardContent>
+              <CardFooter className="p-2 pt-4 mt-auto">
+                  <Button onClick={() => { handleCheckout(yearlyPlan.priceId); setIsYearlyUpgradeModalOpen(false); }} className="w-full bg-primary hover:bg-primary/90 text-lg py-3">
+                      Upgrade to Yearly
+                  </Button>
+              </CardFooter>
+            </Card>
+          </div>
+        )}
+        <DialogFooter className="sm:justify-start pt-2">
+            <DialogClose asChild>
+              <Button type="button" variant="secondary">
+                Close
+              </Button>
+            </DialogClose>
+        </DialogFooter>
+      </DialogContent>
     </Dialog>
 
     {/* Refund Modal */}
@@ -365,3 +365,5 @@ export default function AccountPage() {
     </>
   );
 }
+
+    
