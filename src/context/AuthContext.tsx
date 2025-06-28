@@ -13,7 +13,7 @@ import {
   sendPasswordResetEmail,
   GoogleAuthProvider
 } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { auth, isFirebaseConfigured } from '@/lib/firebase';
 import { useToast } from "@/hooks/use-toast";
 import { getUserData, type UserData } from '@/lib/firebaseUserActions';
 
@@ -37,6 +37,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const { toast } = useToast();
 
   useEffect(() => {
+    if (!isFirebaseConfigured || !auth) {
+        setLoading(false);
+        return;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       try {
         setUser(currentUser);
@@ -65,6 +70,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, [toast]);
 
   const signUp = async (email: string, pass: string): Promise<User | null> => {
+    if (!auth) throw new Error("Firebase is not configured.");
     setLoading(true);
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
@@ -83,6 +89,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const logIn = async (email: string, pass: string): Promise<User | null> => {
+    if (!auth) throw new Error("Firebase is not configured.");
     setLoading(true);
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, pass);
@@ -101,6 +108,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const signInWithGoogle = async (): Promise<User | null> => {
+    if (!auth) throw new Error("Firebase is not configured.");
     setLoading(true);
     const googleProviderInstance = new GoogleAuthProvider();
     googleProviderInstance.setCustomParameters({ prompt: 'select_account' });
@@ -121,6 +129,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const logOut = async () => {
+    if (!auth) throw new Error("Firebase is not configured.");
     setLoading(true);
     try {
       await signOut(auth);
@@ -135,6 +144,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const sendPasswordReset = async (email: string): Promise<{ success: boolean; error?: AuthError | null }> => {
+    if (!auth) throw new Error("Firebase is not configured.");
     setLoading(true);
     try {
       await sendPasswordResetEmail(auth, email);

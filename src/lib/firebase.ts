@@ -1,6 +1,6 @@
 
 import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
-import { getAuth, Auth, GoogleAuthProvider } from 'firebase/auth';
+import { getAuth, Auth } from 'firebase/auth';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -12,14 +12,33 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
-let app: FirebaseApp;
-if (!getApps().length) {
-  app = initializeApp(firebaseConfig);
+// Check if the essential Firebase config keys are provided
+const isFirebaseConfigured = !!firebaseConfig.apiKey && !!firebaseConfig.projectId;
+
+let app: FirebaseApp | null = null;
+let auth: Auth | null = null;
+
+if (isFirebaseConfigured) {
+  if (!getApps().length) {
+    try {
+      app = initializeApp(firebaseConfig);
+    } catch (e) {
+      console.error("Firebase initialization error:", e);
+    }
+  } else {
+    app = getApps()[0];
+  }
+
+  if (app) {
+    auth = getAuth(app);
+  }
 } else {
-  app = getApps()[0];
+    // This warning will be shown in the server/build console
+    console.warn(`
+      ACTION REQUIRED: Firebase is not configured.
+      Authentication and database features will be disabled.
+      Please copy .env.example to .env and add your Firebase project credentials.
+    `);
 }
 
-const auth: Auth = getAuth(app);
-// googleProvider is no longer exported from here, it will be instantiated in AuthContext
-
-export { app, auth };
+export { app, auth, isFirebaseConfigured };

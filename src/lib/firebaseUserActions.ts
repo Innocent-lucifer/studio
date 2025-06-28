@@ -1,5 +1,5 @@
 
-import { app, auth } from '@/lib/firebase';
+import { app, isFirebaseConfigured } from '@/lib/firebase';
 import {
   getFirestore,
   doc,
@@ -17,13 +17,21 @@ import {
   addDoc,
   orderBy,
   where,
+  type Firestore,
 } from 'firebase/firestore';
 import type { User as FirebaseAuthUser } from 'firebase/auth';
 import type { ContentAngle } from '@/ai/flows/suggest-content-angles';
 import type { RepurposingIdea } from '@/ai/flows/suggest-repurposing-ideas';
 
 
-const db = getFirestore(app);
+let db: Firestore | null = null;
+if (isFirebaseConfigured && app) {
+    try {
+        db = getFirestore(app);
+    } catch (e) {
+        console.error("Firestore initialization error:", e);
+    }
+}
 
 export interface UserData {
   uid: string;
@@ -74,6 +82,10 @@ export const createUserDocument = async (
   user: FirebaseAuthUser,
   referredByCode?: string
 ): Promise<UserData | null> => {
+  if (!db) {
+    console.warn("Firestore is not configured. Skipping createUserDocument.");
+    return null;
+  }
   if (!user) return null;
   const userRef = doc(db, 'users', user.uid) as DocumentReference<UserData>;
 
@@ -126,6 +138,10 @@ export const createUserDocument = async (
 };
 
 export const getUserData = async (uid: string, userForCreation?: FirebaseAuthUser): Promise<UserData | null> => {
+  if (!db) {
+    console.warn("Firestore is not configured. Skipping getUserData.");
+    return null;
+  }
   if (!uid) return null;
   const userRef = doc(db, 'users', uid) as DocumentReference<UserData>;
   try {
@@ -148,6 +164,10 @@ export const getUserData = async (uid: string, userForCreation?: FirebaseAuthUse
 };
 
 export const updateUserPlanByEmail = async (email: string, newPlan: 'monthly' | 'yearly'): Promise<boolean> => {
+  if (!db) {
+    console.error("Firestore is not configured. Cannot update user plan.");
+    return false;
+  }
   if (!email) {
     console.error("Email is required to update a user's plan.");
     return false;
@@ -184,6 +204,10 @@ export const saveDraft = async (
   userId: string,
   draftData: Omit<Draft, 'id' | 'userId' | 'createdAt' | 'updatedAt'>
 ): Promise<Draft | null> => {
+  if (!db) {
+    console.warn("Firestore is not configured. Skipping saveDraft.");
+    return null;
+  }
   if (!userId) {
     console.error("User ID is required to save a draft.");
     return null;
@@ -205,6 +229,10 @@ export const saveDraft = async (
 };
 
 export const getDrafts = async (userId: string): Promise<Draft[]> => {
+  if (!db) {
+    console.warn("Firestore is not configured. Skipping getDrafts.");
+    return [];
+  }
   if (!userId) return [];
   try {
     const draftsCollectionRef = collection(db, 'users', userId, 'drafts');
@@ -222,6 +250,10 @@ export const updateDraftContent = async (
   draftId: string,
   newContent: string
 ): Promise<boolean> => {
+  if (!db) {
+    console.warn("Firestore is not configured. Skipping updateDraftContent.");
+    return false;
+  }
   if (!userId || !draftId) return false;
   try {
     const draftRef = doc(db, 'users', userId, 'drafts', draftId);
@@ -237,6 +269,10 @@ export const updateDraftContent = async (
 };
 
 export const deleteDraft = async (userId: string, draftId: string): Promise<boolean> => {
+  if (!db) {
+    console.warn("Firestore is not configured. Skipping deleteDraft.");
+    return false;
+  }
   if (!userId || !draftId) return false;
   try {
     const draftRef = doc(db, 'users', userId, 'drafts', draftId);
@@ -254,6 +290,10 @@ export const saveCampaignDraft = async (
   campaignData: Omit<CampaignDraft, 'id' | 'userId' | 'createdAt' | 'updatedAt'>,
   existingCampaignId?: string | null
 ): Promise<{ id: string } | null> => {
+  if (!db) {
+    console.warn("Firestore is not configured. Skipping saveCampaignDraft.");
+    return null;
+  }
   if (!userId) return null;
 
   const dataPayload = {
@@ -286,6 +326,10 @@ export const saveCampaignDraft = async (
 
 
 export const getCampaignDrafts = async (userId: string): Promise<CampaignDraft[]> => {
+  if (!db) {
+    console.warn("Firestore is not configured. Skipping getCampaignDrafts.");
+    return [];
+  }
   if (!userId) return [];
   try {
     const campaignDraftsCollectionRef = collection(db, 'users', userId, 'campaignDrafts');
@@ -299,6 +343,10 @@ export const getCampaignDrafts = async (userId: string): Promise<CampaignDraft[]
 };
 
 export const getCampaignDraftById = async (userId: string, campaignDraftId: string): Promise<CampaignDraft | null> => {
+  if (!db) {
+    console.warn("Firestore is not configured. Skipping getCampaignDraftById.");
+    return null;
+  }
   if (!userId || !campaignDraftId) return null;
   try {
     const campaignDraftRef = doc(db, 'users', userId, 'campaignDrafts', campaignDraftId) as DocumentReference<CampaignDraft>;
@@ -311,6 +359,10 @@ export const getCampaignDraftById = async (userId: string, campaignDraftId: stri
 };
 
 export const deleteCampaignDraft = async (userId: string, campaignDraftId: string): Promise<boolean> => {
+  if (!db) {
+    console.warn("Firestore is not configured. Skipping deleteCampaignDraft.");
+    return false;
+  }
   if (!userId || !campaignDraftId) return false;
   try {
     const campaignDraftRef = doc(db, 'users', userId, 'campaignDrafts', campaignDraftId);
