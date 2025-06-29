@@ -4,7 +4,6 @@ import React from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
 
 export default function CTA() {
   return (
@@ -25,11 +24,18 @@ export default function CTA() {
           Join early users who are already transforming their content flow with
           SagePostAI.
         </p>
-        <Button asChild size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 transition-transform duration-200 hover:scale-105 shadow-lg shadow-primary/20">
-          <Link href="/login">
-            Start Your Free 3-Day Trial – No Card Needed
-          </Link>
-        </Button>
+        
+        <div className="flex flex-col items-center gap-3">
+          <Button asChild size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 transition-transform duration-200 hover:scale-105 shadow-lg shadow-primary/20">
+            <Link href="/login">
+              Try 3 Days Free
+            </Link>
+          </Button>
+          <p className="text-sm text-accent font-semibold drop-shadow-[0_0_8px_hsl(var(--accent)/0.5)]">
+              No card required for trial.
+          </p>
+        </div>
+
       </motion.div>
     </section>
   );
