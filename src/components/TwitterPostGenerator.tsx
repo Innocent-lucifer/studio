@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { generateTwitterPosts } from "@/ai/flows/generate-twitter-posts";
+import { generateTwitterPosts, regenerateTwitterPosts } from "@/ai/flows/generate-twitter-posts";
 import { motion } from 'framer-motion';
 import { useToast } from "@/hooks/use-toast";
 import { Icons } from "./icons";
@@ -100,9 +100,54 @@ export const TwitterPostGenerator: React.FC<TwitterPostGeneratorProps> = ({
     }
   }, [topic, userId, initialGenerationProcessedForTopic, isLoading, callGenerateFlow]);
 
-  const handleRegenerate = () => {
-     setParentPostsEmpty(); 
-     callGenerateFlow(); 
+  const handleRegenerate = async () => {
+     setParentPostsEmpty();
+     if (!topic || !userId || userId === "sagepostai-guest-user") {
+        toast({
+          title: "Login Required",
+          description: "Please log in to regenerate posts.",
+          variant: "destructive",
+          iconType: 'lock'
+        });
+        return;
+      }
+      
+      setIsLoading(true);
+      setGeneratedPostsInternal([]);
+      setError(null);
+      setTwitterPosts([]);
+  
+      try {
+        const result = await regenerateTwitterPosts({ 
+          topic: topic, 
+          topicDisplay: topic, 
+          numPosts: 3, 
+          userId,
+        });
+  
+        if (result.error) {
+           setError(result.error);
+           toast({ variant: "destructive", title: "Regeneration Error", description: result.error, iconType: 'alertTriangle' });
+           setGeneratedPostsInternal([]);
+           setTwitterPosts([]);
+        } else {
+          setGeneratedPostsInternal(result.posts || []);
+          setTwitterPosts(result.posts || []);
+        }
+      } catch (error: any) {
+        const errorMessage = error.message || "Failed to regenerate posts.";
+        setError(errorMessage);
+        toast({
+          variant: "destructive",
+          title: "Regeneration Failed",
+          description: errorMessage,
+          iconType: 'alertTriangle'
+        });
+        setGeneratedPostsInternal([]);
+        setTwitterPosts([]); 
+      } finally {
+        setIsLoading(false);
+      }
   };
   
   const showPostsInThisCard = displayGeneratedPostsInCard && generatedPostsInternal.length > 0;

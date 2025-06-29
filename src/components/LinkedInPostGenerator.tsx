@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { generateLinkedInPosts } from "@/ai/flows/generate-linkedin-posts";
+import { generateLinkedInPosts, regenerateLinkedInPosts } from "@/ai/flows/generate-linkedin-posts";
 import { motion } from 'framer-motion';
 import { useToast } from "@/hooks/use-toast";
 import { Icons } from "./icons";
@@ -96,8 +96,42 @@ export const LinkedInPostGenerator: React.FC<LinkedInPostGeneratorProps> = ({
 
 
   const handleRegenerate = async () => {
-    setParentPostsEmpty(); 
-    callGenerateFlow();
+    setParentPostsEmpty();
+    if (!topic || !userId || userId === "sagepostai-guest-user") {
+      toast({
+        title: "Login Required",
+        description: "Please log in to regenerate posts.",
+        variant: "destructive",
+        iconType: 'lock'
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    setGeneratedPostsInternal([]);
+    setError(null);
+    setLinkedinPosts([]);
+
+    try {
+      const result = await regenerateLinkedInPosts({ topic, numPosts: 3, userId });
+      if (result.error) {
+         setError(result.error);
+         toast({ variant: "destructive", title: "Regeneration Error", description: result.error, iconType: 'alertTriangle' });
+         setGeneratedPostsInternal([]);
+         setLinkedinPosts([]);
+      } else {
+        setGeneratedPostsInternal(result.posts || []);
+        setLinkedinPosts(result.posts || []);
+      }
+    } catch (error: any) {
+       const errorMessage = error.message || "Failed to regenerate posts.";
+       setError(errorMessage);
+       toast({ variant: "destructive", title: "Regeneration Failed", description: errorMessage, iconType: 'alertTriangle'});
+       setGeneratedPostsInternal([]);
+       setLinkedinPosts([]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const showPostsInThisCard = displayGeneratedPostsInCard && generatedPostsInternal.length > 0;

@@ -1,11 +1,12 @@
 
 'use server';
 /**
- * @fileOverview Generates multiple Twitter posts based on a researched topic with varying tones and angles.
+ * @fileOverview Generates multiple Twitter posts based on a researched topic.
  *
- * - generateTwitterPosts - A function that generates Twitter posts.
- * - GenerateTwitterPostsInput - The input type for the generateTwitterPosts function.
- * - GenerateTwitterPostsOutput - The return type for the generateTwitterPosts function.
+ * - generateTwitterPosts - A function that generates Twitter posts automatically after research.
+ * - regenerateTwitterPosts - A function for manual regeneration, which counts as a new usage.
+ * - GenerateTwitterPostsInput - The input type for the functions.
+ * - GenerateTwitterPostsOutput - The return type for the functions.
  */
 
 import {ai}from '@/ai/ai-instance';
@@ -29,9 +30,16 @@ const GenerateTwitterPostsOutputSchema = z.object({
 });
 export type GenerateTwitterPostsOutput = z.infer<typeof GenerateTwitterPostsOutputSchema>;
 
+// This is for the initial automatic generation (no credit cost)
 export async function generateTwitterPosts(input: GenerateTwitterPostsInput): Promise<GenerateTwitterPostsOutput> {
   return generateTwitterPostsFlow(input);
 }
+
+// This is for manual regeneration (costs a credit)
+export async function regenerateTwitterPosts(input: GenerateTwitterPostsInput): Promise<GenerateTwitterPostsOutput> {
+    return regenerateTwitterPostsFlow(input);
+}
+
 
 const generateTwitterPostsPrompt = ai.definePrompt({
   name: 'generateTwitterPostsPrompt',
@@ -77,25 +85,9 @@ Posts:`,
   },
 });
 
-const generateTwitterPostsFlow = ai.defineFlow(
-  {
-    name: 'generateTwitterPostsFlow',
-    inputSchema: GenerateTwitterPostsInputSchema,
-    outputSchema: GenerateTwitterPostsOutputSchema,
-  },
-  async (input) => {
-    if (!input.userId) {
-      return { error: "User ID is required for this operation." };
-    }
-    const usageCheck = await checkAndIncrementUsage(input.userId);
-    if (!usageCheck.canProceed) {
-      return { error: usageCheck.error };
-    }
-    
+const commonGenerationLogic = async (input: GenerateTwitterPostsInput): Promise<GenerateTwitterPostsOutput> => {
     try {
       let researchedInformation = input.topic;
-      // The research part of the flow is now simplified, as the initial call comes from the UI
-      // which has already done the research. This is just a fallback.
       if (((!input.topicDisplay && input.topic.length < 100) || (input.topicDisplay && input.topic.length < 100 && input.topic === input.topicDisplay))) {
         const researchedInfoResult = await researchTopic({ topic: input.topic, userId: input.userId });
         if (!researchedInfoResult.error) {
@@ -120,5 +112,33 @@ const generateTwitterPostsFlow = ai.defineFlow(
     } catch (e: any) {
       return { error: e.message || "An unexpected error occurred during Twitter post generation." };
     }
-  }
+}
+
+// Flow for automatic generation (NO usage check)
+const generateTwitterPostsFlow = ai.defineFlow(
+  {
+    name: 'generateTwitterPostsFlow',
+    inputSchema: GenerateTwitterPostsInputSchema,
+    outputSchema: GenerateTwitterPostsOutputSchema,
+  },
+  commonGenerationLogic
+);
+
+// Flow for regeneration (WITH usage check)
+const regenerateTwitterPostsFlow = ai.defineFlow(
+    {
+        name: 'regenerateTwitterPostsFlow',
+        inputSchema: GenerateTwitterPostsInputSchema,
+        outputSchema: GenerateTwitterPostsOutputSchema,
+    },
+    async (input) => {
+        if (!input.userId) {
+            return { error: "User ID is required for this operation." };
+        }
+        const usageCheck = await checkAndIncrementUsage(input.userId);
+        if (!usageCheck.canProceed) {
+            return { error: usageCheck.error };
+        }
+        return commonGenerationLogic(input);
+    }
 );

@@ -4,8 +4,9 @@
  * @fileOverview A LinkedIn post generator AI agent.
  *
  * - generateLinkedInPosts - A function that handles the LinkedIn post generation process.
- * - GenerateLinkedInPostsInput - The input type for the generateLinkedInPosts function.
- * - GenerateLinkedInPostsOutput - The return type for the generateLinkedInPosts function.
+ * - regenerateLinkedInPosts - A function that handles regeneration, which counts as a new usage.
+ * - GenerateLinkedInPostsInput - The input type for the functions.
+ * - GenerateLinkedInPostsOutput - The return type for the functions.
  */
 
 import {ai}from '@/ai/ai-instance';
@@ -27,8 +28,14 @@ const GenerateLinkedInPostsOutputSchema = z.object({
 });
 export type GenerateLinkedInPostsOutput = z.infer<typeof GenerateLinkedInPostsOutputSchema>;
 
+// This is for the initial automatic generation (no credit cost)
 export async function generateLinkedInPosts(input: GenerateLinkedInPostsInput): Promise<GenerateLinkedInPostsOutput> {
   return generateLinkedInPostsFlow(input);
+}
+
+// This is for manual regeneration (costs a credit)
+export async function regenerateLinkedInPosts(input: GenerateLinkedInPostsInput): Promise<GenerateLinkedInPostsOutput> {
+    return regenerateLinkedInPostsFlow(input);
 }
 
 const prompt = ai.definePrompt({
@@ -76,21 +83,8 @@ Post {{this}}:
   },
 });
 
-const generateLinkedInPostsFlow = ai.defineFlow(
-  {
-    name: 'generateLinkedInPostsFlow',
-    inputSchema: GenerateLinkedInPostsInputSchema,
-    outputSchema: GenerateLinkedInPostsOutputSchema,
-  },
-  async (input) => {
-    if (!input.userId) {
-      return { error: "User ID is required for this operation." };
-    }
-    const usageCheck = await checkAndIncrementUsage(input.userId);
-    if (!usageCheck.canProceed) {
-      return { error: usageCheck.error };
-    }
 
+const commonGenerationLogic = async (input: GenerateLinkedInPostsInput): Promise<GenerateLinkedInPostsOutput> => {
     try {
       let researchedInformation = input.topic;
       if (((!input.topicDisplay && input.topic.length < 100) || (input.topicDisplay && input.topic.length < 100 && input.topic === input.topicDisplay))) {
@@ -127,8 +121,36 @@ const generateLinkedInPostsFlow = ai.defineFlow(
       };
 
     } catch (e: any) {
-      console.error("[generateLinkedInPostsFlow] Error:", e);
+      console.error("[commonGenerationLogic LinkedIn] Error:", e);
       return { error: e.message || "An unexpected error occurred during LinkedIn post generation." };
     }
+}
+
+// Flow for automatic generation (NO usage check)
+const generateLinkedInPostsFlow = ai.defineFlow(
+  {
+    name: 'generateLinkedInPostsFlow',
+    inputSchema: GenerateLinkedInPostsInputSchema,
+    outputSchema: GenerateLinkedInPostsOutputSchema,
+  },
+  commonGenerationLogic
+);
+
+// Flow for regeneration (WITH usage check)
+const regenerateLinkedInPostsFlow = ai.defineFlow(
+  {
+    name: 'regenerateLinkedInPostsFlow',
+    inputSchema: GenerateLinkedInPostsInputSchema,
+    outputSchema: GenerateLinkedInPostsOutputSchema,
+  },
+  async (input) => {
+    if (!input.userId) {
+      return { error: "User ID is required for this operation." };
+    }
+    const usageCheck = await checkAndIncrementUsage(input.userId);
+    if (!usageCheck.canProceed) {
+      return { error: usageCheck.error };
+    }
+    return commonGenerationLogic(input);
   }
 );
