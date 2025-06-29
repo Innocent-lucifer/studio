@@ -58,7 +58,7 @@ Researched Context:
 Suggest {{numAngles}} content angles:
 `,
   promptOptions: {
-    temperature: 0.7,
+    temperature: 0.9,
   },
 });
 

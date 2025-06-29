@@ -63,6 +63,9 @@ Based on all available information (your general knowledge, recent news, and Twi
 - Make the summary useful for someone wanting to create social media posts about the topic.
 
 Summary:`,
+  promptOptions: {
+    temperature: 0.9,
+  },
 });
 
 const researchTopicFlow = ai.defineFlow(

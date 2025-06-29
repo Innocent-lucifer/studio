@@ -78,7 +78,7 @@ Remember to format your entire response as a JSON object with a "series" key. Fo
 }
 `,
   promptOptions: {
-    temperature: 1.0, 
+    temperature: 0.9, 
     safetySettings: [
       { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
       { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },

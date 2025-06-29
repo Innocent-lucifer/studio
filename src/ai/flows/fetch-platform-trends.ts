@@ -96,7 +96,7 @@ If {{platform}} is Twitter, make trends sound like they'd appear on Twitter (e.g
 If {{platform}} is LinkedIn, make trends sound professional and business-oriented.
 `,
   promptOptions: {
-    temperature: 0.7,
+    temperature: 0.9,
   }
 });
 

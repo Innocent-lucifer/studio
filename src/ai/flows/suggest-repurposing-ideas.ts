@@ -67,7 +67,7 @@ For each of the {{numIdeas}} strategies, you must provide the following:
 Your output must be a valid JSON object with a single "ideas" key, containing an array of these strategy objects.
 `,
   promptOptions: {
-    temperature: 0.8,
+    temperature: 0.9,
   },
 });
 

@@ -53,7 +53,7 @@ Your entire output should be only the edited post content.
 
 Edited Post:`,
   promptOptions: {
-    temperature: 0.7,
+    temperature: 0.9,
     safetySettings: [
       { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
       { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
