@@ -17,6 +17,7 @@ const generateReferralCode = (length = 8): string => {
 /**
  * Updates a user's plan in Firestore using their Firebase UID.
  * This is the primary and most reliable method for updating user data after a purchase.
+ * This version is resilient to race conditions where the user document might not exist yet.
  * @param uid The user's Firebase UID.
  * @param newPlan The plan they purchased.
  * @returns { success: boolean, message: string }
@@ -25,7 +26,7 @@ export async function updateUserPlanByUID(
   uid: string,
   newPlan: 'monthly' | 'yearly'
 ): Promise<{ success: boolean; message: string }> {
-  if (!adminDb) {
+  if (!adminDb || !adminAuth) {
     const errorMessage = 'Firebase Admin SDK is not initialized. Cannot process purchase.';
     console.error(errorMessage);
     return { success: false, message: errorMessage };
@@ -36,17 +37,45 @@ export async function updateUserPlanByUID(
 
   try {
     const userRef = adminDb.collection('users').doc(uid);
-    await userRef.update({
-      plan: newPlan,
-      updatedAt: Timestamp.now(),
-    });
-    console.log(`Updated plan for user UID: ${uid} to ${newPlan}`);
-    return { success: true, message: `Updated plan for user ${uid}.` };
+    const docSnap = await userRef.get();
+
+    if (docSnap.exists()) {
+      // User document exists, just update the plan.
+      await userRef.update({
+        plan: newPlan,
+        updatedAt: Timestamp.now(),
+        // Reset trial data upon upgrade
+        generationsUsed: 0,
+      });
+      console.log(`Updated plan for existing user UID: ${uid} to ${newPlan}`);
+    } else {
+      // User document does NOT exist. Create it. This handles the race condition.
+      console.warn(`User document for UID ${uid} not found. Creating it now.`);
+      const userRecord = await adminAuth.getUser(uid); // Get auth record to find email
+      const email = userRecord.email;
+
+      const newUserDoc: UserData = {
+        uid: uid,
+        email: email || null,
+        displayName: userRecord.displayName || email?.split('@')[0] || 'SageUser',
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+        plan: newPlan, // Set their purchased plan
+        referralCode: generateReferralCode(),
+        referralsMade: 0,
+        // No trial data needed as they have a paid plan
+      };
+      await userRef.set(newUserDoc);
+      console.log(`Created new user document for UID: ${uid} with plan ${newPlan}`);
+    }
+
+    return { success: true, message: `Successfully set plan for user ${uid}.` };
   } catch (error: any) {
-    console.error(`Error updating plan for user UID ${uid}:`, error);
+    console.error(`Error processing plan update for user UID ${uid}:`, error);
     return { success: false, message: `Failed to update plan for user ${uid}: ${error.message}` };
   }
 }
+
 
 /**
  * Finds a user by email. If they exist, updates their plan.
@@ -76,21 +105,14 @@ export async function findOrCreateUserForPurchase(
   try {
     // 1. Check if user exists in Firebase Auth
     const userRecord = await adminAuth.getUserByEmail(email);
-    const userRef = adminDb.collection('users').doc(userRecord.uid);
-    
-    // 2. User exists, update their plan
-    await userRef.update({
-      plan: newPlan,
-      updatedAt: Timestamp.now(),
-    });
-
-    console.log(`Updated plan for existing user: ${email} to ${newPlan}`);
-    return { success: true, message: `Updated plan for existing user ${email}.` };
+    // User exists in Auth, use the robust updateUserPlanByUID to handle Firestore doc.
+    return await updateUserPlanByUID(userRecord.uid, newPlan);
 
   } catch (error: any) {
     // 3. User does not exist, create them
     if (error.code === 'auth/user-not-found') {
       try {
+        console.log(`User with email ${email} not found. Creating new auth user.`);
         const newUserRecord = await adminAuth.createUser({
           email: email,
           emailVerified: true, // Since they paid, we can assume email is valid
@@ -111,8 +133,8 @@ export async function findOrCreateUserForPurchase(
 
         await userRef.set(newUserDoc);
         
-        // TODO: In a real app, send a welcome email with a password setup link.
-        // For now, we log it.
+        // In a real app, you would use a service like SendGrid or Resend
+        // to send a welcome email with a password setup link.
         const passwordResetLink = await adminAuth.generatePasswordResetLink(email);
         console.log(`
           ACTION REQUIRED: A new user signed up via Paddle!
