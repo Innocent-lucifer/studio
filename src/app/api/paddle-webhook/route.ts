@@ -11,19 +11,37 @@ const PADDLE_PRICE_IDS = {
 
 async function handlePurchaseEvent(eventData: any, eventType: string) {
   console.log(`[Webhook] Handling event: ${eventType}`);
-  const userId = eventData.custom_data?.userId;
+  
+  // Robustly parse custom_data
+  const rawCustomData = eventData.custom_data;
+  let parsedCustomData: { userId?: string } = {};
+
+  if (rawCustomData) {
+    if (typeof rawCustomData === 'string') {
+      try {
+        parsedCustomData = JSON.parse(rawCustomData);
+        console.log('[Webhook] Successfully parsed stringified custom_data.');
+      } catch (e) {
+        console.error('[Webhook] FAILED to parse custom_data string:', rawCustomData, e);
+      }
+    } else if (typeof rawCustomData === 'object' && rawCustomData !== null) {
+      parsedCustomData = rawCustomData;
+      console.log('[Webhook] custom_data is already an object.');
+    }
+  }
+
+  const userId = parsedCustomData?.userId;
   const userEmail = eventData.customer?.email;
   const priceId = eventData.items?.[0]?.price?.id;
 
   console.log(`[Webhook] Extracted Info: UserID=${userId}, Email=${userEmail}, PriceID=${priceId}`);
-
 
   let newPlan: 'monthly' | 'yearly' | undefined;
   if (priceId === PADDLE_PRICE_IDS.monthly) newPlan = 'monthly';
   if (priceId === PADDLE_PRICE_IDS.yearly) newPlan = 'yearly';
 
   if (!newPlan) {
-    console.warn(`[Webhook] Received for unhandled priceId: ${priceId}. Ignoring.`);
+    console.warn(`[Webhook] Received webhook for an unhandled priceId: ${priceId}. Ignoring.`);
     return NextResponse.json({ message: 'Webhook acknowledged, but price ID is not handled.' }, { status: 200 });
   }
 
@@ -42,7 +60,7 @@ async function handlePurchaseEvent(eventData: any, eventType: string) {
   }
 
   if (userEmail) {
-    console.log(`[Webhook] Processing purchase for Email: ${userEmail} with plan ${newPlan}. (Fallback)`);
+    console.log(`[Webhook] Processing purchase for Email: ${userEmail} with plan ${newPlan}. (Fallback because no UID was found)`);
     const { success, message } = await findOrCreateUserForPurchase(userEmail, newPlan);
     if (success) {
       console.log(`[Webhook] Successfully processed via email fallback for ${userEmail}: ${message}`);
@@ -53,7 +71,7 @@ async function handlePurchaseEvent(eventData: any, eventType: string) {
     }
   }
 
-  console.warn(`[Webhook] Event "${eventType}" is missing both custom userId and customer email.`, { eventId: eventData.id });
+  console.warn(`[Webhook] Event "${eventType}" is missing both custom userId and customer email. Cannot identify user.`, { eventId: eventData.id });
   return NextResponse.json({ message: 'Webhook acknowledged, but no user identifier found.' }, { status: 200 });
 }
 
@@ -104,6 +122,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = JSON.parse(rawBody);
+    console.log('[Webhook] Raw body received:', JSON.stringify(body, null, 2)); // Detailed log of the entire body
     const eventType = body.event_type;
     console.log(`[Webhook] Processing verified event type: ${eventType}`);
     

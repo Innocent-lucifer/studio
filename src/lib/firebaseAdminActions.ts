@@ -26,12 +26,15 @@ export async function updateUserPlanByUID(
   uid: string,
   newPlan: 'monthly' | 'yearly'
 ): Promise<{ success: boolean; message: string }> {
+  console.log(`[Admin Action] Attempting to update plan for UID: ${uid} to new plan: ${newPlan}`);
+  
   if (!adminDb || !adminAuth) {
     const errorMessage = 'Firebase Admin SDK is not initialized. Cannot process purchase.';
-    console.error(errorMessage);
+    console.error(`[Admin Action] ${errorMessage}`);
     return { success: false, message: errorMessage };
   }
   if (!uid) {
+    console.error('[Admin Action] updateUserPlanByUID called with no UID. Aborting.');
     return { success: false, message: 'UID is required.' };
   }
 
@@ -39,7 +42,7 @@ export async function updateUserPlanByUID(
     const userRef = adminDb.collection('users').doc(uid);
     const docSnap = await userRef.get();
 
-    if (docSnap.exists) { // CORRECTED: .exists is a property, not a function
+    if (docSnap.exists) { // Corrected: .exists is a property on the snapshot
       // User document exists, just update the plan.
       await userRef.update({
         plan: newPlan,
@@ -47,10 +50,10 @@ export async function updateUserPlanByUID(
         // Reset trial data upon upgrade
         generationsUsed: 0,
       });
-      console.log(`Updated plan for existing user UID: ${uid} to ${newPlan}`);
+      console.log(`[Admin Action] Updated plan for existing user UID: ${uid} to ${newPlan}`);
     } else {
       // User document does NOT exist. Create it. This handles the race condition.
-      console.warn(`User document for UID ${uid} not found. Creating it now.`);
+      console.warn(`[Admin Action] User document for UID ${uid} not found. Creating it now.`);
       const userRecord = await adminAuth.getUser(uid); // Get auth record to find email
       const email = userRecord.email;
 
@@ -66,12 +69,12 @@ export async function updateUserPlanByUID(
         generationsUsed: 0, // Set to 0 for new paid user
       };
       await userRef.set(newUserDoc);
-      console.log(`Created new user document for UID: ${uid} with plan ${newPlan}`);
+      console.log(`[Admin Action] Created new user document for UID: ${uid} with plan ${newPlan}`);
     }
 
     return { success: true, message: `Successfully set plan for user ${uid}.` };
   } catch (error: any) {
-    console.error(`Error processing plan update for user UID ${uid}:`, error);
+    console.error(`[Admin Action] Error processing plan update for user UID ${uid}:`, error);
     return { success: false, message: `Failed to update plan for user ${uid}: ${error.message}` };
   }
 }
@@ -90,15 +93,18 @@ export async function findOrCreateUserForPurchase(
   email: string,
   newPlan: 'monthly' | 'yearly'
 ): Promise<{ success: boolean; message: string }> {
+  console.log(`[Admin Action] Attempting findOrCreateUserForPurchase | email: ${email}, plan: ${newPlan}`);
+
   if (!adminAuth || !adminDb) {
     const errorMessage = 'Firebase Admin SDK is not initialized. Cannot process purchase.';
-    console.error(errorMessage);
+    console.error(`[Admin Action] ${errorMessage}`);
     return {
       success: false,
       message: errorMessage,
     };
   }
   if (!email) {
+    console.error('[Admin Action] findOrCreateUserForPurchase called with no email. Aborting.');
     return { success: false, message: 'Email is required.' };
   }
 
@@ -106,13 +112,14 @@ export async function findOrCreateUserForPurchase(
     // 1. Check if user exists in Firebase Auth
     const userRecord = await adminAuth.getUserByEmail(email);
     // User exists in Auth, use the robust updateUserPlanByUID to handle Firestore doc.
+    console.log(`[Admin Action] User found by email. UID: ${userRecord.uid}. Proceeding with plan update.`);
     return await updateUserPlanByUID(userRecord.uid, newPlan);
 
   } catch (error: any) {
     // 3. User does not exist, create them
     if (error.code === 'auth/user-not-found') {
       try {
-        console.log(`User with email ${email} not found. Creating new auth user.`);
+        console.log(`[Admin Action] User with email ${email} not found. Creating new auth user.`);
         const newUserRecord = await adminAuth.createUser({
           email: email,
           emailVerified: true, // Since they paid, we can assume email is valid
@@ -138,7 +145,7 @@ export async function findOrCreateUserForPurchase(
         // to send a welcome email with a password setup link.
         const passwordResetLink = await adminAuth.generatePasswordResetLink(email);
         console.log(`
-          ACTION REQUIRED: A new user signed up via Paddle!
+          [Admin Action] ACTION REQUIRED: A new user signed up via Paddle!
           Email: ${email}
           Plan: ${newPlan}
           To complete setup, send them this password reset link: ${passwordResetLink}
@@ -147,13 +154,13 @@ export async function findOrCreateUserForPurchase(
         return { success: true, message: `Created new user ${email} with plan ${newPlan}.` };
 
       } catch (creationError: any) {
-        console.error('Error creating new user after purchase:', creationError);
+        console.error('[Admin Action] Error creating new user after purchase:', creationError);
         return { success: false, message: `Failed to create new user: ${creationError.message}` };
       }
     }
 
     // Handle other errors
-    console.error('Error in findOrCreateUserForPurchase:', error);
+    console.error(`[Admin Action] Error in findOrCreateUserForPurchase for email ${email}:`, error);
     return { success: false, message: `An unexpected error occurred: ${error.message}` };
   }
 }
