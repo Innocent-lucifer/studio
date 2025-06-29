@@ -1,40 +1,20 @@
-
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // Helper function to check if the user is authenticated
-    function isAuthenticated() {
-      return request.auth != null;
-    }
-
-    // Helper function to check if the user is the owner of the document
-    function isOwner(userId) {
-      return request.auth.uid == userId;
-    }
-
-    // --- Users Collection ---
-    // A user can:
-    // - Read their own document.
-    // - Create their own document upon signup.
-    // - Update their own document.
-    // They cannot delete their own account from the client or see other users' data.
+    // Users can only read and write to their own document.
     match /users/{userId} {
-      allow read, update, create: if isAuthenticated() && isOwner(userId);
-      allow delete: if false;
+      allow read, write: if request.auth != null && request.auth.uid == userId;
     }
 
-    // --- Drafts Subcollection ---
-    // A user can fully control their own drafts subcollection.
+    // Users can manage their own drafts subcollection.
     match /users/{userId}/drafts/{draftId} {
-      allow read, write, delete: if isAuthenticated() && isOwner(userId);
+      allow read, write, create, delete: if request.auth != null && request.auth.uid == userId;
     }
 
-    // --- CampaignDrafts Subcollection ---
-    // A user can fully control their own campaign drafts subcollection.
-    match /users/{userId}/campaignDrafts/{campaignId} {
-      allow read, write, delete: if isAuthenticated() && isOwner(userId);
+    // Users can manage their own campaignDrafts subcollection.
+    match /users/{userId}/campaignDrafts/{campaignDraftId} {
+        allow read, write, create, delete: if request.auth != null && request.auth.uid == userId;
     }
   }
 }
