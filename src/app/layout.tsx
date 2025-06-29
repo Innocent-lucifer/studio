@@ -26,7 +26,6 @@ export const metadata: Metadata = {
     ],
     apple: '/apple-touch-icon.png',
   },
-  manifest: '/site.webmanifest',
   openGraph: {
     title: "SagePostAI | AI Social Media Automation",
     description: "Automate every post, grow faster, and scale effortlessly with intelligent workflows.",
