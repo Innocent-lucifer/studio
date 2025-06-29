@@ -63,7 +63,7 @@ export async function updateUserPlanByUID(
         plan: newPlan, // Set their purchased plan
         referralCode: generateReferralCode(),
         referralsMade: 0,
-        // No trial data needed as they have a paid plan
+        generationsUsed: 0, // Set to 0 for new paid user
       };
       await userRef.set(newUserDoc);
       console.log(`Created new user document for UID: ${uid} with plan ${newPlan}`);
@@ -123,12 +123,13 @@ export async function findOrCreateUserForPurchase(
         const newUserDoc: UserData = {
           uid: newUserRecord.uid,
           email: email,
-          displayName: email.split('@')[0],
+          displayName: email.split('@')[0] || 'New Sage User',
           createdAt: Timestamp.now(),
           updatedAt: Timestamp.now(),
           plan: newPlan, // Start them on their purchased plan
           referralCode: generateReferralCode(),
           referralsMade: 0,
+          generationsUsed: 0, // Set to 0 for new paid user
         };
 
         await userRef.set(newUserDoc);
