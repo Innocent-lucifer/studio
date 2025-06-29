@@ -11,7 +11,7 @@
 
 import {ai} from '@/ai/ai-instance';
 import {z} from 'genkit';
-import { checkAndIncrementUsage } from '@/lib/firebaseUserActions';
+import { checkAndIncrementUsage } from '@/lib/firebaseAdminActions';
 
 const RepurposingIdeaSchema = z.object({
   platformAndFormat: z.string().describe('The target platform and specific content format (e.g., "Instagram Carousel", "TikTok Video Script").'),

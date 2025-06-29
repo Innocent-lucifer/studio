@@ -13,7 +13,7 @@ import {ai}from '@/ai/ai-instance';
 import {z}from 'genkit';
 import { searchTwitter } from '@/ai/tools/searchTwitter';
 import { searchNews } from '@/ai/tools/searchNews'; // Import searchNews
-import { checkAndIncrementUsage } from '@/lib/firebaseUserActions';
+import { checkAndIncrementUsage } from '@/lib/firebaseAdminActions';
 
 const ResearchTopicInputSchema = z.object({
   topic: z.string().describe('The topic to research.'),

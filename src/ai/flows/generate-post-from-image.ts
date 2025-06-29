@@ -10,7 +10,7 @@
 
 import {ai}from '@/ai/ai-instance';
 import {z}from 'genkit';
-import { checkAndIncrementUsage } from '@/lib/firebaseUserActions';
+import { checkAndIncrementUsage } from '@/lib/firebaseAdminActions';
 
 const GeneratePostFromImageInputSchema = z.object({
   imageDataUri: z

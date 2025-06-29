@@ -12,7 +12,7 @@
 import {ai}from '@/ai/ai-instance';
 import {z}from 'genkit';
 import {researchTopic} from "@/ai/flows/research-topic";
-import { checkAndIncrementUsage } from '@/lib/firebaseUserActions';
+import { checkAndIncrementUsage } from '@/lib/firebaseAdminActions';
 
 const GenerateTwitterPostsInputSchema = z.object({
   topic: z.string().describe('The topic to generate Twitter posts about. This might be a simple topic string or a more detailed researched summary.'),

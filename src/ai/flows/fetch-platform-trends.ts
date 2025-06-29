@@ -13,7 +13,7 @@ import {ai}from '@/ai/ai-instance';
 import {z}from 'genkit';
 import { searchTwitter } from '@/ai/tools/searchTwitter';
 import { searchNews } from '@/ai/tools/searchNews'; // Import searchNews
-import { checkAndIncrementUsage } from '@/lib/firebaseUserActions';
+import { checkAndIncrementUsage } from '@/lib/firebaseAdminActions';
 
 const TrendSchema = z.object({
   id: z.string().describe('A unique identifier for the trend.'),

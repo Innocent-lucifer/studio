@@ -10,7 +10,7 @@
 
 import {ai}from '@/ai/ai-instance';
 import {z}from 'genkit';
-import { checkAndIncrementUsage } from '@/lib/firebaseUserActions';
+import { checkAndIncrementUsage } from '@/lib/firebaseAdminActions';
 
 const GenerateEditedPostInputSchema = z.object({
   originalPost: z.string().describe('The original social media post content.'),

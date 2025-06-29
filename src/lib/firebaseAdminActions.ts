@@ -3,7 +3,7 @@
 
 import { adminAuth, adminDb } from '@/lib/firebase-admin';
 import type { UserData } from './firebaseUserActions'; // reuse type
-import { Timestamp } from 'firebase-admin/firestore';
+import { Timestamp, FieldValue } from 'firebase-admin/firestore';
 
 const generateReferralCode = (length = 8): string => {
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -164,3 +164,67 @@ export async function findOrCreateUserForPurchase(
     return { success: false, message: `An unexpected error occurred: ${error.message}` };
   }
 }
+
+export const checkAndIncrementUsage = async (userId: string): Promise<{ canProceed: boolean; error?: string }> => {
+  if (!adminDb) {
+      return { canProceed: false, error: "Database not configured. Please contact support." };
+  }
+  if (!userId) {
+      return { canProceed: false, error: "User not authenticated." };
+  }
+
+  const userRef = adminDb.collection('users').doc(userId);
+  
+  try {
+      const userSnap = await userRef.get();
+
+      if (!userSnap.exists) {
+          return { canProceed: false, error: "User data not found. Please re-login." };
+      }
+
+      const userData = userSnap.data() as UserData;
+
+      // Users on paid plans can always proceed
+      if (userData.plan !== 'free') {
+          return { canProceed: true };
+      }
+
+      // Logic for free plan users
+      const TRIAL_PERIOD_DAYS = 3;
+      const GENERATION_LIMIT = 6;
+
+      if (userData.trialStartedAt) {
+          const trialStartDate = userData.trialStartedAt.toDate();
+          const now = new Date();
+          const diffTime = now.getTime() - trialStartDate.getTime();
+          const diffDays = diffTime / (1000 * 60 * 60 * 24);
+          
+          if (diffDays > TRIAL_PERIOD_DAYS) {
+              return { canProceed: false, error: `Your ${TRIAL_PERIOD_DAYS}-day free trial has ended. Please upgrade to continue generating content.` };
+          }
+      } else {
+          // If trial hasn't started, start it now.
+          await userRef.update({ 
+              trialStartedAt: Timestamp.now(), 
+              generationsUsed: 0,
+              updatedAt: Timestamp.now(),
+          });
+      }
+
+      const generationsUsed = userData.generationsUsed || 0;
+      if (generationsUsed >= GENERATION_LIMIT) {
+          return { canProceed: false, error: `You have used all ${GENERATION_LIMIT} of your free generations for the trial. Please upgrade.` };
+      }
+      
+      // Increment usage for free user
+      await userRef.update({
+          generationsUsed: FieldValue.increment(1),
+          updatedAt: Timestamp.now()
+      });
+
+      return { canProceed: true };
+  } catch (error: any) {
+       console.error(`[checkAndIncrementUsage] Error for UID ${userId}:`, error);
+       return { canProceed: false, error: "An error occurred while checking your usage data." };
+  }
+};
