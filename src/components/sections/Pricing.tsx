@@ -3,7 +3,7 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { CheckCircle, Sparkles } from "lucide-react";
+import { CheckCircle, Sparkles, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
@@ -111,49 +111,55 @@ export default function Pricing({ plans }: PricingProps) {
               whileHover={{ y: -5, scale: 1.03, transition: { type: 'spring', stiffness: 300 } }}
               className={`relative w-full flex flex-col justify-between rounded-2xl p-8 bg-background shadow-lg border ${plan.borderClass} hover:shadow-xl hover:shadow-primary/20`}
             >
-              {plan.badge && (
-                <div
-                  className={`absolute -top-4 right-6 px-4 py-1 text-xs font-bold text-white rounded-full shadow-md bg-gradient-to-r ${plan.badgeClass}`}
-                >
-                  {plan.badge}
+              <div>
+                {plan.badge && (
+                  <div
+                    className={`absolute -top-4 right-6 px-4 py-1 text-xs font-bold text-white rounded-full shadow-md bg-gradient-to-r ${plan.badgeClass}`}
+                  >
+                    {plan.badge}
+                  </div>
+                )}
+                {plan.discountBadge && (
+                  <div className="absolute -top-4 left-6 px-4 py-1.5 text-xs font-bold text-accent-foreground bg-accent rounded-full shadow-lg shadow-accent/40">
+                    {plan.discountBadge}
+                  </div>
+                )}
+                <div className="flex-grow">
+                  <h3 className="text-2xl font-bold mb-2 text-foreground">
+                    {plan.title}
+                  </h3>
+                  <p className="text-4xl font-bold text-primary mb-2">
+                    {plan.price}
+                  </p>
+                  <p className="text-foreground/70 text-sm font-semibold mb-8">
+                    {plan.subtitle}
+                  </p>
+                  <Button 
+                    onClick={() => handleCheckout(plan.priceId)}
+                    size="lg" 
+                    className="w-full bg-primary text-primary-foreground hover:bg-primary/90 text-base mb-2 shadow-lg shadow-primary/30"
+                  >
+                    Try 3 Days Free
+                  </Button>
+                  <p className="text-xs text-accent mb-8 font-semibold drop-shadow-[0_0_6px_hsl(var(--accent)/0.7)]">
+                    No card required for trial.
+                  </p>
+                  <ul className="text-left space-y-3">
+                    {plan.features.map((feat, i) => (
+                      <li
+                        key={i}
+                        className="flex items-start text-foreground/90 text-sm"
+                      >
+                          <CheckCircle className="text-green-500 w-5 h-5 mr-3 shrink-0 mt-0.5" />
+                          <span>{feat}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-              )}
-              {plan.discountBadge && (
-                <div className="absolute -top-4 left-6 px-4 py-1.5 text-xs font-bold text-accent-foreground bg-accent rounded-full shadow-lg shadow-accent/40">
-                  {plan.discountBadge}
-                </div>
-              )}
-              <div className="flex-grow">
-                <h3 className="text-2xl font-bold mb-2 text-foreground">
-                  {plan.title}
-                </h3>
-                <p className="text-4xl font-bold text-primary mb-2">
-                  {plan.price}
-                </p>
-                <p className="text-foreground/70 text-sm font-semibold mb-8">
-                  {plan.subtitle}
-                </p>
-                <Button 
-                  onClick={() => handleCheckout(plan.priceId)}
-                  size="lg" 
-                  className="w-full bg-primary text-primary-foreground hover:bg-primary/90 text-base mb-2 shadow-lg shadow-primary/30"
-                >
-                  Try 3 Days Free
-                </Button>
-                <p className="text-xs text-accent mb-8 font-semibold drop-shadow-[0_0_6px_hsl(var(--accent)/0.7)]">
-                  No card required for trial.
-                </p>
-                <ul className="text-left space-y-3">
-                  {plan.features.map((feat, i) => (
-                    <li
-                      key={i}
-                      className="flex items-start text-foreground/90 text-sm"
-                    >
-                        <CheckCircle className="text-green-500 w-5 h-5 mr-3 shrink-0 mt-0.5" />
-                        <span>{feat}</span>
-                    </li>
-                  ))}
-                </ul>
+              </div>
+              <div className="mt-6 flex items-center justify-center text-sm text-slate-400">
+                  <Lock className="h-4 w-4 mr-2 text-green-500" />
+                  <span className="font-semibold">Secure payment</span>
               </div>
             </motion.div>
           ))}

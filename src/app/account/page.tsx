@@ -283,6 +283,10 @@ export default function AccountPage() {
                         Choose Plan
                     </Button>
                 </CardFooter>
+                <div className="mt-4 flex items-center justify-center text-sm text-slate-400">
+                  <Icons.lock className="h-4 w-4 mr-2 text-green-500" />
+                  <span className="font-semibold">Secure payment</span>
+                </div>
               </Card>
             ))}
           </div>
@@ -331,6 +335,10 @@ export default function AccountPage() {
                         Upgrade to Yearly
                     </Button>
                 </CardFooter>
+                <div className="mt-4 flex items-center justify-center text-sm text-slate-400">
+                    <Icons.lock className="h-4 w-4 mr-2 text-green-500" />
+                    <span className="font-semibold">Secure payment</span>
+                </div>
               </Card>
             </div>
           </ScrollArea>
