@@ -85,9 +85,9 @@ export default function Home() {
         "Visibility Booster (adds optimal emojis & hashtags)",
         "AI Post Editor (Auto cleans grammar & flow instantly)",
         "Copy & export posts anytime",
-        "Post history access",
+        "Saved Content History",
       ],
-      priceId: process.env.NEXT_PUBLIC_PADDLE_SANDBOX_MONTHLY_PRICE_ID || "pri_01jytrrggq73bfpd9bce3resb0"
+      priceId: "pri_01jytrrggq73bfpd9bce3resb0"
     },
     {
       title: "Sage Infinity Yearly",
@@ -107,9 +107,9 @@ export default function Home() {
         "Visibility Booster (adds optimal emojis & hashtags)",
         "AI Post Editor (Auto cleans grammar & flow instantly)",
         "Copy & export posts anytime",
-        "Post history access",
+        "Saved Content History",
       ],
-      priceId: process.env.NEXT_PUBLIC_PADDLE_SANDBOX_YEARLY_PRICE_ID || "pri_01jytrs4wqac0a8pnyttzz34w1"
+      priceId: "pri_01jytrs4wqac0a8pnyttzz34w1"
     }
   ];
 

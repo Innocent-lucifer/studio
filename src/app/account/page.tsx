@@ -97,7 +97,7 @@ export default function AccountPage() {
         "Visibility Booster",
         "AI Post Editor",
         "Copy & export posts",
-        "Post history access",
+        "Saved Content History",
       ],
       priceId: "pri_01jytrrggq73bfpd9bce3resb0"
     },
@@ -117,7 +117,7 @@ export default function AccountPage() {
         "Visibility Booster",
         "AI Post Editor",
         "Copy & export posts",
-        "Post history access",
+        "Saved Content History",
       ],
       priceId: "pri_01jytrs4wqac0a8pnyttzz34w1"
     }
