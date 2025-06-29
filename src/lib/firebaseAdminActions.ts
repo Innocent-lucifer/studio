@@ -29,7 +29,7 @@ export async function updateUserPlanByUID(
   console.log(`[Admin Action] Attempting to update plan for UID: ${uid} to new plan: ${newPlan}`);
   
   if (!adminDb || !adminAuth) {
-    const errorMessage = 'Firebase Admin SDK is not initialized. Cannot process purchase.';
+    const errorMessage = 'Firebase Admin SDK is not initialized. Ensure server environment variables are set. Cannot process purchase.';
     console.error(`[Admin Action] ${errorMessage}`);
     return { success: false, message: errorMessage };
   }
@@ -42,7 +42,7 @@ export async function updateUserPlanByUID(
     const userRef = adminDb.collection('users').doc(uid);
     const docSnap = await userRef.get();
 
-    if (docSnap.exists) { // Corrected: .exists is a property on the snapshot
+    if (docSnap.exists) {
       // User document exists, just update the plan.
       await userRef.update({
         plan: newPlan,
@@ -96,7 +96,7 @@ export async function findOrCreateUserForPurchase(
   console.log(`[Admin Action] Attempting findOrCreateUserForPurchase | email: ${email}, plan: ${newPlan}`);
 
   if (!adminAuth || !adminDb) {
-    const errorMessage = 'Firebase Admin SDK is not initialized. Cannot process purchase.';
+    const errorMessage = 'Firebase Admin SDK is not initialized. Ensure server environment variables are set. Cannot process purchase.';
     console.error(`[Admin Action] ${errorMessage}`);
     return {
       success: false,
@@ -167,7 +167,9 @@ export async function findOrCreateUserForPurchase(
 
 export const checkAndIncrementUsage = async (userId: string): Promise<{ canProceed: boolean; error?: string }> => {
   if (!adminDb) {
-      return { canProceed: false, error: "Database not configured. Please contact support." };
+      const errorMsg = "Server database connection failed. Ensure server environment variables (e.g., FIREBASE_SERVICE_ACCOUNT_KEY) are set correctly in your deployment settings.";
+      console.error(`[checkAndIncrementUsage] Error: ${errorMsg}`);
+      return { canProceed: false, error: errorMsg };
   }
   if (!userId) {
       return { canProceed: false, error: "User not authenticated." };
