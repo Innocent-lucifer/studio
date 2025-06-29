@@ -40,7 +40,10 @@ if (!admin.apps.length) {
         `);
     }
   }
+} else {
+    app = admin.apps[0];
 }
 
-export const adminAuth = admin.apps.length ? admin.auth() : null;
-export const adminDb = admin.apps.length ? admin.firestore() : null;
+
+export const adminAuth = app ? admin.auth() : null;
+export const adminDb = app ? admin.firestore() : null;

@@ -167,7 +167,7 @@ export async function findOrCreateUserForPurchase(
 
 export const checkAndIncrementUsage = async (userId: string): Promise<{ canProceed: boolean; error?: string }> => {
   if (!adminDb) {
-      const errorMsg = "Server database connection failed. Ensure server environment variables (e.g., FIREBASE_SERVICE_ACCOUNT_KEY) are set correctly in your deployment settings.";
+      const errorMsg = "Server is not configured to connect to Firebase. ACTION REQUIRED: Please add your FIREBASE_SERVICE_ACCOUNT_KEY_BASE64 to your live server's environment variables.";
       console.error(`[checkAndIncrementUsage] Error: ${errorMsg}`);
       return { canProceed: false, error: errorMsg };
   }
