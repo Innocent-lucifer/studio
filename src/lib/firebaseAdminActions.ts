@@ -39,7 +39,7 @@ export async function updateUserPlanByUID(
     const userRef = adminDb.collection('users').doc(uid);
     const docSnap = await userRef.get();
 
-    if (docSnap.exists()) {
+    if (docSnap.exists) { // CORRECTED: .exists is a property, not a function
       // User document exists, just update the plan.
       await userRef.update({
         plan: newPlan,
