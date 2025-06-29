@@ -35,7 +35,7 @@ export default function DisclaimerPage() {
                         <strong>SagePostAI</strong> is an AI-powered tool designed to help
                         users generate social media content, campaign ideas, and creative
                         marketing text. While we strive to deliver helpful and accurate
-                        outputs, the content generated is created by artificial intelligence
+                        outputs, the content generated is by artificial intelligence
                         and may not always reflect verified facts, personal opinions, or the
                         latest trends.
                     </p>
@@ -61,7 +61,7 @@ export default function DisclaimerPage() {
 
                     <PolicySection title="3-Day Free Trial Clarification">
                         <p>
-                            The "3-day free trial" provides limited access to our platform's features to allow for evaluation. This trial permits you to use each feature up to three (3) times per day for a total of three (3) days. It is not an unlimited access trial. Usage is monitored, and any attempt to bypass these limitations may result in immediate account termination.
+                            The "3-day free trial" provides limited access to our platform's features for evaluation. This trial permits a total of six (6) free generations to use on any tool within the 3-day period. It is not an unlimited access trial. Usage is monitored, and any attempt to bypass these limitations may result in immediate account termination. After the trial period or usage limit is reached, users must upgrade to a paid plan to continue using the service.
                         </p>
                     </PolicySection>
                     
