@@ -22,7 +22,7 @@ const cardVariants = {
   },
 };
 
-export default function ProblemSolution() {
+const ProblemSolutionComponent = () => {
   return (
     <section
       id="problem-solution"
@@ -93,3 +93,5 @@ export default function ProblemSolution() {
     </section>
   );
 }
+
+export default React.memo(ProblemSolutionComponent);

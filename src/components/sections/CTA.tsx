@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from "react";
@@ -5,7 +6,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
-export default function CTA() {
+const CTAComponent = () => {
   return (
     <section
       id="cta"
@@ -40,3 +41,5 @@ export default function CTA() {
     </section>
   );
 }
+
+export default React.memo(CTAComponent);

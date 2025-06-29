@@ -37,7 +37,7 @@ const testimonials = [
   },
 ];
 
-const TestimonialCard = ({ quote, name, role }: { quote: string; name: string; role: string }) => (
+const TestimonialCard = React.memo(({ quote, name, role }: { quote: string; name: string; role: string }) => (
   <motion.div
     className="min-w-[320px] sm:min-w-[360px] h-auto bg-background border border-border rounded-2xl p-8 flex flex-col justify-between shadow-lg transition-all duration-300 hover:border-primary/50 hover:shadow-primary/10"
   >
@@ -49,9 +49,10 @@ const TestimonialCard = ({ quote, name, role }: { quote: string; name: string; r
       <p className="text-foreground/60 text-sm">{role}</p>
     </div>
   </motion.div>
-);
+));
+TestimonialCard.displayName = "TestimonialCard";
 
-export default function Testimonials() {
+const TestimonialsComponent = () => {
   const controls = useAnimation();
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -104,3 +105,5 @@ export default function Testimonials() {
     </section>
   );
 }
+
+export default React.memo(TestimonialsComponent);

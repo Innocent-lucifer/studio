@@ -83,7 +83,7 @@ const itemVariants = {
   },
 };
 
-export default function Features() {
+const FeaturesComponent = () => {
   return (
     <section id="features" className="py-20 sm:py-28 px-4 sm:px-6">
       <div className="max-w-7xl mx-auto text-center">
@@ -130,3 +130,5 @@ export default function Features() {
     </section>
   );
 }
+
+export default React.memo(FeaturesComponent);

@@ -29,7 +29,7 @@ interface TeamSectionProps {
   onReadRishabhStory: () => void;
 }
 
-export default function TeamSection({ onReadRishabhStory }: TeamSectionProps) {
+const TeamSectionComponent: React.FC<TeamSectionProps> = ({ onReadRishabhStory }) => {
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -119,3 +119,5 @@ export default function TeamSection({ onReadRishabhStory }: TeamSectionProps) {
     </section>
   );
 }
+
+export default React.memo(TeamSectionComponent);

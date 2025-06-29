@@ -19,7 +19,7 @@ const steps = [
   },
 ];
 
-export default function HowItWorks() {
+const HowItWorksComponent = () => {
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -69,3 +69,5 @@ export default function HowItWorks() {
     </section>
   );
 }
+
+export default React.memo(HowItWorksComponent);

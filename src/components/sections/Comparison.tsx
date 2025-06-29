@@ -5,7 +5,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Zap, CheckCircle } from "lucide-react";
 
-export default function Comparison() {
+const ComparisonComponent = () => {
   const comparisonData = [
     {
       task: "Post Generation Speed",
@@ -158,3 +158,5 @@ export default function Comparison() {
     </section>
   );
 }
+
+export default React.memo(ComparisonComponent);

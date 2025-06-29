@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from "react";
@@ -7,7 +8,7 @@ import { Twitter, Linkedin } from "lucide-react";
 import { AppLogo } from "@/components/AppLogo";
 import { usePathname } from "next/navigation";
 
-export default function Footer() {
+const FooterComponent: React.FC = () => {
   const pathname = usePathname();
 
   const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
@@ -98,3 +99,5 @@ export default function Footer() {
     </motion.footer>
   );
 }
+
+export default React.memo(FooterComponent);
