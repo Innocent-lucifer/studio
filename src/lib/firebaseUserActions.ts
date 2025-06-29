@@ -18,6 +18,7 @@ import {
   orderBy,
   where,
   type Firestore,
+  increment,
 } from 'firebase/firestore';
 import type { User as FirebaseAuthUser } from 'firebase/auth';
 import type { ContentAngle } from '@/ai/flows/suggest-content-angles';
@@ -43,6 +44,8 @@ export interface UserData {
   referredBy?: string;
   referralsMade?: number;
   plan: 'free' | 'monthly' | 'yearly';
+  trialStartedAt?: Timestamp;
+  generationsUsed?: number;
 }
 
 export interface Draft {
@@ -104,6 +107,8 @@ export const createUserDocument = async (
         referralCode: generateReferralCode(),
         referralsMade: 0,
         plan: defaultPlan,
+        trialStartedAt: serverTimestamp() as Timestamp,
+        generationsUsed: 0,
       };
 
       if (referredByCode) {
@@ -114,14 +119,16 @@ export const createUserDocument = async (
       return userData;
     } else {
       const existingData = userSnap.data() as UserData;
-      // This is a crucial check for backward compatibility.
-      // If an old user logs in who doesn't have a `plan` field, set it to 'free'.
+      const updates: Partial<UserData> = {};
       if (!existingData.plan) {
-        const updates: Partial<UserData> = {
-          plan: 'free',
-          updatedAt: serverTimestamp() as Timestamp
-        };
-        await updateDoc(userRef, updates);
+        updates.plan = 'free';
+      }
+      if (existingData.plan === 'free' && !existingData.trialStartedAt) {
+          updates.trialStartedAt = serverTimestamp() as Timestamp;
+          updates.generationsUsed = 0;
+      }
+      if (Object.keys(updates).length > 0) {
+        await updateDoc(userRef, { ...updates, updatedAt: serverTimestamp() });
         return { ...existingData, ...updates } as UserData;
       }
       return existingData;
@@ -144,14 +151,20 @@ export const getUserData = async (uid: string, userForCreation?: FirebaseAuthUse
     const userSnap = await getDoc(userRef);
     if (userSnap.exists()) {
        const existingData = userSnap.data();
-       // Backward compatibility: if a user exists but has no plan, set them to free
+       const updates: Partial<UserData> = {};
        if (!existingData.plan) {
-         await updateDoc(userRef, { plan: 'free', updatedAt: serverTimestamp() });
-         return { ...existingData, plan: 'free' } as UserData;
+         updates.plan = 'free';
+       }
+       if (existingData.plan === 'free' && !existingData.trialStartedAt) {
+          updates.trialStartedAt = serverTimestamp() as Timestamp;
+          updates.generationsUsed = 0;
+       }
+       if (Object.keys(updates).length > 0) {
+          await updateDoc(userRef, { ...updates, updatedAt: serverTimestamp() });
+          return { ...existingData, ...updates } as UserData;
        }
       return existingData;
     } else {
-      // If the user doesn't exist, create them with a default 'free' plan.
       if (userForCreation && userForCreation.uid === uid) {
         return await createUserDocument(userForCreation);
       }
@@ -166,8 +179,57 @@ export const getUserData = async (uid: string, userForCreation?: FirebaseAuthUse
   }
 };
 
+export const checkAndIncrementUsage = async (userId: string): Promise<{ canProceed: boolean; error?: string }> => {
+  if (!db) {
+    return { canProceed: false, error: "Database not configured. Please contact support." };
+  }
+  if (!userId) {
+    return { canProceed: false, error: "User not authenticated." };
+  }
 
-// This function is no longer needed as the admin SDK handles it, but we keep it for reference.
+  const userRef = doc(db, 'users', userId) as DocumentReference<UserData>;
+  const userSnap = await getDoc(userRef);
+
+  if (!userSnap.exists()) {
+    return { canProceed: false, error: "User data not found. Please re-login." };
+  }
+
+  const userData = userSnap.data();
+
+  if (userData.plan !== 'free') {
+    return { canProceed: true };
+  }
+
+  const TRIAL_PERIOD_DAYS = 3;
+  const GENERATION_LIMIT = 6;
+
+  if (userData.trialStartedAt) {
+    const trialStartDate = userData.trialStartedAt.toDate();
+    const now = new Date();
+    const diffTime = now.getTime() - trialStartDate.getTime();
+    const diffDays = diffTime / (1000 * 60 * 60 * 24);
+    
+    if (diffDays > TRIAL_PERIOD_DAYS) {
+      return { canProceed: false, error: `Your ${TRIAL_PERIOD_DAYS}-day free trial has ended. Please upgrade to continue generating content.` };
+    }
+  } else {
+      await updateDoc(userRef, { trialStartedAt: serverTimestamp(), generationsUsed: 0 });
+  }
+
+  const generationsUsed = userData.generationsUsed || 0;
+  if (generationsUsed >= GENERATION_LIMIT) {
+    return { canProceed: false, error: `You have used all ${GENERATION_LIMIT} of your free generations for the trial. Please upgrade.` };
+  }
+  
+  await updateDoc(userRef, {
+    generationsUsed: increment(1),
+    updatedAt: serverTimestamp()
+  });
+
+  return { canProceed: true };
+};
+
+
 export const updateUserPlanByEmail = async (email: string, newPlan: 'monthly' | 'yearly'): Promise<boolean> => {
   if (!db) {
     console.error("Firestore is not configured. Cannot update user plan.");

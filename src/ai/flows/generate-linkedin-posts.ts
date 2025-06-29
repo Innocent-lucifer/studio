@@ -11,6 +11,7 @@
 import {ai}from '@/ai/ai-instance';
 import {z}from 'genkit';
 import {researchTopic} from "@/ai/flows/research-topic";
+import { checkAndIncrementUsage } from '@/lib/firebaseUserActions';
 
 const GenerateLinkedInPostsInputSchema = z.object({
   topic: z.string().describe('The topic to generate LinkedIn posts about. This might be a simple topic string or a more detailed researched summary.'),
@@ -84,6 +85,10 @@ const generateLinkedInPostsFlow = ai.defineFlow(
   async (input) => {
     if (!input.userId) {
       return { error: "User ID is required for this operation." };
+    }
+    const usageCheck = await checkAndIncrementUsage(input.userId);
+    if (!usageCheck.canProceed) {
+      return { error: usageCheck.error };
     }
 
     try {
