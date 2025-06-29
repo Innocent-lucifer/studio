@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from "react";
@@ -28,7 +27,7 @@ export default function CTA() {
         </p>
         <Button asChild size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 transition-transform duration-200 hover:scale-105 shadow-lg shadow-primary/20">
           <Link href="/login">
-            Join the Beta Free <ArrowRight className="ml-2 h-5 w-5"/>
+            Start Your Free 3-Day Trial – No Card Needed
           </Link>
         </Button>
       </motion.div>
