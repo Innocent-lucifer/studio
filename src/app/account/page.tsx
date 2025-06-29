@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useEffect, useState } from 'react';
@@ -56,7 +55,7 @@ export default function AccountPage() {
           userId: user.uid,
         },
         settings: {
-          successUrl: `${window.location.origin}/dashboard`
+          successUrl: 'https://sagepostai.com/dashboard'
         }
       });
     } else {

@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from "react";
@@ -55,7 +54,7 @@ export default function Pricing({ plans }: PricingProps) {
             userId: user.uid,
           },
           settings: {
-            successUrl: `${window.location.origin}/dashboard` 
+            successUrl: 'https://sagepostai.com/dashboard' 
           }
         });
       } else {
