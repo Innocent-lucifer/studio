@@ -9,9 +9,6 @@ import { Toaster } from "@/components/ui/toaster";
 import StarryBackground from '@/components/StarryBackground';
 import { PaddleLoader } from '@/components/PaddleLoader';
 
-const geistSans = GeistSans;
-const geistMono = GeistMono;
-
 export const metadata: Metadata = {
   metadataBase: new URL('https://sagepostai.com'),
   title: "SagePostAI | AI Social Media Automation",
@@ -63,8 +60,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+    <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable} dark`}>
+      <body className="antialiased">
         <StarryBackground />
         <AuthProvider>
           {children}
