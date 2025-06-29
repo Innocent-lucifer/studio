@@ -167,9 +167,17 @@ export async function findOrCreateUserForPurchase(
 
 export const checkAndIncrementUsage = async (userId: string): Promise<{ canProceed: boolean; error?: string }> => {
   if (!adminDb) {
-      const errorMsg = "Server is not configured to connect to Firebase. ACTION REQUIRED: Please add your FIREBASE_SERVICE_ACCOUNT_KEY_BASE64 to your live server's environment variables.";
-      console.error(`[checkAndIncrementUsage] Error: ${errorMsg}`);
-      return { canProceed: false, error: errorMsg };
+      console.error(`
+        *****************************************************************
+        *           CRITICAL WARNING: USAGE CHECKING DISABLED           *
+        *****************************************************************
+        * Firebase Admin SDK is not initialized.                        *
+        * ALL USERS WILL HAVE UNLIMITED USAGE.                          *
+        * To fix this, set FIREBASE_SERVICE_ACCOUNT_KEY_BASE64 in your  *
+        * server's environment variables.                               *
+        *****************************************************************
+      `);
+      return { canProceed: true }; // Allow the action but with a server warning
   }
   if (!userId) {
       return { canProceed: false, error: "User not authenticated." };
