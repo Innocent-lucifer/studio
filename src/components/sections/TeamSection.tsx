@@ -1,11 +1,11 @@
-
 "use client";
 
 import React from "react";
 import { motion } from "framer-motion";
-import { Linkedin, Twitter, User } from "lucide-react";
+import { Linkedin, Twitter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 
 const founders = [
@@ -13,6 +13,7 @@ const founders = [
     name: "Rishabh Nauhwar",
     title: "Founder & Product Strategist",
     desc: "Leads product vision, development, and AI systems. Focused on building experiences that scale.",
+    image: "/ceo.png",
     linkedin: "https://linkedin.com/in/rishabh-kumarr/",
     twitter: "https://x.com/ChilledCeo?s=09",
   },
@@ -20,6 +21,7 @@ const founders = [
     name: "Siddharth Gaur",
     title: "Co-founder & Growth Strategist",
     desc: "Handles outreach, customer acquisition, and market-fit strategy. Ensures we solve real problems.",
+    image: "/coo.png",
     linkedin: "https://linkedin.com/in/siddharthgaur01/",
     twitter: "https://x.com/siddharthg17481?t=8fofWw3WkJaus7_wXm_Z9A&s=09",
   },
@@ -77,8 +79,14 @@ const TeamSectionComponent: React.FC<TeamSectionProps> = ({ onReadRishabhStory }
           <motion.div key={i} variants={itemVariants}>
             <Card className="bg-background text-center h-full flex flex-col">
               <CardHeader className="items-center">
-                <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                  <User className="text-primary h-12 w-12" />
+                <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mb-4 overflow-hidden">
+                  <Image
+                    src={member.image}
+                    alt={member.name}
+                    width={96}
+                    height={96}
+                    className="object-cover w-full h-full"
+                  />
                 </div>
                 <CardTitle>{member.name}</CardTitle>
                 <p className="text-sm text-primary font-medium">
