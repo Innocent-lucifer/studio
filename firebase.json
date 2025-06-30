@@ -5,7 +5,13 @@
     "ignore": [
       "firebase.json",
       "**/.*",
-      "**/node_modules/**"
+      "**/node_modules/**",
+      ".env",
+      ".env.*",
+      "*.env",
+      "README.md",
+      "tsconfig.json",
+      "components.json"
     ],
     "frameworksBackend": {
       "region": "us-central1"
