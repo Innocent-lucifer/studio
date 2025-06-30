@@ -79,12 +79,12 @@ const TeamSectionComponent: React.FC<TeamSectionProps> = ({ onReadRishabhStory }
           <motion.div key={i} variants={itemVariants}>
             <Card className="bg-background text-center h-full flex flex-col">
               <CardHeader className="items-center">
-                <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mb-4 overflow-hidden">
+                <div className="w-48 h-48 rounded-full bg-primary/10 flex items-center justify-center mb-4 overflow-hidden">
                   <Image
                     src={member.image}
                     alt={member.name}
-                    width={96}
-                    height={96}
+                    width={192}
+                    height={192}
                     className="object-cover w-full h-full"
                   />
                 </div>
