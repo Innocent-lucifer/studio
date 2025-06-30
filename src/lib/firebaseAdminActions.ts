@@ -3,7 +3,7 @@
 
 import { adminAuth, adminDb } from '@/lib/firebase-admin';
 import type { UserData } from './firebaseUserActions'; // reuse type
-import { Timestamp, FieldValue } from 'firebase-admin/firestore';
+import { Timestamp } from 'firebase-admin/firestore';
 
 const generateReferralCode = (length = 8): string => {
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -14,22 +14,6 @@ const generateReferralCode = (length = 8): string => {
   return result.toUpperCase();
 };
 
-/**
- * Updates a user's plan in Firestore using their Firebase UID.
- * This is the primary and most reliable method for updating user data after a purchase.
- * It's also the function you would use if you wanted to grant a plan to a user manually from a server environment.
- * 
- * To manually grant a plan to a user from the Firebase Console:
- * 1. Go to your Firebase Console -> Firestore Database.
- * 2. Find the 'users' collection.
- * 3. Find the document corresponding to the user's UID.
- * 4. Edit the 'plan' field and set its value to "monthly" or "yearly".
- * 
- * This function is designed to be resilient to race conditions where the user document might not exist yet.
- * @param uid The user's Firebase UID.
- * @param newPlan The plan they purchased or are being granted.
- * @returns { success: boolean, message: string }
- */
 export async function updateUserPlanByUID(
   uid: string,
   newPlan: 'monthly' | 'yearly'
@@ -51,18 +35,15 @@ export async function updateUserPlanByUID(
     const docSnap = await userRef.get();
 
     if (docSnap.exists) {
-      // User document exists, just update the plan.
       await userRef.update({
         plan: newPlan,
         updatedAt: Timestamp.now(),
-        // Reset usage data upon upgrade
         dailyGenerationsUsed: 0,
       });
       console.log(`[Admin Action] Updated plan for existing user UID: ${uid} to ${newPlan}`);
     } else {
-      // User document does NOT exist. Create it. This handles the race condition.
       console.warn(`[Admin Action] User document for UID ${uid} not found. Creating it now.`);
-      const userRecord = await adminAuth.getUser(uid); // Get auth record to find email
+      const userRecord = await adminAuth.getUser(uid);
       const email = userRecord.email;
 
       const newUserDoc: UserData = {
@@ -71,10 +52,11 @@ export async function updateUserPlanByUID(
         displayName: userRecord.displayName || email?.split('@')[0] || 'SageUser',
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now(),
-        plan: newPlan, // Set their purchased plan
+        plan: newPlan,
         referralCode: generateReferralCode(),
         referralsMade: 0,
-        dailyGenerationsUsed: 0, // Set to 0 for new paid user
+        dailyGenerationsUsed: 0,
+        lastGenerationDate: Timestamp.now(),
       };
       await userRef.set(newUserDoc);
       console.log(`[Admin Action] Created new user document for UID: ${uid} with plan ${newPlan}`);
@@ -87,16 +69,6 @@ export async function updateUserPlanByUID(
   }
 }
 
-
-/**
- * Finds a user by email. If they exist, updates their plan.
- * If they don't exist, creates a new Firebase Auth user and a corresponding
- * Firestore document with the purchased plan.
- * This is a FALLBACK method for when a UID is not available in the webhook.
- * @param email The customer's email from Paddle.
- * @param newPlan The plan they purchased.
- * @returns { success: boolean, message: string }
- */
 export async function findOrCreateUserForPurchase(
   email: string,
   newPlan: 'monthly' | 'yearly'
@@ -117,20 +89,17 @@ export async function findOrCreateUserForPurchase(
   }
 
   try {
-    // 1. Check if user exists in Firebase Auth
     const userRecord = await adminAuth.getUserByEmail(email);
-    // User exists in Auth, use the robust updateUserPlanByUID to handle Firestore doc.
     console.log(`[Admin Action] User found by email. UID: ${userRecord.uid}. Proceeding with plan update.`);
     return await updateUserPlanByUID(userRecord.uid, newPlan);
 
   } catch (error: any) {
-    // 3. User does not exist, create them
     if (error.code === 'auth/user-not-found') {
       try {
         console.log(`[Admin Action] User with email ${email} not found. Creating new auth user.`);
         const newUserRecord = await adminAuth.createUser({
           email: email,
-          emailVerified: true, // Since they paid, we can assume email is valid
+          emailVerified: true,
         });
 
         const userRef = adminDb.collection('users').doc(newUserRecord.uid);
@@ -141,16 +110,15 @@ export async function findOrCreateUserForPurchase(
           displayName: email.split('@')[0] || 'New Sage User',
           createdAt: Timestamp.now(),
           updatedAt: Timestamp.now(),
-          plan: newPlan, // Start them on their purchased plan
+          plan: newPlan,
           referralCode: generateReferralCode(),
           referralsMade: 0,
-          dailyGenerationsUsed: 0, // Set to 0 for new paid user
+          dailyGenerationsUsed: 0,
+          lastGenerationDate: Timestamp.now(),
         };
 
         await userRef.set(newUserDoc);
         
-        // In a real app, you would use a service like SendGrid or Resend
-        // to send a welcome email with a password setup link.
         const passwordResetLink = await adminAuth.generatePasswordResetLink(email);
         console.log(`
           [Admin Action] ACTION REQUIRED: A new user signed up via Paddle!
@@ -167,7 +135,6 @@ export async function findOrCreateUserForPurchase(
       }
     }
 
-    // Handle other errors
     console.error(`[Admin Action] Error in findOrCreateUserForPurchase for email ${email}:`, error);
     return { success: false, message: `An unexpected error occurred: ${error.message}` };
   }
@@ -175,16 +142,7 @@ export async function findOrCreateUserForPurchase(
 
 export const checkAndIncrementUsage = async (userId: string): Promise<{ canProceed: boolean; error?: string }> => {
   if (!adminDb) {
-    console.error(`
-      *****************************************************************
-      *           CRITICAL WARNING: USAGE CHECKING DISABLED           *
-      *****************************************************************
-      * Firebase Admin SDK is not initialized.                        *
-      * ALL USERS WILL HAVE UNLIMITED USAGE.                          *
-      * To fix this, set FIREBASE_SERVICE_ACCOUNT_KEY_BASE64 in your  *
-      * server's environment variables.                               *
-      *****************************************************************
-    `);
+    console.error("CRITICAL WARNING: USAGE CHECKING DISABLED. Firebase Admin SDK is not initialized.");
     return { canProceed: true };
   }
   if (!userId) {
@@ -198,6 +156,7 @@ export const checkAndIncrementUsage = async (userId: string): Promise<{ canProce
       const userSnap = await transaction.get(userRef);
 
       if (!userSnap.exists) {
+        console.warn(`[checkAndIncrementUsage] User document not found for UID: ${userId}.`);
         return { canProceed: false, error: "User data not found. Please re-login." };
       }
 
@@ -210,7 +169,7 @@ export const checkAndIncrementUsage = async (userId: string): Promise<{ canProce
       const DAILY_GENERATION_LIMIT = 6;
       const now = new Date();
       const todayUTCStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())).getTime();
-
+      
       let lastGenTime = 0;
       if (userData.lastGenerationDate) {
         const lastGenDate = userData.lastGenerationDate.toDate();
@@ -222,14 +181,13 @@ export const checkAndIncrementUsage = async (userId: string): Promise<{ canProce
       if (lastGenTime < todayUTCStart) {
         dailyGenerationsUsed = 0;
       }
-
+      
       if (dailyGenerationsUsed >= DAILY_GENERATION_LIMIT) {
-        return { canProceed: false, error: `USAGE_LIMIT_EXCEEDED:You've used all ${DAILY_GENERATION_LIMIT} of your free daily generations. Please upgrade for unlimited access.` };
+        return { canProceed: false, error: "USAGE_LIMIT_EXCEEDED" };
       }
 
-      const newCount = dailyGenerationsUsed + 1;
       transaction.update(userRef, {
-        dailyGenerationsUsed: newCount,
+        dailyGenerationsUsed: dailyGenerationsUsed + 1,
         lastGenerationDate: Timestamp.now(),
         updatedAt: Timestamp.now(),
       });

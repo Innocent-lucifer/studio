@@ -65,17 +65,22 @@ export const TopicResearch: React.FC<TopicResearchProps> = ({
 
     setIsLoading(true);
     setResearchedContent(""); 
+    setTopic("");
+
     try {
       const result = await researchTopic({ topic: topicInput, userId: userId }); 
-      if (result.error?.includes('USAGE_LIMIT_EXCEEDED')) {
-        onLimitReached();
-        setTopic(topicInput);
-        setResearchedContent(''); // Ensure no content is set on limit
-      } else if (result.error) {
-        toast({ variant: "destructive", title: "Research Failed", description: result.error, iconType: "alertTriangle" });
-        setTopic(topicInput);
-        setResearchedContent(`Error researching "${topicInput}": ${result.error}`);
+      
+      if (result.error) {
+        if (result.error.includes('USAGE_LIMIT_EXCEEDED')) {
+            onLimitReached();
+        } else {
+            toast({ variant: "destructive", title: "Research Failed", description: result.error, iconType: "alertTriangle" });
+        }
+        // CRITICAL: In case of any error, we clear the content to stop the flow.
+        setResearchedContent("");
+        setTopic("");
       } else {
+        // SUCCESS: Only set content and topic on success.
         setTopic(topicInput);
         setResearchedContent(result.summary);
       }
@@ -87,8 +92,8 @@ export const TopicResearch: React.FC<TopicResearchProps> = ({
         description: error.message || "Failed to research topic. Please try again.",
         iconType: "alertTriangle"
       });
-      setTopic(topicInput);
-      setResearchedContent(`Failed to research "${topicInput}". Please try again.`);
+      setResearchedContent("");
+      setTopic("");
     } finally {
       setIsLoading(false);
     }

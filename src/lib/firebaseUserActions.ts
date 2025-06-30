@@ -43,8 +43,8 @@ export interface UserData {
   referredBy?: string;
   referralsMade?: number;
   plan: 'free' | 'monthly' | 'yearly';
-  dailyGenerationsUsed?: number;
-  lastGenerationDate?: Timestamp;
+  dailyGenerationsUsed: number;
+  lastGenerationDate: Timestamp;
 }
 
 export interface Draft {
@@ -91,8 +91,6 @@ export const createUserDocument = async (
   if (!user) return null;
   const userRef = doc(db, 'users', user.uid) as DocumentReference<UserData>;
 
-  const defaultPlan: UserData['plan'] = 'free';
-
   try {
     const userSnap = await getDoc(userRef);
 
@@ -106,45 +104,20 @@ export const createUserDocument = async (
         updatedAt: now,
         referralCode: generateReferralCode(),
         referralsMade: 0,
-        plan: defaultPlan,
+        plan: 'free',
         dailyGenerationsUsed: 0,
         lastGenerationDate: now,
       };
-
-      if (referredByCode) {
-          // Future referral logic can be implemented here
-      }
       
-      const userDataForDb = { ...userData };
-      delete (userDataForDb as any).createdAt;
-      delete (userDataForDb as any).updatedAt;
-      delete (userDataForDb as any).lastGenerationDate;
-
-
       await setDoc(userRef, {
-        ...userDataForDb,
+        ...userData,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
         lastGenerationDate: serverTimestamp(),
       });
       return userData;
     } else {
-      const existingData = userSnap.data() as UserData;
-      const updates: Partial<UserData> = {};
-      if (!existingData.plan) {
-        updates.plan = 'free';
-      }
-      if (existingData.dailyGenerationsUsed === undefined) {
-          updates.dailyGenerationsUsed = 0;
-      }
-       if (existingData.lastGenerationDate === undefined) {
-          updates.lastGenerationDate = Timestamp.now();
-      }
-      if (Object.keys(updates).length > 0) {
-        await updateDoc(userRef, { ...updates, updatedAt: serverTimestamp() });
-        return { ...existingData, ...updates, updatedAt: Timestamp.now() } as UserData;
-      }
-      return existingData;
+      return userSnap.data() as UserData;
     }
   } catch (error) {
     console.error('Error in createUserDocument:', error);
@@ -178,7 +151,7 @@ export const getUserData = async (uid: string, userForCreation?: FirebaseAuthUse
           await updateDoc(userRef, { ...updates, updatedAt: serverTimestamp() });
           return { ...existingData, ...updates, updatedAt: Timestamp.now() } as UserData;
        }
-      return existingData;
+      return existingData as UserData;
     } else {
       if (userForCreation && userForCreation.uid === uid) {
         return await createUserDocument(userForCreation);
