@@ -10,6 +10,7 @@
 
 import {ai}from '@/ai/ai-instance';
 import {z}from 'genkit';
+import { checkAndIncrementUsage } from '@/lib/firebaseAdminActions';
 
 const GeneratePostFromImageInputSchema = z.object({
   imageDataUri: z
@@ -90,6 +91,15 @@ const generatePostFromImageFlow = ai.defineFlow({
   inputSchema: GeneratePostFromImageInputSchema,
   outputSchema: GeneratePostFromImageOutputSchema,
 }, async (input) => {
+    const { userId } = input;
+    if (!userId) {
+        return { error: "User not authenticated." };
+    }
+    const usageCheck = await checkAndIncrementUsage(userId);
+    if (!usageCheck.canProceed) {
+        return { error: usageCheck.error || "An unknown usage error occurred." };
+    }
+
   try {
     const { output: promptOutput, usage } = await prompt(input);
 

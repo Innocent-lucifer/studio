@@ -78,11 +78,7 @@ const QuickPostPageContent = () => {
         try {
             const result = await researchTopic({ topic: topicToResearch, userId: userIdToPass });
              if (result.error) {
-                if (result.error === 'USAGE_LIMIT_EXCEEDED') {
-                    setIsLimitModalOpen(true);
-                } else {
-                    toast({ variant: "destructive", title: "Research Failed", description: result.error });
-                }
+                toast({ variant: "destructive", title: "Research Failed", description: result.error });
                 setResearchedContent(`Error researching "${topicToResearch}": ${result.error}`);
             } else {
                 setResearchedContent(result.summary);
@@ -284,7 +280,6 @@ const QuickPostPageContent = () => {
                     setIsLoading={setResearchIsLoading}
                     userId={userIdToPass} 
                     isLoading={researchIsLoading}
-                    onLimitExceeded={() => setIsLimitModalOpen(true)}
                   />
                 </CardContent>
               </Card>
@@ -324,6 +319,7 @@ const QuickPostPageContent = () => {
                           setTwitterPosts={setTwitterPosts}
                           displayGeneratedPostsInCard={displayTwitterInCard}
                           setParentPostsEmpty={clearTwitterPosts}
+                          onLimitExceeded={() => setIsLimitModalOpen(true)}
                         />
                       </CardContent>
                     </Card>
@@ -344,6 +340,7 @@ const QuickPostPageContent = () => {
                           setLinkedinPosts={setLinkedinPosts}
                           displayGeneratedPostsInCard={displayLinkedInInCard}
                           setParentPostsEmpty={clearLinkedinPosts}
+                          onLimitExceeded={() => setIsLimitModalOpen(true)}
                         />
                       </CardContent>
                     </Card>

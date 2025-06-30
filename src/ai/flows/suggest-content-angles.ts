@@ -11,6 +11,7 @@
 
 import {ai}from '@/ai/ai-instance';
 import {z}from 'genkit';
+import { checkAndIncrementUsage } from '@/lib/firebaseAdminActions';
 
 const ContentAngleSchema = z.object({
   title: z.string().describe('A concise, compelling title for the content angle (max 10 words).'),
@@ -66,6 +67,15 @@ const suggestContentAnglesFlow = ai.defineFlow({
   inputSchema: SuggestContentAnglesInputSchema,
   outputSchema: SuggestContentAnglesOutputSchema,
 }, async (input) => {
+    const { userId } = input;
+    if (!userId) {
+        return { error: "User not authenticated." };
+    }
+    const usageCheck = await checkAndIncrementUsage(userId);
+    if (!usageCheck.canProceed) {
+        return { error: usageCheck.error || "An unknown usage error occurred." };
+    }
+
   try {
     const { output: promptOutput } = await prompt(input);
 

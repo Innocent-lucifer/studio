@@ -15,6 +15,7 @@ interface LinkedInPostGeneratorProps {
   setLinkedinPosts: (posts: string[]) => void;
   displayGeneratedPostsInCard: boolean;
   setParentPostsEmpty: () => void;
+  onLimitExceeded: () => void;
 }
 
 export const LinkedInPostGenerator: React.FC<LinkedInPostGeneratorProps> = ({ 
@@ -22,7 +23,8 @@ export const LinkedInPostGenerator: React.FC<LinkedInPostGeneratorProps> = ({
   userId,
   setLinkedinPosts, 
   displayGeneratedPostsInCard,
-  setParentPostsEmpty
+  setParentPostsEmpty,
+  onLimitExceeded,
 }) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [generatedPostsInternal, setGeneratedPostsInternal] = useState<string[]>([]);
@@ -57,8 +59,12 @@ export const LinkedInPostGenerator: React.FC<LinkedInPostGeneratorProps> = ({
     try {
       const result = await generateLinkedInPosts({ topic: topic, numPosts: 3, userId }); 
       if (result.error) {
-         setError(result.error);
-         toast({ variant: "destructive", title: "Generation Error", description: result.error, iconType: 'alertTriangle' });
+         if (result.error === 'USAGE_LIMIT_EXCEEDED') {
+            onLimitExceeded();
+         } else {
+            setError(result.error);
+            toast({ variant: "destructive", title: "Generation Error", description: result.error, iconType: 'alertTriangle' });
+         }
          setGeneratedPostsInternal([]);
          setLinkedinPosts([]);
       } else {
@@ -80,7 +86,7 @@ export const LinkedInPostGenerator: React.FC<LinkedInPostGeneratorProps> = ({
     } finally {
       setIsLoading(false);
     }
-  }, [topic, userId, toast, setLinkedinPosts]);
+  }, [topic, userId, toast, setLinkedinPosts, onLimitExceeded]);
 
   useEffect(() => {
     const canGenerateInitial = topic && userId && userId !== "sagepostai-guest-user";
@@ -115,8 +121,12 @@ export const LinkedInPostGenerator: React.FC<LinkedInPostGeneratorProps> = ({
     try {
       const result = await regenerateLinkedInPosts({ topic, numPosts: 3, userId });
       if (result.error) {
-         setError(result.error);
-         toast({ variant: "destructive", title: "Regeneration Error", description: result.error, iconType: 'alertTriangle' });
+         if (result.error === 'USAGE_LIMIT_EXCEEDED') {
+            onLimitExceeded();
+         } else {
+            setError(result.error);
+            toast({ variant: "destructive", title: "Regeneration Error", description: result.error, iconType: 'alertTriangle' });
+         }
          setGeneratedPostsInternal([]);
          setLinkedinPosts([]);
       } else {
