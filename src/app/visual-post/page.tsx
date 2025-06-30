@@ -490,11 +490,9 @@ function VisualPostPageComponent() {
                 Your AI-Generated Post
               </CardTitle>
               {isLoading && (
-                <div className="p-6 bg-slate-700/50 rounded-xl min-h-[150px] space-y-3">
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-[90%]" />
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-[75%]" />
+                <div className="flex flex-col items-center justify-center p-6 bg-slate-700/50 rounded-xl min-h-[150px]">
+                  <Icons.loader className="h-12 w-12 animate-spin text-primary" />
+                  <p className="mt-4 text-lg text-slate-300">Generating post...</p>
                 </div>
               )}
               {!isLoading && error && (
