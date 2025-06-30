@@ -55,7 +55,7 @@ function PricingComponent({ plans }: PricingProps) {
     if (user) {
       if (window.Paddle) {
         window.Paddle.Checkout.open({
-          items: [{ priceId, quantity: 1 }],
+          items: [{ priceId: priceId.trim(), quantity: 1 }],
           customer: {
             email: user.email ?? undefined,
           },

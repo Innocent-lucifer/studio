@@ -14,7 +14,7 @@ const BuiltWith = lazy(() => import("@/components/sections/BuiltWith"));
 const ProblemSolution = lazy(() => import("@/components/sections/ProblemSolution"));
 const Features = lazy(() => import("@/components/sections/Features"));
 const HowItWorks = lazy(() => import("@/components/sections/HowItWorks"));
-// const Examples = lazy(() => import("@/components/sections/Examples"));
+const Examples = lazy(() => import("@/components/sections/Examples"));
 const Comparison = lazy(() => import("@/components/sections/Comparison"));
 const Testimonials = lazy(() => import("@/components/sections/Testimonials"));
 const Pricing = lazy(() => import("@/components/sections/Pricing"));
@@ -87,7 +87,7 @@ export default function Home() {
         "Copy & export posts anytime",
         "Saved Content History",
       ],
-      priceId: process.env.NEXT_PUBLIC_PADDLE_MONTHLY_PRICE_ID || ""
+      priceId: process.env.NEXT_PUBLIC_PADDLE_MONTHLY_PRICE_ID?.trim() || ""
     },
     {
       title: "Sage Infinity Yearly",
@@ -109,7 +109,7 @@ export default function Home() {
         "Copy & export posts anytime",
         "Saved Content History",
       ],
-      priceId: process.env.NEXT_PUBLIC_PADDLE_YEARLY_PRICE_ID || ""
+      priceId: process.env.NEXT_PUBLIC_PADDLE_YEARLY_PRICE_ID?.trim() || ""
     }
   ];
 
@@ -172,7 +172,7 @@ export default function Home() {
           <ProblemSolution />
           <Features />
           <HowItWorks />
-          {/* <Examples /> */}
+          <Examples />
           <Comparison />
           <Testimonials />
           <Pricing plans={plans} />

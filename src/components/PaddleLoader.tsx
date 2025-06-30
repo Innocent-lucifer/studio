@@ -19,7 +19,7 @@ export function PaddleLoader() {
       onLoad={() => {
         if (paddleToken) {
           window.Paddle.Initialize({
-            token: paddleToken,
+            token: paddleToken.trim(),
           });
         } else {
           console.warn("Paddle client token is not set. Checkout will not function.");

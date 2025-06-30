@@ -25,8 +25,8 @@ function AccountPageComponent() {
   const [isYearlyUpgradeModalOpen, setIsYearlyUpgradeModalOpen] = useState(false);
   const [isRefundModalOpen, setIsRefundModalOpen] = useState(false);
 
-  const monthlyPriceId = process.env.NEXT_PUBLIC_PADDLE_MONTHLY_PRICE_ID!;
-  const yearlyPriceId = process.env.NEXT_PUBLIC_PADDLE_YEARLY_PRICE_ID!;
+  const monthlyPriceId = process.env.NEXT_PUBLIC_PADDLE_MONTHLY_PRICE_ID?.trim()!;
+  const yearlyPriceId = process.env.NEXT_PUBLIC_PADDLE_YEARLY_PRICE_ID?.trim()!;
 
   useEffect(() => {
     if (!authLoading && !user) {
