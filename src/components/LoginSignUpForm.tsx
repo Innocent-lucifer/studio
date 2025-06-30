@@ -11,7 +11,7 @@ import { Button as ShadButton } from "@/components/ui/button";
 import { AppLogo } from "@/components/AppLogo";
 import { Icons } from "@/components/icons";
 
-type FormMode = "login" | "register" | "forgotPassword" | "emailLink";
+type FormMode = "login" | "register" | "forgotPassword";
 
 export function LoginSignUpForm() {
   const [formMode, setFormMode] = useState<FormMode>("login");
@@ -23,7 +23,7 @@ export function LoginSignUpForm() {
   const [googleLoading, setGoogleLoading] = useState(false);
   
   const { toast } = useToast();
-  const { signUp, logIn, signInWithGoogle, sendPasswordReset, sendEmailSignInLink, loading } = useAuth();
+  const { signUp, logIn, signInWithGoogle, sendPasswordReset, loading } = useAuth();
 
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
   const toggleConfirmPasswordVisibility = () => setShowConfirmPassword(!showConfirmPassword);
@@ -49,7 +49,8 @@ export function LoginSignUpForm() {
       }
       try {
         await signUp(email, password);
-        toast({ title: "Account Created!", description: "Welcome! You've successfully signed up.", iconType: "checkCircle" });
+        toast({ title: "Account Created!", description: "Please check your email to verify your account before logging in.", iconType: "checkCircle", duration: 8000 });
+        handleModeChange('login'); // Switch to login view after successful signup
       } catch (error) {
         const authError = error as AuthError;
         console.error("Sign Up Error (from component):", authError);
@@ -61,8 +62,13 @@ export function LoginSignUpForm() {
         toast({ title: "Signed In!", description: "Welcome back! You're now signed in.", iconType: "checkCircle" });
       } catch (error) {
         const authError = error as AuthError;
-        console.error("Sign In Error (from component):", authError);
-        toast({ title: "Sign In Failed", description: authError.message || "Invalid email or password. Please try again.", variant: "destructive", iconType: "alertTriangle" });
+        // Check for our custom verification error message from AuthContext
+        if (authError.message.includes('verify your email')) {
+          toast({ title: "Verification Required", description: authError.message, variant: "destructive", iconType: "alertTriangle", duration: 8000 });
+        } else {
+          console.error("Sign In Error (from component):", authError);
+          toast({ title: "Sign In Failed", description: authError.message || "Invalid email or password. Please try again.", variant: "destructive", iconType: "alertTriangle" });
+        }
       }
     } else if (formMode === 'forgotPassword') {
        if (!email) {
@@ -75,18 +81,6 @@ export function LoginSignUpForm() {
         handleModeChange('login');
       } else if (result.error) {
         toast({ title: "Password Reset Failed", description: result.error.message, variant: "destructive", iconType: "alertTriangle" });
-      }
-    } else if (formMode === 'emailLink') {
-      if (!email) {
-        toast({ title: "Email Required", description: "Please enter your email to receive a sign-in link.", variant: "destructive", iconType: "alertTriangle" });
-        return;
-      }
-      const result = await sendEmailSignInLink(email);
-      if (result.success) {
-        toast({ title: "Check Your Email!", description: `A sign-in link has been sent to ${email}.`, iconType: "checkCircle", duration: 8000 });
-        handleModeChange('login');
-      } else if (result.error) {
-        toast({ title: "Failed to Send Link", description: result.error.message, variant: "destructive", iconType: "alertTriangle" });
       }
     }
   };
@@ -117,7 +111,6 @@ export function LoginSignUpForm() {
       case 'login': return "Welcome Back";
       case 'register': return "Create Account";
       case 'forgotPassword': return "Reset Password";
-      case 'emailLink': return "Sign in with Email";
     }
   };
   
@@ -127,7 +120,6 @@ export function LoginSignUpForm() {
       case 'login': return "Sign In";
       case 'register': return "Sign Up";
       case 'forgotPassword': return "Send Reset Link";
-      case 'emailLink': return "Send Sign-in Link";
     }
   };
 
@@ -163,7 +155,7 @@ export function LoginSignUpForm() {
           />
         </motion.div>
 
-        {formMode !== 'forgotPassword' && formMode !== 'emailLink' && (
+        {formMode !== 'forgotPassword' && (
           <motion.div>
             <label htmlFor="password-auth" className="block text-sm font-medium mb-1 text-slate-300">Password</label>
             <div className="relative">
@@ -216,13 +208,7 @@ export function LoginSignUpForm() {
         )}
         
         {formMode === 'login' && (
-          <div className="flex justify-between items-center text-sm">
-            <span
-              className="text-indigo-400 hover:text-purple-400 cursor-pointer"
-              onClick={() => handleModeChange('emailLink')}
-            >
-              Sign in with magic link
-            </span>
+          <div className="text-right text-sm">
             <span
               className="text-indigo-400 hover:text-purple-400 cursor-pointer"
               onClick={() => handleModeChange('forgotPassword')}
@@ -243,7 +229,7 @@ export function LoginSignUpForm() {
           </ShadButton>
         </motion.div>
 
-        {formMode !== 'forgotPassword' && formMode !== 'emailLink' && (
+        {formMode !== 'forgotPassword' && (
           <>
             <motion.div className="my-3 relative !mt-6 !mb-5">
               <div className="absolute inset-0 flex items-center">
@@ -283,14 +269,8 @@ export function LoginSignUpForm() {
               Register now
             </span>
           </>
-        ) : formMode === 'register' ? (
-          <>Already have an account?{" "}
-            <span onClick={() => handleModeChange('login')} className="text-indigo-400 hover:text-purple-400 cursor-pointer">
-              Sign In
-            </span>
-          </>
         ) : (
-           <>Remember your password?{" "}
+           <>Already have an account?{" "}
             <span onClick={() => handleModeChange('login')} className="text-indigo-400 hover:text-purple-400 cursor-pointer">
               Sign In
             </span>
