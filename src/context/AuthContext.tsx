@@ -11,6 +11,7 @@ import {
   signInWithPopup,
   signOut,
   sendPasswordResetEmail,
+  sendSignInLinkToEmail,
   GoogleAuthProvider
 } from 'firebase/auth';
 import { auth, app, isFirebaseConfigured } from '@/lib/firebase';
@@ -27,6 +28,7 @@ interface AuthContextType {
   signInWithGoogle: () => Promise<User | null>;
   logOut: () => Promise<void>;
   sendPasswordReset: (email: string) => Promise<{ success: boolean; error?: AuthError | null }>;
+  sendEmailSignInLink: (email: string) => Promise<{ success: boolean; error?: AuthError | null }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -175,9 +177,30 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setLoading(false);
     }
   };
+  
+  const sendEmailSignInLink = async (email: string): Promise<{ success: boolean; error?: AuthError | null }> => {
+    if (!auth) throw new Error("Firebase is not configured.");
+    
+    const actionCodeSettings = {
+      url: `${window.location.origin}/finishSignUp`,
+      handleCodeInApp: true,
+    };
+
+    setLoading(true);
+    try {
+      await sendSignInLinkToEmail(auth, email, actionCodeSettings);
+      window.localStorage.setItem('emailForSignIn', email);
+      return { success: true };
+    } catch (error) {
+      const authError = error as AuthError;
+      return { success: false, error: authError };
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <AuthContext.Provider value={{ user, userData, loading, signUp, logIn, signInWithGoogle, logOut, sendPasswordReset }}>
+    <AuthContext.Provider value={{ user, userData, loading, signUp, logIn, signInWithGoogle, logOut, sendPasswordReset, sendEmailSignInLink }}>
       {children}
     </AuthContext.Provider>
   );

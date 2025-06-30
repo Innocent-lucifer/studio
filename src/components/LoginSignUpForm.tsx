@@ -11,7 +11,7 @@ import { Button as ShadButton } from "@/components/ui/button";
 import { AppLogo } from "@/components/AppLogo";
 import { Icons } from "@/components/icons";
 
-type FormMode = "login" | "register" | "forgotPassword";
+type FormMode = "login" | "register" | "forgotPassword" | "emailLink";
 
 export function LoginSignUpForm() {
   const [formMode, setFormMode] = useState<FormMode>("login");
@@ -23,7 +23,7 @@ export function LoginSignUpForm() {
   const [googleLoading, setGoogleLoading] = useState(false);
   
   const { toast } = useToast();
-  const { signUp, logIn, signInWithGoogle, sendPasswordReset, loading } = useAuth();
+  const { signUp, logIn, signInWithGoogle, sendPasswordReset, sendEmailSignInLink, loading } = useAuth();
 
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
   const toggleConfirmPasswordVisibility = () => setShowConfirmPassword(!showConfirmPassword);
@@ -76,6 +76,18 @@ export function LoginSignUpForm() {
       } else if (result.error) {
         toast({ title: "Password Reset Failed", description: result.error.message, variant: "destructive", iconType: "alertTriangle" });
       }
+    } else if (formMode === 'emailLink') {
+      if (!email) {
+        toast({ title: "Email Required", description: "Please enter your email to receive a sign-in link.", variant: "destructive", iconType: "alertTriangle" });
+        return;
+      }
+      const result = await sendEmailSignInLink(email);
+      if (result.success) {
+        toast({ title: "Check Your Email!", description: `A sign-in link has been sent to ${email}.`, iconType: "checkCircle", duration: 8000 });
+        handleModeChange('login');
+      } else if (result.error) {
+        toast({ title: "Failed to Send Link", description: result.error.message, variant: "destructive", iconType: "alertTriangle" });
+      }
     }
   };
 
@@ -100,27 +112,12 @@ export function LoginSignUpForm() {
     transition: { duration: 0.35, ease: "easeOut" },
   };
   
-  const formElementsContainerAnimation = {
-    initial: "hidden",
-    animate: "visible",
-    variants: {
-      hidden: {},
-      visible: { transition: { staggerChildren: 0.07, delayChildren: 0.25 } },
-    },
-  };
-
-  const formElementAnimation = {
-    variants: {
-      hidden: { opacity: 0, y: 10 },
-      visible: { opacity: 1, y: 0, transition: { duration: 0.25, ease: "easeOut" } },
-    },
-  };
-  
   const getTitle = () => {
     switch (formMode) {
       case 'login': return "Welcome Back";
       case 'register': return "Create Account";
       case 'forgotPassword': return "Reset Password";
+      case 'emailLink': return "Sign in with Email";
     }
   };
   
@@ -130,6 +127,7 @@ export function LoginSignUpForm() {
       case 'login': return "Sign In";
       case 'register': return "Sign Up";
       case 'forgotPassword': return "Send Reset Link";
+      case 'emailLink': return "Send Sign-in Link";
     }
   };
 
@@ -152,7 +150,7 @@ export function LoginSignUpForm() {
         onSubmit={handleAuthSubmit}
         className="space-y-4"
       >
-        <motion.div {...formElementAnimation}>
+        <motion.div>
           <label htmlFor="email-auth" className="block text-sm font-medium mb-1 text-slate-300">Email</label>
           <input
             type="email"
@@ -165,8 +163,8 @@ export function LoginSignUpForm() {
           />
         </motion.div>
 
-        {formMode !== 'forgotPassword' && (
-          <motion.div {...formElementAnimation}>
+        {formMode !== 'forgotPassword' && formMode !== 'emailLink' && (
+          <motion.div>
             <label htmlFor="password-auth" className="block text-sm font-medium mb-1 text-slate-300">Password</label>
             <div className="relative">
               <input
@@ -192,7 +190,7 @@ export function LoginSignUpForm() {
         )}
 
         {formMode === 'register' && (
-          <motion.div {...formElementAnimation}>
+          <motion.div>
             <label htmlFor="confirm-password-auth" className="block text-sm font-medium mb-1 text-slate-300">Confirm Password</label>
             <div className="relative">
               <input
@@ -218,16 +216,23 @@ export function LoginSignUpForm() {
         )}
         
         {formMode === 'login' && (
-          <motion.div
-            {...formElementAnimation}
-            className="text-sm text-right text-indigo-400 hover:text-purple-400 cursor-pointer"
-            onClick={() => handleModeChange('forgotPassword')}
-          >
-            Forgot password?
-          </motion.div>
+          <div className="flex justify-between items-center text-sm">
+            <span
+              className="text-indigo-400 hover:text-purple-400 cursor-pointer"
+              onClick={() => handleModeChange('emailLink')}
+            >
+              Sign in with magic link
+            </span>
+            <span
+              className="text-indigo-400 hover:text-purple-400 cursor-pointer"
+              onClick={() => handleModeChange('forgotPassword')}
+            >
+              Forgot password?
+            </span>
+          </div>
         )}
         
-        <motion.div {...formElementAnimation}>
+        <motion.div>
           <ShadButton 
             type="submit"
             disabled={loading}
@@ -238,9 +243,9 @@ export function LoginSignUpForm() {
           </ShadButton>
         </motion.div>
 
-        {formMode !== 'forgotPassword' && (
+        {formMode !== 'forgotPassword' && formMode !== 'emailLink' && (
           <>
-            <motion.div {...formElementAnimation} className="my-3 relative !mt-6 !mb-5">
+            <motion.div className="my-3 relative !mt-6 !mb-5">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-slate-600" />
               </div>
@@ -251,7 +256,7 @@ export function LoginSignUpForm() {
               </div>
             </motion.div>
 
-            <motion.div {...formElementAnimation}>
+            <motion.div>
               <ShadButton 
                 type="button" 
                 onClick={handleGoogleAuth}
@@ -278,8 +283,14 @@ export function LoginSignUpForm() {
               Register now
             </span>
           </>
-        ) : (
+        ) : formMode === 'register' ? (
           <>Already have an account?{" "}
+            <span onClick={() => handleModeChange('login')} className="text-indigo-400 hover:text-purple-400 cursor-pointer">
+              Sign In
+            </span>
+          </>
+        ) : (
+           <>Remember your password?{" "}
             <span onClick={() => handleModeChange('login')} className="text-indigo-400 hover:text-purple-400 cursor-pointer">
               Sign In
             </span>
