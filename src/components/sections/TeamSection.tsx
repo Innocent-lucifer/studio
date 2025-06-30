@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from "react";
@@ -85,7 +86,7 @@ const TeamSectionComponent: React.FC<TeamSectionProps> = ({ onReadRishabhStory }
                     alt={member.name}
                     width={224}
                     height={224}
-                    className="object-contain w-full h-full"
+                    className="object-cover object-top w-full h-full"
                   />
                 </div>
                 <CardTitle>{member.name}</CardTitle>
