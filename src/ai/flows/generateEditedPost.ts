@@ -10,7 +10,6 @@
 
 import {ai}from '@/ai/ai-instance';
 import {z}from 'genkit';
-import { checkAndIncrementUsage } from '@/lib/firebaseAdminActions';
 
 const GenerateEditedPostInputSchema = z.object({
   originalPost: z.string().describe('The original social media post content.'),
@@ -70,14 +69,6 @@ const generateEditedPostFlow = ai.defineFlow(
     outputSchema: GenerateEditedPostOutputSchema,
   },
   async (input) => {
-    if (!input.userId) {
-      return { error: "User ID is required for this operation." };
-    }
-    const usageCheck = await checkAndIncrementUsage(input.userId);
-    if (!usageCheck.canProceed) {
-      return { error: usageCheck.error };
-    }
-
     try {
       const {output: promptOutput} = await prompt(input); 
       if (!promptOutput || !promptOutput.editedPost) {

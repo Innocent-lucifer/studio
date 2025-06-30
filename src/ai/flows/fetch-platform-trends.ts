@@ -13,7 +13,6 @@ import {ai}from '@/ai/ai-instance';
 import {z}from 'genkit';
 import { searchTwitter } from '@/ai/tools/searchTwitter';
 import { searchNews } from '@/ai/tools/searchNews'; // Import searchNews
-import { checkAndIncrementUsage } from '@/lib/firebaseAdminActions';
 
 const TrendSchema = z.object({
   id: z.string().describe('A unique identifier for the trend.'),
@@ -105,14 +104,6 @@ const fetchPlatformTrendsFlow = ai.defineFlow({
   inputSchema: FetchPlatformTrendsInputSchema,
   outputSchema: FetchPlatformTrendsOutputSchema,
 }, async (input) => {
-  if (!input.userId) {
-    return { error: "User ID is required for this operation." };
-  }
-  const usageCheck = await checkAndIncrementUsage(input.userId);
-  if (!usageCheck.canProceed) {
-    return { error: usageCheck.error };
-  }
-
   let twitterSearchResults: string | undefined = undefined;
   let newsSearchResults: string | undefined = undefined;
   

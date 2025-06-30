@@ -10,7 +10,6 @@
 
 import {ai}from '@/ai/ai-instance';
 import {z}from 'genkit';
-import { checkAndIncrementUsage } from '@/lib/firebaseAdminActions';
 
 const GenerateCampaignSeriesInputSchema = z.object({
   topic: z.string().describe('The main topic of the campaign.'),
@@ -93,14 +92,6 @@ const generateCampaignSeriesFlow = ai.defineFlow({
   inputSchema: GenerateCampaignSeriesInputSchema,
   outputSchema: GenerateCampaignSeriesOutputSchema,
 }, async (input) => {
-  if (!input.userId) {
-    return { error: "User ID is required for this operation." };
-  }
-  const usageCheck = await checkAndIncrementUsage(input.userId);
-  if (!usageCheck.canProceed) {
-    return { error: usageCheck.error };
-  }
-
   try {
     const { output: promptOutput, usage } = await prompt(input);
 

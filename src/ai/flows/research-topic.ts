@@ -13,7 +13,6 @@ import {ai}from '@/ai/ai-instance';
 import {z}from 'genkit';
 import { searchTwitter } from '@/ai/tools/searchTwitter';
 import { searchNews } from '@/ai/tools/searchNews'; // Import searchNews
-import { checkAndIncrementUsage } from '@/lib/firebaseAdminActions';
 
 const ResearchTopicInputSchema = z.object({
   topic: z.string().describe('The topic to research.'),
@@ -75,14 +74,6 @@ const researchTopicFlow = ai.defineFlow(
     outputSchema: ResearchTopicOutputSchema,
   }, 
   async (input) => {
-    if (!input.userId) {
-      return { summary: "", error: "User ID is required for this operation." };
-    }
-    const usageCheck = await checkAndIncrementUsage(input.userId);
-    if (!usageCheck.canProceed) {
-        return { summary: "", error: usageCheck.error };
-    }
-
     const { topic, userId } = input;
     
     try {
