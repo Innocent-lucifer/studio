@@ -13,10 +13,12 @@ import { useAuth } from "@/context/AuthContext";
 const ProductHuntBadge = lazy(() => import("../compos/ProductHuntBadge"));
 
 const placeholders = [
-  "Enter a topic to see the magic...",
-  "For Founders: 'Go-to-market strategy for a new SaaS'",
-  "For Creators: 'My journey building a personal brand'",
-  "For Marketers: 'Latest trends in content marketing'",
+  "Why pineapple on pizza is a war crime...",
+  "A professional breakdown of the meme economy",
+  "How my cat accidentally became a micro-influencer",
+  "My journey from 'I have an idea' to 'pls clap'",
+  "Unpacking the psychological damage of 'reply all' emails",
+  "Convince me that waking up before 9am is a good idea"
 ];
 
 export default function Hero() {
