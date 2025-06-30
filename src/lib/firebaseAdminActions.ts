@@ -196,6 +196,7 @@ export const checkAndIncrementUsage = async (userId: string): Promise<{ canProce
 
       // Users on paid plans can always proceed
       if (userData.plan !== 'free') {
+          console.log(`[Usage Check] User ${userId} on plan '${userData.plan}' has unlimited access. Proceeding.`);
           return { canProceed: true };
       }
 
