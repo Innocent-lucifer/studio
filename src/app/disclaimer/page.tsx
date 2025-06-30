@@ -60,9 +60,9 @@ export default function DisclaimerPage() {
                         </p>
                     </PolicySection>
 
-                    <PolicySection title="3-Day Free Trial Clarification">
+                    <PolicySection title="Free Plan Limitations">
                         <p>
-                            The "3-day free trial" provides limited access to our platform's features for evaluation. This trial permits a total of six (6) free generations to use on any tool within the 3-day period. It is not an unlimited access trial. Usage is monitored, and any attempt to bypass these limitations may result in immediate account termination. After the trial period or usage limit is reached, users must upgrade to a paid plan to continue using the service.
+                            The free plan is designed to let you explore the platform's core features. It includes a daily limit of six (6) AI generations, which can be used across any of our tools. This limit resets every 24 hours. Usage is monitored, and any attempt to bypass these limitations may result in immediate account termination. To get unlimited access, users must upgrade to a paid plan.
                         </p>
                     </PolicySection>
                     

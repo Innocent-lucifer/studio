@@ -55,8 +55,8 @@ export async function updateUserPlanByUID(
       await userRef.update({
         plan: newPlan,
         updatedAt: Timestamp.now(),
-        // Reset trial data upon upgrade
-        generationsUsed: 0,
+        // Reset usage data upon upgrade
+        dailyGenerationsUsed: 0,
       });
       console.log(`[Admin Action] Updated plan for existing user UID: ${uid} to ${newPlan}`);
     } else {
@@ -74,7 +74,7 @@ export async function updateUserPlanByUID(
         plan: newPlan, // Set their purchased plan
         referralCode: generateReferralCode(),
         referralsMade: 0,
-        generationsUsed: 0, // Set to 0 for new paid user
+        dailyGenerationsUsed: 0, // Set to 0 for new paid user
       };
       await userRef.set(newUserDoc);
       console.log(`[Admin Action] Created new user document for UID: ${uid} with plan ${newPlan}`);
@@ -144,7 +144,7 @@ export async function findOrCreateUserForPurchase(
           plan: newPlan, // Start them on their purchased plan
           referralCode: generateReferralCode(),
           referralsMade: 0,
-          generationsUsed: 0, // Set to 0 for new paid user
+          dailyGenerationsUsed: 0, // Set to 0 for new paid user
         };
 
         await userRef.set(newUserDoc);
@@ -202,44 +202,42 @@ export const checkAndIncrementUsage = async (userId: string): Promise<{ canProce
 
       const userData = userSnap.data() as UserData;
 
-      // Users on paid plans can always proceed
       if (userData.plan !== 'free') {
-          console.log(`[Usage Check] User ${userId} on plan '${userData.plan}' has unlimited access. Proceeding.`);
           return { canProceed: true };
       }
 
-      // Logic for free plan users
-      const TRIAL_PERIOD_DAYS = 3;
-      const GENERATION_LIMIT = 6;
+      const DAILY_GENERATION_LIMIT = 6;
+      const now = new Date();
+      // Get the start of today in UTC
+      const todayUTCStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())).getTime();
 
-      if (userData.trialStartedAt) {
-          const trialStartDate = userData.trialStartedAt.toDate();
-          const now = new Date();
-          const diffTime = now.getTime() - trialStartDate.getTime();
-          const diffDays = diffTime / (1000 * 60 * 60 * 24);
-          
-          if (diffDays > TRIAL_PERIOD_DAYS) {
-              return { canProceed: false, error: `Your ${TRIAL_PERIOD_DAYS}-day free trial has ended. Please upgrade to continue generating content.` };
-          }
-      } else {
-          // If trial hasn't started, start it now.
-          await userRef.update({ 
-              trialStartedAt: Timestamp.now(), 
-              generationsUsed: 0,
-              updatedAt: Timestamp.now(),
-          });
+      let lastGenTime = 0;
+      if (userData.lastGenerationDate) {
+        const lastGenDate = userData.lastGenerationDate.toDate();
+        // Get the start of the last generation day in UTC
+        lastGenTime = new Date(Date.UTC(lastGenDate.getUTCFullYear(), lastGenDate.getUTCMonth(), lastGenDate.getUTCDate())).getTime();
       }
 
-      const generationsUsed = userData.generationsUsed || 0;
-      if (generationsUsed >= GENERATION_LIMIT) {
-          return { canProceed: false, error: `You have used all ${GENERATION_LIMIT} of your free generations for the trial. Please upgrade.` };
+      let dailyGenerationsUsed = userData.dailyGenerationsUsed || 0;
+      let updates: {[key: string]: any} = {};
+
+      // If the last generation was before the start of today, it's a new day.
+      if (lastGenTime < todayUTCStart) {
+          dailyGenerationsUsed = 0; // Reset count for the check
+          updates.dailyGenerationsUsed = 1; // It will become 1 after this generation
+          updates.lastGenerationDate = Timestamp.now();
+      } else {
+          // Same day, just increment
+          updates.dailyGenerationsUsed = FieldValue.increment(1);
       }
       
-      // Increment usage for free user
-      await userRef.update({
-          generationsUsed: FieldValue.increment(1),
-          updatedAt: Timestamp.now()
-      });
+      if (dailyGenerationsUsed >= DAILY_GENERATION_LIMIT) {
+          return { canProceed: false, error: `USAGE_LIMIT_EXCEEDED:You've used all ${DAILY_GENERATION_LIMIT} of your free daily generations. Please upgrade for unlimited access.` };
+      }
+
+      // If the check passes, perform the update
+      updates.updatedAt = Timestamp.now();
+      await userRef.update(updates);
 
       return { canProceed: true };
   } catch (error: any) {

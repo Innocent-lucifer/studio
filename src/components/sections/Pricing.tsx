@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
+import Link from "next/link";
 
 interface Plan {
     title: string;
@@ -145,13 +146,10 @@ function PricingComponent({ plans }: PricingProps) {
                   <Button 
                     onClick={() => handleCheckout(plan.priceId)}
                     size="lg" 
-                    className="w-full bg-primary text-primary-foreground hover:bg-primary/90 text-base mb-2 shadow-lg shadow-primary/30"
+                    className="w-full bg-primary text-primary-foreground hover:bg-primary/90 text-base mb-8 shadow-lg shadow-primary/30"
                   >
-                    Try 3 Days Free
+                    Choose Plan
                   </Button>
-                  <p className="text-xs text-accent mb-8 font-semibold drop-shadow-[0_0_6px_hsl(var(--accent)/0.7)]">
-                    No card required for trial.
-                  </p>
                   <ul className="text-left space-y-3">
                     {plan.features.map((feat, i) => (
                       <li
@@ -171,6 +169,13 @@ function PricingComponent({ plans }: PricingProps) {
               </div>
             </motion.div>
           ))}
+        </div>
+        <div className="mt-12">
+            <h4 className="text-lg font-semibold text-foreground mb-3">Or Start with Our Free Plan</h4>
+             <p className="text-foreground/70 mb-4">Explore SagePostAI with 6 free generations every day.</p>
+             <Button asChild size="lg" variant="outline" className="border-primary text-primary hover:bg-primary/10 hover:text-primary">
+                 <Link href="/login">Get Started for Free</Link>
+             </Button>
         </div>
       </div>
     </section>

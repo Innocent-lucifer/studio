@@ -73,7 +73,7 @@ export default function Home() {
     {
       title: "Sage Infinity Monthly",
       price: "$19.99",
-      subtitle: "Billed monthly. 3-day free trial.",
+      subtitle: "Billed monthly.",
       borderClass: "border-border",
       features: [
         "Unlimited Generations",
@@ -92,7 +92,7 @@ export default function Home() {
     {
       title: "Sage Infinity Yearly",
       price: "$197",
-      subtitle: "Billed annually. 3-day free trial.",
+      subtitle: "Billed annually.",
       badge: "BEST VALUE",
       badgeClass: "from-primary to-accent",
       discountBadge: "18% OFF",
@@ -147,12 +147,12 @@ export default function Home() {
       a: "Not at all. If you can type a topic, you're ready. We built this for founders, creators, marketers, and even students — no prior expertise needed."
     },
     {
-      q: "Is there a free trial?",
-      a: "Yes. You get 3 days of full access to explore all premium features with unlimited generations."
+      q: "Is there a free plan?",
+      a: "Yes. Our free plan allows you to explore the platform and includes 6 free AI generations every day. For unlimited access, you can upgrade to a paid plan."
     },
     {
       q: "What are the pricing options?",
-      a: "You can choose a Monthly Plan ($19.99/month) or Yearly Plan ($197/year). All plans include unlimited AI generations and full access to every feature."
+      a: "You can choose a Monthly Plan ($19.99/month) or Yearly Plan ($197/year). All paid plans include unlimited AI generations and full access to every feature."
     }
   ];
 

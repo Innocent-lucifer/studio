@@ -43,8 +43,8 @@ export interface UserData {
   referredBy?: string;
   referralsMade?: number;
   plan: 'free' | 'monthly' | 'yearly';
-  trialStartedAt?: Timestamp;
-  generationsUsed?: number;
+  dailyGenerationsUsed?: number;
+  lastGenerationDate?: Timestamp;
 }
 
 export interface Draft {
@@ -107,8 +107,8 @@ export const createUserDocument = async (
         referralCode: generateReferralCode(),
         referralsMade: 0,
         plan: defaultPlan,
-        trialStartedAt: now,
-        generationsUsed: 0,
+        dailyGenerationsUsed: 0,
+        lastGenerationDate: now,
       };
 
       if (referredByCode) {
@@ -118,27 +118,27 @@ export const createUserDocument = async (
       const userDataForDb = { ...userData };
       delete (userDataForDb as any).createdAt;
       delete (userDataForDb as any).updatedAt;
-      delete (userDataForDb as any).trialStartedAt;
+      delete (userDataForDb as any).lastGenerationDate;
 
 
       await setDoc(userRef, {
         ...userDataForDb,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
-        trialStartedAt: serverTimestamp(),
+        lastGenerationDate: serverTimestamp(),
       });
       return userData;
     } else {
       const existingData = userSnap.data() as UserData;
       const updates: Partial<UserData> = {};
-      let needsServerTimestamp = false;
       if (!existingData.plan) {
         updates.plan = 'free';
       }
-      if (existingData.plan === 'free' && !existingData.trialStartedAt) {
-          updates.trialStartedAt = Timestamp.now();
-          updates.generationsUsed = 0;
-          needsServerTimestamp = true;
+      if (existingData.dailyGenerationsUsed === undefined) {
+          updates.dailyGenerationsUsed = 0;
+      }
+       if (existingData.lastGenerationDate === undefined) {
+          updates.lastGenerationDate = Timestamp.now();
       }
       if (Object.keys(updates).length > 0) {
         await updateDoc(userRef, { ...updates, updatedAt: serverTimestamp() });
@@ -168,9 +168,11 @@ export const getUserData = async (uid: string, userForCreation?: FirebaseAuthUse
        if (!existingData.plan) {
          updates.plan = 'free';
        }
-       if (existingData.plan === 'free' && !existingData.trialStartedAt) {
-          updates.trialStartedAt = Timestamp.now();
-          updates.generationsUsed = 0;
+       if (existingData.dailyGenerationsUsed === undefined) {
+          updates.dailyGenerationsUsed = 0;
+       }
+       if (existingData.lastGenerationDate === undefined) {
+          updates.lastGenerationDate = Timestamp.now();
        }
        if (Object.keys(updates).length > 0) {
           await updateDoc(userRef, { ...updates, updatedAt: serverTimestamp() });
