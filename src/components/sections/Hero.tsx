@@ -1,7 +1,6 @@
-
 "use client";
 
-import React, { useState, useEffect, lazy, Suspense } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Clock, Search } from "lucide-react";
 import Image from "next/image";
@@ -9,8 +8,7 @@ import Link from 'next/link';
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-
-const ProductHuntBadge = lazy(() => import("../compos/ProductHuntBadge"));
+import ProductHuntBadge from "../compos/ProductHuntBadge";
 
 const placeholders = [
   "Why pineapple on pizza is a war crime...",
@@ -106,9 +104,7 @@ function HeroComponent() {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, ease: "easeOut" }}
         >
-          <Suspense fallback={<div className="h-[52px] w-[230px] bg-secondary rounded-xl animate-pulse"></div>}>
-            <ProductHuntBadge />
-          </Suspense>
+          <ProductHuntBadge />
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold mt-6 mb-6 leading-tight tracking-tighter">
             Automate Social Media <br />
             <span className="text-primary">Dominate with AI</span>
