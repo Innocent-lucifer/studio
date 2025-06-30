@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -148,7 +149,7 @@ function HeroComponent() {
           whileHover={{ scale: 1.03, transition: { duration: 0.2 } }}
           className="w-full"
         >
-          <div className="relative w-full overflow-hidden rounded-2xl shadow-2xl border-2 border-border aspect-[1.6/1]">
+          <div className="relative w-full overflow-hidden rounded-2xl aspect-[1.6/1]">
             <iframe
               src="https://app.supademo.com/embed/cmchrk9gn6jri8qszr3w6m21q?embed_v=2"
               loading="lazy"
