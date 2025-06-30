@@ -1,8 +1,8 @@
 
 "use client";
-import React, { useState } from "react";
-import { motion } from "framer-motion";
-import { Eye, EyeOff } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Eye, EyeOff, CheckCircle, XCircle } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
@@ -13,6 +13,19 @@ import { Icons } from "@/components/icons";
 
 type FormMode = "login" | "register" | "forgotPassword";
 
+const PasswordRequirement = ({ met, text }: { met: boolean; text: string }) => (
+  <motion.li
+    className={`flex items-center text-sm transition-colors duration-300 ${met ? 'text-green-400' : 'text-slate-400'}`}
+    initial={{ x: -10, opacity: 0 }}
+    animate={{ x: 0, opacity: 1 }}
+    transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+  >
+    {met ? <CheckCircle size={14} className="mr-2 shrink-0" /> : <XCircle size={14} className="mr-2 shrink-0" />}
+    {text}
+  </motion.li>
+);
+
+
 export function LoginSignUpForm() {
   const [formMode, setFormMode] = useState<FormMode>("login");
   const [showPassword, setShowPassword] = useState(false);
@@ -21,9 +34,28 @@ export function LoginSignUpForm() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [googleLoading, setGoogleLoading] = useState(false);
-  
+  const [isPasswordFocused, setIsPasswordFocused] = useState(false);
+
+  const [passwordCriteria, setPasswordCriteria] = useState({
+      minLength: false,
+      hasUpper: false,
+      hasLower: false,
+      hasNumber: false,
+  });
+
   const { toast } = useToast();
   const { signUp, logIn, signInWithGoogle, sendPasswordReset, loading } = useAuth();
+
+  useEffect(() => {
+    if (formMode === 'register') {
+      setPasswordCriteria({
+        minLength: password.length >= 8,
+        hasLower: /[a-z]/.test(password),
+        hasUpper: /[A-Z]/.test(password),
+        hasNumber: /\d/.test(password),
+      });
+    }
+  }, [password, formMode]);
 
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
   const toggleConfirmPasswordVisibility = () => setShowConfirmPassword(!showConfirmPassword);
@@ -31,6 +63,7 @@ export function LoginSignUpForm() {
   const resetFields = () => {
     setPassword("");
     setConfirmPassword("");
+    setIsPasswordFocused(false);
   };
 
   const handleModeChange = (newMode: FormMode) => {
@@ -43,6 +76,11 @@ export function LoginSignUpForm() {
     if (loading) return;
 
     if (formMode === 'register') {
+      const allCriteriaMet = Object.values(passwordCriteria).every(Boolean);
+      if (!allCriteriaMet) {
+        toast({ title: "Weak Password", description: "Please ensure your password meets all the requirements.", variant: "destructive", iconType: "alertTriangle" });
+        return;
+      }
       if (password !== confirmPassword) {
         toast({ title: "Password Mismatch", description: "The passwords you entered do not match.", variant: "destructive", iconType: "alertTriangle" });
         return;
@@ -165,8 +203,9 @@ export function LoginSignUpForm() {
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                onFocus={() => setIsPasswordFocused(true)}
                 required
-                minLength={6}
+                minLength={formMode === 'register' ? 8 : 6}
                 className="w-full px-4 py-3 rounded-xl bg-[#1e293b] text-white placeholder-gray-400/70 border border-indigo-600/20 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
               <button
@@ -181,6 +220,23 @@ export function LoginSignUpForm() {
           </motion.div>
         )}
 
+        <AnimatePresence>
+          {formMode === 'register' && isPasswordFocused && (
+            <motion.ul
+              key="password-reqs"
+              className="mt-2 space-y-1 pl-1"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <PasswordRequirement met={passwordCriteria.minLength} text="At least 8 characters" />
+              <PasswordRequirement met={passwordCriteria.hasUpper} text="An uppercase letter" />
+              <PasswordRequirement met={passwordCriteria.hasLower} text="A lowercase letter" />
+              <PasswordRequirement met={passwordCriteria.hasNumber} text="A number" />
+            </motion.ul>
+          )}
+        </AnimatePresence>
+
         {formMode === 'register' && (
           <motion.div>
             <label htmlFor="confirm-password-auth" className="block text-sm font-medium mb-1 text-slate-300">Confirm Password</label>
@@ -192,7 +248,7 @@ export function LoginSignUpForm() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
-                minLength={6}
+                minLength={8}
                 className="w-full px-4 py-3 rounded-xl bg-[#1e293b] text-white placeholder-gray-400/70 border border-indigo-600/20 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
               <button
