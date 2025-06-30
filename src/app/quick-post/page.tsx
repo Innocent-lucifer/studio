@@ -17,6 +17,8 @@ import { useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { researchTopic } from "@/ai/flows/research-topic";
 import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+
 
 const PostSelection = dynamic(() => import('@/components/PostSelection').then(mod => mod.PostSelection), {
   ssr: false,
@@ -39,12 +41,17 @@ const QuickPostPageContent = () => {
   const [researchedContent, setResearchedContent] = useState<string>("");
   const [researchIsLoading, setResearchIsLoading] = useState(false);
   const [hasAttemptedAutoResearch, setHasAttemptedAutoResearch] = useState(false);
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
 
   const [twitterPosts, setTwitterPosts] = useState<string[]>([]);
   const [linkedinPosts, setLinkedinPosts] = useState<string[]>([]);
   
   const [displayTwitterInCard, setDisplayTwitterInCard] = useState(true);
   const [displayLinkedInInCard, setDisplayLinkedInInCard] = useState(true);
+
+  const handleLimitReached = useCallback(() => {
+    setIsUpgradeModalOpen(true);
+  }, []);
 
   useEffect(() => {
     const topicParam = searchParams.get('topic');
@@ -67,7 +74,10 @@ const QuickPostPageContent = () => {
         setResearchIsLoading(true);
         try {
             const result = await researchTopic({ topic: topicToResearch, userId: userIdToPass });
-            if (result.error) {
+             if (result.error?.includes('USAGE_LIMIT_EXCEEDED')) {
+                handleLimitReached();
+                setResearchedContent('');
+            } else if (result.error) {
                 toast({ variant: "destructive", title: "Research Failed", description: result.error });
                 setResearchedContent(`Error researching "${topicToResearch}": ${result.error}`);
             } else {
@@ -89,7 +99,7 @@ const QuickPostPageContent = () => {
         setHasAttemptedAutoResearch(true);
         performAutoResearch(topic);
     }
-}, [topic, researchIsLoading, researchedContent, hasAttemptedAutoResearch, user, userIdToPass, toast]);
+}, [topic, researchIsLoading, researchedContent, hasAttemptedAutoResearch, user, userIdToPass, toast, handleLimitReached]);
 
 
   useEffect(() => {
@@ -251,6 +261,7 @@ const QuickPostPageContent = () => {
                     setIsLoading={setResearchIsLoading}
                     userId={userIdToPass} 
                     isLoading={researchIsLoading}
+                    onLimitReached={handleLimitReached}
                   />
                 </CardContent>
               </Card>
@@ -348,6 +359,28 @@ const QuickPostPageContent = () => {
           </span>
         </footer>
       </motion.div>
+      
+      <Dialog open={isUpgradeModalOpen} onOpenChange={setIsUpgradeModalOpen}>
+        <DialogContent className="bg-slate-800/80 backdrop-blur-md border-slate-700 text-white sm:max-w-md">
+            <DialogHeader className="text-center items-center">
+                <Icons.lock className="h-12 w-12 text-primary mb-3" />
+                <DialogTitle className="text-2xl text-primary">Daily Limit Reached</DialogTitle>
+                <DialogDescription className="text-slate-300 pt-2 text-base">
+                    You've used all 6 of your free daily generations. Upgrade your plan for unlimited access to all features.
+                </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="mt-4 flex-col sm:flex-col sm:space-x-0 gap-2">
+                <Button asChild size="lg" className="w-full bg-primary hover:bg-primary/90">
+                    <Link href="/account">
+                        <Icons.sparkles className="mr-2 h-5 w-5" /> Upgrade to Pro
+                    </Link>
+                </Button>
+                <Button onClick={() => setIsUpgradeModalOpen(false)} variant="ghost" className="w-full text-slate-400 hover:text-slate-200">
+                    Maybe Later
+                </Button>
+            </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

@@ -175,73 +175,70 @@ export async function findOrCreateUserForPurchase(
 
 export const checkAndIncrementUsage = async (userId: string): Promise<{ canProceed: boolean; error?: string }> => {
   if (!adminDb) {
-      console.error(`
-        *****************************************************************
-        *           CRITICAL WARNING: USAGE CHECKING DISABLED           *
-        *****************************************************************
-        * Firebase Admin SDK is not initialized.                        *
-        * ALL USERS WILL HAVE UNLIMITED USAGE.                          *
-        * To fix this, set FIREBASE_SERVICE_ACCOUNT_KEY_BASE64 in your  *
-        * server's environment variables.                               *
-        *****************************************************************
-      `);
-      return { canProceed: true }; // Allow the action but with a server warning
+    console.error(`
+      *****************************************************************
+      *           CRITICAL WARNING: USAGE CHECKING DISABLED           *
+      *****************************************************************
+      * Firebase Admin SDK is not initialized.                        *
+      * ALL USERS WILL HAVE UNLIMITED USAGE.                          *
+      * To fix this, set FIREBASE_SERVICE_ACCOUNT_KEY_BASE64 in your  *
+      * server's environment variables.                               *
+      *****************************************************************
+    `);
+    return { canProceed: true };
   }
   if (!userId) {
-      return { canProceed: false, error: "User not authenticated." };
+    return { canProceed: false, error: "User not authenticated." };
   }
 
   const userRef = adminDb.collection('users').doc(userId);
-  
+
   try {
-      const userSnap = await userRef.get();
+    const status = await adminDb.runTransaction(async (transaction) => {
+      const userSnap = await transaction.get(userRef);
 
       if (!userSnap.exists) {
-          return { canProceed: false, error: "User data not found. Please re-login." };
+        return { canProceed: false, error: "User data not found. Please re-login." };
       }
 
       const userData = userSnap.data() as UserData;
 
-      if (userData.plan !== 'free') {
-          return { canProceed: true };
+      if (userData.plan === 'monthly' || userData.plan === 'yearly') {
+        return { canProceed: true };
       }
 
       const DAILY_GENERATION_LIMIT = 6;
       const now = new Date();
-      // Get the start of today in UTC
       const todayUTCStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())).getTime();
 
       let lastGenTime = 0;
       if (userData.lastGenerationDate) {
         const lastGenDate = userData.lastGenerationDate.toDate();
-        // Get the start of the last generation day in UTC
         lastGenTime = new Date(Date.UTC(lastGenDate.getUTCFullYear(), lastGenDate.getUTCMonth(), lastGenDate.getUTCDate())).getTime();
       }
-
-      let dailyGenerationsUsed = userData.dailyGenerationsUsed || 0;
-      let updates: {[key: string]: any} = {};
-
-      // If the last generation was before the start of today, it's a new day.
-      if (lastGenTime < todayUTCStart) {
-          dailyGenerationsUsed = 0; // Reset count for the check
-          updates.dailyGenerationsUsed = 1; // It will become 1 after this generation
-          updates.lastGenerationDate = Timestamp.now();
-      } else {
-          // Same day, just increment
-          updates.dailyGenerationsUsed = FieldValue.increment(1);
-      }
       
-      if (dailyGenerationsUsed >= DAILY_GENERATION_LIMIT) {
-          return { canProceed: false, error: `USAGE_LIMIT_EXCEEDED:You've used all ${DAILY_GENERATION_LIMIT} of your free daily generations. Please upgrade for unlimited access.` };
+      let dailyGenerationsUsed = userData.dailyGenerationsUsed || 0;
+
+      if (lastGenTime < todayUTCStart) {
+        dailyGenerationsUsed = 0;
       }
 
-      // If the check passes, perform the update
-      updates.updatedAt = Timestamp.now();
-      await userRef.update(updates);
+      if (dailyGenerationsUsed >= DAILY_GENERATION_LIMIT) {
+        return { canProceed: false, error: `USAGE_LIMIT_EXCEEDED:You've used all ${DAILY_GENERATION_LIMIT} of your free daily generations. Please upgrade for unlimited access.` };
+      }
+
+      const newCount = dailyGenerationsUsed + 1;
+      transaction.update(userRef, {
+        dailyGenerationsUsed: newCount,
+        lastGenerationDate: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+      });
 
       return { canProceed: true };
+    });
+    return status;
   } catch (error: any) {
-       console.error(`[checkAndIncrementUsage] Error for UID ${userId}:`, error);
-       return { canProceed: false, error: "An error occurred while checking your usage data." };
+    console.error(`[checkAndIncrementUsage] Transaction Error for UID ${userId}:`, error);
+    return { canProceed: false, error: "An error occurred while checking your usage data." };
   }
 };
