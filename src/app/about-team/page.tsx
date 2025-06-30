@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import TeamSection from "@/components/sections/TeamSection";
 import Footer from "@/components/sections/Footer";
 import Header from "@/components/sections/Header";

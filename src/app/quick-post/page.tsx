@@ -1,10 +1,10 @@
 
 "use client";
 
+import React, { useState, useEffect, useCallback, Suspense, memo } from "react";
 import { TopicResearch } from "@/components/TopicResearch";
 import { TwitterPostGenerator } from "@/components/TwitterPostGenerator";
 import { LinkedInPostGenerator } from "@/components/LinkedInPostGenerator";
-import { useState, useEffect, useCallback, Suspense, memo } from "react";
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { HamburgerMenu } from "@/components/HamburgerMenu";

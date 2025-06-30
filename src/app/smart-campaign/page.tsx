@@ -1,7 +1,7 @@
 
 "use client";
 
-import { Suspense } from 'react';
+import React, { Suspense } from 'react';
 import { SmartCampaignWizard } from '@/components/SmartCampaignWizard';
 import { AppLogo } from '@/components/AppLogo';
 import { HamburgerMenu } from '@/components/HamburgerMenu';
