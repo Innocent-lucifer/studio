@@ -16,6 +16,7 @@ interface TopicResearchProps {
   setIsLoading: (isLoading: boolean) => void;
   userId: string;
   isLoading: boolean;
+  onLimitExceeded: () => void;
 }
 
 export const TopicResearch: React.FC<TopicResearchProps> = ({ 
@@ -25,6 +26,7 @@ export const TopicResearch: React.FC<TopicResearchProps> = ({
   setIsLoading, 
   userId,
   isLoading,
+  onLimitExceeded,
 }) => {
   const [topicInput, setTopicInput] = useState<string>(initialTopic || "");
   const { toast } = useToast();
@@ -69,7 +71,11 @@ export const TopicResearch: React.FC<TopicResearchProps> = ({
       const result = await researchTopic({ topic: topicInput, userId: userId }); 
       
       if (result.error) {
-        toast({ variant: "destructive", title: "Research Failed", description: result.error, iconType: "alertTriangle" });
+        if (result.error === "USAGE_LIMIT_EXCEEDED") {
+          onLimitExceeded();
+        } else {
+          toast({ variant: "destructive", title: "Research Failed", description: result.error, iconType: "alertTriangle" });
+        }
         setResearchedContent("");
         setTopic("");
       } else {

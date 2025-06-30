@@ -13,6 +13,7 @@ import {ai}from '@/ai/ai-instance';
 import {z}from 'genkit';
 import { searchTwitter } from '@/ai/tools/searchTwitter';
 import { searchNews } from '@/ai/tools/searchNews'; // Import searchNews
+import { checkAndIncrementUsage } from '@/lib/firebaseAdminActions';
 
 const ResearchTopicInputSchema = z.object({
   topic: z.string().describe('The topic to research.'),
@@ -76,6 +77,16 @@ const researchTopicFlow = ai.defineFlow(
   async (input) => {
     const { topic, userId } = input;
     
+    // --- GATEKEEPER ---
+    if (!userId) {
+      return { summary: "", error: "User not authenticated." };
+    }
+    const usageCheck = await checkAndIncrementUsage(userId);
+    if (!usageCheck.canProceed) {
+      return { summary: "", error: usageCheck.error || "An unknown usage error occurred." };
+    }
+    // --- END GATEKEEPER ---
+
     try {
       // Run searches in parallel
       const [twitterSearchResults, newsSearchResults] = await Promise.all([
