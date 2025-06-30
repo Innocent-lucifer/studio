@@ -38,7 +38,6 @@ export async function updateUserPlanByUID(
       await userRef.update({
         plan: newPlan,
         updatedAt: Timestamp.now(),
-        dailyGenerationsUsed: 0,
       });
       console.log(`[Admin Action] Updated plan for existing user UID: ${uid} to ${newPlan}`);
     } else {
@@ -55,8 +54,6 @@ export async function updateUserPlanByUID(
         plan: newPlan,
         referralCode: generateReferralCode(),
         referralsMade: 0,
-        dailyGenerationsUsed: 0,
-        lastGenerationDate: Timestamp.now(),
       };
       await userRef.set(newUserDoc);
       console.log(`[Admin Action] Created new user document for UID: ${uid} with plan ${newPlan}`);
@@ -113,8 +110,6 @@ export async function findOrCreateUserForPurchase(
           plan: newPlan,
           referralCode: generateReferralCode(),
           referralsMade: 0,
-          dailyGenerationsUsed: 0,
-          lastGenerationDate: Timestamp.now(),
         };
 
         await userRef.set(newUserDoc);
@@ -140,7 +135,7 @@ export async function findOrCreateUserForPurchase(
   }
 }
 
-export const checkAndIncrementUsage = async (userId: string): Promise<{ canProceed: boolean; error?: string }> => {
+export const checkTrialAndSubscription = async (userId: string): Promise<{ canProceed: boolean; error?: string }> => {
   if (!adminDb) {
     console.error("CRITICAL WARNING: USAGE CHECKING DISABLED. Firebase Admin SDK is not initialized.");
     return { canProceed: true };
@@ -152,51 +147,39 @@ export const checkAndIncrementUsage = async (userId: string): Promise<{ canProce
   const userRef = adminDb.collection('users').doc(userId);
 
   try {
-    const status = await adminDb.runTransaction(async (transaction) => {
-      const userSnap = await transaction.get(userRef);
+    const userSnap = await userRef.get();
 
-      if (!userSnap.exists) {
-        console.warn(`[checkAndIncrementUsage] User document not found for UID: ${userId}.`);
-        return { canProceed: false, error: "User data not found. Please re-login." };
-      }
+    if (!userSnap.exists) {
+      console.warn(`[checkTrialAndSubscription] User document not found for UID: ${userId}.`);
+      return { canProceed: false, error: "User data not found. Please re-login." };
+    }
 
-      const userData = userSnap.data() as UserData;
+    const userData = userSnap.data() as UserData;
 
-      if (userData.plan === 'monthly' || userData.plan === 'yearly') {
-        return { canProceed: true };
-      }
-
-      const DAILY_GENERATION_LIMIT = 6;
-      const now = new Date();
-      const todayUTCStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())).getTime();
-      
-      let lastGenTime = 0;
-      if (userData.lastGenerationDate) {
-        const lastGenDate = userData.lastGenerationDate.toDate();
-        lastGenTime = new Date(Date.UTC(lastGenDate.getUTCFullYear(), lastGenDate.getUTCMonth(), lastGenDate.getUTCDate())).getTime();
-      }
-      
-      let dailyGenerationsUsed = userData.dailyGenerationsUsed || 0;
-
-      if (lastGenTime < todayUTCStart) {
-        dailyGenerationsUsed = 0;
-      }
-      
-      if (dailyGenerationsUsed >= DAILY_GENERATION_LIMIT) {
-        return { canProceed: false, error: "USAGE_LIMIT_EXCEEDED" };
-      }
-
-      transaction.update(userRef, {
-        dailyGenerationsUsed: dailyGenerationsUsed + 1,
-        lastGenerationDate: Timestamp.now(),
-        updatedAt: Timestamp.now(),
-      });
-
+    // Paid users always have access.
+    if (userData.plan === 'monthly' || userData.plan === 'yearly') {
       return { canProceed: true };
-    });
-    return status;
+    }
+
+    // Free users are on a 3-day trial.
+    if (!userData.createdAt) {
+      console.error(`[checkTrialAndSubscription] User ${userId} is on free plan but has no createdAt timestamp.`);
+      return { canProceed: false, error: "Account creation date not found. Please contact support." };
+    }
+
+    const threeDaysInMillis = 3 * 24 * 60 * 60 * 1000;
+    const trialEndDate = userData.createdAt.toMillis() + threeDaysInMillis;
+    const now = Date.now();
+
+    if (now > trialEndDate) {
+      return { canProceed: false, error: "TRIAL_EXPIRED" };
+    }
+
+    // If trial is still active
+    return { canProceed: true };
+
   } catch (error: any) {
-    console.error(`[checkAndIncrementUsage] Transaction Error for UID ${userId}:`, error);
-    return { canProceed: false, error: "An error occurred while checking your usage data." };
+    console.error(`[checkTrialAndSubscription] Transaction Error for UID ${userId}:`, error);
+    return { canProceed: false, error: "An error occurred while checking your subscription status." };
   }
 };

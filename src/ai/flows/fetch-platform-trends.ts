@@ -13,7 +13,7 @@ import {ai}from '@/ai/ai-instance';
 import {z}from 'genkit';
 import { searchTwitter } from '@/ai/tools/searchTwitter';
 import { searchNews } from '@/ai/tools/searchNews'; // Import searchNews
-import { checkAndIncrementUsage } from '@/lib/firebaseAdminActions';
+import { checkTrialAndSubscription } from '@/lib/firebaseAdminActions';
 
 const TrendSchema = z.object({
   id: z.string().describe('A unique identifier for the trend.'),
@@ -109,9 +109,9 @@ const fetchPlatformTrendsFlow = ai.defineFlow({
     if (!userId) {
         return { error: "User not authenticated." };
     }
-    const usageCheck = await checkAndIncrementUsage(userId);
-    if (!usageCheck.canProceed) {
-        return { error: usageCheck.error || "An unknown usage error occurred." };
+    const accessCheck = await checkTrialAndSubscription(userId);
+    if (!accessCheck.canProceed) {
+        return { error: accessCheck.error || "Access denied." };
     }
 
   let twitterSearchResults: string | undefined = undefined;

@@ -16,6 +16,7 @@ interface TopicResearchProps {
   setIsLoading: (isLoading: boolean) => void;
   userId: string;
   isLoading: boolean;
+  onTrialExpired: () => void;
 }
 
 export const TopicResearch: React.FC<TopicResearchProps> = ({ 
@@ -25,6 +26,7 @@ export const TopicResearch: React.FC<TopicResearchProps> = ({
   setIsLoading, 
   userId,
   isLoading,
+  onTrialExpired,
 }) => {
   const [topicInput, setTopicInput] = useState<string>(initialTopic || "");
   const { toast } = useToast();
@@ -69,7 +71,11 @@ export const TopicResearch: React.FC<TopicResearchProps> = ({
       const result = await researchTopic({ topic: topicInput, userId: userId }); 
       
       if (result.error) {
-        toast({ variant: "destructive", title: "Research Failed", description: result.error, iconType: "alertTriangle" });
+        if (result.error === 'TRIAL_EXPIRED') {
+          onTrialExpired();
+        } else {
+          toast({ variant: "destructive", title: "Research Failed", description: result.error, iconType: "alertTriangle" });
+        }
         setResearchedContent("");
         setTopic("");
       } else {

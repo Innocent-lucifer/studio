@@ -43,8 +43,6 @@ export interface UserData {
   referredBy?: string;
   referralsMade?: number;
   plan: 'free' | 'monthly' | 'yearly';
-  dailyGenerationsUsed: number;
-  lastGenerationDate: Timestamp;
 }
 
 export interface Draft {
@@ -105,15 +103,12 @@ export const createUserDocument = async (
         referralCode: generateReferralCode(),
         referralsMade: 0,
         plan: 'free',
-        dailyGenerationsUsed: 0,
-        lastGenerationDate: now,
       };
       
       await setDoc(userRef, {
         ...userData,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
-        lastGenerationDate: serverTimestamp(),
       });
       return userData;
     } else {
@@ -137,19 +132,9 @@ export const getUserData = async (uid: string, userForCreation?: FirebaseAuthUse
     const userSnap = await getDoc(userRef);
     if (userSnap.exists()) {
        const existingData = userSnap.data();
-       const updates: Partial<UserData> = {};
        if (!existingData.plan) {
-         updates.plan = 'free';
-       }
-       if (existingData.dailyGenerationsUsed === undefined) {
-          updates.dailyGenerationsUsed = 0;
-       }
-       if (existingData.lastGenerationDate === undefined) {
-          updates.lastGenerationDate = Timestamp.now();
-       }
-       if (Object.keys(updates).length > 0) {
-          await updateDoc(userRef, { ...updates, updatedAt: serverTimestamp() });
-          return { ...existingData, ...updates, updatedAt: Timestamp.now() } as UserData;
+         await updateDoc(userRef, { plan: 'free', updatedAt: serverTimestamp() });
+         return { ...existingData, plan: 'free', updatedAt: Timestamp.now() } as UserData;
        }
       return existingData as UserData;
     } else {

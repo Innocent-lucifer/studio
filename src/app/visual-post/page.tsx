@@ -43,6 +43,8 @@ function VisualPostPageComponent() {
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
   const fileInputRefVisual = useRef<HTMLInputElement>(null);
+  
+  const [isTrialExpiredModalOpen, setIsTrialExpiredModalOpen] = useState(false);
 
   const [isClient, setIsClient] = useState(false);
   
@@ -100,8 +102,12 @@ function VisualPostPageComponent() {
       });
 
       if (result.error) {
-        setError(result.error);
-        toast({ variant: "destructive", title: "Post Generation Failed", description: result.error, iconType: 'alertTriangle' });
+        if (result.error === 'TRIAL_EXPIRED') {
+          setIsTrialExpiredModalOpen(true);
+        } else {
+          setError(result.error);
+          toast({ variant: "destructive", title: "Post Generation Failed", description: result.error, iconType: 'alertTriangle' });
+        }
       } else {
         setGeneratedPost(result.generatedPost || '');
         generationState.current = {
@@ -230,7 +236,13 @@ function VisualPostPageComponent() {
       });
 
       if (result.error) {
-        toast({ variant: "destructive", title: "AI Edit Error", description: result.error, iconType: 'alertTriangle' });
+        if (result.error === 'TRIAL_EXPIRED') {
+          setIsAiEditModalOpen(false);
+          setIsEditModalOpen(false);
+          setIsTrialExpiredModalOpen(true);
+        } else {
+          toast({ variant: "destructive", title: "AI Edit Error", description: result.error, iconType: 'alertTriangle' });
+        }
       } else if (result.editedPost) {
         setEditingContent(result.editedPost); 
         toast({ title: "AI Edit Applied", description: "The AI has revised the post in the editor. Review and save.", iconType: 'wand' });
@@ -386,6 +398,27 @@ function VisualPostPageComponent() {
   }
 
   return (
+    <>
+    <Dialog open={isTrialExpiredModalOpen} onOpenChange={setIsTrialExpiredModalOpen}>
+      <DialogContent className="bg-slate-800/80 backdrop-blur-md border-slate-700 text-white sm:max-w-md">
+        <DialogHeader className="text-center">
+          <Icons.sparkles className="h-12 w-12 text-primary mx-auto mb-3" />
+          <DialogTitle className="text-2xl text-primary">Free Trial Expired</DialogTitle>
+          <DialogDescription className="text-slate-400 pt-2 leading-relaxed">
+            Your 3-day free trial has ended. Please upgrade to a paid plan for unlimited access to all features.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="mt-4 flex flex-col gap-2">
+          <Button asChild size="lg" className="w-full bg-primary hover:bg-primary/90">
+            <Link href="/account">Upgrade to Unlimited</Link>
+          </Button>
+          <Button type="button" variant="ghost" onClick={() => setIsTrialExpiredModalOpen(false)} className="text-slate-400 hover:text-slate-200">
+            Maybe Later
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -632,6 +665,7 @@ function VisualPostPageComponent() {
 
       {commonFooter}
     </motion.div>
+    </>
   );
 }
 

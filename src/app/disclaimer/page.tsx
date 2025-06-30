@@ -62,7 +62,7 @@ export default function DisclaimerPage() {
 
                     <PolicySection title="Free Plan Limitations">
                         <p>
-                            The free plan is designed to let you explore the platform's core features. It includes a daily limit of six (6) AI generations, which can be used across any of our tools. This limit resets every 24 hours. Usage is monitored, and any attempt to bypass these limitations may result in immediate account termination. To get unlimited access, users must upgrade to a paid plan.
+                            The free plan is designed to let you explore the platform's core features. It includes a 3-day free trial with unlimited access to all features. After the trial period ends, users must upgrade to a paid plan (Monthly or Yearly) to continue using the generation tools.
                         </p>
                     </PolicySection>
                     

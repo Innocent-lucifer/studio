@@ -13,6 +13,7 @@ import {ai}from '@/ai/ai-instance';
 import {z}from 'genkit';
 import { searchTwitter } from '@/ai/tools/searchTwitter';
 import { searchNews } from '@/ai/tools/searchNews'; // Import searchNews
+import { checkTrialAndSubscription } from '@/lib/firebaseAdminActions';
 
 const ResearchTopicInputSchema = z.object({
   topic: z.string().describe('The topic to research.'),
@@ -76,9 +77,13 @@ const researchTopicFlow = ai.defineFlow(
   async (input) => {
     const { topic, userId } = input;
     
-    // User authentication check
     if (!userId) {
       return { summary: "", error: "User not authenticated." };
+    }
+
+    const accessCheck = await checkTrialAndSubscription(userId);
+    if (!accessCheck.canProceed) {
+        return { summary: "", error: accessCheck.error || "Access denied." };
     }
 
     try {

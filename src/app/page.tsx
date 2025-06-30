@@ -148,7 +148,7 @@ export default function Home() {
     },
     {
       q: "Is there a free plan?",
-      a: "Yes. Our free plan allows you to explore the platform and includes 6 free AI generations every day. For unlimited access, you can upgrade to a paid plan."
+      a: "Yes. Our free plan gives you a 3-day free trial with unlimited access to all features. After the trial, you can upgrade to a paid plan to continue using the platform."
     },
     {
       q: "What are the pricing options?",

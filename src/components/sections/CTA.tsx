@@ -29,11 +29,11 @@ const CTAComponent = () => {
         <div className="flex flex-col items-center gap-3">
           <Button asChild size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 transition-transform duration-200 hover:scale-105 shadow-lg shadow-primary/20">
             <Link href="/login">
-              Get Started Free
+              Start 3-Day Free Trial
             </Link>
           </Button>
           <p className="text-sm text-accent font-semibold drop-shadow-[0_0_8px_hsl(var(--accent)/0.5)]">
-              6 free generations daily.
+             No card required for trial.
           </p>
         </div>
 

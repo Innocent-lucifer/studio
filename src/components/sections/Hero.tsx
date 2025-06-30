@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -138,7 +139,7 @@ function HeroComponent() {
             className="mt-6 flex items-center text-sm text-foreground/60"
           >
             <Clock className="w-4 h-4 mr-2 text-accent" />
-            Let AI research and generate posts for you — free trial available.
+            Start your 3-day free trial. Unlimited access, no card needed.
           </motion.div>
         </motion.div>
 

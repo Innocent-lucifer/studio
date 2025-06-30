@@ -44,46 +44,9 @@ function PricingComponent({ plans }: PricingProps) {
   const router = useRouter();
   const { toast } = useToast();
 
-  const handleCheckout = useCallback((priceId: string) => {
-    if (!priceId) {
-      toast({
-        title: "Configuration Error",
-        description: "Pricing is not configured correctly. Please contact support.",
-        variant: "destructive",
-      });
-      return;
-    }
-    if (user) {
-      if (window.Paddle) {
-        window.Paddle.Checkout.open({
-          items: [{ priceId: priceId.trim(), quantity: 1 }],
-          customer: {
-            email: user.email ?? undefined,
-          },
-          customData: {
-            userId: user.uid,
-          },
-          settings: {
-            successUrl: 'https://sagepostai.com/dashboard' 
-          }
-        });
-      } else {
-        console.error("Paddle.js is not loaded or initialized.");
-        toast({
-          title: "Checkout Error",
-          description: "Payment system is not available. Please try again.",
-          variant: "destructive",
-        });
-      }
-    } else {
-      toast({
-        title: "Login Required",
-        description: "Please log in or create an account to subscribe.",
-        iconType: 'lock'
-      });
-      router.push('/login');
-    }
-  }, [user, router, toast]);
+  const handleGetStarted = useCallback(() => {
+    router.push('/login');
+  }, [router]);
 
   return (
     <section id="pricing" className="py-20 sm:py-28 px-4 sm:px-6">
@@ -144,7 +107,7 @@ function PricingComponent({ plans }: PricingProps) {
                     {plan.subtitle}
                   </p>
                   <Button 
-                    onClick={() => handleCheckout(plan.priceId)}
+                    onClick={() => router.push(user ? '/account' : '/login')}
                     size="lg" 
                     className="w-full bg-primary text-primary-foreground hover:bg-primary/90 text-base mb-8 shadow-lg shadow-primary/30"
                   >
@@ -165,17 +128,20 @@ function PricingComponent({ plans }: PricingProps) {
               </div>
               <div className="mt-6 flex items-center justify-center text-sm text-slate-400">
                   <Lock className="h-4 w-4 mr-2 text-green-500" />
-                  <span className="font-semibold">Secure payment</span>
+                  <span className="font-semibold">Secure payment via Paddle</span>
               </div>
             </motion.div>
           ))}
         </div>
         <div className="mt-12">
-            <h4 className="text-lg font-semibold text-foreground mb-3">Or Start with Our Free Plan</h4>
-             <p className="text-foreground/70 mb-4">Explore SagePostAI with 6 free generations every day.</p>
+            <h4 className="text-lg font-semibold text-foreground mb-3">Or Start with Our Free Trial</h4>
+             <p className="text-foreground/70 mb-4">Explore SagePostAI with a 3-day, no-strings-attached free trial.</p>
              <Button asChild size="lg" variant="outline" className="border-primary text-primary hover:bg-primary/10 hover:text-primary">
-                 <Link href="/login">Get Started for Free</Link>
+                 <Link href="/login">Start 3-Day Free Trial</Link>
              </Button>
+             <p className="text-sm text-accent font-semibold drop-shadow-[0_0_8px_hsl(var(--accent)/0.5)] mt-3">
+                No card required for trial.
+            </p>
         </div>
       </div>
     </section>

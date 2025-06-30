@@ -15,7 +15,7 @@ interface TwitterPostGeneratorProps {
   setTwitterPosts: (posts: string[]) => void;
   displayGeneratedPostsInCard: boolean;
   setParentPostsEmpty: () => void;
-  onLimitExceeded: () => void;
+  onTrialExpired: () => void;
 }
 
 export const TwitterPostGenerator: React.FC<TwitterPostGeneratorProps> = ({ 
@@ -24,7 +24,7 @@ export const TwitterPostGenerator: React.FC<TwitterPostGeneratorProps> = ({
   setTwitterPosts, 
   displayGeneratedPostsInCard,
   setParentPostsEmpty,
-  onLimitExceeded,
+  onTrialExpired,
 }) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [generatedPostsInternal, setGeneratedPostsInternal] = useState<string[]>([]);
@@ -65,8 +65,8 @@ export const TwitterPostGenerator: React.FC<TwitterPostGeneratorProps> = ({
       });
 
       if (result.error) {
-         if (result.error === 'USAGE_LIMIT_EXCEEDED') {
-            onLimitExceeded();
+         if (result.error === 'TRIAL_EXPIRED') {
+            onTrialExpired();
          } else {
             setError(result.error);
             toast({ variant: "destructive", title: "Generation Error", description: result.error, iconType: 'alertTriangle' });
@@ -92,7 +92,7 @@ export const TwitterPostGenerator: React.FC<TwitterPostGeneratorProps> = ({
     } finally {
       setIsLoading(false);
     }
-  }, [topic, userId, toast, setTwitterPosts, onLimitExceeded]);
+  }, [topic, userId, toast, setTwitterPosts, onTrialExpired]);
 
   useEffect(() => {
     const canGenerateInitial = topic && userId && userId !== "sagepostai-guest-user";
@@ -132,8 +132,8 @@ export const TwitterPostGenerator: React.FC<TwitterPostGeneratorProps> = ({
         });
   
         if (result.error) {
-           if (result.error === 'USAGE_LIMIT_EXCEEDED') {
-              onLimitExceeded();
+           if (result.error === 'TRIAL_EXPIRED') {
+              onTrialExpired();
            } else {
               setError(result.error);
               toast({ variant: "destructive", title: "Regeneration Error", description: result.error, iconType: 'alertTriangle' });

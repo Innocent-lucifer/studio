@@ -16,6 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose, DialogFooter } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { differenceInHours, addDays } from 'date-fns';
 
 function AccountPageComponent() {
   const { user, userData, loading: authLoading, logOut } = useAuth();
@@ -24,6 +25,7 @@ function AccountPageComponent() {
   const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
   const [isYearlyUpgradeModalOpen, setIsYearlyUpgradeModalOpen] = useState(false);
   const [isRefundModalOpen, setIsRefundModalOpen] = useState(false);
+  const [trialTimeLeft, setTrialTimeLeft] = useState<string>('');
 
   const monthlyPriceId = process.env.NEXT_PUBLIC_PADDLE_MONTHLY_PRICE_ID?.trim()!;
   const yearlyPriceId = process.env.NEXT_PUBLIC_PADDLE_YEARLY_PRICE_ID?.trim()!;
@@ -33,6 +35,21 @@ function AccountPageComponent() {
       router.push('/login');
     }
   }, [user, authLoading, router]);
+  
+  useEffect(() => {
+    if (userData?.plan === 'free' && userData.createdAt) {
+      const trialEndDate = addDays(userData.createdAt.toDate(), 3);
+      const hoursLeft = differenceInHours(trialEndDate, new Date());
+      if (hoursLeft > 24) {
+        setTrialTimeLeft(`${Math.floor(hoursLeft / 24)} days left`);
+      } else if (hoursLeft > 0) {
+        setTrialTimeLeft(`${hoursLeft} hours left`);
+      } else {
+        setTrialTimeLeft('Expired');
+      }
+    }
+  }, [userData]);
+
 
   const handleLogout = useCallback(async () => {
     await logOut();
@@ -107,7 +124,7 @@ function AccountPageComponent() {
         "Tone Styler",
         "Visibility Booster",
         "AI Post Editor",
-        "Copy & export posts",
+        "Copy & export posts anytime",
         "Saved Content History",
       ],
       priceId: monthlyPriceId
@@ -127,7 +144,7 @@ function AccountPageComponent() {
         "Tone Styler",
         "Visibility Booster",
         "AI Post Editor",
-        "Copy & export posts",
+        "Copy & export posts anytime",
         "Saved Content History",
       ],
       priceId: yearlyPriceId
@@ -140,8 +157,10 @@ function AccountPageComponent() {
     if (userData.plan === 'free') {
       return (
         <div className="pt-2 text-center">
-            <h4 className="text-md font-semibold text-slate-100 mb-2">Upgrade to Unlock More Power</h4>
-            <p className="text-sm text-slate-400 mb-4">You are currently on the Free plan. Upgrade to get unlimited generations and more.</p>
+            <h4 className="text-md font-semibold text-slate-100 mb-2">Upgrade to Unlock Unlimited Access</h4>
+            <p className="text-sm text-slate-400 mb-4">
+              Your free trial has <span className="font-bold text-amber-400">{trialTimeLeft}</span>. Upgrade to keep generating.
+            </p>
             <Button size="lg" className="bg-primary hover:bg-primary/90" onClick={() => setIsPricingModalOpen(true)}>
                 <Icons.sparkles className="mr-2 h-5 w-5" /> View Upgrade Options
             </Button>
@@ -217,7 +236,7 @@ function AccountPageComponent() {
             <div className="space-y-4 p-4 bg-slate-700/50 rounded-lg border border-slate-600">
               <h3 className="text-lg font-medium text-slate-200">Plan & Subscription</h3>
               <p className="text-sm text-slate-300">
-                Current Plan: <span className="font-semibold text-purple-400">{userData.plan.charAt(0).toUpperCase() + userData.plan.slice(1)}</span>
+                Current Plan: <span className="font-semibold text-purple-400">{userData.plan.charAt(0).toUpperCase() + userData.plan.slice(1)} {userData.plan === 'free' && `(Trial)`}</span>
               </p>
               
               {renderPlanContent()}

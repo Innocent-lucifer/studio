@@ -48,7 +48,7 @@ const QuickPostPageContent = () => {
   const [researchedContent, setResearchedContent] = useState<string>("");
   const [researchIsLoading, setResearchIsLoading] = useState(false);
   const [hasAttemptedAutoResearch, setHasAttemptedAutoResearch] = useState(false);
-  const [isLimitModalOpen, setIsLimitModalOpen] = useState(false);
+  const [isTrialExpiredModalOpen, setIsTrialExpiredModalOpen] = useState(false);
 
   const [twitterPosts, setTwitterPosts] = useState<string[]>([]);
   const [linkedinPosts, setLinkedinPosts] = useState<string[]>([]);
@@ -78,7 +78,11 @@ const QuickPostPageContent = () => {
         try {
             const result = await researchTopic({ topic: topicToResearch, userId: userIdToPass });
              if (result.error) {
-                toast({ variant: "destructive", title: "Research Failed", description: result.error });
+                if (result.error === 'TRIAL_EXPIRED') {
+                  setIsTrialExpiredModalOpen(true);
+                } else {
+                  toast({ variant: "destructive", title: "Research Failed", description: result.error });
+                }
                 setResearchedContent(`Error researching "${topicToResearch}": ${result.error}`);
             } else {
                 setResearchedContent(result.summary);
@@ -163,20 +167,20 @@ const QuickPostPageContent = () => {
 
   return (
     <>
-      <Dialog open={isLimitModalOpen} onOpenChange={setIsLimitModalOpen}>
+      <Dialog open={isTrialExpiredModalOpen} onOpenChange={setIsTrialExpiredModalOpen}>
         <DialogContent className="bg-slate-800/80 backdrop-blur-md border-slate-700 text-white sm:max-w-md">
             <DialogHeader className="text-center">
             <Icons.sparkles className="h-12 w-12 text-primary mx-auto mb-3" />
-            <DialogTitle className="text-2xl text-primary">Daily Limit Reached</DialogTitle>
+            <DialogTitle className="text-2xl text-primary">Free Trial Expired</DialogTitle>
             <DialogDescription className="text-slate-400 pt-2 leading-relaxed">
-                You've used all 6 of your free generations for today. Upgrade to Sage Infinity for unlimited generations and access to all features.
+                Your 3-day free trial has ended. Please upgrade to a paid plan for unlimited access to all features.
             </DialogDescription>
             </DialogHeader>
             <DialogFooter className="mt-4 flex flex-col gap-2">
             <Button asChild size="lg" className="w-full bg-primary hover:bg-primary/90">
                 <Link href="/account">Upgrade to Unlimited</Link>
             </Button>
-            <Button type="button" variant="ghost" onClick={() => setIsLimitModalOpen(false)} className="text-slate-400 hover:text-slate-200">
+            <Button type="button" variant="ghost" onClick={() => setIsTrialExpiredModalOpen(false)} className="text-slate-400 hover:text-slate-200">
                 Maybe Later
             </Button>
             </DialogFooter>
@@ -280,6 +284,7 @@ const QuickPostPageContent = () => {
                     setIsLoading={setResearchIsLoading}
                     userId={userIdToPass} 
                     isLoading={researchIsLoading}
+                    onTrialExpired={() => setIsTrialExpiredModalOpen(true)}
                   />
                 </CardContent>
               </Card>
@@ -319,7 +324,7 @@ const QuickPostPageContent = () => {
                           setTwitterPosts={setTwitterPosts}
                           displayGeneratedPostsInCard={displayTwitterInCard}
                           setParentPostsEmpty={clearTwitterPosts}
-                          onLimitExceeded={() => setIsLimitModalOpen(true)}
+                          onTrialExpired={() => setIsTrialExpiredModalOpen(true)}
                         />
                       </CardContent>
                     </Card>
@@ -340,7 +345,7 @@ const QuickPostPageContent = () => {
                           setLinkedinPosts={setLinkedinPosts}
                           displayGeneratedPostsInCard={displayLinkedInInCard}
                           setParentPostsEmpty={clearLinkedinPosts}
-                          onLimitExceeded={() => setIsLimitModalOpen(true)}
+                          onTrialExpired={() => setIsTrialExpiredModalOpen(true)}
                         />
                       </CardContent>
                     </Card>

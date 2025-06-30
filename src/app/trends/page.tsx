@@ -111,7 +111,7 @@ function TrendsPageComponent() {
   const [filterByHype, setFilterByHype] = useState<boolean>(false);
   const [trendingRegion, setTrendingRegion] = useState<"Global" | "Local">("Global");
   const [selectedTrend, setSelectedTrend] = useState<Trend | null>(null);
-  const [isLimitModalOpen, setIsLimitModalOpen] = useState(false);
+  const [isTrialExpiredModalOpen, setIsTrialExpiredModalOpen] = useState(false);
 
   const debouncedFetchTrends = useCallback(
     debounce(async (platform: Platform, category: string, userId: string, region: 'Global' | 'Local') => {
@@ -121,9 +121,9 @@ function TrendsPageComponent() {
       try {
         const result = await fetchPlatformTrends({ platform, category, userId, region });
         if (result.error) {
-           if (result.error === 'USAGE_LIMIT_EXCEEDED') {
-             setIsLimitModalOpen(true);
-             setError("You have reached your daily generation limit.");
+           if (result.error === 'TRIAL_EXPIRED') {
+             setIsTrialExpiredModalOpen(true);
+             setError("Your free trial has expired.");
            } else {
              setError(result.error);
              toast({ variant: "destructive", title: "Failed to Fetch Trends", description: result.error });
@@ -168,20 +168,20 @@ function TrendsPageComponent() {
 
   return (
     <>
-      <Dialog open={isLimitModalOpen} onOpenChange={setIsLimitModalOpen}>
+      <Dialog open={isTrialExpiredModalOpen} onOpenChange={setIsTrialExpiredModalOpen}>
         <DialogContent className="bg-slate-800/80 backdrop-blur-md border-slate-700 text-white sm:max-w-md">
             <DialogHeader className="text-center">
             <Icons.sparkles className="h-12 w-12 text-primary mx-auto mb-3" />
-            <DialogTitle className="text-2xl text-primary">Daily Limit Reached</DialogTitle>
+            <DialogTitle className="text-2xl text-primary">Free Trial Expired</DialogTitle>
             <DialogDescription className="text-slate-400 pt-2 leading-relaxed">
-                You've used all 6 of your free generations for today. Upgrade to Sage Infinity for unlimited generations and access to all features.
+                Your 3-day free trial has ended. Please upgrade to a paid plan for unlimited access to all features.
             </DialogDescription>
             </DialogHeader>
             <DialogFooter className="mt-4 flex flex-col gap-2">
             <Button asChild size="lg" className="w-full bg-primary hover:bg-primary/90">
                 <Link href="/account">Upgrade to Unlimited</Link>
             </Button>
-            <Button type="button" variant="ghost" onClick={() => setIsLimitModalOpen(false)} className="text-slate-400 hover:text-slate-200">
+            <Button type="button" variant="ghost" onClick={() => setIsTrialExpiredModalOpen(false)} className="text-slate-400 hover:text-slate-200">
                 Maybe Later
             </Button>
             </DialogFooter>

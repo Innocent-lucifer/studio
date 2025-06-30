@@ -10,7 +10,7 @@
 
 import {ai}from '@/ai/ai-instance';
 import {z}from 'genkit';
-import { checkAndIncrementUsage } from '@/lib/firebaseAdminActions';
+import { checkTrialAndSubscription } from '@/lib/firebaseAdminActions';
 
 const GenerateCampaignSeriesInputSchema = z.object({
   topic: z.string().describe('The main topic of the campaign.'),
@@ -97,9 +97,9 @@ const generateCampaignSeriesFlow = ai.defineFlow({
     if (!userId) {
         return { error: "User not authenticated." };
     }
-    const usageCheck = await checkAndIncrementUsage(userId);
-    if (!usageCheck.canProceed) {
-        return { error: usageCheck.error || "An unknown usage error occurred." };
+    const accessCheck = await checkTrialAndSubscription(userId);
+    if (!accessCheck.canProceed) {
+        return { error: accessCheck.error || "Access denied." };
     }
 
   try {
