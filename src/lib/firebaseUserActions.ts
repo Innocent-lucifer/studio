@@ -97,38 +97,52 @@ export const createUserDocument = async (
     const userSnap = await getDoc(userRef);
 
     if (!userSnap.exists()) {
+      const now = Timestamp.now();
       const userData: UserData = {
         uid: user.uid,
         email: user.email,
         displayName: user.displayName || user.email?.split('@')[0] || 'SageUser',
-        createdAt: serverTimestamp() as Timestamp,
-        updatedAt: serverTimestamp() as Timestamp,
+        createdAt: now,
+        updatedAt: now,
         referralCode: generateReferralCode(),
         referralsMade: 0,
         plan: defaultPlan,
-        trialStartedAt: serverTimestamp() as Timestamp,
+        trialStartedAt: now,
         generationsUsed: 0,
       };
 
       if (referredByCode) {
           // Future referral logic can be implemented here
       }
+      
+      const userDataForDb = { ...userData };
+      delete (userDataForDb as any).createdAt;
+      delete (userDataForDb as any).updatedAt;
+      delete (userDataForDb as any).trialStartedAt;
 
-      await setDoc(userRef, userData);
+
+      await setDoc(userRef, {
+        ...userDataForDb,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        trialStartedAt: serverTimestamp(),
+      });
       return userData;
     } else {
       const existingData = userSnap.data() as UserData;
       const updates: Partial<UserData> = {};
+      let needsServerTimestamp = false;
       if (!existingData.plan) {
         updates.plan = 'free';
       }
       if (existingData.plan === 'free' && !existingData.trialStartedAt) {
-          updates.trialStartedAt = serverTimestamp() as Timestamp;
+          updates.trialStartedAt = Timestamp.now();
           updates.generationsUsed = 0;
+          needsServerTimestamp = true;
       }
       if (Object.keys(updates).length > 0) {
         await updateDoc(userRef, { ...updates, updatedAt: serverTimestamp() });
-        return { ...existingData, ...updates } as UserData;
+        return { ...existingData, ...updates, updatedAt: Timestamp.now() } as UserData;
       }
       return existingData;
     }
@@ -155,12 +169,12 @@ export const getUserData = async (uid: string, userForCreation?: FirebaseAuthUse
          updates.plan = 'free';
        }
        if (existingData.plan === 'free' && !existingData.trialStartedAt) {
-          updates.trialStartedAt = serverTimestamp() as Timestamp;
+          updates.trialStartedAt = Timestamp.now();
           updates.generationsUsed = 0;
        }
        if (Object.keys(updates).length > 0) {
           await updateDoc(userRef, { ...updates, updatedAt: serverTimestamp() });
-          return { ...existingData, ...updates } as UserData;
+          return { ...existingData, ...updates, updatedAt: Timestamp.now() } as UserData;
        }
       return existingData;
     } else {
@@ -202,7 +216,7 @@ export const updateUserPlanByEmail = async (email: string, newPlan: 'monthly' | 
 
     await updateDoc(userRef, {
       plan: newPlan,
-      updatedAt: serverTimestamp() as Timestamp,
+      updatedAt: serverTimestamp(),
     });
     console.log(`Successfully updated plan for ${email} to ${newPlan}`);
     return true;
@@ -227,15 +241,17 @@ export const saveDraft = async (
     return null;
   }
   try {
-    const draftsCollectionRef = collection(db, 'users', userId, 'drafts');
-    const newDraftData: Omit<Draft, 'id'> = {
+    const now = Timestamp.now();
+    const newDraftDataForDb: Omit<Draft, 'id' | 'createdAt' | 'updatedAt'> = {
       ...draftData,
       userId,
-      createdAt: serverTimestamp() as Timestamp,
-      updatedAt: serverTimestamp() as Timestamp,
     };
-    const docRef = await addDoc(draftsCollectionRef, newDraftData);
-    return { ...newDraftData, id: docRef.id };
+    const docRef = await addDoc(collection(db, 'users', userId, 'drafts'), {
+        ...newDraftDataForDb,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+    });
+    return { ...draftData, id: docRef.id, userId, createdAt: now, updatedAt: now };
   } catch (error) {
     console.error('Error saving draft:', error);
     return null;
@@ -273,7 +289,7 @@ export const updateDraftContent = async (
     const draftRef = doc(db, 'users', userId, 'drafts', draftId);
     await updateDoc(draftRef, {
       content: newContent,
-      updatedAt: serverTimestamp() as Timestamp,
+      updatedAt: serverTimestamp(),
     });
     return true;
   } catch (error) {
