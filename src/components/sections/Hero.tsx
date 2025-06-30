@@ -4,7 +4,6 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Clock, Search } from "lucide-react";
-import Image from "next/image";
 import Link from 'next/link';
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
@@ -148,16 +147,21 @@ function HeroComponent() {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5, delay: 0.1, ease: "easeOut" }}
           whileHover={{ scale: 1.03, transition: { duration: 0.2 } }}
-          className="w-full h-auto aspect-video relative"
+          className="w-full"
         >
-          <Image
-            src="/product-preview.png"
-            alt="SagePostAI application preview"
-            fill
-            style={{objectFit:"cover"}}
-            className="rounded-2xl shadow-2xl border-2 border-border"
-            priority
-          />
+          <div className="relative w-full overflow-hidden rounded-2xl shadow-2xl border-2 border-border aspect-[1.6/1]">
+            <iframe
+              src="https://app.supademo.com/embed/cmchrk9gn6jri8qszr3w6m21q?embed_v=2"
+              loading="lazy"
+              title="Sagepostai Demo"
+              allow="clipboard-write"
+              frameBorder="0"
+              webkitAllowFullScreen={true}
+              mozAllowFullScreen={true}
+              allowFullScreen={true}
+              className="absolute top-0 left-0 w-full h-full"
+            ></iframe>
+          </div>
         </motion.div>
       </div>
     </section>
