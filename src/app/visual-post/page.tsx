@@ -122,7 +122,7 @@ function VisualPostPageComponent() {
     } finally {
       setIsLoading(false);
     }
-  }, [userIdToPass, generatedPost, toast]);
+  }, [userIdToPass, toast]);
 
   useEffect(() => {
     if (!imageDataUri || !isClient) return;

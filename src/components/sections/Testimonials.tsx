@@ -104,6 +104,6 @@ const TestimonialsComponent = () => {
       </div>
     </section>
   );
-}
+};
 
 export default React.memo(TestimonialsComponent);

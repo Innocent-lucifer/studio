@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { researchTopic } from "@/ai/flows/research-topic";
@@ -19,7 +19,7 @@ interface TopicResearchProps {
   onTrialExpired: () => void;
 }
 
-export const TopicResearch: React.FC<TopicResearchProps> = ({ 
+const TopicResearchComponent: React.FC<TopicResearchProps> = ({ 
   initialTopic,
   setTopic, 
   setResearchedContent, 
@@ -132,3 +132,5 @@ export const TopicResearch: React.FC<TopicResearchProps> = ({
     </motion.div>
   );
 };
+
+export const TopicResearch = React.memo(TopicResearchComponent);

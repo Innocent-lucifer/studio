@@ -63,6 +63,6 @@ const BuiltWithComponent = () => {
       </div>
     </section>
   );
-}
+};
 
 export default React.memo(BuiltWithComponent);

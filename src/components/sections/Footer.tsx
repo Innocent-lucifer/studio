@@ -98,6 +98,6 @@ const FooterComponent: React.FC = () => {
       </div>
     </motion.footer>
   );
-}
+};
 
 export default React.memo(FooterComponent);

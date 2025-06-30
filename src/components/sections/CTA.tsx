@@ -32,7 +32,7 @@ const CTAComponent = () => {
               Start 3-Day Free Trial
             </Link>
           </Button>
-          <p className="text-sm text-accent font-semibold drop-shadow-[0_0_8px_hsl(var(--accent)/0.5)]">
+          <p className="text-sm text-accent font-semibold drop-shadow-[0_0_8px_hsl(var(--accent)/0.5)] animate-pulse">
              No card required for trial.
           </p>
         </div>

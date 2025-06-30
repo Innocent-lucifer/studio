@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { generateTwitterPosts, regenerateTwitterPosts } from "@/ai/flows/generate-twitter-posts";
 import { motion } from 'framer-motion';
@@ -18,7 +18,7 @@ interface TwitterPostGeneratorProps {
   onTrialExpired: () => void;
 }
 
-export const TwitterPostGenerator: React.FC<TwitterPostGeneratorProps> = ({ 
+const TwitterPostGeneratorComponent: React.FC<TwitterPostGeneratorProps> = ({ 
   topic, 
   userId,
   setTwitterPosts, 
@@ -234,3 +234,5 @@ export const TwitterPostGenerator: React.FC<TwitterPostGeneratorProps> = ({
     </motion.div>
   );
 };
+
+export const TwitterPostGenerator = React.memo(TwitterPostGeneratorComponent);

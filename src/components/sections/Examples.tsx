@@ -33,7 +33,7 @@ const linkedinExamples = [
   }
 ];
 
-const ExamplePost = ({ user, handle, content, platform }: { user: string; handle: string; content: string; platform: 'twitter' | 'linkedin' }) => (
+const ExamplePost = React.memo(({ user, handle, content }: { user: string; handle: string; content: string; }) => (
     <Card className="bg-background border border-border p-6 text-left hover:shadow-primary/10 transition-shadow duration-300">
         <CardContent className="p-0">
             <div className="flex items-start space-x-4">
@@ -50,9 +50,11 @@ const ExamplePost = ({ user, handle, content, platform }: { user: string; handle
             </div>
         </CardContent>
     </Card>
-);
+));
+ExamplePost.displayName = 'ExamplePost';
 
-export default function Examples() {
+
+const ExamplesComponent = () => {
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -105,7 +107,7 @@ export default function Examples() {
             >
               {twitterExamples.map((post, i) => (
                 <motion.div key={`twitter-${i}`} variants={itemVariants}>
-                    <ExamplePost {...post} platform="twitter" />
+                    <ExamplePost {...post} />
                 </motion.div>
               ))}
             </motion.div>
@@ -120,7 +122,7 @@ export default function Examples() {
             >
               {linkedinExamples.map((post, i) => (
                 <motion.div key={`linkedin-${i}`} variants={itemVariants}>
-                  <ExamplePost {...post} platform="linkedin" />
+                  <ExamplePost {...post} />
                 </motion.div>
               ))}
             </motion.div>
@@ -130,3 +132,5 @@ export default function Examples() {
     </section>
   );
 }
+
+export default React.memo(ExamplesComponent);

@@ -92,6 +92,6 @@ const ProblemSolutionComponent = () => {
       </div>
     </section>
   );
-}
+};
 
 export default React.memo(ProblemSolutionComponent);

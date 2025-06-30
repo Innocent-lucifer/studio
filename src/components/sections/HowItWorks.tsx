@@ -51,7 +51,7 @@ const HowItWorksComponent = () => {
           whileInView="visible"
           viewport={{ once: true, amount: 0.3 }}
         >
-          {steps.map(({ step, desc }, index) => (
+          {steps.map(({ step, desc }) => (
             <motion.div
               key={step}
               variants={itemVariants}
@@ -68,6 +68,6 @@ const HowItWorksComponent = () => {
       </div>
     </section>
   );
-}
+};
 
 export default React.memo(HowItWorksComponent);

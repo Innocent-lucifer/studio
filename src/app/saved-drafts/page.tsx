@@ -26,6 +26,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { Textarea } from '@/components/ui/textarea';
+import { Skeleton } from '@/components/ui/skeleton';
 
 // Reusable Draft Platform Info (can be moved to a util if used elsewhere)
 const getDraftPlatformInfo = (platform: Draft['platform']) => {
@@ -168,6 +169,16 @@ const CampaignDraftListItem = React.memo(CampaignDraftListItemComponent);
 
 type MainFilter = "all" | "quick" | "visual" | "campaigns";
 type QuickPostSubFilter = "all" | "twitter" | "linkedin";
+
+const DraftSkeleton = () => (
+    <div className="p-4 bg-slate-700/70 rounded-lg border border-slate-600 flex items-center space-x-4 w-full">
+      <Skeleton className="h-6 w-6 rounded-full" />
+      <div className="space-y-2 flex-grow">
+        <Skeleton className="h-4 w-2/5" />
+        <Skeleton className="h-4 w-4/5" />
+      </div>
+    </div>
+  );
 
 export default function SavedDraftsPage() {
   const { user, loading: authLoading } = useAuth();
@@ -374,9 +385,10 @@ export default function SavedDraftsPage() {
               )}
 
               {isLoading ? (
-                <div className="flex items-center justify-center p-10 rounded-md bg-slate-700/30 min-h-[200px]">
-                  <Icons.loader className="h-10 w-10 animate-spin text-primary mr-3" />
-                  <span className="text-lg text-slate-300">Loading your drafts...</span>
+                <div className="space-y-4 min-h-[200px]">
+                    <DraftSkeleton />
+                    <DraftSkeleton />
+                    <DraftSkeleton />
                 </div>
               ) : displayItems.length > 0 ? (
                 <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2 -mr-2">

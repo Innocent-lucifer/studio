@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { generateLinkedInPosts, regenerateLinkedInPosts } from "@/ai/flows/generate-linkedin-posts";
 import { motion } from 'framer-motion';
@@ -18,7 +18,7 @@ interface LinkedInPostGeneratorProps {
   onTrialExpired: () => void;
 }
 
-export const LinkedInPostGenerator: React.FC<LinkedInPostGeneratorProps> = ({ 
+const LinkedInPostGeneratorComponent: React.FC<LinkedInPostGeneratorProps> = ({ 
   topic, 
   userId,
   setLinkedinPosts, 
@@ -219,3 +219,5 @@ export const LinkedInPostGenerator: React.FC<LinkedInPostGeneratorProps> = ({
     </motion.div>
   );
 };
+
+export const LinkedInPostGenerator = React.memo(LinkedInPostGeneratorComponent);

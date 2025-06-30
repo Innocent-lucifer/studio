@@ -157,6 +157,6 @@ const ComparisonComponent = () => {
       </div>
     </section>
   );
-}
+};
 
 export default React.memo(ComparisonComponent);

@@ -126,6 +126,6 @@ const HeaderComponent: React.FC<HeaderProps> = ({ scrolled, menuOpen, toggleMenu
       )}
     </motion.header>
   );
-}
+};
 
 export default React.memo(HeaderComponent);

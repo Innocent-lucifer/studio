@@ -87,6 +87,7 @@ const TeamSectionComponent: React.FC<TeamSectionProps> = ({ onReadRishabhStory }
                     width={256}
                     height={256}
                     className="object-cover w-full h-full"
+                    priority
                   />
                 </div>
                 <CardTitle>{member.name}</CardTitle>
@@ -127,6 +128,6 @@ const TeamSectionComponent: React.FC<TeamSectionProps> = ({ onReadRishabhStory }
       </motion.div>
     </section>
   );
-}
+};
 
 export default React.memo(TeamSectionComponent);
