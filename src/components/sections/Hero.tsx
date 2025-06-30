@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -156,9 +155,9 @@ function HeroComponent() {
               title="Sagepostai Demo"
               allow="clipboard-write"
               frameBorder="0"
-              webkitAllowFullScreen={true}
-              mozAllowFullScreen={true}
-              allowFullScreen={true}
+              webkitallowfullscreen="true"
+              mozallowfullscreen="true"
+              allowFullScreen
               className="absolute top-0 left-0 w-full h-full"
             ></iframe>
           </div>
