@@ -127,16 +127,6 @@ function PricingComponent({ plans }: PricingProps) {
             </motion.div>
           ))}
         </div>
-        <div className="mt-12">
-            <h4 className="text-lg font-semibold text-foreground mb-3">Or Start with Our Free Trial</h4>
-             <p className="text-foreground/70 mb-4">Explore SagePostAI with a 3-day, no-strings-attached free trial.</p>
-             <Button asChild size="lg" variant="outline" className="border-primary text-primary hover:bg-primary/10 hover:text-primary">
-                 <Link href="/login">Get Started Free</Link>
-             </Button>
-             <p className="text-sm text-accent font-semibold drop-shadow-[0_0_8px_hsl(var(--accent)/0.5)] mt-3 animate-pulse">
-                No card required for trial.
-            </p>
-        </div>
       </div>
     </section>
   );

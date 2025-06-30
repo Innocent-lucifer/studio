@@ -86,13 +86,20 @@ const FooterComponent: React.FC = () => {
           ))}
         </div>
 
-        <div className="mt-12 pt-8 border-t border-border flex flex-col sm:flex-row justify-between items-center">
-          <p className="text-sm text-secondary-foreground/60">
-            © {new Date().getFullYear()} SagePostAI. All rights reserved.
-          </p>
-          <div className="flex items-center space-x-4 mt-4 sm:mt-0">
-            <Link href="https://x.com/SagepostAI" passHref target="_blank" rel="noopener noreferrer"><Twitter className="h-5 w-5 text-secondary-foreground/60 hover:text-primary transition-colors" /></Link>
-            <Link href="https://linkedin.com/company/sagepostai" passHref target="_blank" rel="noopener noreferrer"><Linkedin className="h-5 w-5 text-secondary-foreground/60 hover:text-primary transition-colors" /></Link>
+        <div className="mt-12 pt-8 border-t border-border">
+          <div className="flex flex-col sm:flex-row justify-between items-center">
+            <p className="text-sm text-secondary-foreground/60">
+              © {new Date().getFullYear()} SagePostAI. All rights reserved.
+            </p>
+            <div className="flex items-center space-x-4 mt-4 sm:mt-0">
+              <Link href="https://x.com/SagepostAI" passHref target="_blank" rel="noopener noreferrer"><Twitter className="h-5 w-5 text-secondary-foreground/60 hover:text-primary transition-colors" /></Link>
+              <Link href="https://linkedin.com/company/sagepostai" passHref target="_blank" rel="noopener noreferrer"><Linkedin className="h-5 w-5 text-secondary-foreground/60 hover:text-primary transition-colors" /></Link>
+            </div>
+          </div>
+          <div className="text-center mt-6">
+            <p className="text-sm text-secondary-foreground/70">
+              Made With ❤️ By 15-Year-Old Teenagers
+            </p>
           </div>
         </div>
       </div>
