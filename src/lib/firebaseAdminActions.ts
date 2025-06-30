@@ -17,9 +17,17 @@ const generateReferralCode = (length = 8): string => {
 /**
  * Updates a user's plan in Firestore using their Firebase UID.
  * This is the primary and most reliable method for updating user data after a purchase.
- * This version is resilient to race conditions where the user document might not exist yet.
+ * It's also the function you would use if you wanted to grant a plan to a user manually from a server environment.
+ * 
+ * To manually grant a plan to a user from the Firebase Console:
+ * 1. Go to your Firebase Console -> Firestore Database.
+ * 2. Find the 'users' collection.
+ * 3. Find the document corresponding to the user's UID.
+ * 4. Edit the 'plan' field and set its value to "monthly" or "yearly".
+ * 
+ * This function is designed to be resilient to race conditions where the user document might not exist yet.
  * @param uid The user's Firebase UID.
- * @param newPlan The plan they purchased.
+ * @param newPlan The plan they purchased or are being granted.
  * @returns { success: boolean, message: string }
  */
 export async function updateUserPlanByUID(
