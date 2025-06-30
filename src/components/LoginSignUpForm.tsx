@@ -41,6 +41,7 @@ export function LoginSignUpForm() {
       hasUpper: false,
       hasLower: false,
       hasNumber: false,
+      hasSpecial: false,
   });
 
   const { toast } = useToast();
@@ -53,6 +54,7 @@ export function LoginSignUpForm() {
         hasLower: /[a-z]/.test(password),
         hasUpper: /[A-Z]/.test(password),
         hasNumber: /\d/.test(password),
+        hasSpecial: /[!@#$%^&*(),.?":{}|<>]/.test(password),
       });
     }
   }, [password, formMode]);
@@ -233,6 +235,7 @@ export function LoginSignUpForm() {
               <PasswordRequirement met={passwordCriteria.hasUpper} text="An uppercase letter" />
               <PasswordRequirement met={passwordCriteria.hasLower} text="A lowercase letter" />
               <PasswordRequirement met={passwordCriteria.hasNumber} text="A number" />
+              <PasswordRequirement met={passwordCriteria.hasSpecial} text="A special character" />
             </motion.ul>
           )}
         </AnimatePresence>
