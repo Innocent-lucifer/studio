@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { Icons } from '@/components/icons';
@@ -17,7 +17,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
-export default function AccountPage() {
+function AccountPageComponent() {
   const { user, userData, loading: authLoading, logOut } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
@@ -25,18 +25,29 @@ export default function AccountPage() {
   const [isYearlyUpgradeModalOpen, setIsYearlyUpgradeModalOpen] = useState(false);
   const [isRefundModalOpen, setIsRefundModalOpen] = useState(false);
 
+  const monthlyPriceId = process.env.NEXT_PUBLIC_PADDLE_MONTHLY_PRICE_ID!;
+  const yearlyPriceId = process.env.NEXT_PUBLIC_PADDLE_YEARLY_PRICE_ID!;
+
   useEffect(() => {
     if (!authLoading && !user) {
       router.push('/login');
     }
   }, [user, authLoading, router]);
 
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
     await logOut();
     router.push('/login');
-  };
+  }, [logOut, router]);
 
-  const handleCheckout = (priceId: string) => {
+  const handleCheckout = useCallback((priceId: string) => {
+    if (!priceId) {
+      toast({
+        title: "Configuration Error",
+        description: "Pricing is not configured correctly. Please contact support.",
+        variant: "destructive",
+      });
+      return;
+    }
     if (!user) {
       toast({
         title: "Login Required",
@@ -66,7 +77,7 @@ export default function AccountPage() {
         variant: "destructive",
       });
     }
-  };
+  }, [user, router, toast]);
 
   if (authLoading || !userData) { 
     return (
@@ -99,7 +110,7 @@ export default function AccountPage() {
         "Copy & export posts",
         "Saved Content History",
       ],
-      priceId: "pri_01jyp11r1dqn1gyvk3ybmrsctv"
+      priceId: monthlyPriceId
     },
     {
       title: "Sage Infinity Yearly",
@@ -119,7 +130,7 @@ export default function AccountPage() {
         "Copy & export posts",
         "Saved Content History",
       ],
-      priceId: "pri_01jyp1dzgerhxbdx8rbz8pzsts"
+      priceId: yearlyPriceId
     }
   ];
 
@@ -376,3 +387,5 @@ export default function AccountPage() {
     </>
   );
 }
+
+export default React.memo(AccountPageComponent);

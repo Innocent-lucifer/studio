@@ -4,7 +4,7 @@
 import { TopicResearch } from "@/components/TopicResearch";
 import { TwitterPostGenerator } from "@/components/TwitterPostGenerator";
 import { LinkedInPostGenerator } from "@/components/LinkedInPostGenerator";
-import { useState, useEffect, useCallback, Suspense } from "react";
+import { useState, useEffect, useCallback, Suspense, memo } from "react";
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { HamburgerMenu } from "@/components/HamburgerMenu";
@@ -104,13 +104,13 @@ const QuickPostPageContent = () => {
   }, [topic, researchedContent, researchIsLoading, twitterPosts, linkedinPosts]);
 
 
-  const handlePostUpdate = (type: 'twitter' | 'linkedin', index: number, newText: string) => {
+  const handlePostUpdate = useCallback((type: 'twitter' | 'linkedin', index: number, newText: string) => {
     if (type === 'twitter') {
       setTwitterPosts(prev => prev.map((post, i) => i === index ? newText : post));
     } else {
       setLinkedinPosts(prev => prev.map((post, i) => i === index ? newText : post));
     }
-  };
+  }, []);
 
   const showPostSelectionCard = twitterPosts.length > 0 && linkedinPosts.length > 0;
 
@@ -352,6 +352,7 @@ const QuickPostPageContent = () => {
   );
 }
 
+const MemoizedQuickPostPageContent = memo(QuickPostPageContent);
 
 export default function QuickPostPage() {
   // Suspense is necessary because QuickPostPageContent uses useSearchParams
@@ -362,7 +363,7 @@ export default function QuickPostPage() {
         <p className="mt-4 text-xl">Loading Quick Post Generator...</p>
       </div>
     }>
-      <QuickPostPageContent />
+      <MemoizedQuickPostPageContent />
     </Suspense>
   );
 }

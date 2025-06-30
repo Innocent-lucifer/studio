@@ -21,7 +21,7 @@ const placeholders = [
   "Convince me that waking up before 9am is a good idea"
 ];
 
-export default function Hero() {
+function HeroComponent() {
   const [topic, setTopic] = useState("");
   const router = useRouter();
   const { user } = useAuth();
@@ -166,3 +166,5 @@ export default function Hero() {
     </section>
   );
 }
+
+export default React.memo(HeroComponent);

@@ -87,7 +87,7 @@ export default function Home() {
         "Copy & export posts anytime",
         "Saved Content History",
       ],
-      priceId: "pri_01jyp11r1dqn1gyvk3ybmrsctv"
+      priceId: process.env.NEXT_PUBLIC_PADDLE_MONTHLY_PRICE_ID || ""
     },
     {
       title: "Sage Infinity Yearly",
@@ -109,7 +109,7 @@ export default function Home() {
         "Copy & export posts anytime",
         "Saved Content History",
       ],
-      priceId: "pri_01jyp1dzgerhxbdx8rbz8pzsts"
+      priceId: process.env.NEXT_PUBLIC_PADDLE_YEARLY_PRICE_ID || ""
     }
   ];
 

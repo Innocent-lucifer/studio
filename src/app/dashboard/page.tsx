@@ -86,7 +86,7 @@ const FeatureCardComponent: React.FC<FeatureCardProps> = ({ icon, title, descrip
 const FeatureCard = React.memo(FeatureCardComponent);
 
 
-export default function DashboardPage() {
+function DashboardPageComponent() {
   const { user, userData, loading } = useAuth();
   const router = useRouter();
   const [displayName, setDisplayName] = useState<string>("Guest");
@@ -208,3 +208,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+export default React.memo(DashboardPageComponent);

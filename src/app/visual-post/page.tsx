@@ -30,7 +30,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 type Tone = 'default' | 'romantic' | 'funny' | 'professional' | 'mysterious';
 
-export default function VisualPostPage() {
+function VisualPostPageComponent() {
   const { user } = useAuth();
   const userIdToPass = user?.uid; 
 
@@ -636,3 +636,5 @@ export default function VisualPostPage() {
     </motion.div>
   );
 }
+
+export default React.memo(VisualPostPageComponent);

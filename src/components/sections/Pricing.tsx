@@ -1,6 +1,7 @@
+
 "use client";
 
-import React from "react";
+import React, { useCallback } from "react";
 import { motion } from "framer-motion";
 import { CheckCircle, Sparkles, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -37,12 +38,20 @@ const cardVariants = {
   }),
 };
 
-export default function Pricing({ plans }: PricingProps) {
+function PricingComponent({ plans }: PricingProps) {
   const { user } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
 
-  const handleCheckout = (priceId: string) => {
+  const handleCheckout = useCallback((priceId: string) => {
+    if (!priceId) {
+      toast({
+        title: "Configuration Error",
+        description: "Pricing is not configured correctly. Please contact support.",
+        variant: "destructive",
+      });
+      return;
+    }
     if (user) {
       if (window.Paddle) {
         window.Paddle.Checkout.open({
@@ -73,7 +82,7 @@ export default function Pricing({ plans }: PricingProps) {
       });
       router.push('/login');
     }
-  };
+  }, [user, router, toast]);
 
   return (
     <section id="pricing" className="py-20 sm:py-28 px-4 sm:px-6">
@@ -167,3 +176,5 @@ export default function Pricing({ plans }: PricingProps) {
     </section>
   );
 }
+
+export default React.memo(PricingComponent);

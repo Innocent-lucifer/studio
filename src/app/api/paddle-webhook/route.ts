@@ -3,16 +3,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { findOrCreateUserForPurchase, updateUserPlanByUID } from '@/lib/firebaseAdminActions';
 
-// These are your LIVE price IDs.
-const PADDLE_PRICE_IDS = {
-  monthly: "pri_01jyp11r1dqn1gyvk3ybmrsctv",
-  yearly: "pri_01jyp1dzgerhxbdx8rbz8pzsts",
-};
+const PADDLE_MONTHLY_PRICE_ID = process.env.NEXT_PUBLIC_PADDLE_MONTHLY_PRICE_ID;
+const PADDLE_YEARLY_PRICE_ID = process.env.NEXT_PUBLIC_PADDLE_YEARLY_PRICE_ID;
 
 async function handlePurchaseEvent(eventData: any, eventType: string) {
   console.log(`[Webhook] Handling event: ${eventType}`);
   
-  // Robustly parse custom_data
+  if (!PADDLE_MONTHLY_PRICE_ID || !PADDLE_YEARLY_PRICE_ID) {
+    console.error("CRITICAL: Paddle Price IDs are not set in environment variables. Cannot process purchase.");
+    return NextResponse.json({ message: 'Server configuration error: Price IDs not found.' }, { status: 500 });
+  }
+  
   const rawCustomData = eventData.custom_data;
   let parsedCustomData: { userId?: string } = {};
 
@@ -37,8 +38,8 @@ async function handlePurchaseEvent(eventData: any, eventType: string) {
   console.log(`[Webhook] Extracted Info: UserID=${userId}, Email=${userEmail}, PriceID=${priceId}`);
 
   let newPlan: 'monthly' | 'yearly' | undefined;
-  if (priceId === PADDLE_PRICE_IDS.monthly) newPlan = 'monthly';
-  if (priceId === PADDLE_PRICE_IDS.yearly) newPlan = 'yearly';
+  if (priceId === PADDLE_MONTHLY_PRICE_ID) newPlan = 'monthly';
+  if (priceId === PADDLE_YEARLY_PRICE_ID) newPlan = 'yearly';
 
   if (!newPlan) {
     console.warn(`[Webhook] Received webhook for an unhandled priceId: ${priceId}. Ignoring.`);

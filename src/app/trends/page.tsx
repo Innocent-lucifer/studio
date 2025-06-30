@@ -97,8 +97,7 @@ const TrendCardItemComponent: React.FC<TrendCardItemProps> = ({ trend, onViewTre
 };
 const TrendCardItem = React.memo(TrendCardItemComponent);
 
-
-export default function TrendsPage() {
+function TrendsPageComponent() {
   const { user } = useAuth();
   const userIdToPass = user?.uid || "sagepostai-guest-user";
   const { toast } = useToast();
@@ -369,3 +368,5 @@ export default function TrendsPage() {
     </motion.div>
   );
 }
+
+export default React.memo(TrendsPageComponent);
