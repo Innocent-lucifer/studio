@@ -3,10 +3,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { findOrCreateUserForPurchase, updateUserPlanByUID } from '@/lib/firebaseAdminActions';
 
-// These are the correct sandbox Price IDs you provided.
+// These are your LIVE price IDs.
 const PADDLE_PRICE_IDS = {
-  monthly: "pri_01jytrrggq73bfpd9bce3resb0",
-  yearly: "pri_01jytrs4wqac0a8pnyttzz34w1",
+  monthly: "pri_01jyp11r1dqn1gyvk3ybmrsctv",
+  yearly: "pri_01jyp1dzgerhxbdx8rbz8pzsts",
 };
 
 async function handlePurchaseEvent(eventData: any, eventType: string) {

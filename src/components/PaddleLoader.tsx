@@ -10,7 +10,7 @@ declare global {
 }
 
 export function PaddleLoader() {
-  const paddleToken = process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN || "test_cf963617e34d2af675ce87ab957";
+  const paddleToken = "apikey_01jyzqf3wf40736sky345whwya";
 
   return (
     <Script
@@ -18,7 +18,7 @@ export function PaddleLoader() {
       strategy="afterInteractive"
       onLoad={() => {
         if (paddleToken) {
-          window.Paddle.Environment.set("sandbox");
+          // Sandbox environment setting is removed for live mode.
           window.Paddle.Initialize({
             token: paddleToken,
           });
