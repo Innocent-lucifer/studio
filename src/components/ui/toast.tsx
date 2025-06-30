@@ -33,7 +33,7 @@ const toastVariants = cva(
       variant: {
         default: "border bg-background text-foreground",
         destructive:
-          "destructive group border-destructive bg-destructive text-destructive-foreground",
+          "destructive group border-destructive/50 bg-background text-destructive dark:border-destructive [&_svg]:text-destructive",
       },
     },
     defaultVariants: {
@@ -60,10 +60,7 @@ const Toast = React.forwardRef<
     >
       {IconComponent && (
         <div className="shrink-0">
-          <IconComponent className={cn(
-            "h-6 w-6",
-            variant === "destructive" ? "text-destructive-foreground/80" : "text-primary/80"
-          )} />
+          <IconComponent className="h-6 w-6" />
         </div>
       )}
       <div className="flex-1">{children}</div>

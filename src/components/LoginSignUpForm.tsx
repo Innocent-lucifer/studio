@@ -102,12 +102,28 @@ export function LoginSignUpForm() {
         toast({ title: "Signed In!", description: "Welcome back! You're now signed in.", iconType: "checkCircle" });
       } catch (error) {
         const authError = error as AuthError;
+        
+        let userFriendlyMessage = "An unexpected error occurred. Please try again.";
+        switch (authError.code) {
+            case 'auth/invalid-credential':
+            case 'auth/user-not-found':
+            case 'auth/wrong-password':
+                userFriendlyMessage = "Invalid email or password. Please check your details and try again.";
+                break;
+            case 'auth/invalid-email':
+                userFriendlyMessage = "The email address is not valid. Please enter a valid email.";
+                break;
+            case 'auth/too-many-requests':
+                userFriendlyMessage = "Access to this account has been temporarily disabled due to many failed login attempts. You can reset your password or try again later.";
+                break;
+        }
+
         // Check for our custom verification error message from AuthContext
         if (authError.message.includes('verify your email')) {
           toast({ title: "Verification Required", description: authError.message, variant: "destructive", iconType: "alertTriangle", duration: 8000 });
         } else {
-          console.error("Sign In Error (from component):", authError);
-          toast({ title: "Sign In Failed", description: authError.message || "Invalid email or password. Please try again.", variant: "destructive", iconType: "alertTriangle" });
+          console.error("Sign In Error (from component):", authError.code);
+          toast({ title: "Sign In Failed", description: userFriendlyMessage, variant: "destructive", iconType: "alertTriangle" });
         }
       }
     } else if (formMode === 'forgotPassword') {
