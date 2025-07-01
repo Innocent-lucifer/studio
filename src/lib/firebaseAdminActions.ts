@@ -137,8 +137,8 @@ export async function findOrCreateUserForPurchase(
 
 export const checkTrialAndSubscription = async (userId: string): Promise<{ canProceed: boolean; error?: string }> => {
   if (!adminDb) {
-    console.error("CRITICAL WARNING: USAGE CHECKING DISABLED. Firebase Admin SDK is not initialized.");
-    return { canProceed: true };
+    console.error("CRITICAL ERROR: Firebase Admin SDK is not initialized. Access denied.");
+    return { canProceed: false, error: "Server configuration error. Please contact support." };
   }
   if (!userId) {
     return { canProceed: false, error: "User not authenticated." };
