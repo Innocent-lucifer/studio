@@ -1,8 +1,8 @@
 
 "use client";
 
-import React, { useEffect, useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useEffect, useState, useCallback, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { Icons } from '@/components/icons';
 import { AppLogo } from '@/components/AppLogo';
@@ -18,7 +18,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { differenceInHours, addDays } from 'date-fns';
 
-function AccountPageComponent() {
+function AccountPageContent() {
   const { user, userData, loading: authLoading, logOut } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
@@ -26,6 +26,17 @@ function AccountPageComponent() {
   const [isYearlyUpgradeModalOpen, setIsYearlyUpgradeModalOpen] = useState(false);
   const [isRefundModalOpen, setIsRefundModalOpen] = useState(false);
   const [trialTimeLeft, setTrialTimeLeft] = useState<string>('');
+  
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get('action') === 'upgrade' && userData?.plan === 'free') {
+      setIsPricingModalOpen(true);
+      // Clean up URL to prevent modal from re-opening on refresh
+      router.replace('/account', { scroll: false });
+    }
+  }, [searchParams, userData, router]);
+
 
   const monthlyPriceId = process.env.NEXT_PUBLIC_PADDLE_MONTHLY_PRICE_ID?.trim()!;
   const yearlyPriceId = process.env.NEXT_PUBLIC_PADDLE_YEARLY_PRICE_ID?.trim()!;
@@ -271,7 +282,7 @@ function AccountPageComponent() {
 
       <footer className="w-full text-center p-6 sm:p-8 text-slate-500 text-sm mt-8">
         <span className="relative group hover:text-primary transition-colors duration-300 cursor-default">
-          Built by EZ Teenagers
+          Built with ❤️ by 15-year-old teenagers
           <span className="absolute -bottom-0.5 left-0 w-full h-[1.5px] bg-primary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-out origin-left"></span>
         </span>
       </footer>
@@ -408,4 +419,17 @@ function AccountPageComponent() {
   );
 }
 
-export default React.memo(AccountPageComponent);
+const LoadingFallback = () => (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col items-center justify-center p-4">
+    <Icons.loader className="h-16 w-16 animate-spin text-primary" />
+    <p className="mt-4 text-xl">Loading Account...</p>
+    </div>
+);
+
+export default function AccountPage() {
+    return (
+        <Suspense fallback={<LoadingFallback />}>
+            <AccountPageContent />
+        </Suspense>
+    );
+}

@@ -12,6 +12,8 @@ import { useAuth } from '@/context/AuthContext';
 import React, { useEffect, useState } from 'react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
+import { Card, CardContent } from '@/components/ui/card';
+import { addDays, differenceInHours } from 'date-fns';
 
 interface FeatureCardProps {
   icon: keyof typeof Icons;
@@ -92,6 +94,23 @@ function DashboardPageComponent() {
   const router = useRouter();
   const [displayName, setDisplayName] = useState<string>("Guest");
   const { toast } = useToast();
+  const [trialTimeLeft, setTrialTimeLeft] = useState<string>('');
+  const [showTrialBanner, setShowTrialBanner] = useState<boolean>(true);
+
+
+  useEffect(() => {
+    if (userData?.plan === 'free' && userData.createdAt) {
+      const trialEndDate = addDays(userData.createdAt.toDate(), 3);
+      const hoursLeft = differenceInHours(trialEndDate, new Date());
+      if (hoursLeft > 24) {
+        setTrialTimeLeft(`${Math.floor(hoursLeft / 24)} days remaining`);
+      } else if (hoursLeft > 0) {
+        setTrialTimeLeft(`${hoursLeft} hours remaining`);
+      } else {
+        setTrialTimeLeft('has expired');
+      }
+    }
+  }, [userData]);
 
   useEffect(() => {
     const priceId = sessionStorage.getItem('paddleCheckoutPriceId');
@@ -176,6 +195,37 @@ function DashboardPageComponent() {
       </header>
 
       <main className="container mx-auto max-w-6xl flex-grow flex flex-col items-center text-center px-2 sm:px-4">
+        
+        {userData?.plan === 'free' && trialTimeLeft && showTrialBanner && (
+          <motion.div
+            initial={{ opacity: 0, y: -20, height: 0 }}
+            animate={{ opacity: 1, y: 0, height: 'auto' }}
+            exit={{ opacity: 0, y: -20, height: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="mb-8 w-full"
+          >
+            <Card className="bg-primary/10 border border-primary/30 shadow-lg shadow-primary/10">
+              <CardContent className="p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="flex items-center text-left">
+                  <Icons.sparkles className="h-6 w-6 text-primary mr-3 shrink-0" />
+                  <div>
+                    <p className="font-semibold text-slate-100">Your free trial {trialTimeLeft.includes('expired') ? trialTimeLeft : `has ${trialTimeLeft}`}.</p>
+                    <p className="text-sm text-slate-400">Upgrade to unlock unlimited access.</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground flex-grow sm:flex-grow-0">
+                      <Link href="/account?action=upgrade">Upgrade Now</Link>
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => setShowTrialBanner(false)} className="text-slate-400 hover:text-slate-100 hover:bg-slate-700">
+                        <Icons.close className="h-4 w-4" />
+                    </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
         <motion.section
           initial={{ opacity: 0, y: -30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -230,7 +280,7 @@ function DashboardPageComponent() {
 
       <footer className="w-full text-center p-6 sm:p-8 text-slate-500 text-sm">
         <span className="relative group hover:text-primary transition-colors duration-300 cursor-default">
-          Built by EZ Teenagers
+          Built with ❤️ by 15-year-old teenagers
           <span className="absolute -bottom-0.5 left-0 w-full h-[1.5px] bg-primary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-out origin-left"></span>
         </span>
       </footer>
