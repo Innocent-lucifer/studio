@@ -13,12 +13,17 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '/refund-policy',
     '/terms-of-service',
     '/login',
+    '/dashboard',
+    '/quick-post',
+    '/visual-post',
+    '/smart-campaign',
+    '/trends'
   ];
 
   const sitemapEntries: MetadataRoute.Sitemap = staticRoutes.map((route) => ({
     url: `${baseUrl}${route}`,
     lastModified: new Date(),
-    changeFrequency: 'monthly',
+    changeFrequency: route === '/' ? 'weekly' : 'monthly',
     priority: route === '/' ? 1 : 0.8,
   }));
 

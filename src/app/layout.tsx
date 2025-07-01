@@ -13,8 +13,8 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://sagepostai.com'),
   title: "SagePostAI | AI Social Media Automation",
   description: "SagePostAI is the AI layer for social media — built to help creators and brands automate every post, grow faster, and scale effortlessly with intelligent workflows.",
-  keywords: "SagePostAI, AI social media tool, automate posts, AI content planner, GPT social media, AI scheduler",
-  authors: [{ name: "SagePostAI Team" }],
+  keywords: "SagePostAI, AI social media tool, automate posts, AI content planner, GPT social media, AI scheduler, content creation, social media marketing, twitter automation, linkedin automation",
+  authors: [{ name: "SagePostAI Team", url: "https://sagepostai.com" }],
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: 'any' },
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     siteName: "SagePostAI",
     images: [
       {
-        url: '/og-image.png',
+        url: 'https://sagepostai.com/og-image.png',
         width: 1200,
         height: 630,
         alt: 'SagePostAI an AI social media tool',
@@ -43,7 +43,8 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: "SagePostAI | AI Social Media Automation",
     description: "Automate every post, grow faster, and scale effortlessly with intelligent workflows.",
-    images: ['/og-image.png'],
+    creator: '@ChilledCeo',
+    images: ['https://sagepostai.com/og-image.png'],
   },
   
 };

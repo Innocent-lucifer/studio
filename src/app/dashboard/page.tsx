@@ -77,7 +77,7 @@ const FeatureCardComponent: React.FC<FeatureCardProps> = ({ icon, title, descrip
             </Link>
           </motion.div>
         </TooltipTrigger>
-        <TooltipContent className="bg-slate-800 text-slate-200 border-slate-700 shadow-lg">
+        <TooltipContent>
           <p>{tooltipText}</p>
         </TooltipContent>
       </Tooltip>

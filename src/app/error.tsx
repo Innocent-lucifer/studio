@@ -34,9 +34,10 @@ export default function Error({
             We've encountered an unexpected error. Our team has been notified.
             Please try again, or return to the dashboard.
           </p>
-          <p className="text-xs text-slate-500 bg-slate-700/50 p-2 rounded-md font-mono">
-            Error: {error.message || "An unknown error occurred."}
-          </p>
+          <details className="text-left text-xs text-slate-500 bg-slate-700/50 p-2 rounded-md font-mono">
+            <summary className="cursor-pointer">Error Details</summary>
+            <p className="mt-2 whitespace-pre-wrap">{error.message || "An unknown error occurred."}{error.digest && `\nDigest: ${error.digest}`}</p>
+          </details>
         </CardContent>
         <CardFooter className="flex justify-center gap-4">
           <Button

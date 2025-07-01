@@ -389,9 +389,10 @@ function AccountPageComponent() {
         <DialogHeader>
           <DialogTitle className="text-primary text-xl">Refund Request</DialogTitle>
           <DialogDescription className="text-slate-400 pt-2 leading-relaxed">
-            We generally do not offer refunds except in a few cases. 
-            Please email us at <a href="mailto:refund@sagepostai.com" className="text-primary underline">refund@sagepostai.com</a> with your query. 
-            We will try to solve it within 3 business days.
+            As per our policy, we generally do not offer refunds. However, if you're facing a critical issue, please email us with your user ID and a description of the problem.
+             We will investigate and try to resolve it within 3 business days.
+             <br/><br/>
+             Email: <a href="mailto:refund@sagepostai.com" className="text-primary underline">refund@sagepostai.com</a>
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="mt-4">
