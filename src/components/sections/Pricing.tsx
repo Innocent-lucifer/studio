@@ -1,13 +1,13 @@
 
 "use client";
 
-import React from "react";
+import React, { useCallback } from "react";
 import { motion } from "framer-motion";
 import { CheckCircle, Sparkles, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { useToast } from "@/hooks/use-toast";
 
 interface Plan {
     title: string;
@@ -41,6 +41,45 @@ const cardVariants = {
 function PricingComponent({ plans }: PricingProps) {
   const { user } = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
+
+  const handleCheckout = useCallback((priceId: string) => {
+    if (!priceId) {
+      toast({
+        title: "Configuration Error",
+        description: "Pricing is not configured correctly. Please contact support.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!user) {
+      sessionStorage.setItem('paddleCheckoutPriceId', priceId);
+      router.push('/login');
+      return;
+    }
+
+    if (window.Paddle) {
+      window.Paddle.Checkout.open({
+        items: [{ priceId, quantity: 1 }],
+        customer: {
+          email: user.email ?? undefined,
+        },
+        customData: {
+          userId: user.uid,
+        },
+        settings: {
+          successUrl: 'https://sagepostai.com/dashboard'
+        }
+      });
+    } else {
+      toast({
+        title: "Checkout Error",
+        description: "Payment system is not available. Please try again later.",
+        variant: "destructive",
+      });
+    }
+  }, [user, router, toast]);
 
   return (
     <section id="pricing" className="py-20 sm:py-28 px-4 sm:px-6">
@@ -100,12 +139,12 @@ function PricingComponent({ plans }: PricingProps) {
                   <p className="text-foreground/70 text-sm font-semibold mb-8">
                     {plan.subtitle}
                   </p>
-                  <Button 
-                    onClick={() => router.push(user ? '/account' : '/login')}
-                    size="lg" 
+                  <Button
+                    onClick={() => handleCheckout(plan.priceId)}
+                    size="lg"
                     className="w-full bg-primary text-primary-foreground hover:bg-primary/90 text-base mb-8 shadow-lg shadow-primary/30"
                   >
-                    Get Started Free
+                    Choose Plan
                   </Button>
                   <ul className="text-left space-y-3">
                     {plan.features.map((feat, i) => (

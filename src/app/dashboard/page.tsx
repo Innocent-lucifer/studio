@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 import React, { useEffect, useState } from 'react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useToast } from "@/hooks/use-toast";
 
 interface FeatureCardProps {
   icon: keyof typeof Icons;
@@ -90,6 +91,34 @@ function DashboardPageComponent() {
   const { user, userData, loading } = useAuth();
   const router = useRouter();
   const [displayName, setDisplayName] = useState<string>("Guest");
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const priceId = sessionStorage.getItem('paddleCheckoutPriceId');
+    if (priceId && user && window.Paddle) {
+      sessionStorage.removeItem('paddleCheckoutPriceId');
+      
+      window.Paddle.Checkout.open({
+        items: [{ priceId, quantity: 1 }],
+        customer: {
+          email: user.email ?? undefined,
+        },
+        customData: {
+          userId: user.uid,
+        },
+        settings: {
+          successUrl: 'https://sagepostai.com/dashboard'
+        }
+      });
+    } else if (priceId && user && !window.Paddle) {
+        sessionStorage.removeItem('paddleCheckoutPriceId');
+        toast({
+            title: "Checkout Error",
+            description: "Payment system is not available. Please try again later.",
+            variant: "destructive",
+        });
+    }
+  }, [user, toast]);
 
   useEffect(() => {
     if (!loading && !user) {
