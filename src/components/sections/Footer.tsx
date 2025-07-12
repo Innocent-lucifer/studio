@@ -96,11 +96,6 @@ const FooterComponent: React.FC = () => {
               <Link href="https://linkedin.com/company/sagepostai" passHref target="_blank" rel="noopener noreferrer"><Linkedin className="h-5 w-5 text-secondary-foreground/60 hover:text-primary transition-colors" /></Link>
             </div>
           </div>
-          <div className="text-center mt-6">
-            <p className="text-sm text-secondary-foreground/70">
-              Built with ❤️ by a passionate team.
-            </p>
-          </div>
         </div>
       </div>
     </motion.footer>
