@@ -8,7 +8,6 @@ import Link from 'next/link';
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import ProductHuntBadge from "../compos/ProductHuntBadge";
 
 const placeholders = [
   "Why pineapple on pizza is a war crime...",
@@ -104,8 +103,7 @@ function HeroComponent() {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, ease: "easeOut" }}
         >
-          <ProductHuntBadge />
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold mt-6 mb-6 leading-tight tracking-tighter">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tighter">
             Automate Social Media <br />
             <span className="text-primary">Dominate with AI</span>
           </h1>
