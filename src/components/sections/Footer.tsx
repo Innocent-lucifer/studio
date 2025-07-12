@@ -98,7 +98,7 @@ const FooterComponent: React.FC = () => {
           </div>
           <div className="text-center mt-6">
             <p className="text-sm text-secondary-foreground/70">
-              Made With ❤️ By 15-Year-Old Teenagers
+              Built with ❤️ by a passionate team.
             </p>
           </div>
         </div>

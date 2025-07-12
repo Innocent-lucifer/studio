@@ -1,19 +1,31 @@
-import React from "react";
-import Image from "next/image";
+"use client";
+
+import { Triangle } from "lucide-react";
+import { motion } from "framer-motion";
 
 export default function ProductHuntBadge() {
   return (
-    <a
-      href="https://www.producthunt.com/products/sagepostai?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-sagepostai"
+    <motion.a
+      href="https://www.producthunt.com/posts/sagepostai"
       target="_blank"
       rel="noopener noreferrer"
+      aria-label="Visit SagePostAI on Product Hunt"
+      className="inline-flex items-center justify-between space-x-4 bg-background text-[#FF6154] border border-[#FF6154]/50 rounded-xl px-4 py-2 font-semibold shadow-lg transition-all duration-300 ease-in-out hover:bg-[#FF6154] hover:text-white hover:shadow-xl hover:shadow-[#FF6154]/30"
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
     >
-      <Image
-        src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=985466&theme=light&t=1751342131153"
-        alt="SagePostAI - Automate social media. Dominate with AI | Product Hunt"
-        width={250}
-        height={54}
-      />
-    </a>
+      <div className="flex items-center space-x-3">
+        <div className="bg-[#FF6154] text-white font-bold rounded-lg w-8 h-8 flex items-center justify-center text-lg">
+          P
+        </div>
+        <div className="text-left leading-tight">
+          <div className="text-xs font-bold leading-none text-foreground/70">FEATURED ON</div>
+          <div className="text-base font-bold leading-tight">Product Hunt</div>
+        </div>
+      </div>
+      <div className="pl-4 border-l border-[#FF6154]/30 flex items-center justify-center">
+        <Triangle className="w-4 h-4 fill-current" />
+      </div>
+    </motion.a>
   );
 }

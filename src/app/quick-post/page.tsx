@@ -379,8 +379,7 @@ const QuickPostPageContent = () => {
         </main>
         <footer className="text-center p-4 mt-12 text-slate-500 text-sm">
           <span className="relative group hover:text-primary transition-colors duration-300 cursor-default">
-            Made With ❤️ By 15-Year-Old Teenagers
-            <span className="absolute -bottom-0.5 left-0 w-full h-[1.5px] bg-primary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-out origin-left"></span>
+            © {new Date().getFullYear()} SagePostAI. All rights reserved.
           </span>
         </footer>
       </motion.div>

@@ -282,8 +282,7 @@ function AccountPageContent() {
 
       <footer className="w-full text-center p-6 sm:p-8 text-slate-500 text-sm mt-8">
         <span className="relative group hover:text-primary transition-colors duration-300 cursor-default">
-          Built with ❤️ by 15-year-old teenagers
-          <span className="absolute -bottom-0.5 left-0 w-full h-[1.5px] bg-primary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-out origin-left"></span>
+          © {new Date().getFullYear()} SagePostAI. All rights reserved.
         </span>
       </footer>
     </div>
