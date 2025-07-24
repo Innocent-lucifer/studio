@@ -1,0 +1,445 @@
+
+"use client";
+
+import React, { useEffect, useState, useCallback, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
+import { Icons } from '@/components/icons';
+import { AppLogo } from '@/components/AppLogo';
+import { HamburgerMenu } from '@/components/HamburgerMenu';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { motion } from 'framer-motion';
+import Link from 'next/link';
+import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose, DialogFooter } from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { differenceInHours, addDays } from 'date-fns';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+
+function AccountPageContent() {
+  const { user, userData, loading: authLoading, logOut } = useAuth();
+  const router = useRouter();
+  const { toast } = useToast();
+  const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
+  const [isYearlyUpgradeModalOpen, setIsYearlyUpgradeModalOpen] = useState(false);
+  const [isRefundModalOpen, setIsRefundModalOpen] = useState(false);
+  const [trialTimeLeft, setTrialTimeLeft] = useState<string>('');
+  
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get('action') === 'upgrade' && userData?.plan === 'free') {
+      setIsPricingModalOpen(true);
+      // Clean up URL to prevent modal from re-opening on refresh
+      router.replace('/account', { scroll: false });
+    }
+  }, [searchParams, userData, router]);
+
+
+  const monthlyPriceId = process.env.NEXT_PUBLIC_PADDLE_MONTHLY_PRICE_ID?.trim()!;
+  const yearlyPriceId = process.env.NEXT_PUBLIC_PADDLE_YEARLY_PRICE_ID?.trim()!;
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push('/login');
+    }
+  }, [user, authLoading, router]);
+  
+  useEffect(() => {
+    if (userData?.plan === 'free' && userData.createdAt) {
+      const trialEndDate = addDays(userData.createdAt.toDate(), 3);
+      const hoursLeft = differenceInHours(trialEndDate, new Date());
+      if (hoursLeft > 24) {
+        setTrialTimeLeft(`${Math.floor(hoursLeft / 24)} days left`);
+      } else if (hoursLeft > 0) {
+        setTrialTimeLeft(`${hoursLeft} hours left`);
+      } else {
+        setTrialTimeLeft('Expired');
+      }
+    }
+  }, [userData]);
+
+
+  const handleLogout = useCallback(async () => {
+    await logOut();
+    router.push('/login');
+  }, [logOut, router]);
+
+  const handleCheckout = useCallback((priceId: string) => {
+    if (!priceId) {
+      toast({
+        title: "Configuration Error",
+        description: "Pricing is not configured correctly. Please contact support.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!user) {
+      toast({
+        title: "Login Required",
+        description: "Please log in to choose a plan.",
+        variant: "destructive",
+      });
+      router.push('/login');
+      return;
+    }
+    if (window.Paddle) {
+      window.Paddle.Checkout.open({
+        items: [{ priceId, quantity: 1 }],
+        customer: {
+          email: user.email ?? undefined,
+        },
+        customData: {
+          userId: user.uid,
+        },
+        settings: {
+          successUrl: 'https://sagepostai.com/dashboard'
+        }
+      });
+    } else {
+      toast({
+        title: "Checkout Error",
+        description: "Payment system is not available. Please try again later.",
+        variant: "destructive",
+      });
+    }
+  }, [user, router, toast]);
+
+  if (authLoading || !userData) { 
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col items-center justify-center p-4">
+        <Icons.loader className="h-16 w-16 animate-spin text-primary" />
+        <p className="mt-4 text-xl">Loading Account...</p>
+      </div>
+    );
+  }
+
+  const cardVariants = {
+    initial: { opacity: 0, y: 20 },
+    animate: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
+  };
+
+  const plans = [
+    {
+      title: "Sage Infinity Monthly",
+      price: "$19.99",
+      subtitle: "Billed monthly.",
+      features: [
+        "Unlimited Generations",
+        "Image to Post Wizard",
+        "Quick Post Generator",
+        "Smart Campaign Builder",
+        "Upload image & get content ideas",
+        "Tone Styler",
+        "Visibility Booster",
+        "AI Post Editor",
+        "Copy & export posts anytime",
+        "Saved Content History",
+      ],
+      priceId: monthlyPriceId
+    },
+    {
+      title: "Sage Infinity Yearly",
+      price: "$197",
+      subtitle: "Billed annually.",
+      badge: "BEST VALUE",
+      discountBadge: "18% OFF",
+      features: [
+        "Unlimited Generations",
+        "Image to Post Wizard",
+        "Quick Post Generator",
+        "Smart Campaign Builder",
+        "Upload image & get content ideas",
+        "Tone Styler",
+        "Visibility Booster",
+        "AI Post Editor",
+        "Copy & export posts anytime",
+        "Saved Content History",
+      ],
+      priceId: yearlyPriceId
+    }
+  ];
+
+  const yearlyPlan = plans.find(p => p.title.includes("Yearly"));
+
+  const renderPlanContent = () => {
+    if (userData.plan === 'free') {
+      return (
+        <div className="pt-2 text-center">
+            <h4 className="text-md font-semibold text-slate-100 mb-2">Upgrade to Unlock Unlimited Access</h4>
+            <p className="text-sm text-slate-400 mb-4">
+              Your free trial has <span className="font-bold text-amber-400">{trialTimeLeft}</span>. Upgrade to keep generating.
+            </p>
+            <Button size="lg" className="bg-primary hover:bg-primary/90" onClick={() => setIsPricingModalOpen(true)}>
+                <Icons.sparkles className="mr-2 h-5 w-5" /> View Upgrade Options
+            </Button>
+        </div>
+      );
+    }
+    if (userData.plan === 'monthly') {
+      return (
+        <div className="pt-2 text-center">
+          <h4 className="text-md font-semibold text-slate-100 mb-2">You're on the Monthly Plan</h4>
+          <p className="text-sm text-slate-400 mb-4">You can upgrade to our Yearly plan and save 18%.</p>
+          <Button size="lg" className="bg-primary hover:bg-primary/90" onClick={() => setIsYearlyUpgradeModalOpen(true)}>
+              <Icons.sparkles className="mr-2 h-5 w-5" /> View Yearly Plan
+          </Button>
+          <Button onClick={() => setIsRefundModalOpen(true)} variant="link" className="text-slate-400 hover:text-red-400 text-xs mt-2 block">
+              Need a refund?
+          </Button>
+        </div>
+      );
+    }
+     if (userData.plan === 'yearly') {
+      return (
+         <div className="pt-2 text-center">
+            <h4 className="text-md font-semibold text-slate-100 mb-2">You're on the best plan!</h4>
+            <p className="text-sm text-slate-400 mb-4">You have full access to all features with the Sage Infinity Yearly plan.</p>
+             <Button onClick={() => setIsRefundModalOpen(true)} variant="link" className="text-slate-400 hover:text-red-400 text-xs mt-2 block">
+                Need a refund?
+             </Button>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  return (
+    <>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col items-center p-4 sm:p-6 md:p-8">
+      <header className="w-full max-w-5xl mx-auto py-4 sm:py-6 px-4 flex justify-between items-center">
+        <div className="flex items-center space-x-2 sm:space-x-3">
+          <HamburgerMenu />
+          <Link href="/dashboard" passHref>
+            <div className="flex items-center space-x-2 sm:space-x-3 cursor-pointer group">
+              <AppLogo className="h-12 w-12 sm:h-16 sm:w-16 text-primary group-hover:scale-110 transition-transform" />
+               <div>
+                  <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-primary">
+                    SagePostAI
+                  </h1>
+                  <p className="text-xs sm:text-sm text-slate-400 mt-0.5">My Account</p>
+                </div>
+            </div>
+          </Link>
+        </div>
+      </header>
+
+      <main className="container mx-auto max-w-3xl flex-grow w-full">
+        <motion.div variants={cardVariants} initial="initial" animate="animate">
+        <Card className="bg-slate-800/60 backdrop-blur-md border border-slate-700 shadow-xl rounded-xl">
+          <CardHeader>
+            <CardTitle className="text-2xl sm:text-3xl font-semibold text-primary">Account Overview</CardTitle>
+            <CardDescription className="text-slate-400">Manage your account details and subscription.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-2 p-4 bg-slate-700/50 rounded-lg border border-slate-600">
+              <h3 className="text-lg font-medium text-slate-200">User Information</h3>
+              <p className="text-sm text-slate-300">
+                <span className="font-semibold text-slate-100">Email:</span> {userData?.email || user?.email}
+              </p>
+              <p className="text-sm text-slate-300">
+                <span className="font-semibold text-slate-100">UID:</span> <span className="text-xs">{user?.uid}</span>
+              </p>
+            </div>
+            
+            <div className="space-y-4 p-4 bg-slate-700/50 rounded-lg border border-slate-600">
+              <h3 className="text-lg font-medium text-slate-200">Language Settings</h3>
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-slate-300">
+                  Display Language
+                </p>
+                <LanguageSwitcher />
+              </div>
+            </div>
+
+            <div className="space-y-4 p-4 bg-slate-700/50 rounded-lg border border-slate-600">
+              <h3 className="text-lg font-medium text-slate-200">Plan & Subscription</h3>
+              <p className="text-sm text-slate-300">
+                Current Plan: <span className="font-semibold text-purple-400">{userData.plan.charAt(0).toUpperCase() + userData.plan.slice(1)} {userData.plan === 'free' && `(Trial)`}</span>
+              </p>
+              
+              {renderPlanContent()}
+
+            </div>
+            
+            <Separator className="bg-slate-700" />
+
+            <div className="p-4 bg-slate-700/50 rounded-lg border border-slate-600 text-center">
+                <Icons.archive className="h-12 w-12 text-primary mx-auto mb-3" />
+                <h3 className="text-xl font-semibold text-slate-100 mb-2">My Saved Drafts & Campaigns</h3>
+                <p className="text-slate-400 text-sm mb-4 max-w-md mx-auto">
+                    Access all your saved post ideas, visual post drafts, and full smart campaigns in one organized place.
+                </p>
+                <Button asChild size="lg" className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-lg transition-all">
+                    <Link href="/saved-drafts">
+                        <Icons.eye className="mr-2 h-5 w-5" /> View My Saved Content
+                    </Link>
+                </Button>
+            </div>
+
+
+            <Separator className="bg-slate-700" />
+            
+            <Button onClick={handleLogout} variant="destructive" className="w-full sm:w-auto">
+              <Icons.logOut className="mr-2 h-5 w-5" /> Log Out
+            </Button>
+          </CardContent>
+        </Card>
+        </motion.div>
+      </main>
+
+      <footer className="w-full text-center p-6 sm:p-8 text-slate-500 text-sm mt-8">
+        <span className="relative group hover:text-primary transition-colors duration-300 cursor-default">
+          © {new Date().getFullYear()} SagePostAI. All rights reserved.
+        </span>
+      </footer>
+    </div>
+
+    {/* Free plan -> Upgrade Modal */}
+    <Dialog open={isPricingModalOpen} onOpenChange={setIsPricingModalOpen}>
+      <DialogContent className="bg-slate-800/80 backdrop-blur-md border-slate-700 text-white sm:max-w-4xl">
+        <DialogHeader>
+          <DialogTitle className="text-2xl text-primary text-center">Upgrade Your Plan</DialogTitle>
+          <DialogDescription className="text-center text-slate-400 text-md">
+              Choose the plan that's right for you.
+          </DialogDescription>
+        </DialogHeader>
+        <ScrollArea className="max-h-[70vh]">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4 px-2">
+            {plans.map(plan => (
+              <Card key={plan.priceId} className={`relative bg-slate-700/60 border-slate-600 text-center flex flex-col p-6 ${plan.badge ? 'border-primary/80' : ''}`}>
+                {plan.badge && (
+                    <Badge className="absolute -top-3 right-4 bg-primary text-primary-foreground">{plan.badge}</Badge>
+                )}
+                <CardHeader className="p-2">
+                    <CardTitle className="text-xl text-primary">{plan.title}</CardTitle>
+                    <p className="text-3xl font-bold text-slate-100 pt-1">{plan.price}</p>
+                    <p className="text-sm text-slate-400">{plan.subtitle}</p>
+                </CardHeader>
+                <CardContent className="p-2 flex-grow">
+                    <ul className="space-y-3 text-sm my-4 text-left">
+                        {plan.features.map(feature => (
+                            <li key={feature} className="flex items-start">
+                                <Icons.checkCircle className="h-5 w-5 text-green-400 mr-2 mt-0.5 shrink-0" />
+                                <span className="text-slate-300">{feature}</span>
+                            </li>
+                        ))}
+                    </ul>
+                </CardContent>
+                <CardFooter className="p-2 pt-4 mt-auto">
+                    <Button onClick={() => { handleCheckout(plan.priceId); setIsPricingModalOpen(false); }} className="w-full bg-primary hover:bg-primary/90 text-lg py-3">
+                        Choose Plan
+                    </Button>
+                </CardFooter>
+                <div className="mt-4 flex items-center justify-center text-sm text-slate-400">
+                  <Icons.lock className="h-4 w-4 mr-2 text-green-500" />
+                  <span className="font-semibold">Secure payment</span>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </ScrollArea>
+        <DialogFooter className="sm:justify-start pt-2">
+            <DialogClose asChild>
+              <Button type="button" variant="secondary">
+                Close
+              </Button>
+            </DialogClose>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    
+    {/* Monthly plan -> Yearly Upgrade Modal */}
+    <Dialog open={isYearlyUpgradeModalOpen} onOpenChange={setIsYearlyUpgradeModalOpen}>
+      <DialogContent className="bg-slate-800/80 backdrop-blur-md border-slate-700 text-white sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="text-2xl text-primary text-center">Upgrade to Yearly & Save!</DialogTitle>
+          <DialogDescription className="text-center text-slate-400 text-md">
+              Get all the same great features and save 18% by switching to our yearly plan.
+          </DialogDescription>
+        </DialogHeader>
+        {yearlyPlan && (
+          <ScrollArea className="max-h-[70vh]">
+            <div className="py-4 px-2">
+              <Card key={yearlyPlan.priceId} className="relative bg-slate-700/60 border-slate-600 text-center flex flex-col p-6 border-primary/80">
+                <Badge className="absolute -top-3 right-4 bg-primary text-primary-foreground">{yearlyPlan.badge}</Badge>
+                <CardHeader className="p-2">
+                    <CardTitle className="text-xl text-primary">{yearlyPlan.title}</CardTitle>
+                    <p className="text-3xl font-bold text-slate-100 pt-1">{yearlyPlan.price}</p>
+                    <p className="text-sm text-slate-400">{yearlyPlan.subtitle}</p>
+                </CardHeader>
+                <CardContent className="p-2 flex-grow">
+                    <ul className="space-y-3 text-sm my-4 text-left">
+                        {yearlyPlan.features.map(feature => (
+                            <li key={feature} className="flex items-start">
+                                <Icons.checkCircle className="h-5 w-5 text-green-400 mr-2 mt-0.5 shrink-0" />
+                                <span className="text-slate-300">{feature}</span>
+                            </li>
+                        ))}
+                    </ul>
+                </CardContent>
+                <CardFooter className="p-2 pt-4 mt-auto">
+                    <Button onClick={() => { handleCheckout(yearlyPlan.priceId); setIsYearlyUpgradeModalOpen(false); }} className="w-full bg-primary hover:bg-primary/90 text-lg py-3">
+                        Upgrade to Yearly
+                    </Button>
+                </CardFooter>
+                <div className="mt-4 flex items-center justify-center text-sm text-slate-400">
+                    <Icons.lock className="h-4 w-4 mr-2 text-green-500" />
+                    <span className="font-semibold">Secure payment</span>
+                </div>
+              </Card>
+            </div>
+          </ScrollArea>
+        )}
+        <DialogFooter className="sm:justify-start pt-2">
+            <DialogClose asChild>
+              <Button type="button" variant="secondary">
+                Close
+              </Button>
+            </DialogClose>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
+    {/* Refund Modal */}
+    <Dialog open={isRefundModalOpen} onOpenChange={setIsRefundModalOpen}>
+      <DialogContent className="bg-slate-800 border-slate-700 text-white sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="text-primary text-xl">Refund Request</DialogTitle>
+          <DialogDescription className="text-slate-400 pt-2 leading-relaxed">
+            As per our policy, we generally do not offer refunds. However, if you're facing a critical issue, please email us with your user ID and a description of the problem.
+             We will investigate and try to resolve it within 3 business days.
+             <br/><br/>
+             Email: <a href="mailto:refund@sagepostai.com" className="text-primary underline">refund@sagepostai.com</a>
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="mt-4">
+            <DialogClose asChild>
+                <Button type="button" variant="secondary">
+                    Close
+                </Button>
+            </DialogClose>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
+  );
+}
+
+const LoadingFallback = () => (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col items-center justify-center p-4">
+    <Icons.loader className="h-16 w-16 animate-spin text-primary" />
+    <p className="mt-4 text-xl">Loading Account...</p>
+    </div>
+);
+
+export default function AccountPage() {
+    return (
+        <Suspense fallback={<LoadingFallback />}>
+            <AccountPageContent />
+        </Suspense>
+    );
+}

@@ -7,6 +7,7 @@ import Link from "next/link";
 import { Twitter, Linkedin } from "lucide-react";
 import { AppLogo } from "@/components/AppLogo";
 import { usePathname } from "next/navigation";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 const FooterComponent: React.FC = () => {
   const pathname = usePathname();
@@ -87,11 +88,12 @@ const FooterComponent: React.FC = () => {
         </div>
 
         <div className="mt-12 pt-8 border-t border-border">
-          <div className="flex flex-col sm:flex-row justify-between items-center">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
             <p className="text-sm text-secondary-foreground/60">
               © {new Date().getFullYear()} SagePostAI. All rights reserved.
             </p>
-            <div className="flex items-center space-x-4 mt-4 sm:mt-0">
+            <div className="flex items-center space-x-4">
+               <LanguageSwitcher />
               <Link href="https://x.com/SagepostAI" passHref target="_blank" rel="noopener noreferrer"><Twitter className="h-5 w-5 text-secondary-foreground/60 hover:text-primary transition-colors" /></Link>
               <Link href="https://linkedin.com/company/sagepostai" passHref target="_blank" rel="noopener noreferrer"><Linkedin className="h-5 w-5 text-secondary-foreground/60 hover:text-primary transition-colors" /></Link>
             </div>
