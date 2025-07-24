@@ -3,8 +3,6 @@
 
 import * as React from "react";
 import { Check, Languages } from "lucide-react";
-import { useI18n } from "@/locales/client";
-import { useRouter, usePathname } from "next/navigation";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -12,7 +10,6 @@ import {
   Command,
   CommandEmpty,
   CommandGroup,
-  CommandInput,
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
@@ -29,19 +26,9 @@ const languages = [
 
 export function LanguageSwitcher() {
   const [open, setOpen] = React.useState(false);
-  const { getLocale, setLocale, getScopedI18n } = useI18n();
-  const currentLocale = getLocale();
-  const router = useRouter();
-  const pathname = usePathname();
-  const t = getScopedI18n("common");
-
-  const changeLocale = (newLocale: 'en' | 'es') => {
-    const newPath = pathname.replace(`/${currentLocale}`, `/${newLocale}`);
-    
-    // This is a client-side transition:
-    document.cookie = `NEXT_LOCALE=${newLocale}; path=/; max-age=31536000; SameSite=Lax`;
-    router.replace(newPath);
-  };
+  // This is now just a local state for the UI demo.
+  // It will be replaced with real logic later.
+  const [currentLocale, setCurrentLocale] = React.useState("en");
 
   const selectedLanguage = languages.find((lang) => lang.value === currentLocale);
 
@@ -68,9 +55,7 @@ export function LanguageSwitcher() {
                   key={language.value}
                   value={language.value}
                   onSelect={(currentValue) => {
-                    if (currentValue !== currentLocale) {
-                      changeLocale(currentValue as 'en' | 'es');
-                    }
+                    setCurrentLocale(currentValue);
                     setOpen(false);
                   }}
                 >
