@@ -1,15 +1,16 @@
 
 "use client";
-
 import * as React from "react";
+import { useLocale, useTranslations } from "next-intl";
+import { useRouter, usePathname } from 'next-intl/navigation';
 import { Check, Languages } from "lucide-react";
-
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   Command,
   CommandEmpty,
   CommandGroup,
+  CommandInput,
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
@@ -25,12 +26,11 @@ const languages = [
 ];
 
 export function LanguageSwitcher() {
+  const t = useTranslations('LanguageSwitcher');
   const [open, setOpen] = React.useState(false);
-  // This is now just a local state for the UI demo.
-  // It will be replaced with real logic later.
-  const [currentLocale, setCurrentLocale] = React.useState("en");
-
-  const selectedLanguage = languages.find((lang) => lang.value === currentLocale);
+  const currentLocale = useLocale();
+  const router = useRouter();
+  const pathname = usePathname();
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -39,25 +39,26 @@ export function LanguageSwitcher() {
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-[150px] justify-between bg-slate-700 border-slate-600 hover:bg-slate-600 text-slate-100"
+          className="w-[200px] justify-between bg-slate-700/50 border-slate-600 hover:bg-slate-600/50 hover:text-slate-100"
         >
-          <Languages className="mr-2 h-4 w-4" />
-          {selectedLanguage ? selectedLanguage.label : "Select language..."}
+          {languages.find((lang) => lang.value === currentLocale)?.label}
+          <Languages className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[150px] p-0 bg-slate-800 border-slate-700 text-white">
+      <PopoverContent className="w-[200px] p-0 bg-slate-800 border-slate-700 text-white">
         <Command>
+          <CommandInput placeholder={t('changeLanguage')} className="border-slate-700"/>
           <CommandList>
             <CommandEmpty>No language found.</CommandEmpty>
             <CommandGroup>
               {languages.map((language) => (
                 <CommandItem
                   key={language.value}
-                  value={language.value}
-                  onSelect={(currentValue) => {
-                    setCurrentLocale(currentValue);
+                  onSelect={() => {
+                    router.push(pathname, { locale: language.value });
                     setOpen(false);
                   }}
+                  className="hover:bg-slate-700 aria-selected:bg-slate-700"
                 >
                   <Check
                     className={cn(

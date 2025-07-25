@@ -1,0 +1,23 @@
+{
+  "LoginSignUpForm": {
+    "signIn": "Sign In",
+    "register": "Register",
+    "emailLabel": "Email",
+    "passwordLabel": "Password",
+    "forgotPassword": "Forgot password?",
+    "continueWithGoogle": "Sign in with Google",
+    "backToSignIn": "Back to Sign In",
+    "alreadyHaveAccount": "Already have an account?",
+    "dontHaveAccount": "Don't have an account?",
+    "registerNow": "Register now",
+    "resetPassword": "Reset Password",
+    "sendResetLink": "Send Reset Link",
+    "processing": "Processing...",
+    "passwordsDoNotMatch": "Passwords do not match.",
+    "passwordResetEmailSent": "Password reset email sent! Check your inbox.",
+    "pleaseEnterEmail": "Please enter your email address to reset the password."
+  },
+  "LanguageSwitcher": {
+      "changeLanguage": "Change language"
+  }
+}

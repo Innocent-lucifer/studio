@@ -1,0 +1,23 @@
+{
+  "LoginSignUpForm": {
+    "signIn": "Iniciar Sesión",
+    "register": "Registrarse",
+    "emailLabel": "Correo Electrónico",
+    "passwordLabel": "Contraseña",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
+    "continueWithGoogle": "Iniciar sesión con Google",
+    "backToSignIn": "Volver a Iniciar Sesión",
+    "alreadyHaveAccount": "¿Ya tienes una cuenta?",
+    "dontHaveAccount": "¿No tienes una cuenta?",
+    "registerNow": "Regístrate ahora",
+    "resetPassword": "Restablecer Contraseña",
+    "sendResetLink": "Enviar Enlace de Restablecimiento",
+    "processing": "Procesando...",
+    "passwordsDoNotMatch": "Las contraseñas no coinciden.",
+    "passwordResetEmailSent": "¡Correo electrónico de restablecimiento de contraseña enviado! Revisa tu bandeja de entrada.",
+    "pleaseEnterEmail": "Por favor, introduce tu dirección de correo electrónico para restablecer la contraseña."
+  },
+  "LanguageSwitcher": {
+      "changeLanguage": "Cambiar idioma"
+  }
+}

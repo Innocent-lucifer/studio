@@ -10,6 +10,8 @@ import { AuthError } from "firebase/auth";
 import { Button as ShadButton } from "@/components/ui/button";
 import { AppLogo } from "@/components/AppLogo";
 import { Icons } from "@/components/icons";
+import { useTranslations } from 'next-intl';
+import { LanguageSwitcher } from "./LanguageSwitcher";
 
 type FormMode = "login" | "register" | "forgotPassword";
 
@@ -27,6 +29,7 @@ const PasswordRequirement = ({ met, text }: { met: boolean; text: string }) => (
 
 
 export function LoginSignUpForm() {
+  const t = useTranslations('LoginSignUpForm');
   const [formMode, setFormMode] = useState<FormMode>("login");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -84,7 +87,7 @@ export function LoginSignUpForm() {
         return;
       }
       if (password !== confirmPassword) {
-        toast({ title: "Password Mismatch", description: "The passwords you entered do not match.", variant: "destructive", iconType: "alertTriangle" });
+        toast({ title: "Password Mismatch", description: t('passwordsDoNotMatch'), variant: "destructive", iconType: "alertTriangle" });
         return;
       }
       try {
@@ -128,12 +131,12 @@ export function LoginSignUpForm() {
       }
     } else if (formMode === 'forgotPassword') {
        if (!email) {
-        toast({ title: "Email Required", description: "Please enter your email address to reset the password.", variant: "destructive", iconType: "alertTriangle" });
+        toast({ title: "Email Required", description: t('pleaseEnterEmail'), variant: "destructive", iconType: "alertTriangle" });
         return;
       }
       const result = await sendPasswordReset(email);
       if (result.success) {
-        toast({ title: "Password Reset Email Sent", description: "Please check your inbox (and spam folder) for the reset link.", iconType: "checkCircle" });
+        toast({ title: "Password Reset Email Sent", description: t('passwordResetEmailSent'), iconType: "checkCircle" });
         handleModeChange('login');
       } else if (result.error) {
         toast({ title: "Password Reset Failed", description: result.error.message, variant: "destructive", iconType: "alertTriangle" });
@@ -164,18 +167,18 @@ export function LoginSignUpForm() {
   
   const getTitle = () => {
     switch (formMode) {
-      case 'login': return "Welcome Back";
-      case 'register': return "Create Account";
-      case 'forgotPassword': return "Reset Password";
+      case 'login': return t('signIn');
+      case 'register': return t('register');
+      case 'forgotPassword': return t('resetPassword');
     }
   };
   
   const getButtonText = () => {
-    if (loading) return "Processing...";
+    if (loading) return t('processing');
     switch (formMode) {
-      case 'login': return "Sign In";
-      case 'register': return "Sign Up";
-      case 'forgotPassword': return "Send Reset Link";
+      case 'login': return t('signIn');
+      case 'register': return t('register');
+      case 'forgotPassword': return t('sendResetLink');
     }
   };
 
@@ -185,6 +188,9 @@ export function LoginSignUpForm() {
       {...cardAnimation}
       className="max-w-md mx-auto bg-[#0f172a] text-white rounded-3xl shadow-2xl px-8 py-10 space-y-6 border border-indigo-600/30"
     >
+      <div className="flex justify-end">
+        <LanguageSwitcher />
+      </div>
       <motion.div 
         className="flex flex-col items-center"
       >
@@ -199,7 +205,7 @@ export function LoginSignUpForm() {
         className="space-y-4"
       >
         <motion.div>
-          <label htmlFor="email-auth" className="block text-sm font-medium mb-1 text-slate-300">Email</label>
+          <label htmlFor="email-auth" className="block text-sm font-medium mb-1 text-slate-300">{t('emailLabel')}</label>
           <input
             type="email"
             id="email-auth"
@@ -213,7 +219,7 @@ export function LoginSignUpForm() {
 
         {formMode !== 'forgotPassword' && (
           <motion.div>
-            <label htmlFor="password-auth" className="block text-sm font-medium mb-1 text-slate-300">Password</label>
+            <label htmlFor="password-auth" className="block text-sm font-medium mb-1 text-slate-300">{t('passwordLabel')}</label>
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
@@ -288,7 +294,7 @@ export function LoginSignUpForm() {
               className="text-indigo-400 hover:text-purple-400 cursor-pointer"
               onClick={() => handleModeChange('forgotPassword')}
             >
-              Forgot password?
+              {t('forgotPassword')}
             </span>
           </div>
         )}
@@ -327,7 +333,7 @@ export function LoginSignUpForm() {
                 {googleLoading ? 
                   <Icons.loader className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" />
                 : <FcGoogle size={20} />}
-                {formMode === 'register' ? "Sign up with Google" : "Sign in with Google"}
+                {formMode === 'register' ? t('register') : t('signIn')} with Google
               </ShadButton>
             </motion.div>
           </>
@@ -339,15 +345,15 @@ export function LoginSignUpForm() {
         className="text-center text-sm text-gray-400 pt-2"
       >
         {formMode === 'login' ? (
-          <>Don't have an account?{" "}
+          <>{t('dontHaveAccount')}{" "}
             <span onClick={() => handleModeChange('register')} className="text-indigo-400 hover:text-purple-400 cursor-pointer">
-              Register now
+              {t('registerNow')}
             </span>
           </>
         ) : (
-           <>Already have an account?{" "}
+           <>{t('alreadyHaveAccount')}{" "}
             <span onClick={() => handleModeChange('login')} className="text-indigo-400 hover:text-purple-400 cursor-pointer">
-              Sign In
+              {t('signIn')}
             </span>
           </>
         )}
