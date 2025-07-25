@@ -1,9 +1,8 @@
-
 import type {Metadata} from 'next';
 import { GeistSans } from 'geist/font/sans';
 import { GeistMono } from 'geist/font/mono';
 import Script from 'next/script';
-import './globals.css';
+import '../globals.css';
 import { AuthProvider } from '@/context/AuthContext';
 import { Toaster } from "@/components/ui/toaster"; 
 import StarryBackground from '@/components/StarryBackground';
