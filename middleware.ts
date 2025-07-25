@@ -1,11 +1,11 @@
 import createMiddleware from 'next-intl/middleware';
+import {locales, pathnames} from './src/i18n-config';
  
 export default createMiddleware({
-  // A list of all locales that are supported
-  locales: ['en', 'es'],
- 
-  // Used when no locale matches
-  defaultLocale: 'en'
+  locales,
+  pathnames,
+  defaultLocale: 'en',
+  localePrefix: 'always'
 });
  
 export const config = {

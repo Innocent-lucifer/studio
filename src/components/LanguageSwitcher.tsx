@@ -2,8 +2,8 @@
 
 import * as React from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { usePathname } from 'next/navigation';
 import { Languages, Check } from "lucide-react";
+import { usePathname } from 'next-intl/navigation';
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
