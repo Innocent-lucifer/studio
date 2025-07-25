@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { Icons } from '@/components/icons';
-import Link from 'next/link';
+import { Link } from '@/navigation';
 
 export default function Error({
   error,
@@ -36,7 +36,8 @@ export default function Error({
           </p>
           <details className="text-left text-xs text-slate-500 bg-slate-700/50 p-2 rounded-md font-mono">
             <summary className="cursor-pointer">Error Details</summary>
-            <p className="mt-2 whitespace-pre-wrap">{error.message || "An unknown error occurred."}{error.digest && `\nDigest: ${error.digest}`}</p>
+            <p className="mt-2 whitespace-pre-wrap">{error.message || "An unknown error occurred."}{error.digest && `
+Digest: ${error.digest}`}</p>
           </details>
         </CardContent>
         <CardFooter className="flex justify-center gap-4">

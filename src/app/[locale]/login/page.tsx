@@ -54,7 +54,11 @@ const LoginContent = () => {
     );
   }
 
-  return <LoginSignUpForm />;
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col items-center justify-center p-4">
+        <LoginSignUpForm />
+    </div>
+  );
 };
 
 const LoginPageFallback = () => (
@@ -67,10 +71,8 @@ const LoginPageFallback = () => (
 export default function LoginPage() {
   // Suspense is required to use useSearchParams on a page.
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col items-center justify-center p-4">
-        <Suspense fallback={<LoginPageFallback />}>
-          <LoginContent />
-        </Suspense>
-    </div>
+    <Suspense fallback={<LoginPageFallback />}>
+      <LoginContent />
+    </Suspense>
   );
 }

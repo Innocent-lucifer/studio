@@ -58,7 +58,10 @@ export function LanguageSwitcher() {
                   key={language.value}
                   onSelect={() => {
                     const params = new URLSearchParams(searchParams.toString());
-                    router.replace({ pathname, query: Object.fromEntries(params.entries()) }, { locale: language.value });
+                    router.replace(
+                      { pathname, query: Object.fromEntries(params.entries()) },
+                      { locale: language.value }
+                    );
                     setOpen(false);
                   }}
                   className="hover:bg-slate-700 aria-selected:bg-slate-700"
