@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Languages, Check } from "lucide-react";
-import { usePathname } from 'next-intl/navigation';
+import { usePathname } from '@/navigation';
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
