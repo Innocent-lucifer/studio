@@ -16,7 +16,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { differenceInHours, addDays } from 'date-fns';
-import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
 function AccountPageContent() {
   const { user, userData, loading: authLoading, logOut } = useAuth();
@@ -242,16 +241,6 @@ function AccountPageContent() {
               <p className="text-sm text-slate-300">
                 <span className="font-semibold text-slate-100">UID:</span> <span className="text-xs">{user?.uid}</span>
               </p>
-            </div>
-            
-            <div className="space-y-4 p-4 bg-slate-700/50 rounded-lg border border-slate-600">
-              <h3 className="text-lg font-medium text-slate-200">Language Settings</h3>
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-slate-300">
-                  Display Language
-                </p>
-                <LanguageSwitcher />
-              </div>
             </div>
 
             <div className="space-y-4 p-4 bg-slate-700/50 rounded-lg border border-slate-600">
