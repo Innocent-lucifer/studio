@@ -5,7 +5,11 @@ import React from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 
-const BuiltWithComponent = () => {
+interface BuiltWithProps {
+  title: string;
+}
+
+const BuiltWithComponent: React.FC<BuiltWithProps> = ({ title }) => {
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -23,7 +27,7 @@ const BuiltWithComponent = () => {
     <section className="py-12 px-4 sm:px-6">
       <div className="max-w-7xl mx-auto text-center">
         <p className="text-sm text-foreground/60 mb-6 font-semibold tracking-wider uppercase">
-          BUILT WITH THE BEST AI MODELS
+          {title}
         </p>
         <motion.div
           className="flex justify-center items-center gap-8 md:gap-12"

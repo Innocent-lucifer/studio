@@ -8,42 +8,42 @@ import { Twitter, Linkedin } from "lucide-react";
 import { AppLogo } from "@/components/AppLogo";
 import { usePathname } from "next/navigation";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { useTranslations } from "next-intl";
 
 const FooterComponent: React.FC = () => {
   const pathname = usePathname();
+  const t = useTranslations('LandingPage.footer');
 
   const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     if (href.startsWith('/#')) {
       const sectionId = href.substring(2);
-      if (pathname === '/') {
+      if (pathname.endsWith('/en') || pathname.endsWith('/es')) { // Check if on homepage
         e.preventDefault();
         const section = document.getElementById(sectionId);
         if (section) {
           section.scrollIntoView({ behavior: 'smooth' });
         }
       }
-      // If not on the homepage, the default Link behavior will navigate
-      // to the homepage and jump to the hash, which is the correct fallback.
     }
   };
 
   const footerLinks = {
-    Product: [
-      { name: "Problem & Solution", href: "/#problem-solution" },
-      { name: "Features", href: "/#features" },
-      { name: "Get Started", href: "/login" },
+    [t('product.title')]: [
+      { name: t('product.links.problemSolution'), href: "/#problem-solution" },
+      { name: t('product.links.features'), href: "/#features" },
+      { name: t('product.links.getStarted'), href: "/login" },
     ],
-    Support: [
-      { name: "FAQ", href: "/#faq" },
-      { name: "Contact", href: "/contact" },
-      { name: "Help Center", href: "/contact" },
+    [t('support.title')]: [
+      { name: t('support.links.faq'), href: "/#faq" },
+      { name: t('support.links.contact'), href: "/contact" },
+      { name: t('support.links.helpCenter'), href: "/contact" },
     ],
-    Legal: [
-      { name: "Privacy Policy", href: "/privacy-policy" },
-      { name: "Terms of Service", href: "/terms-of-service" },
-      { name: "Refund Policy", href: "/refund-policy" },
-      { name: "Cookie Policy", href: "/cookie-policy" },
-      { name: "Disclaimer", href: "/disclaimer" },
+    [t('legal.title')]: [
+      { name: t('legal.links.privacy'), href: "/privacy-policy" },
+      { name: t('legal.links.terms'), href: "/terms-of-service" },
+      { name: t('legal.links.refund'), href: "/refund-policy" },
+      { name: t('legal.links.cookie'), href: "/cookie-policy" },
+      { name: t('legal.links.disclaimer'), href: "/disclaimer" },
     ],
   };
 
@@ -67,7 +67,7 @@ const FooterComponent: React.FC = () => {
               </div>
             </Link>
             <p className="text-secondary-foreground/70 text-sm max-w-xs">
-              The AI layer for social media, helping you automate posts and scale effortlessly.
+              {t('description')}
             </p>
           </div>
 
@@ -90,7 +90,7 @@ const FooterComponent: React.FC = () => {
         <div className="mt-12 pt-8 border-t border-border">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
             <p className="text-sm text-secondary-foreground/60">
-              © {new Date().getFullYear()} SagePostAI. All rights reserved.
+              {t('copyright', { year: new Date().getFullYear() })}
             </p>
             <div className="flex items-center space-x-4">
               <LanguageSwitcher />

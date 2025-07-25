@@ -3,62 +3,20 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { Image as ImageIcon, Edit, Sparkles, Flame, PenTool, Bot, Hash, Monitor, Zap } from "lucide-react";
-import type { Icon } from "lucide-react";
+import { Image as ImageIcon, Edit, Sparkles, Flame, PenTool, Bot, Hash, Monitor, Zap, Icon } from "lucide-react";
 
 interface Feature {
   title: string;
   description: string;
-  icon: Icon;
 }
 
-const features: Feature[] = [
-  {
-    title: "Image to Post Wizard",
-    description: "Upload an image and let our AI craft a personalized, descriptive social media post based on its content and your chosen tone.",
-    icon: ImageIcon,
-  },
-  {
-    title: "Quick Post Generator",
-    description: "Research any topic and instantly generate engaging drafts for Twitter and LinkedIn. Perfect for rapid content creation.",
-    icon: Edit,
-  },
-  {
-    title: "Smart Campaign Builder",
-    description: "Create cohesive multi-post campaigns. Select content angles, generate series for different platforms, and get repurposing ideas.",
-    icon: Sparkles,
-  },
-  {
-    title: "Trend Explorer",
-    description: "Discover what's buzzing on social media. Explore trending topics across platforms and categories to inspire your next viral post.",
-    icon: Flame,
-  },
-  {
-    title: "Human-Like AI Writing",
-    description: "Posts that sound like you, not a robot — crafted for engagement, not just grammar.",
-    icon: PenTool,
-  },
-  {
-    title: "Emotion-Aware Intelligence",
-    description: "It senses your vibe. Casual, bold, or subtle — SagePostAI mirrors your tone without prompts.",
-    icon: Bot,
-  },
-  {
-    title: "Smart Hashtags + Emojis",
-    description: "Context-aware enhancers that boost reach without feeling forced.",
-    icon: Hash,
-  },
-  {
-    title: "Platform-Tailored Output",
-    description: "Each post is fine-tuned for its platform — format, tone, and style aligned.",
-    icon: Monitor,
-  },
-  {
-    title: "Fast, Frictionless Output",
-    description: "Under 2 seconds. Every time. No delays. Just copy, paste, and publish — effortlessly.",
-    icon: Zap,
-  },
-];
+interface FeaturesProps {
+    title: string;
+    subtitle: string;
+    features: Feature[];
+}
+
+const icons: Icon[] = [ImageIcon, Edit, Sparkles, Flame, PenTool, Bot, Hash, Monitor, Zap];
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -83,7 +41,7 @@ const itemVariants = {
   },
 };
 
-const FeaturesComponent = () => {
+const FeaturesComponent: React.FC<FeaturesProps> = ({ title, subtitle, features }) => {
   return (
     <section id="features" className="py-20 sm:py-28 px-4 sm:px-6">
       <div className="max-w-7xl mx-auto text-center">
@@ -94,10 +52,10 @@ const FeaturesComponent = () => {
           transition={{ duration: 0.6 }}
         >
           <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-foreground">
-            Why Choose SagePostAI?
+            {title}
           </h2>
           <p className="text-lg text-foreground/70 mb-12 max-w-2xl mx-auto">
-            Go beyond basic generation. We provide an intelligent suite of tools designed for modern creators.
+            {subtitle}
           </p>
         </motion.div>
         <motion.div
@@ -107,24 +65,27 @@ const FeaturesComponent = () => {
           whileInView="visible"
           viewport={{ once: true, amount: 0.2 }}
         >
-          {features.map(({ title, description, icon: Icon }) => (
-            <motion.div
-              key={title}
-              variants={itemVariants}
-              whileHover={{ y: -5, scale: 1.03, transition: { type: 'spring', stiffness: 300 } }}
-              className="p-5 text-left rounded-2xl bg-background border border-border shadow-lg hover:shadow-xl hover:shadow-primary/20 hover:border-primary/30"
-            >
-              <div className="bg-primary/10 text-primary p-2 rounded-lg inline-block mb-3">
-                <Icon className="w-5 h-5" />
-              </div>
-              <h3 className="text-lg font-semibold mb-2 text-foreground">
-                {title}
-              </h3>
-              <p className="text-foreground/70 text-sm">
-                {description}
-              </p>
-            </motion.div>
-          ))}
+          {features.map(({ title, description }, index) => {
+            const Icon = icons[index] || Zap;
+            return (
+              <motion.div
+                key={title}
+                variants={itemVariants}
+                whileHover={{ y: -5, scale: 1.03, transition: { type: 'spring', stiffness: 300 } }}
+                className="p-5 text-left rounded-2xl bg-background border border-border shadow-lg hover:shadow-xl hover:shadow-primary/20 hover:border-primary/30"
+              >
+                <div className="bg-primary/10 text-primary p-2 rounded-lg inline-block mb-3">
+                  <Icon className="w-5 h-5" />
+                </div>
+                <h3 className="text-lg font-semibold mb-2 text-foreground">
+                  {title}
+                </h3>
+                <p className="text-foreground/70 text-sm">
+                  {description}
+                </p>
+              </motion.div>
+            )
+          })}
         </motion.div>
       </div>
     </section>

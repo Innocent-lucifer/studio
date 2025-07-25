@@ -4,40 +4,18 @@
 import React, { useRef, useEffect } from "react";
 import { motion, useAnimation } from "framer-motion";
 
-const testimonials = [
-  {
-    quote: "SagePostAI doubled my engagement in just a week!",
-    name: "Emily R.",
-    role: "Social Media Strategist",
-  },
-  {
-    quote: "The automation saves me hours every day—amazing tool!",
-    name: "Carlos M.",
-    role: "Content Creator",
-  },
-  {
-    quote: "Best AI tool for social media I’ve ever used.",
-    name: "Sophie L.",
-    role: "Marketing Lead",
-  },
-  {
-    quote: "It feels like SagePostAI knows my brand perfectly!",
-    name: "Liam J.",
-    role: "Startup Founder",
-  },
-  {
-    quote: "Content creation is now effortless and fast.",
-    name: "Ava D.",
-    role: "Freelance Writer",
-  },
-  {
-    quote: "The tone-matching feature is a game-changer.",
-    name: "Rohan P.",
-    role: "Marketing Consultant",
-  },
-];
+interface Testimonial {
+    quote: string;
+    name: string;
+    role: string;
+}
 
-const TestimonialCard = React.memo(({ quote, name, role }: { quote: string; name: string; role: string }) => (
+interface TestimonialsProps {
+    title: string;
+    testimonials: Testimonial[];
+}
+
+const TestimonialCard = React.memo(({ quote, name, role }: Testimonial) => (
   <motion.div
     className="min-w-[320px] sm:min-w-[360px] h-auto bg-background border border-border rounded-2xl p-8 flex flex-col justify-between shadow-lg transition-all duration-300 hover:border-primary/50 hover:shadow-primary/10"
   >
@@ -52,7 +30,7 @@ const TestimonialCard = React.memo(({ quote, name, role }: { quote: string; name
 ));
 TestimonialCard.displayName = "TestimonialCard";
 
-const TestimonialsComponent = () => {
+const TestimonialsComponent: React.FC<TestimonialsProps> = ({ title, testimonials }) => {
   const controls = useAnimation();
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -77,7 +55,7 @@ const TestimonialsComponent = () => {
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
             className="text-3xl sm:text-4xl font-bold mb-12 text-foreground">
-          What Our Global Users Say 🌍
+          {title}
         </motion.h2>
         <div
           ref={containerRef}

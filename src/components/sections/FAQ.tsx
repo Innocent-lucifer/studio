@@ -9,6 +9,8 @@ interface FAQProps {
   faqs: { q: string; a: string }[];
   openFAQIndex: number | null;
   toggleFAQ: (index: number) => void;
+  faqTitle: string;
+  faqSubtitle: string;
 }
 
 const answerVariants = {
@@ -31,7 +33,7 @@ const answerVariants = {
   },
 };
 
-const FAQComponent: React.FC<FAQProps> = ({ faqs, openFAQIndex, toggleFAQ }) => {
+const FAQComponent: React.FC<FAQProps> = ({ faqs, openFAQIndex, toggleFAQ, faqTitle, faqSubtitle }) => {
   return (
     <motion.section
       id="faq"
@@ -44,10 +46,10 @@ const FAQComponent: React.FC<FAQProps> = ({ faqs, openFAQIndex, toggleFAQ }) => 
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-12">
             <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-foreground">
-            Frequently Asked Questions
+              {faqTitle}
             </h2>
             <p className="text-lg text-foreground/70">
-            Everything you need to know about SagePostAI.
+              {faqSubtitle}
             </p>
         </div>
         <div className="space-y-4">

@@ -23,6 +23,9 @@ interface Plan {
 
 interface PricingProps {
     plans: Plan[];
+    pricingTitle: string;
+    pricingSubtitle: string;
+    launchBadge: string;
 }
 
 const cardVariants = {
@@ -38,7 +41,7 @@ const cardVariants = {
   }),
 };
 
-function PricingComponent({ plans }: PricingProps) {
+function PricingComponent({ plans, pricingTitle, pricingSubtitle, launchBadge }: PricingProps) {
   const { user } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
@@ -92,13 +95,13 @@ function PricingComponent({ plans }: PricingProps) {
         >
             <div className="inline-flex items-center justify-center gap-2 text-primary-foreground font-semibold text-sm mb-3 bg-primary px-4 py-1.5 rounded-full shadow-md shadow-primary/30">
                 <Sparkles className="w-5 h-5" />
-                <span>Launching-only Pricing</span>
+                <span>{launchBadge}</span>
             </div>
             <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
-                Simple, Transparent Pricing
+                {pricingTitle}
             </h2>
             <p className="text-lg text-foreground/70 mb-12 max-w-2xl mx-auto">
-                Choose the plan that’s right for you. Get lifetime access at early-bird value.
+                {pricingSubtitle}
             </p>
         </motion.div>
 

@@ -4,22 +4,17 @@
 import React from "react";
 import { motion } from "framer-motion";
 
-const steps = [
-  {
-    step: "Step 1: Choose Your Input",
-    desc: "Write a topic, upload an image, or pick a category — our AI understands context and adapts to your intent.",
-  },
-  {
-    step: "Step 2: Let AI Do the Work",
-    desc: "It crafts personalized posts instantly — tone, format, and length adjusted automatically for the platform.",
-  },
-  {
-    step: "Step 3: Share or Repurpose",
-    desc: "Copy, refine, or share your post. Or turn it into a multi-post campaign in one click.",
-  },
-];
+interface Step {
+    step: string;
+    desc: string;
+}
 
-const HowItWorksComponent = () => {
+interface HowItWorksProps {
+    title: string;
+    steps: Step[];
+}
+
+const HowItWorksComponent: React.FC<HowItWorksProps> = ({ title, steps }) => {
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -42,7 +37,7 @@ const HowItWorksComponent = () => {
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
             className="text-3xl sm:text-4xl font-bold mb-12 text-foreground">
-          How SagePostAI Works
+          {title}
         </motion.h2>
         <motion.div
           className="grid grid-cols-1 md:grid-cols-3 gap-8"

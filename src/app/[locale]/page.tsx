@@ -114,18 +114,62 @@ export default function Home() {
     }
   ];
 
-  const faqs = [
-    { q: t('faq.q1'), a: t('faq.a1') },
-    { q: t('faq.q2'), a: t('faq.a2') },
-    { q: t('faq.q3'), a: t('faq.a3') },
-    { q: t('faq.q4'), a: t('faq.a4') },
-    { q: t('faq.q5'), a: t('faq.a5') },
-    { q: t('faq.q6'), a: t('faq.a6') },
-    { q: t('faq.q7'), a: t('faq.a7') },
-    { q: t('faq.q8'), a: t('faq.a8') },
-    { q: t('faq.q9'), a: t('faq.a9') },
-    { q: t('faq.q10'), a: t('faq.a10') },
-  ];
+  const faqs = Array.from({ length: 10 }, (_, i) => ({
+    q: t(`faq.q${i + 1}`),
+    a: t(`faq.a${i + 1}`),
+  }));
+
+  const problemSolutionProps = {
+    title: t('problemSolution.title'),
+    subtitle: t('problemSolution.subtitle'),
+    cards: Array.from({ length: 3 }, (_, i) => ({
+      title: t(`problemSolution.cards.c${i + 1}.title`),
+      desc: t(`problemSolution.cards.c${i + 1}.desc`),
+    })),
+  };
+
+  const featuresProps = {
+    title: t('featuresSection.title'),
+    subtitle: t('featuresSection.subtitle'),
+    features: Array.from({ length: 9 }, (_, i) => ({
+      title: t(`featuresSection.features.f${i + 1}.title`),
+      description: t(`featuresSection.features.f${i + 1}.description`),
+    })),
+  };
+
+  const howItWorksProps = {
+    title: t('howItWorks.title'),
+    steps: Array.from({ length: 3 }, (_, i) => ({
+      step: t(`howItWorks.steps.s${i + 1}.step`),
+      desc: t(`howItWorks.steps.s${i + 1}.desc`),
+    })),
+  };
+  
+  const comparisonProps = {
+    title: t('comparison.title'),
+    headers: {
+      feature: t('comparison.headers.feature'),
+      sage: t('comparison.headers.sage'),
+      others: t('comparison.headers.others'),
+      speed: t('comparison.headers.speed'),
+    },
+    data: Array.from({ length: 9 }, (_, i) => ({
+      task: t(`comparison.data.d${i + 1}.task`),
+      sage: t(`comparison.data.d${i + 1}.sage`),
+      others: t(`comparison.data.d${i + 1}.others`),
+      speed: t(`comparison.data.d${i + 1}.speed`),
+    })),
+  };
+  
+  const testimonialsProps = {
+    title: t('testimonials.title'),
+    testimonials: Array.from({ length: 6 }, (_, i) => ({
+      quote: t(`testimonials.items.t${i + 1}.quote`),
+      name: t(`testimonials.items.t${i + 1}.name`),
+      role: t(`testimonials.items.t${i + 1}.role`),
+    })),
+  };
+
 
   return (
     <div className="flex flex-col min-h-screen text-foreground">
@@ -147,15 +191,29 @@ export default function Home() {
           trialInfo={t('hero.trialInfo')}
         />
         <Suspense fallback={<SectionLoader />}>
-          <BuiltWith />
-          <ProblemSolution />
-          <Features />
-          <HowItWorks />
-          <Comparison />
-          <Testimonials />
-          <Pricing plans={plans} />
-          <FAQ faqs={faqs} openFAQIndex={openFAQIndex} toggleFAQ={toggleFAQ} />
-          <CTA />
+          <BuiltWith 
+            title={t('builtWith.title')}
+          />
+          <ProblemSolution {...problemSolutionProps} />
+          <Features {...featuresProps} />
+          <HowItWorks {...howItWorksProps} />
+          <Comparison {...comparisonProps} />
+          <Testimonials {...testimonialsProps} />
+          <Pricing plans={plans} 
+            pricingTitle={t('pricing.title')} 
+            pricingSubtitle={t('pricing.subtitle')}
+            launchBadge={t('pricing.launchBadge')}
+          />
+          <FAQ faqs={faqs} openFAQIndex={openFAQIndex} toggleFAQ={toggleFAQ} 
+             faqTitle={t('faq.title')}
+             faqSubtitle={t('faq.subtitle')}
+          />
+          <CTA 
+            title={t('cta.title')}
+            subtitle={t('cta.subtitle')}
+            buttonText={t('cta.buttonText')}
+            trialInfo={t('cta.trialInfo')}
+          />
         </Suspense>
       </main>
       <Footer />

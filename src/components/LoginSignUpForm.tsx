@@ -83,63 +83,62 @@ export function LoginSignUpForm() {
     if (formMode === 'register') {
       const allCriteriaMet = Object.values(passwordCriteria).every(Boolean);
       if (!allCriteriaMet) {
-        toast({ title: "Weak Password", description: "Please ensure your password meets all the requirements.", variant: "destructive", iconType: "alertTriangle" });
+        toast({ title: t('weakPassword'), description: t('passwordRequirements'), variant: "destructive", iconType: "alertTriangle" });
         return;
       }
       if (password !== confirmPassword) {
-        toast({ title: "Password Mismatch", description: t('passwordsDoNotMatch'), variant: "destructive", iconType: "alertTriangle" });
+        toast({ title: t('passwordMismatch'), description: t('passwordsDoNotMatch'), variant: "destructive", iconType: "alertTriangle" });
         return;
       }
       try {
         await signUp(email, password);
-        toast({ title: "Account Created!", description: "Please check your email to verify your account before logging in.", iconType: "checkCircle", duration: 8000 });
-        handleModeChange('login'); // Switch to login view after successful signup
+        toast({ title: t('accountCreated'), description: t('verifyEmail'), iconType: "checkCircle", duration: 8000 });
+        handleModeChange('login');
       } catch (error) {
         const authError = error as AuthError;
         console.error("Sign Up Error (from component):", authError);
-        toast({ title: "Sign Up Failed", description: authError.message || "Please check your details and try again.", variant: "destructive", iconType: "alertTriangle" });
+        toast({ title: t('signUpFailed'), description: authError.message || t('checkDetails'), variant: "destructive", iconType: "alertTriangle" });
       }
     } else if (formMode === 'login') {
       try {
         await logIn(email, password);
-        toast({ title: "Signed In!", description: "Welcome back! You're now signed in.", iconType: "checkCircle" });
+        toast({ title: t('signedIn'), description: t('welcomeBack'), iconType: "checkCircle" });
       } catch (error) {
         const authError = error as AuthError;
         
-        let userFriendlyMessage = "An unexpected error occurred. Please try again.";
+        let userFriendlyMessage = t('unexpectedError');
         switch (authError.code) {
             case 'auth/invalid-credential':
             case 'auth/user-not-found':
             case 'auth/wrong-password':
-                userFriendlyMessage = "Invalid email or password. Please check your details and try again.";
+                userFriendlyMessage = t('invalidCredentials');
                 break;
             case 'auth/invalid-email':
-                userFriendlyMessage = "The email address is not valid. Please enter a valid email.";
+                userFriendlyMessage = t('invalidEmail');
                 break;
             case 'auth/too-many-requests':
-                userFriendlyMessage = "Access to this account has been temporarily disabled due to many failed login attempts. You can reset your password or try again later.";
+                userFriendlyMessage = t('tooManyRequests');
                 break;
         }
 
-        // Check for our custom verification error message from AuthContext
         if (authError.message.includes('verify your email')) {
-          toast({ title: "Verification Required", description: authError.message, variant: "destructive", iconType: "alertTriangle", duration: 8000 });
+          toast({ title: t('verificationRequired'), description: authError.message, variant: "destructive", iconType: "alertTriangle", duration: 8000 });
         } else {
           console.error("Sign In Error (from component):", authError.code);
-          toast({ title: "Sign In Failed", description: userFriendlyMessage, variant: "destructive", iconType: "alertTriangle" });
+          toast({ title: t('signInFailed'), description: userFriendlyMessage, variant: "destructive", iconType: "alertTriangle" });
         }
       }
     } else if (formMode === 'forgotPassword') {
        if (!email) {
-        toast({ title: "Email Required", description: t('pleaseEnterEmail'), variant: "destructive", iconType: "alertTriangle" });
+        toast({ title: t('emailRequired'), description: t('pleaseEnterEmail'), variant: "destructive", iconType: "alertTriangle" });
         return;
       }
       const result = await sendPasswordReset(email);
       if (result.success) {
-        toast({ title: "Password Reset Email Sent", description: t('passwordResetEmailSent'), iconType: "checkCircle" });
+        toast({ title: t('passwordResetEmailSentTitle'), description: t('passwordResetEmailSent'), iconType: "checkCircle" });
         handleModeChange('login');
       } else if (result.error) {
-        toast({ title: "Password Reset Failed", description: result.error.message, variant: "destructive", iconType: "alertTriangle" });
+        toast({ title: t('passwordResetFailed'), description: result.error.message, variant: "destructive", iconType: "alertTriangle" });
       }
     }
   };
@@ -149,11 +148,11 @@ export function LoginSignUpForm() {
     setGoogleLoading(true);
     try {
       await signInWithGoogle();
-      toast({ title: "Google Sign-In Successful!", description: formMode === 'register' ? "Welcome! Your account is created." : "You're now signed in with Google.", iconType: "checkCircle" });
+      toast({ title: t('googleSignInSuccess'), description: formMode === 'register' ? t('googleWelcome') : t('googleSignedIn'), iconType: "checkCircle" });
     } catch (error) {
       const authError = error as AuthError;
       console.error("Google Sign-In Error (from component):", authError);
-      toast({ title: "Google Sign-In Failed", description: authError.message || "Could not sign in with Google. Please try again.", variant: "destructive", iconType: "alertTriangle" });
+      toast({ title: t('googleSignInFailed'), description: authError.message || t('googleError'), variant: "destructive", iconType: "alertTriangle" });
     } finally {
       setGoogleLoading(false);
     }
@@ -236,7 +235,7 @@ export function LoginSignUpForm() {
                 type="button"
                 onClick={togglePasswordVisibility}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-indigo-400"
-                aria-label={showPassword ? "Hide password" : "Show password"}
+                aria-label={showPassword ? t('hidePassword') : t('showPassword')}
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -253,23 +252,23 @@ export function LoginSignUpForm() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              <PasswordRequirement met={passwordCriteria.minLength} text="At least 8 characters" />
-              <PasswordRequirement met={passwordCriteria.hasUpper} text="An uppercase letter" />
-              <PasswordRequirement met={passwordCriteria.hasLower} text="A lowercase letter" />
-              <PasswordRequirement met={passwordCriteria.hasNumber} text="A number" />
-              <PasswordRequirement met={passwordCriteria.hasSpecial} text="A special character" />
+              <PasswordRequirement met={passwordCriteria.minLength} text={t('pw.minLength')} />
+              <PasswordRequirement met={passwordCriteria.hasUpper} text={t('pw.hasUpper')} />
+              <PasswordRequirement met={passwordCriteria.hasLower} text={t('pw.hasLower')} />
+              <PasswordRequirement met={passwordCriteria.hasNumber} text={t('pw.hasNumber')} />
+              <PasswordRequirement met={passwordCriteria.hasSpecial} text={t('pw.hasSpecial')} />
             </motion.ul>
           )}
         </AnimatePresence>
 
         {formMode === 'register' && (
           <motion.div>
-            <label htmlFor="confirm-password-auth" className="block text-sm font-medium mb-1 text-slate-300">Confirm Password</label>
+            <label htmlFor="confirm-password-auth" className="block text-sm font-medium mb-1 text-slate-300">{t('confirmPassword')}</label>
             <div className="relative">
               <input
                 type={showConfirmPassword ? "text" : "password"}
                 id="confirm-password-auth"
-                placeholder="Re-enter your password"
+                placeholder={t('confirmPasswordPlaceholder')}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
@@ -280,7 +279,7 @@ export function LoginSignUpForm() {
                 type="button"
                 onClick={toggleConfirmPasswordVisibility}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-indigo-400"
-                aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+                aria-label={showConfirmPassword ? t('hidePassword') : t('showPassword')}
               >
                 {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -318,7 +317,7 @@ export function LoginSignUpForm() {
               </div>
               <div className="relative flex justify-center text-xs">
                 <span className="bg-[#0f172a] px-2 text-slate-400">
-                  OR CONTINUE WITH
+                  {t('orContinueWith')}
                 </span>
               </div>
             </motion.div>
