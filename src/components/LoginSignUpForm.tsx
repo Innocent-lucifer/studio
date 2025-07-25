@@ -333,7 +333,7 @@ export function LoginSignUpForm() {
                 {googleLoading ? 
                   <Icons.loader className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" />
                 : <FcGoogle size={20} />}
-                {formMode === 'register' ? t('register') : t('signIn')} with Google
+                {t('continueWithGoogle')}
               </ShadButton>
             </motion.div>
           </>
