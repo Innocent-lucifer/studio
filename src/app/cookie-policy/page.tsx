@@ -1,9 +1,12 @@
 
+"use client";
+
 import React from "react";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import Footer from "@/components/sections/Footer";
+import { useTranslations } from "next-intl";
 
 const PolicySection: React.FC<{title: string, children: React.ReactNode}> = ({ title, children }) => (
   <div className="mb-8">
@@ -15,6 +18,8 @@ const PolicySection: React.FC<{title: string, children: React.ReactNode}> = ({ t
 );
 
 export default function CookiePolicyPage() {
+  const t = useTranslations('CookiePolicyPage');
+
   return (
     <div className="text-foreground min-h-screen flex flex-col">
       <main className="flex-grow py-16 sm:py-24 px-4 sm:px-6">
@@ -23,84 +28,56 @@ export default function CookiePolicyPage() {
               <Link href="/" passHref>
                 <Button variant="ghost" className="text-foreground/70 hover:text-foreground">
                     <ArrowLeft className="w-5 h-5 mr-2" />
-                    Back to Home
+                    {t('backToHome')}
                 </Button>
               </Link>
           </div>
 
           <div className="bg-background border border-border rounded-lg p-8 sm:p-10">
             <h1 className="text-3xl font-extrabold mb-6 text-foreground">
-              Cookie Policy
+              {t('title')}
             </h1>
 
             <p className="mb-5 text-foreground/80">
-              At <strong>SagePostAI</strong>, we use cookies to improve your
-              browsing experience and ensure the platform functions as intended.
-              This Cookie Policy explains what cookies are, how we use them, and
-              how you can manage them.
+              {t('intro')}
             </p>
 
-            <PolicySection title="1. What Are Cookies?">
-              <p>
-                Cookies are small text files stored on your device when you visit a
-                website. They help us remember your preferences, login sessions, and
-                gather anonymized usage data to improve our service.
-              </p>
+            <PolicySection title={t('sections.s1.title')}>
+              <p>{t('sections.s1.content')}</p>
             </PolicySection>
 
-            <PolicySection title="2. Types of Cookies We Use">
+            <PolicySection title={t('sections.s2.title')}>
               <ul className="list-disc list-inside space-y-2">
-                <li>
-                  <strong>Essential Cookies:</strong> Required for basic
-                  functionality like authentication and navigation.
-                </li>
-                <li>
-                  <strong>Performance Cookies:</strong> Help us understand how users
-                  interact with SagePostAI for product improvement.
-                </li>
-                <li>
-                  <strong>Preference Cookies:</strong> Remember user settings (e.g.
-                  input text, selected tone, last used tool).
-                </li>
+                <li><strong>{t('sections.s2.item1.title')}:</strong> {t('sections.s2.item1.content')}</li>
+                <li><strong>{t('sections.s2.item2.title')}:</strong> {t('sections.s2.item2.content')}</li>
+                <li><strong>{t('sections.s2.item3.title')}:</strong> {t('sections.s2.item3.content')}</li>
               </ul>
             </PolicySection>
             
-            <PolicySection title="3. How We Use Cookies">
+            <PolicySection title={t('sections.s3.title')}>
               <ul className="list-disc list-inside space-y-2">
-                <li>To keep you logged in securely</li>
-                <li>To track platform usage anonymously for analytics</li>
-                <li>To store preferences across sessions</li>
-                <li>To improve speed and performance</li>
+                <li>{t('sections.s3.item1')}</li>
+                <li>{t('sections.s3.item2')}</li>
+                <li>{t('sections.s3.item3')}</li>
+                <li>{t('sections.s3.item4')}</li>
               </ul>
             </PolicySection>
 
-            <PolicySection title="4. Managing Cookies">
-              <p>
-                You can disable or clear cookies at any time from your browser
-                settings. Note that disabling cookies may affect your experience and
-                functionality of some features on SagePostAI.
-              </p>
+            <PolicySection title={t('sections.s4.title')}>
+              <p>{t('sections.s4.content')}</p>
             </PolicySection>
 
-            <PolicySection title="5. Third-Party Cookies">
-              <p>
-                Some cookies may be set by trusted third-party services we use, such
-                as Firebase, or analytics providers. These services follow
-                strict privacy standards and do not collect personally identifiable
-                information from you.
-              </p>
+            <PolicySection title={t('sections.s5.title')}>
+              <p>{t('sections.s5.content')}</p>
             </PolicySection>
 
-            <PolicySection title="6. Policy Updates">
-              <p>
-                We may update this Cookie Policy as our platform evolves. We
-                encourage you to review this page periodically.
-              </p>
+            <PolicySection title={t('sections.s6.title')}>
+              <p>{t('sections.s6.content')}</p>
             </PolicySection>
 
-            <PolicySection title="7. Contact">
+            <PolicySection title={t('sections.s7.title')}>
               <p>
-                For any questions about this policy, please reach out to us at{" "}
+                {t('sections.s7.content')}
                 <a
                   href="mailto:support@sagepostai.com"
                   className="text-primary underline"
@@ -117,3 +94,5 @@ export default function CookiePolicyPage() {
     </div>
   );
 }
+
+    

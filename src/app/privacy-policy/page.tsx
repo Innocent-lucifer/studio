@@ -1,9 +1,12 @@
 
+"use client";
+
 import React from "react";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import Footer from "@/components/sections/Footer";
+import { useTranslations } from "next-intl";
 
 const PolicySection: React.FC<{title: string, children: React.ReactNode}> = ({ title, children }) => (
   <div className="mb-8">
@@ -15,6 +18,8 @@ const PolicySection: React.FC<{title: string, children: React.ReactNode}> = ({ t
 );
 
 export default function PrivacyPolicyPage() {
+  const t = useTranslations('PrivacyPolicyPage');
+
   return (
     <div className="text-foreground min-h-screen flex flex-col">
       <main className="flex-grow py-16 sm:py-24 px-4 sm:px-6">
@@ -23,90 +28,58 @@ export default function PrivacyPolicyPage() {
               <Link href="/" passHref>
                 <Button variant="ghost" className="text-foreground/70 hover:text-foreground">
                     <ArrowLeft className="w-5 h-5 mr-2" />
-                    Back to Home
+                    {t('backToHome')}
                 </Button>
               </Link>
           </div>
           <div className="bg-background border border-border rounded-lg p-8 sm:p-10">
             <h1 className="text-3xl font-extrabold mb-6 text-foreground">
-              Privacy Policy
+              {t('title')}
             </h1>
             <p className="mb-5 text-foreground/80">
-              At <strong>SagePostAI</strong>, we deeply respect your privacy. This
-              Privacy Policy outlines what data we collect, how we use it, and how
-              we protect your information while using our services.
+              {t('intro')}
             </p>
 
-            <PolicySection title="1. Information We Collect">
+            <PolicySection title={t('sections.s1.title')}>
               <ul className="list-disc list-inside space-y-2">
-                <li>
-                  <strong>Email & Sign-In Info:</strong> Collected when you sign up
-                  or log in using email/password or Google.
-                </li>
-                <li>
-                  <strong>Usage Data:</strong> We store your plan type, credit
-                  balance, post history, and interactions to improve product
-                  functionality.
-                </li>
-                <li>
-                  <strong>Cookies:</strong> Used to improve your experience, remember
-                  sessions, and enable smooth navigation.{" "}
-                  Learn more in our{" "}
-                  <Link href="/cookie-policy" className="text-primary underline hover:text-primary/80">
-                    Cookie Policy
-                  </Link>
-                  .
-                </li>
+                <li><strong>{t('sections.s1.item1.title')}:</strong> {t('sections.s1.item1.content')}</li>
+                <li><strong>{t('sections.s1.item2.title')}:</strong> {t('sections.s1.item2.content')}</li>
+                <li><strong>{t('sections.s1.item3.title')}:</strong> {t('sections.s1.item3.content.span1')}<Link href="/cookie-policy" className="text-primary underline hover:text-primary/80">{t('sections.s1.item3.content.link')}</Link>.</li>
               </ul>
             </PolicySection>
 
-            <PolicySection title="2. How We Use Your Data">
+            <PolicySection title={t('sections.s2.title')}>
               <ul className="list-disc list-inside space-y-2">
-                <li>To personalize your dashboard experience</li>
-                <li>To generate and store AI-generated post content</li>
-                <li>To manage subscription plans and credits</li>
-                <li>
-                  To send essential communications like billing, feature updates, or
-                  legal notices
-                </li>
+                <li>{t('sections.s2.item1')}</li>
+                <li>{t('sections.s2.item2')}</li>
+                <li>{t('sections.s2.item3')}</li>
+                <li>{t('sections.s2.item4')}</li>
               </ul>
             </PolicySection>
 
-            <PolicySection title="3. Data Protection & Security">
-              <p>
-                We use Firebase and other modern cloud infrastructure to keep your
-                data secure, encrypted, and access-restricted. Only authorized
-                staff (under NDA) have access to internal systems when necessary.
-              </p>
+            <PolicySection title={t('sections.s3.title')}>
+              <p>{t('sections.s3.content')}</p>
             </PolicySection>
 
-            <PolicySection title="4. Third-Party Tools">
-              <p>
-                We may use tools like Firebase and analytics platforms.
-                These services comply with industry standards and do not collect
-                personally identifiable information unless necessary for platform
-                functionality.
-              </p>
+            <PolicySection title={t('sections.s4.title')}>
+              <p>{t('sections.s4.content')}</p>
             </PolicySection>
 
-            <PolicySection title="5. Your Rights">
+            <PolicySection title={t('sections.s5.title')}>
               <ul className="list-disc list-inside space-y-2">
-                <li>Access or delete your data anytime by contacting us</li>
-                <li>Withdraw consent for cookies via browser settings</li>
-                <li>Request data export if legally applicable</li>
+                <li>{t('sections.s5.item1')}</li>
+                <li>{t('sections.s5.item2')}</li>
+                <li>{t('sections.s5.item3')}</li>
               </ul>
             </PolicySection>
 
-            <PolicySection title="6. Updates">
-              <p>
-                This policy may be updated periodically to reflect product
-                improvements. We recommend checking back occasionally.
-              </p>
+            <PolicySection title={t('sections.s6.title')}>
+              <p>{t('sections.s6.content')}</p>
             </PolicySection>
 
-            <PolicySection title="7. Contact">
+            <PolicySection title={t('sections.s7.title')}>
               <p>
-                For any privacy-related concerns, reach out to us at{" "}
+                {t('sections.s7.content')}
                 <a
                   href="mailto:support@sagepostai.com"
                   className="text-primary underline"
@@ -123,3 +96,5 @@ export default function PrivacyPolicyPage() {
     </div>
   );
 }
+
+    

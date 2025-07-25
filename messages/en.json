@@ -350,5 +350,295 @@
       },
       "copyright": "© {year} SagePostAI. All rights reserved."
     }
+  },
+  "AboutTeamPage": {
+    "nav": {
+      "home": "Home"
+    },
+    "title": "About Our Team",
+    "subtitle": "We’re a team of founders passionate about building fast, solving real problems, and shipping tools that matter.",
+    "teamSection": {
+      "title": "Meet the Makers",
+      "subtitle": "We’re a duo of founders building fast, solving real problems, and shipping tools that matter."
+    },
+    "ourStory": {
+      "title": "Our Story",
+      "p1": "We didn’t set out to build just another AI tool — we built SagePostAI because we needed it.",
+      "p2": "Like many young builders and founders, we were moving fast — launching projects, validating ideas, and sharing our journey online. But consistently creating great content? That became a real pain.",
+      "p3": "We didn’t even have time to think of what to post. And even when we did have an idea, writing something thoughtful and well-crafted around it was frustrating and time-consuming — unless it was super short and rushed.",
+      "p4": "That’s when I realized:",
+      "quote": "What if we could build something that solves every part of this problem — in one go? Something ultra fast, human-like, super clean in design, premium in experience, and ridiculously easy to use. A tool that gets straight to the point, while still sounding like you.",
+      "p5": "It wouldn’t be easy, I knew that. But with clarity, consistency, and the will to ship — it was absolutely possible.",
+      "p6": "We built the first version of SagePostAI in under 20 hours. What started as a quick MVP became a product people love — and now use daily to show up online without friction.",
+      "p7": "Since then, we’ve added features like:",
+      "feature1": "Tone styling,",
+      "feature2": "Image-to-post wizard,",
+      "feature3": "Smart campaign generation,",
+      "feature4": "And emoji + hashtag enrichment — all built to make your content feel alive."
+    },
+    "ourMission": {
+      "title": "Our Mission",
+      "p1": "Content shouldn’t feel like a chore.",
+      "p2": "We’re building SagePostAI to empower:",
+      "empower1": "Founders,",
+      "empower2": "Students,",
+      "empower3": "Side-hustlers,",
+      "empower4": "And creators like you…",
+      "p3": "To post faster, better, and more authentically — without hiring a team or wasting hours.",
+      "quote": "We believe AI should amplify your voice, not replace it.",
+      "p4": "This is just the beginning.",
+      "signature": "Founders of SagePostAI"
+    },
+    "rishabhStory": {
+      "title": "My Story - Rishabh Nauhowar",
+      "subtitle": "Founder & Product Strategist of SagePostAI",
+      "journey": {
+        "title": "My Journey",
+        "p1": "From a young age, I found myself deeply curious about space, technology, and how things work. I didn’t always have clear answers, but I always had questions — and I followed them. That early curiosity led me to explore everything from AI and robotics to business and design. As I grew older, that interest turned into something more focused: a desire to build meaningful things.",
+        "p2": "In my early teens, I was introduced to entrepreneurship and began experimenting — sometimes out of passion, sometimes just to see what was possible. I tried my hand at different things: small digital businesses, trading, content, building tools — not all of them worked, but every experience taught me something new. Slowly, I began to understand how much was possible with just an idea, some determination, and a willingness to learn.",
+        "p3": "Eventually, my co-founder and I started a project called NexusHive, where we poured everything we knew into building something valuable. We worked relentlessly — often without sleep — constantly iterating, improving, and figuring things out on the go. Though the outcome wasn’t what we’d hoped, it taught us more than any success could have.",
+        "p4": "That experience led to our next step: building SagePostAI. At the time, we were struggling with something simple — writing social content. Despite having ideas, turning them into polished, high-quality posts was slow and frustrating. We kept saying, “There has to be a better way.”",
+        "p5": "So instead of waiting, I built the first prototype in a single stretch — about 15 hours straight. From there, it became a daily cycle of refinement: listening, improving, testing. Within a couple of weeks, we had something that didn’t just solve our problem — it could help many others too."
+      },
+      "whatWeBelieve": {
+        "title": "What We Believe",
+        "p1": "We believe in building quietly, consistently, and with care. We don’t chase attention. We focus on progress. If we find something worth solving, we try to solve it — not just for ourselves, but for others who might be facing the same thing."
+      },
+      "lookingAhead": {
+        "title": "Looking Ahead",
+        "p1": "SagePostAI is just the beginning. In the future, we hope to return to some of the dreams that first inspired us — in AI, in space, in deep technology — and continue building products that make people’s lives easier and more meaningful.",
+        "p2": "This journey has come with its share of challenges: technical setbacks, rejections, and the everyday doubts that come with building anything new. But we’ve also grown — a lot. We’ve learned that failure is part of the process, that persistence matters more than motivation, and that you don’t need permission to start.",
+        "p3": "We’re still learning. Still growing. Still showing up. And we’re excited for what’s ahead."
+      },
+      "whatComesNext": {
+        "title": "And What Comes Next",
+        "p1": "I’m genuinely excited about what lies ahead. This — all of this — is just the beginning. The path forward won’t be perfect. It’ll be messy, unpredictable, and filled with its share of challenges. There will be wins, and there will be losses. There will be late nights, restless thinking, breakthroughs, setbacks, and everything in between. But that’s what makes it real — and worth it.",
+        "p2": "What excites me the most is not just the idea of success, but the journey itself. The unknowns. The problems yet to be solved. The people we’ll meet. The things we’ll build. The stories we’ll tell later, looking back at how it all started.",
+        "p3": "It’s going to be adventurous — full of different emotions, unexpected turns, juggling ideas, experimenting, failing, learning, and growing. And that’s the kind of life I’ve always wanted to live — one where I’m building something that matters, no matter how uncertain or uphill it may be.",
+        "quote": "I’m here for the long run. Let’s see where this takes us."
+      },
+      "closeButton": "Close"
+    }
+  },
+  "ContactPage": {
+    "backToHome": "Back to Home",
+    "title": "Contact SagePostAI",
+    "subtitle": "Reach out to the right department. We're here to help, partner, and grow with you.",
+    "points": {
+      "p1": {
+        "title": "Message the CEO",
+        "description": "For direct leadership queries, vision discussions, or serious collaborations."
+      },
+      "p2": {
+        "title": "Partnerships & Business",
+        "description": "For sponsorships, integrations, brand collabs, and enterprise licensing."
+      },
+      "p3": {
+        "title": "Product Support",
+        "description": "Questions, bugs, feature requests, or anything stopping your flow?"
+      },
+      "p4": {
+        "title": "Refunds & Billing",
+        "description": "For questions about refunds, charges, or your subscription."
+      }
+    }
+  },
+  "CookiePolicyPage": {
+    "backToHome": "Back to Home",
+    "title": "Cookie Policy",
+    "intro": "At SagePostAI, we use cookies to improve your browsing experience and ensure the platform functions as intended. This Cookie Policy explains what cookies are, how we use them, and how you can manage them.",
+    "sections": {
+      "s1": {
+        "title": "1. What Are Cookies?",
+        "content": "Cookies are small text files stored on your device when you visit a website. They help us remember your preferences, login sessions, and gather anonymized usage data to improve our service."
+      },
+      "s2": {
+        "title": "2. Types of Cookies We Use",
+        "item1": {
+          "title": "Essential Cookies",
+          "content": "Required for basic functionality like authentication and navigation."
+        },
+        "item2": {
+          "title": "Performance Cookies",
+          "content": "Help us understand how users interact with SagePostAI for product improvement."
+        },
+        "item3": {
+          "title": "Preference Cookies",
+          "content": "Remember user settings (e.g. input text, selected tone, last used tool)."
+        }
+      },
+      "s3": {
+        "title": "3. How We Use Cookies",
+        "item1": "To keep you logged in securely",
+        "item2": "To track platform usage anonymously for analytics",
+        "item3": "To store preferences across sessions",
+        "item4": "To improve speed and performance"
+      },
+      "s4": {
+        "title": "4. Managing Cookies",
+        "content": "You can disable or clear cookies at any time from your browser settings. Note that disabling cookies may affect your experience and functionality of some features on SagePostAI."
+      },
+      "s5": {
+        "title": "5. Third-Party Cookies",
+        "content": "Some cookies may be set by trusted third-party services we use, such as Firebase, or analytics providers. These services follow strict privacy standards and do not collect personally identifiable information from you."
+      },
+      "s6": {
+        "title": "6. Policy Updates",
+        "content": "We may update this Cookie Policy as our platform evolves. We encourage you to review this page periodically."
+      },
+      "s7": {
+        "title": "7. Contact",
+        "content": "For any questions about this policy, please reach out to us at "
+      }
+    }
+  },
+  "DisclaimerPage": {
+    "backToHome": "Back to Home",
+    "title": "Disclaimer",
+    "intro": "SagePostAI is an AI-powered tool designed to help users generate social media content, campaign ideas, and creative marketing text. While we strive to deliver helpful and accurate outputs, the content generated is by artificial intelligence and may not always reflect verified facts, personal opinions, or the latest trends.",
+    "sections": {
+      "s1": {
+        "title": "No Guarantees or Warranties",
+        "content": "We do not guarantee that the content generated by SagePostAI will be accurate, reliable, error-free, or suitable for all purposes. Users are encouraged to review, edit, and verify all AI-generated content before using it publicly or professionally."
+      },
+      "s2": {
+        "title": "User Responsibility",
+        "content": "By using SagePostAI, you acknowledge that you are solely responsible for the content you generate and share. We are not liable for any outcomes resulting from the use or misuse of AI-generated text — including but not limited to reputational, legal, or financial consequences."
+      },
+      "s3": {
+        "title": "Free Plan Limitations",
+        "content": "The free plan is designed to let you explore the platform's core features. It includes a 3-day free trial with unlimited access to all features. After the trial period ends, users must upgrade to a paid plan (Monthly or Yearly) to continue using the generation tools."
+      },
+      "s4": {
+        "title": "No Professional Advice",
+        "content": "The content generated by SagePostAI is not a substitute for professional advice, including legal, financial, or medical guidance. Always consult with qualified professionals for decisions in those domains."
+      },
+      "s5": {
+        "title": "Limitation of Liability",
+        "content": "Under no circumstances shall SagePostAI, its founders, partners, or affiliates be held liable for any damages or losses arising from your use of the platform or its outputs."
+      },
+      "s6": {
+        "title": "Contact Us",
+        "content": "If you have questions about this disclaimer, please contact us at "
+      }
+    }
+  },
+  "PrivacyPolicyPage": {
+    "backToHome": "Back to Home",
+    "title": "Privacy Policy",
+    "intro": "At SagePostAI, we deeply respect your privacy. This Privacy Policy outlines what data we collect, how we use it, and how we protect your information while using our services.",
+    "sections": {
+      "s1": {
+        "title": "1. Information We Collect",
+        "item1": {
+          "title": "Email & Sign-In Info",
+          "content": "Collected when you sign up or log in using email/password or Google."
+        },
+        "item2": {
+          "title": "Usage Data",
+          "content": "We store your plan type, credit balance, post history, and interactions to improve product functionality."
+        },
+        "item3": {
+          "title": "Cookies",
+          "content": {
+            "span1": "Used to improve your experience, remember sessions, and enable smooth navigation. Learn more in our ",
+            "link": "Cookie Policy"
+          }
+        }
+      },
+      "s2": {
+        "title": "2. How We Use Your Data",
+        "item1": "To personalize your dashboard experience",
+        "item2": "To generate and store AI-generated post content",
+        "item3": "To manage subscription plans and credits",
+        "item4": "To send essential communications like billing, feature updates, or legal notices"
+      },
+      "s3": {
+        "title": "3. Data Protection & Security",
+        "content": "We use Firebase and other modern cloud infrastructure to keep your data secure, encrypted, and access-restricted. Only authorized staff (under NDA) have access to internal systems when necessary."
+      },
+      "s4": {
+        "title": "4. Third-Party Tools",
+        "content": "We may use tools like Firebase and analytics platforms. These services comply with industry standards and do not collect personally identifiable information unless necessary for platform functionality."
+      },
+      "s5": {
+        "title": "5. Your Rights",
+        "item1": "Access or delete your data anytime by contacting us",
+        "item2": "Withdraw consent for cookies via browser settings",
+        "item3": "Request data export if legally applicable"
+      },
+      "s6": {
+        "title": "6. Updates",
+        "content": "This policy may be updated periodically to reflect product improvements. We recommend checking back occasionally."
+      },
+      "s7": {
+        "title": "7. Contact",
+        "content": "For any privacy-related concerns, reach out to us at "
+      }
+    }
+  },
+  "RefundPolicyPage": {
+    "backToHome": "Back to Home",
+    "title": "Cancellation & Refund Policy",
+    "p1": {
+      "span1": "At ",
+      "span2": "SagePostAI",
+      "span3": ", we are transitioning to a subscription-based model. Due to the nature of immediate digital delivery and access to our AI tools upon subscription, ",
+      "span4": "we generally do not offer refunds",
+      "span5": " for subscription payments."
+    },
+    "p2": "This policy ensures fairness and protects our platform from misuse. Our focus is on providing consistent value to our subscribers.",
+    "p3": {
+      "span1": "If you experience a genuine technical issue that prevents you from using the service, please contact our team within ",
+      "span2": "3 days",
+      "span3": " of your payment. In such cases, we’ll review the issue and, if appropriate, offer a partial or full refund at our discretion."
+    },
+    "p4": "You may cancel your subscription at any time. Your plan will remain active until the end of the current billing cycle, after which no further charges will occur.",
+    "p5": {
+      "span1": "If you have any questions or concerns, feel free to reach out to us at "
+    }
+  },
+  "TermsOfServicePage": {
+    "backToHome": "Back to Home",
+    "title": "Terms of Service",
+    "intro": "These Terms of Service ('Terms') govern your use of SagePostAI ('we', 'our', or 'us'). By accessing or using our services, you agree to be bound by these Terms. If you do not agree, please do not use our platform.",
+    "sections": {
+      "s1": {
+        "title": "1. Use of the Platform",
+        "content": "SagePostAI allows users to generate social media content using AI. You agree to use the platform only for lawful purposes, and not to misuse or exploit it for unauthorized commercial use, scraping, or manipulation."
+      },
+      "s2": {
+        "title": "2. Account & Access",
+        "content": "You must be at least 13 years old to use SagePostAI. You are responsible for maintaining the confidentiality of your account and for all activities under it. We reserve the right to suspend or terminate accounts for violations of these Terms."
+      },
+      "s3": {
+        "title": "3. Credit-Based System",
+        "content": "SagePostAI operates on a credit-based usage model. Once credits are used to generate content, they cannot be refunded or reclaimed. Please review our Refund Policy for full details."
+      },
+      "s4": {
+        "title": "4. Intellectual Property",
+        "content": "All code, branding, and original assets are the property of SagePostAI. However, any content generated using your account and credits is fully owned by you and can be used commercially."
+      },
+      "s5": {
+        "title": "5. Restrictions",
+        "item1": "Do not reverse-engineer or copy our platform's internal mechanisms.",
+        "item2": "Do not use SagePostAI to generate harmful, hateful, or misleading content.",
+        "item3": "Do not share your login with others or resell generated content without consent."
+      },
+      "s6": {
+        "title": "6. Limitation of Liability",
+        "content": "We are not liable for any damages or losses resulting from the use or inability to use our services. All features are provided 'as-is' without warranty of any kind."
+      },
+      "s7": {
+        "title": "7. Changes to Terms",
+        "content": "SagePostAI may update these Terms as features evolve. We’ll notify you of major changes via email or in-app alerts. Continued use after updates constitutes agreement to the revised Terms."
+      },
+      "s8": {
+        "title": "8. Contact",
+        "content": "For any legal questions or concerns, please contact us at "
+      }
+    }
   }
 }
+
+    

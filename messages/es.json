@@ -350,5 +350,295 @@
       },
       "copyright": "© {year} SagePostAI. Todos los derechos reservados."
     }
+  },
+  "AboutTeamPage": {
+    "nav": {
+      "home": "Inicio"
+    },
+    "title": "Sobre Nuestro Equipo",
+    "subtitle": "Somos un equipo de fundadores apasionados por construir rápido, resolver problemas reales y lanzar herramientas que importan.",
+    "teamSection": {
+      "title": "Conoce a los Creadores",
+      "subtitle": "Somos un dúo de fundadores construyendo rápido, resolviendo problemas reales y lanzando herramientas que importan."
+    },
+    "ourStory": {
+      "title": "Nuestra Historia",
+      "p1": "No nos propusimos construir solo otra herramienta de IA; construimos SagePostAI porque la necesitábamos.",
+      "p2": "Como muchos jóvenes constructores y fundadores, nos movíamos rápido: lanzando proyectos, validando ideas y compartiendo nuestro viaje en línea. Pero, ¿crear contenido excelente de manera consistente? Eso se convirtió en un verdadero problema.",
+      "p3": "Ni siquiera teníamos tiempo para pensar qué publicar. E incluso cuando teníamos una idea, escribir algo reflexivo y bien elaborado era frustrante y llevaba mucho tiempo, a menos que fuera súper corto y apresurado.",
+      "p4": "Fue entonces cuando me di cuenta:",
+      "quote": "¿Y si pudiéramos construir algo que resuelva cada parte de este problema de una vez? Algo ultrarrápido, similar a un humano, con un diseño súper limpio, una experiencia premium y ridículamente fácil de usar. Una herramienta que va directo al grano, sin dejar de sonar como tú.",
+      "p5": "No sería fácil, lo sabía. Pero con claridad, consistencia y la voluntad de lanzar, era absolutamente posible.",
+      "p6": "Construimos la primera versión de SagePostAI en menos de 20 horas. Lo que comenzó como un MVP rápido se convirtió en un producto que la gente ama y ahora usa a diario para mostrarse en línea sin fricciones.",
+      "p7": "Desde entonces, hemos agregado características como:",
+      "feature1": "Estilización de tono,",
+      "feature2": "Asistente de imagen a publicación,",
+      "feature3": "Generación de campañas inteligentes,",
+      "feature4": "Y enriquecimiento con emojis y hashtags, todo diseñado para que tu contenido se sienta vivo."
+    },
+    "ourMission": {
+      "title": "Nuestra Misión",
+      "p1": "El contenido no debería sentirse como una tarea.",
+      "p2": "Estamos construyendo SagePostAI para empoderar a:",
+      "empower1": "Fundadores,",
+      "empower2": "Estudiantes,",
+      "empower3": "Emprendedores,",
+      "empower4": "Y creadores como tú...",
+      "p3": "Para publicar más rápido, mejor y de manera más auténtica, sin contratar a un equipo ni perder horas.",
+      "quote": "Creemos que la IA debe amplificar tu voz, no reemplazarla.",
+      "p4": "Esto es solo el comienzo.",
+      "signature": "Fundadores de SagePostAI"
+    },
+    "rishabhStory": {
+      "title": "Mi Historia - Rishabh Nauhowar",
+      "subtitle": "Fundador y Estratega de Producto de SagePostAI",
+      "journey": {
+        "title": "Mi Viaje",
+        "p1": "Desde joven, sentí una profunda curiosidad por el espacio, la tecnología y cómo funcionan las cosas. No siempre tenía respuestas claras, pero siempre tenía preguntas, y las seguía. Esa curiosidad temprana me llevó a explorar todo, desde la IA y la robótica hasta los negocios y el diseño. A medida que crecía, ese interés se convirtió en algo más enfocado: el deseo de construir cosas significativas.",
+        "p2": "En mi adolescencia, me introduje en el emprendimiento y comencé a experimentar, a veces por pasión, a veces solo para ver qué era posible. Probé diferentes cosas: pequeñas empresas digitales, comercio, contenido, herramientas de construcción; no todas funcionaron, pero cada experiencia me enseñó algo nuevo. Poco a poco, comencé a comprender cuánto era posible con solo una idea, algo de determinación y ganas de aprender.",
+        "p3": "Finalmente, mi cofundador y yo comenzamos un proyecto llamado NexusHive, donde vertimos todo lo que sabíamos para construir algo valioso. Trabajamos sin descanso, a menudo sin dormir, iterando, mejorando y resolviendo cosas constantemente sobre la marcha. Aunque el resultado no fue el que esperábamos, nos enseñó más de lo que cualquier éxito podría haberlo hecho.",
+        "p4": "Esa experiencia nos llevó a nuestro siguiente paso: construir SagePostAI. En ese momento, luchábamos con algo simple: escribir contenido social. A pesar de tener ideas, convertirlas en publicaciones pulidas y de alta calidad era lento y frustrante. Seguíamos diciendo: 'Tiene que haber una mejor manera'.",
+        "p5": "Así que, en lugar de esperar, construí el primer prototipo de una sola vez, unas 15 horas seguidas. A partir de ahí, se convirtió en un ciclo diario de refinamiento: escuchar, mejorar, probar. En un par de semanas, teníamos algo que no solo resolvía nuestro problema, sino que también podía ayudar a muchos otros."
+      },
+      "whatWeBelieve": {
+        "title": "Lo Que Creemos",
+        "p1": "Creemos en construir en silencio, de manera consistente y con cuidado. No buscamos atención. Nos enfocamos en el progreso. Si encontramos algo que vale la pena resolver, tratamos de resolverlo, no solo para nosotros, sino para otros que podrían estar enfrentando lo mismo."
+      },
+      "lookingAhead": {
+        "title": "Mirando Hacia Adelante",
+        "p1": "SagePostAI es solo el comienzo. En el futuro, esperamos volver a algunos de los sueños que nos inspiraron por primera vez, en IA, en el espacio, en tecnología profunda, y continuar construyendo productos que hagan la vida de las personas más fácil y significativa.",
+        "p2": "Este viaje ha venido con su parte de desafíos: contratiempos técnicos, rechazos y las dudas cotidianas que surgen al construir algo nuevo. Pero también hemos crecido, mucho. Hemos aprendido que el fracaso es parte del proceso, que la persistencia importa más que la motivación y que no necesitas permiso para comenzar.",
+        "p3": "Todavía estamos aprendiendo. Todavía creciendo. Todavía presentándonos. Y estamos emocionados por lo que está por venir."
+      },
+      "whatComesNext": {
+        "title": "Y Lo Que Viene Después",
+        "p1": "Estoy genuinamente emocionado por lo que se avecina. Esto, todo esto, es solo el comienzo. El camino a seguir no será perfecto. Será desordenado, impredecible y lleno de desafíos. Habrá victorias y habrá derrotas. Habrá noches largas, pensamientos inquietos, avances, contratiempos y todo lo demás. Pero eso es lo que lo hace real, y vale la pena.",
+        "p2": "Lo que más me emociona no es solo la idea del éxito, sino el viaje en sí. Lo desconocido. Los problemas aún por resolver. Las personas que conoceremos. Las cosas que construiremos. Las historias que contaremos más tarde, recordando cómo empezó todo.",
+        "p3": "Va a ser una aventura, llena de diferentes emociones, giros inesperados, malabarismos con ideas, experimentar, fallar, aprender y crecer. Y ese es el tipo de vida que siempre he querido vivir, una en la que estoy construyendo algo que importa, sin importar cuán incierto o cuesta arriba pueda ser.",
+        "quote": "Estoy aquí a largo plazo. Veamos a dónde nos lleva esto."
+      },
+      "closeButton": "Cerrar"
+    }
+  },
+  "ContactPage": {
+    "backToHome": "Volver al Inicio",
+    "title": "Contacta a SagePostAI",
+    "subtitle": "Comunícate con el departamento correcto. Estamos aquí para ayudar, asociarnos y crecer contigo.",
+    "points": {
+      "p1": {
+        "title": "Mensaje al CEO",
+        "description": "Para consultas directas de liderazgo, discusiones de visión o colaboraciones serias."
+      },
+      "p2": {
+        "title": "Asociaciones y Negocios",
+        "description": "Para patrocinios, integraciones, colaboraciones de marca y licencias empresariales."
+      },
+      "p3": {
+        "title": "Soporte de Producto",
+        "description": "¿Preguntas, errores, solicitudes de funciones o algo que detenga tu flujo?"
+      },
+      "p4": {
+        "title": "Reembolsos y Facturación",
+        "description": "Para preguntas sobre reembolsos, cargos o tu suscripción."
+      }
+    }
+  },
+  "CookiePolicyPage": {
+    "backToHome": "Volver al Inicio",
+    "title": "Política de Cookies",
+    "intro": "En SagePostAI, usamos cookies para mejorar tu experiencia de navegación y asegurar que la plataforma funcione como se espera. Esta Política de Cookies explica qué son las cookies, cómo las usamos y cómo puedes gestionarlas.",
+    "sections": {
+      "s1": {
+        "title": "1. ¿Qué son las Cookies?",
+        "content": "Las cookies son pequeños archivos de texto que se almacenan en tu dispositivo cuando visitas un sitio web. Nos ayudan a recordar tus preferencias, sesiones de inicio de sesión y a recopilar datos de uso anónimos para mejorar nuestro servicio."
+      },
+      "s2": {
+        "title": "2. Tipos de Cookies que Usamos",
+        "item1": {
+          "title": "Cookies Esenciales",
+          "content": "Necesarias para la funcionalidad básica como la autenticación y la navegación."
+        },
+        "item2": {
+          "title": "Cookies de Rendimiento",
+          "content": "Nos ayudan a entender cómo los usuarios interactúan con SagePostAI para mejorar el producto."
+        },
+        "item3": {
+          "title": "Cookies de Preferencia",
+          "content": "Recuerdan la configuración del usuario (p. ej., texto de entrada, tono seleccionado, última herramienta utilizada)."
+        }
+      },
+      "s3": {
+        "title": "3. Cómo Usamos las Cookies",
+        "item1": "Para mantenerte conectado de forma segura",
+        "item2": "Para rastrear el uso de la plataforma de forma anónima para análisis",
+        "item3": "Para almacenar preferencias entre sesiones",
+        "item4": "Para mejorar la velocidad y el rendimiento"
+      },
+      "s4": {
+        "title": "4. Gestión de Cookies",
+        "content": "Puedes desactivar o eliminar las cookies en cualquier momento desde la configuración de tu navegador. Ten en cuenta que desactivar las cookies puede afectar tu experiencia y la funcionalidad de algunas características en SagePostAI."
+      },
+      "s5": {
+        "title": "5. Cookies de Terceros",
+        "content": "Algunas cookies pueden ser establecidas por servicios de terceros de confianza que utilizamos, como Firebase o proveedores de análisis. Estos servicios siguen estrictos estándares de privacidad y no recopilan información personal identificable tuya."
+      },
+      "s6": {
+        "title": "6. Actualizaciones de la Política",
+        "content": "Podemos actualizar esta Política de Cookies a medida que nuestra plataforma evoluciona. Te recomendamos que revises esta página periódicamente."
+      },
+      "s7": {
+        "title": "7. Contacto",
+        "content": "Para cualquier pregunta sobre esta política, por favor contáctanos en "
+      }
+    }
+  },
+  "DisclaimerPage": {
+    "backToHome": "Volver al Inicio",
+    "title": "Descargo de Responsabilidad",
+    "intro": "SagePostAI es una herramienta impulsada por IA diseñada para ayudar a los usuarios a generar contenido para redes sociales, ideas de campañas y texto de marketing creativo. Aunque nos esforzamos por ofrecer resultados útiles y precisos, el contenido generado es por inteligencia artificial y puede no siempre reflejar hechos verificados, opiniones personales o las últimas tendencias.",
+    "sections": {
+      "s1": {
+        "title": "Sin Garantías",
+        "content": "No garantizamos que el contenido generado por SagePostAI sea preciso, confiable, libre de errores o adecuado para todos los propósitos. Se alienta a los usuarios a revisar, editar y verificar todo el contenido generado por IA antes de usarlo públicamente o profesionalmente."
+      },
+      "s2": {
+        "title": "Responsabilidad del Usuario",
+        "content": "Al usar SagePostAI, reconoces que eres el único responsable del contenido que generas y compartes. No somos responsables de ningún resultado derivado del uso o mal uso del texto generado por IA, incluidas, entre otras, las consecuencias reputacionales, legales o financieras."
+      },
+      "s3": {
+        "title": "Limitaciones del Plan Gratuito",
+        "content": "El plan gratuito está diseñado para que explores las características principales de la plataforma. Incluye una prueba gratuita de 3 días con acceso ilimitado a todas las funciones. Una vez finalizado el período de prueba, los usuarios deben actualizar a un plan de pago (Mensual o Anual) para continuar usando las herramientas de generación."
+      },
+      "s4": {
+        "title": "Sin Asesoramiento Profesional",
+        "content": "El contenido generado por SagePostAI no sustituye el asesoramiento profesional, incluida la orientación legal, financiera o médica. Siempre consulta a profesionales calificados para tomar decisiones en esos dominios."
+      },
+      "s5": {
+        "title": "Limitación de Responsabilidad",
+        "content": "Bajo ninguna circunstancia SagePostAI, sus fundadores, socios o afiliados serán responsables de los daños o pérdidas que surjan de tu uso de la plataforma o sus resultados."
+      },
+      "s6": {
+        "title": "Contáctanos",
+        "content": "Si tienes preguntas sobre este descargo de responsabilidad, por favor contáctanos en "
+      }
+    }
+  },
+  "PrivacyPolicyPage": {
+    "backToHome": "Volver al Inicio",
+    "title": "Política de Privacidad",
+    "intro": "En SagePostAI, respetamos profundamente tu privacidad. Esta Política de Privacidad describe qué datos recopilamos, cómo los usamos y cómo protegemos tu información mientras usas nuestros servicios.",
+    "sections": {
+      "s1": {
+        "title": "1. Información que Recopilamos",
+        "item1": {
+          "title": "Correo Electrónico e Información de Inicio de Sesión",
+          "content": "Recopilada cuando te registras o inicias sesión usando correo electrónico/contraseña o Google."
+        },
+        "item2": {
+          "title": "Datos de Uso",
+          "content": "Almacenamos tu tipo de plan, saldo de créditos, historial de publicaciones e interacciones para mejorar la funcionalidad del producto."
+        },
+        "item3": {
+          "title": "Cookies",
+          "content": {
+            "span1": "Utilizadas para mejorar tu experiencia, recordar sesiones y permitir una navegación fluida. Obtén más información en nuestra ",
+            "link": "Política de Cookies"
+          }
+        }
+      },
+      "s2": {
+        "title": "2. Cómo Usamos Tus Datos",
+        "item1": "Para personalizar tu experiencia en el panel de control",
+        "item2": "Para generar y almacenar contenido de publicaciones generado por IA",
+        "item3": "Para gestionar planes de suscripción y créditos",
+        "item4": "Para enviar comunicaciones esenciales como facturación, actualizaciones de funciones o avisos legales"
+      },
+      "s3": {
+        "title": "3. Protección y Seguridad de Datos",
+        "content": "Usamos Firebase y otra infraestructura en la nube moderna para mantener tus datos seguros, encriptados y con acceso restringido. Solo el personal autorizado (bajo NDA) tiene acceso a los sistemas internos cuando es necesario."
+      },
+      "s4": {
+        "title": "4. Herramientas de Terceros",
+        "content": "Podemos usar herramientas como Firebase y plataformas de análisis. Estos servicios cumplen con los estándares de la industria y no recopilan información de identificación personal a menos que sea necesario para la funcionalidad de la plataforma."
+      },
+      "s5": {
+        "title": "5. Tus Derechos",
+        "item1": "Acceder o eliminar tus datos en cualquier momento contactándonos",
+        "item2": "Retirar el consentimiento para las cookies a través de la configuración del navegador",
+        "item3": "Solicitar la exportación de datos si es legalmente aplicable"
+      },
+      "s6": {
+        "title": "6. Actualizaciones",
+        "content": "Esta política puede actualizarse periódicamente para reflejar las mejoras del producto. Recomendamos volver a consultarla ocasionalmente."
+      },
+      "s7": {
+        "title": "7. Contacto",
+        "content": "Para cualquier inquietud relacionada con la privacidad, contáctanos en "
+      }
+    }
+  },
+  "RefundPolicyPage": {
+    "backToHome": "Volver al Inicio",
+    "title": "Política de Cancelación y Reembolso",
+    "p1": {
+      "span1": "En ",
+      "span2": "SagePostAI",
+      "span3": ", estamos en transición a un modelo basado en suscripción. Debido a la naturaleza de la entrega digital inmediata y el acceso a nuestras herramientas de IA tras la suscripción, ",
+      "span4": "generalmente no ofrecemos reembolsos",
+      "span5": " para los pagos de suscripción."
+    },
+    "p2": "Esta política garantiza la equidad y protege nuestra plataforma del uso indebido. Nuestro enfoque es proporcionar un valor constante a nuestros suscriptores.",
+    "p3": {
+      "span1": "Si experimentas un problema técnico genuino que te impide usar el servicio, por favor contacta a nuestro equipo dentro de los ",
+      "span2": "3 días",
+      "span3": " de tu pago. En tales casos, revisaremos el problema y, si corresponde, ofreceremos un reembolso parcial o total a nuestra discreción."
+    },
+    "p4": "Puedes cancelar tu suscripción en cualquier momento. Tu plan permanecerá activo hasta el final del ciclo de facturación actual, después de lo cual no se realizarán más cargos.",
+    "p5": {
+      "span1": "Si tienes alguna pregunta o inquietud, no dudes en contactarnos en "
+    }
+  },
+  "TermsOfServicePage": {
+    "backToHome": "Volver al Inicio",
+    "title": "Términos de Servicio",
+    "intro": "Estos Términos de Servicio ('Términos') rigen tu uso de SagePostAI ('nosotros', 'nuestro' o 'nos'). Al acceder o usar nuestros servicios, aceptas estar sujeto a estos Términos. Si no estás de acuerdo, por favor no uses nuestra plataforma.",
+    "sections": {
+      "s1": {
+        "title": "1. Uso de la Plataforma",
+        "content": "SagePostAI permite a los usuarios generar contenido para redes sociales usando IA. Aceptas usar la plataforma solo para fines legales, y no para hacer mal uso o explotarla para uso comercial no autorizado, scraping o manipulación."
+      },
+      "s2": {
+        "title": "2. Cuenta y Acceso",
+        "content": "Debes tener al menos 13 años para usar SagePostAI. Eres responsable de mantener la confidencialidad de tu cuenta y de todas las actividades que se realicen en ella. Nos reservamos el derecho de suspender o cancelar cuentas por violaciones de estos Términos."
+      },
+      "s3": {
+        "title": "3. Sistema Basado en Créditos",
+        "content": "SagePostAI opera con un modelo de uso basado en créditos. Una vez que los créditos se utilizan para generar contenido, no pueden ser reembolsados ni reclamados. Por favor, revisa nuestra Política de Reembolso para obtener todos los detalles."
+      },
+      "s4": {
+        "title": "4. Propiedad Intelectual",
+        "content": "Todo el código, la marca y los activos originales son propiedad de SagePostAI. Sin embargo, cualquier contenido generado usando tu cuenta y créditos es de tu propiedad total y puede ser utilizado comercialmente."
+      },
+      "s5": {
+        "title": "5. Restricciones",
+        "item1": "No realizar ingeniería inversa ni copiar los mecanismos internos de nuestra plataforma.",
+        "item2": "No usar SagePostAI para generar contenido dañino, de odio o engañoso.",
+        "item3": "No compartir tu inicio de sesión con otros ni revender contenido generado sin consentimiento."
+      },
+      "s6": {
+        "title": "6. Limitación de Responsabilidad",
+        "content": "No somos responsables de ningún daño o pérdida que resulte del uso o la incapacidad de usar nuestros servicios. Todas las características se proporcionan 'tal cual' sin garantía de ningún tipo."
+      },
+      "s7": {
+        "title": "7. Cambios en los Términos",
+        "content": "SagePostAI puede actualizar estos Términos a medida que evolucionan las características. Te notificaremos los cambios importantes por correo electrónico o alertas en la aplicación. El uso continuado después de las actualizaciones constituye la aceptación de los Términos revisados."
+      },
+      "s8": {
+        "title": "8. Contacto",
+        "content": "Para cualquier pregunta o inquietud legal, por favor contáctanos en "
+      }
+    }
   }
 }
+
+    

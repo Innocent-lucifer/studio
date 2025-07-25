@@ -6,8 +6,13 @@ import { motion } from "framer-motion";
 import { Linkedin, Twitter, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+
+interface TeamSectionProps {
+  onReadRishabhStory: () => void;
+  title: string;
+  subtitle: string;
+}
 
 const founders = [
   {
@@ -26,11 +31,7 @@ const founders = [
   },
 ];
 
-interface TeamSectionProps {
-  onReadRishabhStory: () => void;
-}
-
-const TeamSectionComponent: React.FC<TeamSectionProps> = ({ onReadRishabhStory }) => {
+const TeamSectionComponent: React.FC<TeamSectionProps> = ({ onReadRishabhStory, title, subtitle }) => {
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -54,7 +55,7 @@ const TeamSectionComponent: React.FC<TeamSectionProps> = ({ onReadRishabhStory }
             transition={{ duration: 0.6 }}
             className="text-3xl sm:text-4xl font-bold mb-4 text-foreground"
         >
-          Meet the Makers
+          {title}
         </motion.h2>
         <motion.p 
             initial={{ opacity: 0, y: 20 }}
@@ -62,8 +63,7 @@ const TeamSectionComponent: React.FC<TeamSectionProps> = ({ onReadRishabhStory }
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.1 }}
             className="text-foreground/70 text-lg">
-          We’re a duo of founders building fast, solving real
-          problems, and shipping tools that matter.
+          {subtitle}
         </motion.p>
       </div>
 
@@ -121,3 +121,5 @@ const TeamSectionComponent: React.FC<TeamSectionProps> = ({ onReadRishabhStory }
 };
 
 export default React.memo(TeamSectionComponent);
+
+    

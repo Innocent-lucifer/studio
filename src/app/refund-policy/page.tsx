@@ -1,20 +1,16 @@
 
+"use client";
+
 import React from "react";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import Footer from "@/components/sections/Footer";
-
-const PolicySection: React.FC<{title: string, children: React.ReactNode}> = ({ title, children }) => (
-  <div className="mb-8">
-    <h2 className="text-2xl font-semibold mt-6 mb-3 text-primary">
-      {title}
-    </h2>
-    <div className="space-y-4 text-foreground/80">{children}</div>
-  </div>
-);
+import { useTranslations } from "next-intl";
 
 export default function RefundPolicyPage() {
+  const t = useTranslations('RefundPolicyPage');
+
   return (
     <div className="text-foreground min-h-screen flex flex-col">
       <main className="flex-grow py-16 sm:py-24 px-4 sm:px-6">
@@ -23,37 +19,29 @@ export default function RefundPolicyPage() {
             <Link href="/" passHref>
               <Button variant="ghost" className="text-foreground/70 hover:text-foreground">
                 <ArrowLeft className="w-5 h-5 mr-2" />
-                Back to Home
+                {t('backToHome')}
               </Button>
             </Link>
           </div>
           <div className="bg-background border border-border rounded-lg p-8 sm:p-10">
             <h1 className="text-3xl font-extrabold mb-6 text-foreground">
-              Cancellation & Refund Policy
+              {t('title')}
             </h1>
 
             <p className="mb-5 text-foreground/80">
-              At <span className="font-semibold text-foreground">SagePostAI</span>, we are transitioning to a subscription-based model.
-              Due to the nature of immediate digital delivery and access to our AI tools upon subscription,{" "}
-              <span className="font-semibold text-destructive">
-                we generally do not offer refunds
-              </span>{" "}
-              for subscription payments.
+              {t('p1.span1')}<span className="font-semibold text-foreground">{t('p1.span2')}</span>{t('p1.span3')}<span className="font-semibold text-destructive">{t('p1.span4')}</span>{t('p1.span5')}
             </p>
             <p className="mb-5 text-foreground/80">
-              This policy ensures fairness and protects our platform from misuse. Our focus is on providing consistent value to our subscribers.
+              {t('p2')}
             </p>
             <p className="mb-5 text-foreground/80">
-              If you experience a genuine technical issue that prevents you from using the service, please contact our team within{" "}
-              <span className="font-semibold text-foreground">3 days</span> of your payment. In such cases, we’ll review the issue and,
-              if appropriate, offer a partial or full refund at our discretion.
+              {t('p3.span1')}<span className="font-semibold text-foreground">{t('p3.span2')}</span>{t('p3.span3')}
             </p>
             <p className="mb-5 text-foreground/80">
-              You may cancel your subscription at any time. Your plan will remain active until the end of the current
-              billing cycle, after which no further charges will occur.
+              {t('p4')}
             </p>
             <p className="text-foreground/80">
-              If you have any questions or concerns, feel free to reach out to us at{" "}
+              {t('p5.span1')}
               <a
                 href="mailto:support@sagepostai.com"
                 className="text-primary underline"
@@ -69,3 +57,5 @@ export default function RefundPolicyPage() {
     </div>
   );
 }
+
+    
