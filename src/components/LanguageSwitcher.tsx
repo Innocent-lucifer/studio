@@ -57,9 +57,11 @@ export function LanguageSwitcher() {
                 <CommandItem
                   key={language.value}
                   onSelect={() => {
-                    const params = new URLSearchParams(searchParams.toString());
                     router.replace(
-                      { pathname, query: Object.fromEntries(params.entries()) },
+                      // The `pathname` is the path without the locale (e.g. `/about-team`)
+                      // The `searchParams` are the current search params (e.g. `?foo=bar`)
+                      // The `locale` is the new locale to switch to (e.g. `es`)
+                      { pathname, params: searchParams },
                       { locale: language.value }
                     );
                     setOpen(false);
