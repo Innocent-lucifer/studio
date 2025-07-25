@@ -3,11 +3,11 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import { AppLogo } from "@/components/AppLogo";
 import { Button } from "@/components/ui/button";
 import { type User } from 'firebase/auth';
+import { Link } from "@/navigation";
 
 interface NavLink {
   name: string;

@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from "react";
@@ -8,13 +9,12 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
   DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu";
 import { Icons } from "@/components/icons";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext"; 
-import Link from "next/link";
+import { Link } from "@/navigation";
 
 export function HamburgerMenu() {
   const { toast } = useToast();

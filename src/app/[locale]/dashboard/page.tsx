@@ -1,7 +1,6 @@
 
 "use client";
 
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Icons } from '@/components/icons';
@@ -14,6 +13,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from '@/components/ui/card';
 import { addDays, differenceInHours } from 'date-fns';
+import { Link } from '@/navigation';
 
 interface FeatureCardProps {
   icon: keyof typeof Icons;
@@ -52,7 +52,7 @@ const FeatureCardComponent: React.FC<FeatureCardProps> = ({ icon, title, descrip
             }}
             className="group"
           >
-            <Link href={href} passHref legacyBehavior={false}>
+            <Link href={href} passHref>
               <div className="bg-slate-800/50 backdrop-blur-lg border border-slate-700/60 rounded-2xl p-6 sm:p-8 h-full flex flex-col cursor-pointer transition-all duration-300 hover:border-primary/50">
                 <div className="mb-4 sm:mb-6">
                   <IconComponent className="h-10 w-10 sm:h-12 sm:w-12 text-primary group-hover:text-purple-400 transition-colors duration-300" />

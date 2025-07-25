@@ -4,11 +4,11 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Clock, Search } from "lucide-react";
-import Link from 'next/link';
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useTranslations } from 'next-intl';
+import { Link } from "@/navigation";
 
 const placeholders = [
   "Why pineapple on pizza is a war crime...",

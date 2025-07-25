@@ -5,8 +5,8 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Linkedin, Twitter, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Link } from "@/navigation";
 
 interface TeamSectionProps {
   onReadRishabhStory: () => void;
@@ -121,5 +121,3 @@ const TeamSectionComponent: React.FC<TeamSectionProps> = ({ onReadRishabhStory, 
 };
 
 export default React.memo(TeamSectionComponent);
-
-    

@@ -3,12 +3,12 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import Link from "next/link";
 import { Twitter, Linkedin } from "lucide-react";
 import { AppLogo } from "@/components/AppLogo";
 import { usePathname } from "next/navigation";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useTranslations } from "next-intl";
+import { Link } from "@/navigation";
 
 const FooterComponent: React.FC = () => {
   const pathname = usePathname();
