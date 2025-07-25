@@ -16,7 +16,42 @@
     "processing": "Processing...",
     "passwordsDoNotMatch": "Passwords do not match.",
     "passwordResetEmailSent": "Password reset email sent! Check your inbox.",
-    "pleaseEnterEmail": "Please enter your email address to reset the password."
+    "pleaseEnterEmail": "Please enter your email address to reset the password.",
+    "confirmPassword": "Confirm Password",
+    "confirmPasswordPlaceholder": "Re-enter your password",
+    "weakPassword": "Weak Password",
+    "passwordRequirements": "Please meet all password requirements.",
+    "passwordMismatch": "Password Mismatch",
+    "accountCreated": "Account Created!",
+    "verifyEmail": "Please check your inbox to verify your email address.",
+    "signUpFailed": "Sign Up Failed",
+    "checkDetails": "Please check your details and try again.",
+    "signedIn": "Signed In!",
+    "welcomeBack": "Welcome back!",
+    "unexpectedError": "An unexpected error occurred. Please try again.",
+    "invalidCredentials": "Invalid email or password. Please try again.",
+    "invalidEmail": "Please enter a valid email address.",
+    "tooManyRequests": "Too many failed attempts. Please try again later.",
+    "verificationRequired": "Verification Required",
+    "signInFailed": "Sign In Failed",
+    "emailRequired": "Email Required",
+    "passwordResetEmailSentTitle": "Password Reset Email Sent",
+    "passwordResetFailed": "Password Reset Failed",
+    "googleSignInSuccess": "Google Sign-In Successful",
+    "googleWelcome": "Welcome! Your account has been created.",
+    "googleSignedIn": "Signed in successfully. Welcome back!",
+    "googleSignInFailed": "Google Sign-In Failed",
+    "googleError": "An error occurred during Google sign-in.",
+    "orContinueWith": "Or continue with",
+    "hidePassword": "Hide password",
+    "showPassword": "Show password",
+    "pw": {
+        "minLength": "At least 8 characters long",
+        "hasUpper": "At least one uppercase letter",
+        "hasLower": "At least one lowercase letter",
+        "hasNumber": "At least one number",
+        "hasSpecial": "At least one special character"
+    }
   },
   "LanguageSwitcher": {
       "changeLanguage": "Change language"
@@ -49,6 +84,9 @@
       }
     },
     "pricing": {
+      "launchBadge": "Launching-only Pricing",
+      "title": "Simple, Transparent Pricing",
+      "subtitle": "Choose the plan that’s right for you. Get lifetime access at early-bird value.",
       "monthly": {
         "title": "Sage Infinity Monthly",
         "subtitle": "Billed monthly."
@@ -73,6 +111,8 @@
       }
     },
     "faq": {
+      "title": "Frequently Asked Questions",
+      "subtitle": "Everything you need to know about SagePostAI.",
       "q1": "How does SagePostAI actually create social media content?",
       "a1": "SagePostAI combines your topic input with real-time research, brand tone detection, and formatting intelligence to generate professional-grade posts for LinkedIn and Twitter instantly.",
       "q2": "What makes SagePostAI better than other AI tools?",
@@ -93,6 +133,222 @@
       "a9": "Yes. Our free plan gives you a 3-day free trial with unlimited access to all features. After the trial, you can upgrade to a paid plan to continue using the platform.",
       "q10": "What are the pricing options?",
       "a10": "You can choose a Monthly Plan ($19.99/month) or Yearly Plan ($197/year). All paid plans include unlimited AI generations and full access to every feature."
+    },
+    "builtWith": {
+        "title": "BUILT WITH CUTTING-EDGE AI"
+    },
+    "problemSolution": {
+      "title": "The Real Struggles of Social Media",
+      "subtitle": "Everyone faces them. Now there’s a smarter way out.",
+      "cards": {
+        "c1": {
+          "title": "Too Much Time Spent Writing",
+          "desc": "Crafting each post from scratch takes forever. SagePostAI generates quality posts instantly based on your topic."
+        },
+        "c2": {
+          "title": "Struggling for Post Ideas",
+          "desc": "You run out of fresh, engaging content ideas quickly. We auto-research and generate creative content tailored to your needs."
+        },
+        "c3": {
+          "title": "Inconsistent Posting",
+          "desc": "You miss optimal times or post irregularly. SagePostAI formats and helps you plan posts for peak impact."
+        }
+      }
+    },
+    "featuresSection": {
+      "title": "Why Choose SagePostAI?",
+      "subtitle": "Go beyond basic generation. We provide an intelligent suite of tools designed for modern creators.",
+      "features": {
+        "f1": {
+          "title": "Image to Post Wizard",
+          "description": "Upload an image and let our AI craft a personalized, descriptive social media post based on its content and your chosen tone."
+        },
+        "f2": {
+          "title": "Quick Post Generator",
+          "description": "Research any topic and instantly generate engaging drafts for Twitter and LinkedIn. Perfect for rapid content creation."
+        },
+        "f3": {
+          "title": "Smart Campaign Builder",
+          "description": "Create cohesive multi-post campaigns. Select content angles, generate series for different platforms, and get repurposing ideas."
+        },
+        "f4": {
+          "title": "Trend Explorer",
+          "description": "Discover what's buzzing on social media. Explore trending topics across platforms and categories to inspire your next viral post."
+        },
+        "f5": {
+          "title": "Human-Like AI Writing",
+          "description": "Posts that sound like you, not a robot — crafted for engagement, not just grammar."
+        },
+        "f6": {
+          "title": "Emotion-Aware Intelligence",
+          "description": "It senses your vibe. Casual, bold, or subtle — SagePostAI mirrors your tone without prompts."
+        },
+        "f7": {
+          "title": "Smart Hashtags + Emojis",
+          "description": "Context-aware enhancers that boost reach without feeling forced."
+        },
+        "f8": {
+          "title": "Platform-Tailored Output",
+          "description": "Each post is fine-tuned for its platform — format, tone, and style aligned."
+        },
+        "f9": {
+          "title": "Fast, Frictionless Output",
+          "description": "Under 2 seconds. Every time. No delays. Just copy, paste, and publish — effortlessly."
+        }
+      }
+    },
+    "howItWorks": {
+      "title": "How SagePostAI Works",
+      "steps": {
+        "s1": {
+          "step": "Step 1: Choose Your Input",
+          "desc": "Write a topic, upload an image, or pick a category — our AI understands context and adapts to your intent."
+        },
+        "s2": {
+          "step": "Step 2: Let AI Do the Work",
+          "desc": "It crafts personalized posts instantly — tone, format, and length adjusted automatically for the platform."
+        },
+        "s3": {
+          "step": "Step 3: Share or Repurpose",
+          "desc": "Copy, refine, or share your post. Or turn it into a multi-post campaign in one click."
+        }
+      }
+    },
+    "comparison": {
+      "title": "Why SagePostAI Stands Out",
+      "headers": {
+        "feature": "Feature",
+        "sage": "SagePostAI",
+        "others": "Other Tools",
+        "speed": "Speed"
+      },
+      "data": {
+        "d1": {
+          "task": "Post Generation Speed",
+          "sage": "Instant (<2s)",
+          "others": "5–10s",
+          "speed": "Real-Time"
+        },
+        "d2": {
+          "task": "AI Research + Visual Input",
+          "sage": "Text + Image Support",
+          "others": "Text Only",
+          "speed": ""
+        },
+        "d3": {
+          "task": "Human-like Tone & Emotion",
+          "sage": "Mirrors Your Style",
+          "others": "Robotic & Flat",
+          "speed": ""
+        },
+        "d4": {
+          "task": "Hashtag & Emoji Automation",
+          "sage": "Smart & Contextual",
+          "others": "Manual & Random",
+          "speed": ""
+        },
+        "d5": {
+          "task": "Platform-Specific Formatting",
+          "sage": "Auto-Tailored",
+          "others": "One-Size-Fits-All",
+          "speed": ""
+        },
+        "d6": {
+          "task": "Multi-Post Campaigns",
+          "sage": "Built-In Feature",
+          "others": "Not Available",
+          "speed": ""
+        },
+        "d7": {
+          "task": "Trending Topic Insights",
+          "sage": "Real-Time Trends",
+          "others": "No Trend Detection",
+          "speed": ""
+        },
+        "d8": {
+          "task": "Unlimited Generation",
+          "sage": "(Sage Infinity Plan)",
+          "others": "Credit Capped",
+          "speed": ""
+        },
+        "d9": {
+          "task": "Conclusion",
+          "sage": "Fast. Smart. Emotionally Tuned.",
+          "others": "Slow. Generic. Prompt-Heavy.",
+          "speed": "Real-Time"
+        }
+      }
+    },
+    "testimonials": {
+      "title": "What Our Global Users Say 🌍",
+      "items": {
+        "t1": {
+          "quote": "SagePostAI doubled my engagement in just a week!",
+          "name": "Emily R.",
+          "role": "Social Media Strategist"
+        },
+        "t2": {
+          "quote": "The automation saves me hours every day—amazing tool!",
+          "name": "Carlos M.",
+          "role": "Content Creator"
+        },
+        "t3": {
+          "quote": "Best AI tool for social media I’ve ever used.",
+          "name": "Sophie L.",
+          "role": "Marketing Lead"
+        },
+        "t4": {
+          "quote": "It feels like SagePostAI knows my brand perfectly!",
+          "name": "Liam J.",
+          "role": "Startup Founder"
+        },
+        "t5": {
+          "quote": "Content creation is now effortless and fast.",
+          "name": "Ava D.",
+          "role": "Freelance Writer"
+        },
+        "t6": {
+          "quote": "The tone-matching feature is a game-changer.",
+          "name": "Rohan P.",
+          "role": "Marketing Consultant"
+        }
+      }
+    },
+    "cta": {
+      "title": "Start Posting Smarter",
+      "subtitle": "Join early users who are already transforming their content flow with SagePostAI.",
+      "buttonText": "Join the Beta Free",
+      "trialInfo": "Start your 3-day free trial. Unlimited access, no card needed."
+    },
+    "footer": {
+      "description": "The AI layer for social media — built to help creators and brands automate every post, grow faster, and scale effortlessly.",
+      "product": {
+        "title": "Product",
+        "links": {
+          "problemSolution": "Problem & Solution",
+          "features": "Features",
+          "getStarted": "Get Started"
+        }
+      },
+      "support": {
+        "title": "Support",
+        "links": {
+          "faq": "FAQ",
+          "contact": "Contact",
+          "helpCenter": "Help Center"
+        }
+      },
+      "legal": {
+        "title": "Legal",
+        "links": {
+          "privacy": "Privacy Policy",
+          "terms": "Terms of Service",
+          "refund": "Refund Policy",
+          "cookie": "Cookie Policy",
+          "disclaimer": "Disclaimer"
+        }
+      },
+      "copyright": "© {year} SagePostAI. All rights reserved."
     }
   }
 }

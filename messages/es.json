@@ -16,7 +16,42 @@
     "processing": "Procesando...",
     "passwordsDoNotMatch": "Las contraseñas no coinciden.",
     "passwordResetEmailSent": "¡Correo electrónico de restablecimiento de contraseña enviado! Revisa tu bandeja de entrada.",
-    "pleaseEnterEmail": "Por favor, introduce tu dirección de correo electrónico para restablecer la contraseña."
+    "pleaseEnterEmail": "Por favor, introduce tu dirección de correo electrónico para restablecer la contraseña.",
+    "confirmPassword": "Confirmar Contraseña",
+    "confirmPasswordPlaceholder": "Vuelve a escribir tu contraseña",
+    "weakPassword": "Contraseña Débil",
+    "passwordRequirements": "Por favor, cumple todos los requisitos de la contraseña.",
+    "passwordMismatch": "Las Contraseñas no Coinciden",
+    "accountCreated": "¡Cuenta Creada!",
+    "verifyEmail": "Por favor, revisa tu bandeja de entrada para verificar tu dirección de correo electrónico.",
+    "signUpFailed": "Error al Registrarse",
+    "checkDetails": "Por favor, revisa tus datos e inténtalo de nuevo.",
+    "signedIn": "¡Sesión Iniciada!",
+    "welcomeBack": "¡Bienvenido de nuevo!",
+    "unexpectedError": "Ocurrió un error inesperado. Por favor, inténtalo de nuevo.",
+    "invalidCredentials": "Correo electrónico o contraseña no válidos. Por favor, inténtalo de nuevo.",
+    "invalidEmail": "Por favor, introduce una dirección de correo electrónico válida.",
+    "tooManyRequests": "Demasiados intentos fallidos. Por favor, inténtalo de nuevo más tarde.",
+    "verificationRequired": "Verificación Requerida",
+    "signInFailed": "Error al Iniciar Sesión",
+    "emailRequired": "Correo Electrónico Requerido",
+    "passwordResetEmailSentTitle": "Correo de Restablecimiento de Contraseña Enviado",
+    "passwordResetFailed": "Error al Restablecer la Contraseña",
+    "googleSignInSuccess": "Inicio de Sesión con Google Exitoso",
+    "googleWelcome": "¡Bienvenido! Tu cuenta ha sido creada.",
+    "googleSignedIn": "Sesión iniciada con éxito. ¡Bienvenido de nuevo!",
+    "googleSignInFailed": "Error al Iniciar Sesión con Google",
+    "googleError": "Ocurrió un error durante el inicio de sesión con Google.",
+    "orContinueWith": "O continuar con",
+    "hidePassword": "Ocultar contraseña",
+    "showPassword": "Mostrar contraseña",
+    "pw": {
+      "minLength": "Al menos 8 caracteres",
+      "hasUpper": "Al menos una letra mayúscula",
+      "hasLower": "Al menos una letra minúscula",
+      "hasNumber": "Al menos un número",
+      "hasSpecial": "Al menos un carácter especial"
+    }
   },
   "LanguageSwitcher": {
       "changeLanguage": "Cambiar idioma"
@@ -49,6 +84,9 @@
       }
     },
     "pricing": {
+      "launchBadge": "Precio Solo por Lanzamiento",
+      "title": "Precios Simples y Transparentes",
+      "subtitle": "Elige el plan adecuado para ti. Obtén acceso de por vida a un precio de lanzamiento.",
       "monthly": {
         "title": "Sage Infinity Mensual",
         "subtitle": "Facturado mensualmente."
@@ -73,6 +111,8 @@
       }
     },
     "faq": {
+      "title": "Preguntas Frecuentes",
+      "subtitle": "Todo lo que necesitas saber sobre SagePostAI.",
       "q1": "¿Cómo crea SagePostAI realmente el contenido para redes sociales?",
       "a1": "SagePostAI combina tu tema con investigación en tiempo real, detección de tono de marca e inteligencia de formato para generar publicaciones de nivel profesional para LinkedIn y Twitter al instante.",
       "q2": "¿Qué hace a SagePostAI mejor que otras herramientas de IA?",
@@ -93,6 +133,222 @@
       "a9": "Sí. Nuestro plan gratuito te ofrece una prueba gratuita de 3 días con acceso ilimitado a todas las funciones. Después de la prueba, puedes actualizar a un plan de pago para seguir usando la plataforma.",
       "q10": "¿Cuáles son las opciones de precios?",
       "a10": "Puedes elegir un Plan Mensual ($19.99/mes) o un Plan Anual ($197/año). Todos los planes de pago incluyen generaciones ilimitadas de IA y acceso completo a todas las funciones."
+    },
+    "builtWith": {
+      "title": "CONSTRUIDO CON IA DE VANGUARDIA"
+    },
+    "problemSolution": {
+      "title": "Los Verdaderos Desafíos de las Redes Sociales",
+      "subtitle": "Todos los enfrentan. Ahora hay una forma más inteligente de superarlos.",
+      "cards": {
+        "c1": {
+          "title": "Demasiado Tiempo Escribiendo",
+          "desc": "Crear cada publicación desde cero lleva una eternidad. SagePostAI genera publicaciones de calidad al instante según tu tema."
+        },
+        "c2": {
+          "title": "Luchando por Ideas de Publicaciones",
+          "desc": "Te quedas sin ideas de contenido fresco y atractivo rápidamente. Investigamos y generamos contenido creativo adaptado a tus necesidades."
+        },
+        "c3": {
+          "title": "Publicaciones Inconsistentes",
+          "desc": "Omites los momentos óptimos o publicas de forma irregular. SagePostAI formatea y te ayuda a planificar publicaciones para un impacto máximo."
+        }
+      }
+    },
+    "featuresSection": {
+      "title": "¿Por Qué Elegir SagePostAI?",
+      "subtitle": "Ve más allá de la generación básica. Ofrecemos un conjunto de herramientas inteligentes diseñadas para los creadores modernos.",
+      "features": {
+        "f1": {
+          "title": "Asistente de Imagen a Publicación",
+          "description": "Sube una imagen y deja que nuestra IA elabore una publicación de redes sociales personalizada y descriptiva basada en su contenido y el tono que elijas."
+        },
+        "f2": {
+          "title": "Generador Rápido de Publicaciones",
+          "description": "Investiga cualquier tema y genera instantáneamente borradores atractivos para Twitter y LinkedIn. Perfecto para la creación rápida de contenido."
+        },
+        "f3": {
+          "title": "Constructor de Campañas Inteligente",
+          "description": "Crea campañas coherentes de varias publicaciones. Selecciona ángulos de contenido, genera series para diferentes plataformas y obtén ideas para reutilizar."
+        },
+        "f4": {
+          "title": "Explorador de Tendencias",
+          "description": "Descubre qué está de moda en las redes sociales. Explora temas de tendencia en plataformas y categorías para inspirar tu próxima publicación viral."
+        },
+        "f5": {
+          "title": "Escritura de IA similar a la humana",
+          "description": "Publicaciones que suenan como tú, no como un robot, diseñadas para la interacción, no solo para la gramática."
+        },
+        "f6": {
+          "title": "Inteligencia Emocional",
+          "description": "Siente tu vibra. Casual, audaz o sutil: SagePostAI refleja tu tono sin necesidad de indicaciones."
+        },
+        "f7": {
+          "title": "Hashtags y Emojis Inteligentes",
+          "description": "Potenciadores conscientes del contexto que aumentan el alcance sin sentirse forzados."
+        },
+        "f8": {
+          "title": "Salida Adaptada a la Plataforma",
+          "description": "Cada publicación se ajusta a su plataforma: formato, tono y estilo alineados."
+        },
+        "f9": {
+          "title": "Salida Rápida y sin Fricciones",
+          "description": "Menos de 2 segundos. Siempre. Sin retrasos. Simplemente copia, pega y publica, sin esfuerzo."
+        }
+      }
+    },
+    "howItWorks": {
+      "title": "Cómo Funciona SagePostAI",
+      "steps": {
+        "s1": {
+          "step": "Paso 1: Elige tu Entrada",
+          "desc": "Escribe un tema, sube una imagen o elige una categoría: nuestra IA entiende el contexto y se adapta a tu intención."
+        },
+        "s2": {
+          "step": "Paso 2: Deja que la IA Trabaje",
+          "desc": "Crea publicaciones personalizadas al instante: tono, formato y longitud ajustados automáticamente para la plataforma."
+        },
+        "s3": {
+          "step": "Paso 3: Comparte o Reutiliza",
+          "desc": "Copia, perfecciona o comparte tu publicación. O conviértela en una campaña de varias publicaciones con un solo clic."
+        }
+      }
+    },
+    "comparison": {
+      "title": "Por Qué Destaca SagePostAI",
+      "headers": {
+        "feature": "Característica",
+        "sage": "SagePostAI",
+        "others": "Otras Herramientas",
+        "speed": "Velocidad"
+      },
+      "data": {
+        "d1": {
+          "task": "Velocidad de Generación",
+          "sage": "Instantáneo (<2s)",
+          "others": "5–10s",
+          "speed": "Tiempo Real"
+        },
+        "d2": {
+          "task": "Investigación + Imágenes",
+          "sage": "Texto + Imágenes",
+          "others": "Solo Texto",
+          "speed": ""
+        },
+        "d3": {
+          "task": "Tono y Emoción Humana",
+          "sage": "Refleja tu Estilo",
+          "others": "Robótico y Plano",
+          "speed": ""
+        },
+        "d4": {
+          "task": "Automatización de Hashtags",
+          "sage": "Inteligente y Contextual",
+          "others": "Manual y Aleatorio",
+          "speed": ""
+        },
+        "d5": {
+          "task": "Formato por Plataforma",
+          "sage": "Adaptado Automáticamente",
+          "others": "Talla Única",
+          "speed": ""
+        },
+        "d6": {
+          "task": "Campañas de Múltiples Posts",
+          "sage": "Función Integrada",
+          "others": "No Disponible",
+          "speed": ""
+        },
+        "d7": {
+          "task": "Ideas de Tendencias",
+          "sage": "Tendencias en Tiempo Real",
+          "others": "Sin Detección",
+          "speed": ""
+        },
+        "d8": {
+          "task": "Generación Ilimitada",
+          "sage": "(Plan Sage Infinity)",
+          "others": "Con Límite",
+          "speed": ""
+        },
+        "d9": {
+          "task": "Conclusión",
+          "sage": "Rápido. Inteligente. Emocional.",
+          "others": "Lento. Genérico. Manual.",
+          "speed": "Tiempo Real"
+        }
+      }
+    },
+    "testimonials": {
+      "title": "Lo Que Dicen Nuestros Usuarios Globales 🌍",
+      "items": {
+        "t1": {
+          "quote": "¡SagePostAI duplicó mi interacción en solo una semana!",
+          "name": "Emily R.",
+          "role": "Estratega de Redes Sociales"
+        },
+        "t2": {
+          "quote": "La automatización me ahorra horas todos los días, ¡herramienta increíble!",
+          "name": "Carlos M.",
+          "role": "Creador de Contenido"
+        },
+        "t3": {
+          "quote": "La mejor herramienta de IA para redes sociales que he usado.",
+          "name": "Sophie L.",
+          "role": "Líder de Marketing"
+        },
+        "t4": {
+          "quote": "¡Parece que SagePostAI conoce mi marca perfectamente!",
+          "name": "Liam J.",
+          "role": "Fundador de Startup"
+        },
+        "t5": {
+          "quote": "La creación de contenido ahora es rápida y sin esfuerzo.",
+          "name": "Ava D.",
+          "role": "Escritora Freelance"
+        },
+        "t6": {
+          "quote": "La función de ajuste de tono es revolucionaria.",
+          "name": "Rohan P.",
+          "role": "Consultor de Marketing"
+        }
+      }
+    },
+    "cta": {
+      "title": "Comienza a Publicar de Forma Inteligente",
+      "subtitle": "Únete a los primeros usuarios que ya están transformando su flujo de contenido con SagePostAI.",
+      "buttonText": "Únete a la Beta Gratis",
+      "trialInfo": "Inicia tu prueba gratuita de 3 días. Acceso ilimitado, no se requiere tarjeta."
+    },
+    "footer": {
+      "description": "La capa de IA para redes sociales, creada para ayudar a creadores y marcas a automatizar cada publicación, crecer más rápido y escalar sin esfuerzo.",
+      "product": {
+        "title": "Producto",
+        "links": {
+          "problemSolution": "Problema y Solución",
+          "features": "Características",
+          "getStarted": "Comenzar"
+        }
+      },
+      "support": {
+        "title": "Soporte",
+        "links": {
+          "faq": "Preguntas Frecuentes",
+          "contact": "Contacto",
+          "helpCenter": "Centro de Ayuda"
+        }
+      },
+      "legal": {
+        "title": "Legal",
+        "links": {
+          "privacy": "Política de Privacidad",
+          "terms": "Términos de Servicio",
+          "refund": "Política de Reembolso",
+          "cookie": "Política de Cookies",
+          "disclaimer": "Descargo de Responsabilidad"
+        }
+      },
+      "copyright": "© {year} SagePostAI. Todos los derechos reservados."
     }
   }
 }
