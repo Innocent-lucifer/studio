@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { usePathname, useRouter } from '@/navigation';
+import { useSearchParams } from 'next/navigation';
 import { Check, Languages } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,7 @@ export function LanguageSwitcher() {
   const currentLocale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -55,7 +57,8 @@ export function LanguageSwitcher() {
                 <CommandItem
                   key={language.value}
                   onSelect={() => {
-                    router.replace(pathname, { locale: language.value });
+                    const params = new URLSearchParams(searchParams.toString());
+                    router.replace({ pathname, query: Object.fromEntries(params.entries()) }, { locale: language.value });
                     setOpen(false);
                   }}
                   className="hover:bg-slate-700 aria-selected:bg-slate-700"
