@@ -1,8 +1,21 @@
+import { NextIntlClientProvider, useMessages } from 'next-intl';
+import { AuthProvider } from '@/context/AuthContext';
+import { Toaster } from "@/components/ui/toaster";
 
 export default function LocaleLayout({
-  children
-}: Readonly<{
+  children,
+  params: {locale}
+}: {
   children: React.ReactNode;
-}>) {
-  return children;
+  params: {locale: string};
+}) {
+  const messages = useMessages();
+  return (
+    <NextIntlClientProvider locale={locale} messages={messages}>
+      <AuthProvider>
+        {children}
+        <Toaster />
+      </AuthProvider>
+    </NextIntlClientProvider>
+  );
 }

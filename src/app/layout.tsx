@@ -3,12 +3,8 @@ import type { Metadata } from 'next';
 import { GeistSans } from 'geist/font/sans';
 import { GeistMono } from 'geist/font/mono';
 import './globals.css';
-import { AuthProvider } from '@/context/AuthContext';
-import { Toaster } from "@/components/ui/toaster"; 
 import StarryBackground from '@/components/StarryBackground';
 import { PaddleLoader } from '@/components/PaddleLoader';
-import {NextIntlClientProvider} from 'next-intl';
-import {getMessages} from 'next-intl/server';
 
 declare global {
   interface Window {
@@ -55,26 +51,19 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function RootLayout({ 
+export default function RootLayout({ 
   children,
   params: {locale}
 }: { 
   children: React.ReactNode;
   params: {locale: string};
 }) {
-  const messages = await getMessages();
-
   return (
     <html lang={locale} className={`${GeistSans.variable} ${GeistMono.variable} dark`}>
       <body className="antialiased">
-        <NextIntlClientProvider locale={locale} messages={messages}>
-          <AuthProvider>
-            <StarryBackground />
-            {children}
-            <Toaster />
-            <PaddleLoader />
-          </AuthProvider>
-        </NextIntlClientProvider>
+        <StarryBackground />
+        {children}
+        <PaddleLoader />
       </body>
     </html>
   );
