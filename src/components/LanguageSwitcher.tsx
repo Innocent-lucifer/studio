@@ -2,7 +2,7 @@
 "use client";
 import * as React from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { usePathname, useRouter } from 'next-intl/client';
+import { usePathname, useRouter } from '@/navigation';
 import { Check, Languages } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
