@@ -2,7 +2,7 @@
 "use client";
 import * as React from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { useRouter, usePathname } from 'next-intl/navigation';
+import { usePathname, useRouter } from 'next-intl/client';
 import { Check, Languages } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -55,7 +55,7 @@ export function LanguageSwitcher() {
                 <CommandItem
                   key={language.value}
                   onSelect={() => {
-                    router.push(pathname, { locale: language.value });
+                    router.replace(pathname, { locale: language.value });
                     setOpen(false);
                   }}
                   className="hover:bg-slate-700 aria-selected:bg-slate-700"
