@@ -53,13 +53,11 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ 
   children,
-  params: {locale}
 }: { 
   children: React.ReactNode;
-  params: {locale: string};
 }) {
   return (
-    <html lang={locale} className={`${GeistSans.variable} ${GeistMono.variable} dark`}>
+    <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable} dark`}>
       <body className="antialiased">
         <StarryBackground />
         {children}
