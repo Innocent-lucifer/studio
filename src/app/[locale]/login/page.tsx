@@ -67,8 +67,10 @@ const LoginPageFallback = () => (
 export default function LoginPage() {
   // Suspense is required to use useSearchParams on a page.
   return (
-    <Suspense fallback={<LoginPageFallback />}>
-      <LoginContent />
-    </Suspense>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col items-center justify-center p-4">
+        <Suspense fallback={<LoginPageFallback />}>
+          <LoginContent />
+        </Suspense>
+    </div>
   );
 }
