@@ -1,53 +1,9 @@
-import type {Metadata} from 'next';
-import { GeistSans } from 'geist/font/sans';
-import { GeistMono } from 'geist/font/mono';
 import Script from 'next/script';
-import '../globals.css';
 import { AuthProvider } from '@/context/AuthContext';
 import { Toaster } from "@/components/ui/toaster"; 
 import StarryBackground from '@/components/StarryBackground';
 import { PaddleLoader } from '@/components/PaddleLoader';
 import {NextIntlClientProvider, useMessages} from 'next-intl';
-
-export const metadata: Metadata = {
-  metadataBase: new URL('https://sagepostai.com'),
-  title: "SagePostAI | AI Social Media Automation",
-  description: "SagePostAI is the AI layer for social media — built to help creators and brands automate every post, grow faster, and scale effortlessly with intelligent workflows.",
-  keywords: "SagePostAI, AI social media tool, automate posts, AI content planner, GPT social media, AI scheduler, content creation, social media marketing, twitter automation, linkedin automation",
-  authors: [{ name: "SagePostAI Team", url: "https://sagepostai.com" }],
-  icons: {
-    icon: [
-      { url: '/favicon.ico', sizes: 'any' },
-      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
-      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
-    ],
-    apple: '/apple-touch-icon.png',
-  },
-  openGraph: {
-    title: "SagePostAI | AI Social Media Automation",
-    description: "Automate every post, grow faster, and scale effortlessly with intelligent workflows.",
-    url: "https://sagepostai.com",
-    siteName: "SagePostAI",
-    images: [
-      {
-        url: 'https://sagepostai.com/og-image.png',
-        width: 1200,
-        height: 630,
-        alt: 'SagePostAI an AI social media tool',
-      },
-    ],
-    locale: 'en_US',
-    type: 'website',
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: "SagePostAI | AI Social Media Automation",
-    description: "Automate every post, grow faster, and scale effortlessly with intelligent workflows.",
-    creator: '@ChilledCeo',
-    images: ['https://sagepostai.com/og-image.png'],
-  },
-  
-};
 
 declare global {
   interface Window {
@@ -55,7 +11,7 @@ declare global {
   }
 }
 
-export default function RootLayout({
+export default function LocaleLayout({
   children,
   params: {locale}
 }: Readonly<{
@@ -64,30 +20,28 @@ export default function RootLayout({
 }>) {
   const messages = useMessages();
   return (
-    <html lang={locale} className={`${GeistSans.variable} ${GeistMono.variable} dark`}>
-      <body className="antialiased">
-        <StarryBackground />
-        <NextIntlClientProvider locale={locale} messages={messages}>
-          <AuthProvider>
-            {children}
-            <Toaster />
-          </AuthProvider>
-        </NextIntlClientProvider>
-        <Script
-          async
-          src="https://www.googletagmanager.com/gtag/js?id=G-R35KLPZN1G"
-        />
-        <Script id="google-analytics">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
+    <>
+      <StarryBackground />
+      <NextIntlClientProvider locale={locale} messages={messages}>
+        <AuthProvider>
+          {children}
+          <Toaster />
+        </AuthProvider>
+      </NextIntlClientProvider>
+      <Script
+        async
+        src="https://www.googletagmanager.com/gtag/js?id=G-R35KLPZN1G"
+      />
+      <Script id="google-analytics">
+        {`
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
 
-            gtag('config', 'G-R35KLPZN1G');
-          `}
-        </Script>
-        <PaddleLoader />
-      </body>
-    </html>
+          gtag('config', 'G-R35KLPZN1G');
+        `}
+      </Script>
+      <PaddleLoader />
+    </>
   );
 }
