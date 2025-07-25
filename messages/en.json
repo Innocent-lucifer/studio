@@ -1,3 +1,4 @@
+
 {
   "LoginSignUpForm": {
     "signIn": "Sign In",
@@ -19,5 +20,79 @@
   },
   "LanguageSwitcher": {
       "changeLanguage": "Change language"
+  },
+  "LandingPage": {
+    "navLinks": {
+      "why": "Why SagePostAI",
+      "pricing": "Pricing",
+      "about": "About Team",
+      "contact": "Contact"
+    },
+    "header": {
+      "tryForFree": "Try it Free",
+      "goToApp": "Go to App"
+    },
+    "hero": {
+      "title1": "Automate Social Media",
+      "title2": "Dominate with AI",
+      "subtitle": "SagePostAI helps you plan, write, and publish social media content effortlessly — with zero-effort automation.",
+      "buttonText": "Start Generating",
+      "trialInfo": "Start your 3-day free trial. Unlimited access, no card needed.",
+      "placeholder": "Enter a topic to see the magic...",
+      "placeholders": {
+        "p1": "Why pineapple on pizza is a war crime...",
+        "p2": "A professional breakdown of the meme economy",
+        "p3": "How my cat accidentally became a micro-influencer",
+        "p4": "My journey from 'I have an idea' to 'pls clap'",
+        "p5": "Unpacking the psychological damage of 'reply all' emails",
+        "p6": "Convince me that waking up before 9am is a good idea"
+      }
+    },
+    "pricing": {
+      "monthly": {
+        "title": "Sage Infinity Monthly",
+        "subtitle": "Billed monthly."
+      },
+      "yearly": {
+        "title": "Sage Infinity Yearly",
+        "subtitle": "Billed annually.",
+        "badge": "BEST VALUE",
+        "discountBadge": "18% OFF"
+      },
+      "features": {
+        "unlimited": "Unlimited Generations",
+        "imageWizard": "Image to Post Wizard",
+        "quickPost": "Quick Post Generator",
+        "campaignBuilder": "Smart Campaign Builder",
+        "uploadImage": "Upload image & get content ideas",
+        "toneStyler": "Tone Styler (auto-matches human, casual, or pro)",
+        "visibilityBooster": "Visibility Booster (adds optimal emojis & hashtags)",
+        "aiEditor": "AI Post Editor (Auto cleans grammar & flow instantly)",
+        "copyExport": "Copy & export posts anytime",
+        "savedHistory": "Saved Content History"
+      }
+    },
+    "faq": {
+      "q1": "How does SagePostAI actually create social media content?",
+      "a1": "SagePostAI combines your topic input with real-time research, brand tone detection, and formatting intelligence to generate professional-grade posts for LinkedIn and Twitter instantly.",
+      "q2": "What makes SagePostAI better than other AI tools?",
+      "a2": "We go beyond templates. SagePostAI uses tone styling, grammar cleaning, emoji optimization, and post enrichment to match human-like writing that resonates and performs well.",
+      "q3": "Can I generate content using an image or screenshot?",
+      "a3": "Yes! With the Image-to-Post Wizard, you can upload an image or screenshot and SagePostAI will extract key insights, detect context, and generate a relevant post instantly.",
+      "q4": "How does the Tone Styler feature work?",
+      "a4": "Tone Styler detects your intended style — casual, professional, or personal — and automatically adjusts sentence flow, wording, and punctuation to match it precisely.",
+      "q5": "What is the Smart Campaign Builder?",
+      "a5": "It’s a power feature that lets you plan 3–5 AI posts around a single idea or goal. It generates themed posts for a product launch, a story arc, or an educational series.",
+      "q6": "Can I edit the generated posts?",
+      "a6": "Yes. The AI Post Editor helps you clean up grammar, improve sentence clarity, or rephrase sections without losing the original meaning — with one click.",
+      "q7": "Do I get hashtags and emojis automatically?",
+      "a7": "Absolutely. Our Visibility Booster adds high-engagement hashtags and relevant emojis to make your post stand out while preserving professionalism and tone.",
+      "q8": "Do I need experience with social media to use SagePostAI?",
+      "a8": "Not at all. If you can type a topic, you're ready. We built this for founders, creators, marketers, and even students — no prior expertise needed.",
+      "q9": "Is there a free plan?",
+      "a9": "Yes. Our free plan gives you a 3-day free trial with unlimited access to all features. After the trial, you can upgrade to a paid plan to continue using the platform.",
+      "q10": "What are the pricing options?",
+      "a10": "You can choose a Monthly Plan ($19.99/month) or Yearly Plan ($197/year). All paid plans include unlimited AI generations and full access to every feature."
+    }
   }
 }

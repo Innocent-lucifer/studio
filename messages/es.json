@@ -1,3 +1,4 @@
+
 {
   "LoginSignUpForm": {
     "signIn": "Iniciar Sesión",
@@ -19,5 +20,79 @@
   },
   "LanguageSwitcher": {
       "changeLanguage": "Cambiar idioma"
+  },
+  "LandingPage": {
+    "navLinks": {
+      "why": "¿Por qué SagePostAI?",
+      "pricing": "Precios",
+      "about": "Sobre Nosotros",
+      "contact": "Contacto"
+    },
+    "header": {
+      "tryForFree": "Pruébalo Gratis",
+      "goToApp": "Ir a la App"
+    },
+    "hero": {
+      "title1": "Automatiza las Redes Sociales",
+      "title2": "Domina con IA",
+      "subtitle": "SagePostAI te ayuda a planificar, escribir y publicar contenido en redes sociales sin esfuerzo, con automatización inteligente.",
+      "buttonText": "Empezar a Generar",
+      "trialInfo": "Inicia tu prueba gratuita de 3 días. Acceso ilimitado, no se requiere tarjeta.",
+      "placeholder": "Introduce un tema para ver la magia...",
+      "placeholders": {
+        "p1": "¿Por qué la piña en la pizza es un crimen de guerra...",
+        "p2": "Un análisis profesional de la economía de los memes",
+        "p3": "Cómo mi gato se convirtió en un micro-influencer por accidente",
+        "p4": "Mi viaje de 'tengo una idea' a 'por favor aplaudan'",
+        "p5": "Analizando el daño psicológico de los correos 'responder a todos'",
+        "p6": "convénceme de que despertarse antes de las 9am es una buena idea"
+      }
+    },
+    "pricing": {
+      "monthly": {
+        "title": "Sage Infinity Mensual",
+        "subtitle": "Facturado mensualmente."
+      },
+      "yearly": {
+        "title": "Sage Infinity Anual",
+        "subtitle": "Facturado anualmente.",
+        "badge": "MEJOR VALOR",
+        "discountBadge": "18% DE DESCUENTO"
+      },
+      "features": {
+        "unlimited": "Generaciones Ilimitadas",
+        "imageWizard": "Asistente de Imagen a Publicación",
+        "quickPost": "Generador Rápido de Publicaciones",
+        "campaignBuilder": "Constructor de Campañas Inteligente",
+        "uploadImage": "Sube una imagen y obtén ideas de contenido",
+        "toneStyler": "Estilizador de Tono (humano, casual, o pro)",
+        "visibilityBooster": "Optimizador de Visibilidad (emojis y hashtags)",
+        "aiEditor": "Editor de Publicaciones con IA (corrige gramática)",
+        "copyExport": "Copia y exporta publicaciones en cualquier momento",
+        "savedHistory": "Historial de Contenido Guardado"
+      }
+    },
+    "faq": {
+      "q1": "¿Cómo crea SagePostAI realmente el contenido para redes sociales?",
+      "a1": "SagePostAI combina tu tema con investigación en tiempo real, detección de tono de marca e inteligencia de formato para generar publicaciones de nivel profesional para LinkedIn y Twitter al instante.",
+      "q2": "¿Qué hace a SagePostAI mejor que otras herramientas de IA?",
+      "a2": "Vamos más allá de las plantillas. SagePostAI usa estilización de tono, limpieza gramatical, optimización de emojis y enriquecimiento de publicaciones para imitar una escritura humana que resuena y funciona bien.",
+      "q3": "¿Puedo generar contenido usando una imagen o captura de pantalla?",
+      "a3": "¡Sí! Con el Asistente de Imagen a Publicación, puedes subir una imagen o captura de pantalla y SagePostAI extraerá ideas clave, detectará el contexto y generará una publicación relevante al instante.",
+      "q4": "¿Cómo funciona la función de Estilizador de Tono?",
+      "a4": "El Estilizador de Tono detecta tu estilo deseado — casual, profesional o personal — y ajusta automáticamente el flujo de las oraciones, las palabras y la puntuación para que coincida con precisión.",
+      "q5": "¿Qué es el Constructor de Campañas Inteligente?",
+      "a5": "Es una función potente que te permite planificar de 3 a 5 publicaciones de IA en torno a una sola idea u objetivo. Genera publicaciones temáticas para el lanzamiento de un producto, un arco narrativo o una serie educativa.",
+      "q6": "¿Puedo editar las publicaciones generadas?",
+      "a6": "Sí. El Editor de Publicaciones con IA te ayuda a corregir la gramática, mejorar la claridad de las oraciones o reformular secciones sin perder el significado original, con un solo clic.",
+      "q7": "¿Obtengo hashtags y emojis automáticamente?",
+      "a7": "Absolutamente. Nuestro Optimizador de Visibilidad añade hashtags de alta interacción y emojis relevantes para que tu publicación destaque, preservando el profesionalismo y el tono.",
+      "q8": "¿Necesito experiencia en redes sociales para usar SagePostAI?",
+      "a8": "Para nada. Si puedes escribir un tema, estás listo. Creamos esto para fundadores, creadores, especialistas en marketing e incluso estudiantes; no se necesita experiencia previa.",
+      "q9": "¿Hay un plan gratuito?",
+      "a9": "Sí. Nuestro plan gratuito te ofrece una prueba gratuita de 3 días con acceso ilimitado a todas las funciones. Después de la prueba, puedes actualizar a un plan de pago para seguir usando la plataforma.",
+      "q10": "¿Cuáles son las opciones de precios?",
+      "a10": "Puedes elegir un Plan Mensual ($19.99/mes) o un Plan Anual ($197/año). Todos los planes de pago incluyen generaciones ilimitadas de IA y acceso completo a todas las funciones."
+    }
   }
 }

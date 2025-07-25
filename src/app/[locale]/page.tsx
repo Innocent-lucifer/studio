@@ -8,6 +8,7 @@ import Hero from "@/components/sections/Hero";
 import Footer from "@/components/sections/Footer";
 import { useAuth } from "@/context/AuthContext";
 import { Icons } from "@/components/icons";
+import { useTranslations } from 'next-intl';
 
 // Lazy-loaded components
 const BuiltWith = lazy(() => import("@/components/sections/BuiltWith"));
@@ -32,6 +33,7 @@ export default function Home() {
   const [openFAQIndex, setOpenFAQIndex] = useState<number | null>(null);
   const router = useRouter();
   const { user } = useAuth();
+  const t = useTranslations('LandingPage');
 
   useEffect(() => {
     const onScroll = () => {
@@ -62,97 +64,67 @@ export default function Home() {
   }, []);
 
   const navLinks = [
-    { name: "Why SagePostAI", href: "#comparison", onClick: (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => handleScrollToSection(e, 'comparison') },
-    { name: "Pricing", href: "#pricing", onClick: (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => handleScrollToSection(e, 'pricing') },
-    { name: "About Team", href: "/about-team" },
-    { name: "Contact", href: "/contact" }
+    { name: t('navLinks.why'), href: "#comparison", onClick: (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => handleScrollToSection(e, 'comparison') },
+    { name: t('navLinks.pricing'), href: "#pricing", onClick: (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => handleScrollToSection(e, 'pricing') },
+    { name: t('navLinks.about'), href: "/about-team" },
+    { name: t('navLinks.contact'), href: "/contact" }
   ];
 
   const plans = [
     {
-      title: "Sage Infinity Monthly",
+      title: t('pricing.monthly.title'),
       price: "$19.99",
-      subtitle: "Billed monthly.",
+      subtitle: t('pricing.monthly.subtitle'),
       borderClass: "border-border",
       features: [
-        "Unlimited Generations",
-        "Image to Post Wizard",
-        "Quick Post Generator",
-        "Smart Campaign Builder",
-        "Upload image & get content ideas",
-        "Tone Styler (auto-matches human, casual, or pro)",
-        "Visibility Booster (adds optimal emojis & hashtags)",
-        "AI Post Editor (Auto cleans grammar & flow instantly)",
-        "Copy & export posts anytime",
-        "Saved Content History",
+        t('pricing.features.unlimited'),
+        t('pricing.features.imageWizard'),
+        t('pricing.features.quickPost'),
+        t('pricing.features.campaignBuilder'),
+        t('pricing.features.uploadImage'),
+        t('pricing.features.toneStyler'),
+        t('pricing.features.visibilityBooster'),
+        t('pricing.features.aiEditor'),
+        t('pricing.features.copyExport'),
+        t('pricing.features.savedHistory'),
       ],
       priceId: process.env.NEXT_PUBLIC_PADDLE_MONTHLY_PRICE_ID?.trim() || ""
     },
     {
-      title: "Sage Infinity Yearly",
+      title: t('pricing.yearly.title'),
       price: "$197",
-      subtitle: "Billed annually.",
-      badge: "BEST VALUE",
+      subtitle: t('pricing.yearly.subtitle'),
+      badge: t('pricing.yearly.badge'),
       badgeClass: "from-primary to-accent",
-      discountBadge: "18% OFF",
+      discountBadge: t('pricing.yearly.discountBadge'),
       borderClass: "border-primary ring-2 ring-primary/50",
       features: [
-        "Unlimited Generations",
-        "Image to Post Wizard",
-        "Quick Post Generator",
-        "Smart Campaign Builder",
-        "Upload image & get content ideas",
-        "Tone Styler (auto-matches human, casual, or pro)",
-        "Visibility Booster (adds optimal emojis & hashtags)",
-        "AI Post Editor (Auto cleans grammar & flow instantly)",
-        "Copy & export posts anytime",
-        "Saved Content History",
+        t('pricing.features.unlimited'),
+        t('pricing.features.imageWizard'),
+        t('pricing.features.quickPost'),
+        t('pricing.features.campaignBuilder'),
+        t('pricing.features.uploadImage'),
+        t('pricing.features.toneStyler'),
+        t('pricing.features.visibilityBooster'),
+        t('pricing.features.aiEditor'),
+        t('pricing.features.copyExport'),
+        t('pricing.features.savedHistory'),
       ],
       priceId: process.env.NEXT_PUBLIC_PADDLE_YEARLY_PRICE_ID?.trim() || ""
     }
   ];
 
   const faqs = [
-    {
-      q: "How does SagePostAI actually create social media content?",
-      a: "SagePostAI combines your topic input with real-time research, brand tone detection, and formatting intelligence to generate professional-grade posts for LinkedIn and Twitter instantly."
-    },
-    {
-      q: "What makes SagePostAI better than other AI tools?",
-      a: "We go beyond templates. SagePostAI uses tone styling, grammar cleaning, emoji optimization, and post enrichment to match human-like writing that resonates and performs well."
-    },
-    {
-      q: "Can I generate content using an image or screenshot?",
-      a: "Yes! With the Image-to-Post Wizard, you can upload an image or screenshot and SagePostAI will extract key insights, detect context, and generate a relevant post instantly."
-    },
-    {
-      q: "How does the Tone Styler feature work?",
-      a: "Tone Styler detects your intended style — casual, professional, or personal — and automatically adjusts sentence flow, wording, and punctuation to match it precisely."
-    },
-    {
-      q: "What is the Smart Campaign Builder?",
-      a: "It’s a power feature that lets you plan 3–5 AI posts around a single idea or goal. It generates themed posts for a product launch, a story arc, or an educational series."
-    },
-    {
-      q: "Can I edit the generated posts?",
-      a: "Yes. The AI Post Editor helps you clean up grammar, improve sentence clarity, or rephrase sections without losing the original meaning — with one click."
-    },
-    {
-      q: "Do I get hashtags and emojis automatically?",
-      a: "Absolutely. Our Visibility Booster adds high-engagement hashtags and relevant emojis to make your post stand out while preserving professionalism and tone."
-    },
-    {
-      q: "Do I need experience with social media to use SagePostAI?",
-      a: "Not at all. If you can type a topic, you're ready. We built this for founders, creators, marketers, and even students — no prior expertise needed."
-    },
-    {
-      q: "Is there a free plan?",
-      a: "Yes. Our free plan gives you a 3-day free trial with unlimited access to all features. After the trial, you can upgrade to a paid plan to continue using the platform."
-    },
-    {
-      q: "What are the pricing options?",
-      a: "You can choose a Monthly Plan ($19.99/month) or Yearly Plan ($197/year). All paid plans include unlimited AI generations and full access to every feature."
-    }
+    { q: t('faq.q1'), a: t('faq.a1') },
+    { q: t('faq.q2'), a: t('faq.a2') },
+    { q: t('faq.q3'), a: t('faq.a3') },
+    { q: t('faq.q4'), a: t('faq.a4') },
+    { q: t('faq.q5'), a: t('faq.a5') },
+    { q: t('faq.q6'), a: t('faq.a6') },
+    { q: t('faq.q7'), a: t('faq.a7') },
+    { q: t('faq.q8'), a: t('faq.a8') },
+    { q: t('faq.q9'), a: t('faq.a9') },
+    { q: t('faq.q10'), a: t('faq.a10') },
   ];
 
   return (
@@ -163,9 +135,17 @@ export default function Home() {
         toggleMenu={toggleMenu}
         navLinks={navLinks}
         user={user}
+        tryForFreeText={t('header.tryForFree')}
+        goToAppText={t('header.goToApp')}
       />
       <main className="flex-grow">
-        <Hero />
+        <Hero 
+          title1={t('hero.title1')}
+          title2={t('hero.title2')}
+          subtitle={t('hero.subtitle')}
+          buttonText={t('hero.buttonText')}
+          trialInfo={t('hero.trialInfo')}
+        />
         <Suspense fallback={<SectionLoader />}>
           <BuiltWith />
           <ProblemSolution />

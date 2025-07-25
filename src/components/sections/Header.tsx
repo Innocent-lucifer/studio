@@ -21,9 +21,11 @@ interface HeaderProps {
   toggleMenu: () => void;
   navLinks: NavLink[];
   user: User | null;
+  tryForFreeText: string;
+  goToAppText: string;
 }
 
-const HeaderComponent: React.FC<HeaderProps> = ({ scrolled, menuOpen, toggleMenu, navLinks, user }) => {
+const HeaderComponent: React.FC<HeaderProps> = ({ scrolled, menuOpen, toggleMenu, navLinks, user, tryForFreeText, goToAppText }) => {
 
   const headerVariants = {
     initial: { y: -100, opacity: 0 },
@@ -68,13 +70,13 @@ const HeaderComponent: React.FC<HeaderProps> = ({ scrolled, menuOpen, toggleMenu
           {user ? (
              <Button asChild className={`ml-4 ${buttonGlowClass}`}>
                 <Link href="/dashboard">
-                    Go to App
+                    {goToAppText}
                 </Link>
              </Button>
           ) : (
             <Button asChild className={`ml-4 ${buttonGlowClass}`}>
                 <Link href="/login">
-                    Try it Free
+                    {tryForFreeText}
                 </Link>
             </Button>
           )}
@@ -110,13 +112,13 @@ const HeaderComponent: React.FC<HeaderProps> = ({ scrolled, menuOpen, toggleMenu
                 {user ? (
                     <Button asChild size="lg" className={`mt-4 ${buttonGlowClass}`}>
                         <Link href="/dashboard">
-                            Go to App
+                            {goToAppText}
                         </Link>
                     </Button>
                 ) : (
                     <Button asChild size="lg" className={`mt-4 ${buttonGlowClass}`}>
                         <Link href="/login">
-                            Try it Free
+                            {tryForFreeText}
                         </Link>
                     </Button>
                 )}

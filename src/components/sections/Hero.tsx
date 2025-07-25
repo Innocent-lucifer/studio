@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { useTranslations } from 'next-intl';
 
 const placeholders = [
   "Why pineapple on pizza is a war crime...",
@@ -18,11 +19,20 @@ const placeholders = [
   "Convince me that waking up before 9am is a good idea"
 ];
 
-function HeroComponent() {
+interface HeroProps {
+  title1: string;
+  title2: string;
+  subtitle: string;
+  buttonText: string;
+  trialInfo: string;
+}
+
+function HeroComponent({ title1, title2, subtitle, buttonText, trialInfo }: HeroProps) {
   const [topic, setTopic] = useState("");
   const router = useRouter();
   const { user } = useAuth();
-  const [placeholder, setPlaceholder] = useState("Enter a topic to see the magic...");
+  const t = useTranslations('LandingPage.hero');
+  const [placeholder, setPlaceholder] = useState(t('placeholder'));
   const [isUserInteracting, setIsUserInteracting] = useState(false);
 
   // Typing animation effect
@@ -33,6 +43,15 @@ function HeroComponent() {
     let placeholderIndex = 0;
     let isDeleting = false;
     let loopTimeout: NodeJS.Timeout;
+    
+    const animatedPlaceholders = [
+      t('placeholders.p1'),
+      t('placeholders.p2'),
+      t('placeholders.p3'),
+      t('placeholders.p4'),
+      t('placeholders.p5'),
+      t('placeholders.p6'),
+    ];
 
     const type = () => {
       // Stop the loop if the user starts typing
@@ -41,7 +60,7 @@ function HeroComponent() {
         return;
       }
 
-      const fullText = placeholders[placeholderIndex];
+      const fullText = animatedPlaceholders[placeholderIndex];
       currentText = isDeleting
         ? fullText.substring(0, currentText.length - 1)
         : fullText.substring(0, currentText.length + 1);
@@ -58,7 +77,7 @@ function HeroComponent() {
         isDeleting = true;
       } else if (isDeleting && currentText === "") {
         isDeleting = false;
-        placeholderIndex = (placeholderIndex + 1) % placeholders.length;
+        placeholderIndex = (placeholderIndex + 1) % animatedPlaceholders.length;
         typeSpeed = 500; // Pause before typing new word
       }
 
@@ -68,7 +87,7 @@ function HeroComponent() {
     loopTimeout = setTimeout(type, 1000); // Initial delay
 
     return () => clearTimeout(loopTimeout); // Cleanup on unmount
-  }, [isUserInteracting]);
+  }, [isUserInteracting, t]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!isUserInteracting) {
@@ -104,12 +123,11 @@ function HeroComponent() {
           transition={{ duration: 0.5, ease: "easeOut" }}
         >
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tighter">
-            Automate Social Media <br />
-            <span className="text-primary">Dominate with AI</span>
+            {title1} <br />
+            <span className="text-primary">{title2}</span>
           </h1>
           <p className="text-lg md:text-xl text-foreground/70 mb-8 max-w-xl">
-            SagePostAI helps you plan, write, and publish social media content
-            effortlessly — with zero-effort automation.
+            {subtitle}
           </p>
 
           <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row items-center gap-4">
@@ -125,7 +143,7 @@ function HeroComponent() {
             
             <Button type="submit" size="lg" className="w-full sm:w-auto h-14 bg-primary text-primary-foreground hover:bg-primary/90 transition-transform duration-200 hover:scale-105 shadow-lg shadow-primary/20">
               <Search className="mr-2 h-5 w-5" />
-              Start Generating
+              {buttonText}
             </Button>
           </form>
 
@@ -136,7 +154,7 @@ function HeroComponent() {
             className="mt-6 flex items-center text-sm text-foreground/60"
           >
             <Clock className="w-4 h-4 mr-2 text-accent" />
-            Start your 3-day free trial. Unlimited access, no card needed.
+            {trialInfo}
           </motion.div>
         </motion.div>
 
